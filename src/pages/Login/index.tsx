@@ -79,7 +79,7 @@ const Login = () => {
           <img src="/images/logo.png" alt="中岳会计" className="w-48 h-auto" />
         </div>
 
-        <div className="mb-4 p-3 bg-red-50 rounded text-red-700 text-sm">
+        <div className="mb-4 p-3 bg-blue-50 rounded text-blue-700 text-sm">
           <p>可用的测试账号:</p>
           <p>管理员: admin / admin</p>
           <p>普通用户: user / user</p>

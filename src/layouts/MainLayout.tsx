@@ -179,37 +179,6 @@ const MainLayout = () => {
     />
   )
 
-  // 获取用户角色显示
-  const getRoleTag = () => {
-    let roleName = '普通用户'
-
-    // 从字符串数组中获取角色名称
-    if (user && user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
-      roleName = user.roles[0] || '普通用户'
-    }
-
-    let color = ''
-
-    if (roleName === '管理员' || roleName === 'admin') {
-      color = '#9D174D'
-    } else if (roleName === '财务主管') {
-      color = '#9D4221'
-    } else if (roleName === '会计') {
-      color = '#9D5D16'
-    } else {
-      color = '#4B5563'
-    }
-
-    return (
-      <span
-        className="text-xs px-1 py-0.5 rounded"
-        style={{ backgroundColor: color, color: 'white' }}
-      >
-        {roleName}
-      </span>
-    )
-  }
-
   return (
     <Layout className="min-h-screen">
       {/* 桌面端侧边栏 */}
@@ -303,16 +272,13 @@ const MainLayout = () => {
                 <Avatar
                   src={user?.avatar}
                   icon={<UserOutlined />}
-                  className="border-2 border-pink-100"
-                  style={{ backgroundColor: user?.avatar ? 'transparent' : '#9D174D' }}
+                  style={{ backgroundColor: user?.avatar ? 'transparent' : '#1890ff' }}
                 />
                 {!isMobile && (
                   <div className="ml-2">
                     <div className="flex items-center">
-                      <span className="font-medium mr-1">{user?.username}</span>
-                      {getRoleTag()}
+                      <span className="font-medium">{user?.username}</span>
                     </div>
-                    <div className="text-xs text-gray-500">{user?.nickname}</div>
                   </div>
                 )}
               </div>
