@@ -341,7 +341,18 @@ const Customers = () => {
       render: date => {
         if (!date) return '-'
         const dateObj = new Date(date)
-        return dateObj.toISOString().split('T')[0]
+        // 格式化为 YYYY-MM-DD HH:mm:ss
+        return dateObj
+          .toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          })
+          .replace(/\//g, '-')
       },
     },
     {
@@ -507,11 +518,21 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // 格式化日期为YYYY-MM-DD
+  // 格式化日期为YYYY-MM-DD HH:mm:ss
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
-    return date.toISOString().split('T')[0]
+    return date
+      .toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      })
+      .replace(/\//g, '-')
   }
 
   const tabItems: TabsProps['items'] = [
@@ -557,6 +578,8 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
           <Descriptions.Item label="注册资本">
             {customer.registered_capital ? `${customer.registered_capital}元` : '-'}
           </Descriptions.Item>
+          <Descriptions.Item label="创建时间">{formatDate(customer.create_time)}</Descriptions.Item>
+          <Descriptions.Item label="更新时间">{formatDate(customer.update_time)}</Descriptions.Item>
         </Descriptions>
       ),
     },
