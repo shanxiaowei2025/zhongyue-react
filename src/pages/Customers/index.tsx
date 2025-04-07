@@ -23,8 +23,8 @@ import type { ColumnsType } from 'antd/es/table'
 import type { Customer } from '../../types'
 import { getCustomerList, deleteCustomer } from '../../api/customer'
 import CustomerForm from './CustomerForm'
+import type { TabsProps } from 'antd'
 
-const { TabPane } = Tabs
 const { confirm } = Modal
 
 const Customers = () => {
@@ -514,9 +514,11 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
     return date.toISOString().split('T')[0]
   }
 
-  return (
-    <Tabs defaultActiveKey="1" className="customer-detail-tabs">
-      <TabPane tab="基本信息" key="1">
+  const tabItems: TabsProps['items'] = [
+    {
+      key: '1',
+      label: '基本信息',
+      children: (
         <Descriptions
           bordered
           column={isMobile ? 1 : 2}
@@ -556,9 +558,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
             {customer.registered_capital ? `${customer.registered_capital}元` : '-'}
           </Descriptions.Item>
         </Descriptions>
-      </TabPane>
-
-      <TabPane tab="业务详情" key="2">
+      ),
+    },
+    {
+      key: '2',
+      label: '业务详情',
+      children: (
         <Descriptions
           bordered
           column={1}
@@ -576,9 +581,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
             {customer.affiliated_enterprises || '-'}
           </Descriptions.Item>
         </Descriptions>
-      </TabPane>
-
-      <TabPane tab="银行账户" key="3">
+      ),
+    },
+    {
+      key: '3',
+      label: '银行账户',
+      children: (
         <Descriptions
           bordered
           column={isMobile ? 1 : 2}
@@ -609,85 +617,93 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
             {customer.tripartite_agreement_account || '-'}
           </Descriptions.Item>
         </Descriptions>
-      </TabPane>
+      ),
+    },
+    {
+      key: '4',
+      label: '税务信息',
+      children: (
+        <>
+          <Descriptions
+            bordered
+            column={isMobile ? 1 : 2}
+            size={isMobile ? 'small' : 'default'}
+            className="break-all"
+          >
+            <Descriptions.Item label="税种">{customer.tax_categories || '-'}</Descriptions.Item>
+            <Descriptions.Item label="个税申报密码">
+              {customer.personal_income_tax_password || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="个税申报人员" span={2}>
+              {customer.personal_income_tax_staff || '-'}
+            </Descriptions.Item>
+          </Descriptions>
 
-      <TabPane tab="税务信息" key="4">
-        <Descriptions
-          bordered
-          column={isMobile ? 1 : 2}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="税种">{customer.tax_categories || '-'}</Descriptions.Item>
-          <Descriptions.Item label="个税申报密码">
-            {customer.personal_income_tax_password || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="个税申报人员" span={2}>
-            {customer.personal_income_tax_staff || '-'}
-          </Descriptions.Item>
-        </Descriptions>
+          <h3 className="mt-4 mb-2 font-medium">法定代表人</h3>
+          <Descriptions
+            bordered
+            column={isMobile ? 1 : 2}
+            size={isMobile ? 'small' : 'default'}
+            className="break-all"
+          >
+            <Descriptions.Item label="姓名">
+              {customer.legal_representative_name || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {customer.legal_representative_phone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {customer.legal_representative_id || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="电子税务局密码">
+              {customer.legal_representative_tax_password || '-'}
+            </Descriptions.Item>
+          </Descriptions>
 
-        <h3 className="mt-4 mb-2 font-medium">法定代表人</h3>
-        <Descriptions
-          bordered
-          column={isMobile ? 1 : 2}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="姓名">
-            {customer.legal_representative_name || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="联系电话">
-            {customer.legal_representative_phone || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="身份证号">
-            {customer.legal_representative_id || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="电子税务局密码">
-            {customer.legal_representative_tax_password || '-'}
-          </Descriptions.Item>
-        </Descriptions>
+          <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
+          <Descriptions
+            bordered
+            column={isMobile ? 1 : 2}
+            size={isMobile ? 'small' : 'default'}
+            className="break-all"
+          >
+            <Descriptions.Item label="姓名">
+              {customer.financial_contact_name || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {customer.financial_contact_phone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {customer.financial_contact_id || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="电子税务局密码">
+              {customer.financial_contact_tax_password || '-'}
+            </Descriptions.Item>
+          </Descriptions>
 
-        <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
-        <Descriptions
-          bordered
-          column={isMobile ? 1 : 2}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="姓名">
-            {customer.financial_contact_name || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="联系电话">
-            {customer.financial_contact_phone || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="身份证号">
-            {customer.financial_contact_id || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="电子税务局密码">
-            {customer.financial_contact_tax_password || '-'}
-          </Descriptions.Item>
-        </Descriptions>
-
-        <h3 className="mt-4 mb-2 font-medium">办税员</h3>
-        <Descriptions
-          bordered
-          column={isMobile ? 1 : 2}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="姓名">{customer.tax_officer_name || '-'}</Descriptions.Item>
-          <Descriptions.Item label="联系电话">
-            {customer.tax_officer_phone || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="身份证号">{customer.tax_officer_id || '-'}</Descriptions.Item>
-          <Descriptions.Item label="电子税务局密码">
-            {customer.tax_officer_tax_password || '-'}
-          </Descriptions.Item>
-        </Descriptions>
-      </TabPane>
-
-      <TabPane tab="证照信息" key="5">
+          <h3 className="mt-4 mb-2 font-medium">办税员</h3>
+          <Descriptions
+            bordered
+            column={isMobile ? 1 : 2}
+            size={isMobile ? 'small' : 'default'}
+            className="break-all"
+          >
+            <Descriptions.Item label="姓名">{customer.tax_officer_name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {customer.tax_officer_phone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">{customer.tax_officer_id || '-'}</Descriptions.Item>
+            <Descriptions.Item label="电子税务局密码">
+              {customer.tax_officer_tax_password || '-'}
+            </Descriptions.Item>
+          </Descriptions>
+        </>
+      ),
+    },
+    {
+      key: '5',
+      label: '证照信息',
+      children: (
         <Descriptions
           bordered
           column={1}
@@ -713,11 +729,11 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
             {customer.capital_contribution_records || '-'}
           </Descriptions.Item>
         </Descriptions>
+      ),
+    },
+  ]
 
-        {/* 这里可以添加证件照片的展示，因为图片数据以JSON字符串形式存储，实际项目中需要进行解析 */}
-      </TabPane>
-    </Tabs>
-  )
+  return <Tabs defaultActiveKey="1" items={tabItems} className="customer-detail-tabs" />
 }
 
 export default Customers
