@@ -372,42 +372,42 @@ const Customers = () => {
 
   return (
     <div className="p-2 md:p-6">
-      <div className="mb-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
+      <div className="mb-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3 w-full lg:w-auto">
           <Input
             placeholder="企业名称"
             value={searchParams.company_name}
             onChange={e => setSearchParams({ ...searchParams, company_name: e.target.value })}
-            className="w-full md:w-[200px]"
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
             placeholder="老板姓名"
             value={searchParams.boss_name}
             onChange={e => setSearchParams({ ...searchParams, boss_name: e.target.value })}
-            className="w-full md:w-[200px]"
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
             placeholder="日常联系人"
             value={searchParams.daily_contact}
             onChange={e => setSearchParams({ ...searchParams, daily_contact: e.target.value })}
-            className="w-full md:w-[200px]"
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
             placeholder="所属税局"
             value={searchParams.tax_bureau}
             onChange={e => setSearchParams({ ...searchParams, tax_bureau: e.target.value })}
-            className="w-full md:w-[200px]"
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
-          <div className="flex gap-2 mt-2 md:mt-0">
+          <div className="flex gap-2 w-full sm:w-auto sm:ml-auto lg:ml-0 mt-1 sm:mt-0">
             <Button
               type="primary"
               icon={<SearchOutlined />}
               onClick={handleSearch}
-              className="flex-1 md:flex-none"
+              className="flex-1 sm:flex-none"
             >
               搜索
             </Button>
-            <Button onClick={resetSearch} className="flex-1 md:flex-none">
+            <Button onClick={resetSearch} className="flex-1 sm:flex-none">
               重置
             </Button>
           </div>
@@ -416,7 +416,7 @@ const Customers = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleAdd}
-          className="mt-2 md:mt-0 w-full md:w-auto"
+          className="mt-2 lg:mt-0 w-full sm:w-auto"
         >
           添加客户
         </Button>

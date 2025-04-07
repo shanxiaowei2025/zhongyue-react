@@ -103,6 +103,27 @@ button:focus-visible {
   }
 }
 
+/* 中等屏幕适配优化 */
+@media (min-width: 769px) and (max-width: 1199px) {
+  .ant-table {
+    font-size: 0.9rem;
+  }
+
+  .ant-table-cell {
+    padding: 10px 8px !important;
+  }
+
+  /* 避免搜索区域在中等屏幕上撑开布局 */
+  .ant-input-group-wrapper {
+    max-width: 100%;
+  }
+
+  /* 优化按钮大小以适应更小空间 */
+  .ant-btn {
+    padding: 4px 12px;
+  }
+}
+
 /* 全屏模态框样式 */
 .full-height-modal .ant-modal-content {
   border-radius: 0;
