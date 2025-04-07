@@ -13,6 +13,7 @@ const Users = lazy(() => import('../pages/Users'))
 const Roles = lazy(() => import('../pages/Roles'))
 const Permissions = lazy(() => import('../pages/Permissions'))
 const Profile = lazy(() => import('../pages/Profile'))
+const Customers = lazy(() => import('../pages/Customers'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -50,6 +51,10 @@ const routes: RouteObject[] = [
       {
         path: 'permissions',
         element: <Permissions />,
+      },
+      {
+        path: 'customers',
+        element: <Customers />,
       },
       {
         path: 'profile',

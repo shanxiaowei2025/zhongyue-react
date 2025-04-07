@@ -6,6 +6,7 @@ import {
   TeamOutlined,
   LockOutlined,
   LogoutOutlined,
+  ShopOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import type { MenuProps } from 'antd'
@@ -37,6 +38,11 @@ const MainLayout = () => {
       key: '/permissions',
       icon: <LockOutlined />,
       label: '权限管理',
+    },
+    {
+      key: '/customers',
+      icon: <ShopOutlined />,
+      label: '客户管理',
     },
   ]
 
