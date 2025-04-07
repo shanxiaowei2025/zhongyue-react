@@ -338,7 +338,11 @@ const Customers = () => {
       dataIndex: 'create_time',
       key: 'create_time',
       width: 180,
-      render: date => (date ? new Date(date).toLocaleString() : '-'),
+      render: date => {
+        if (!date) return '-'
+        const dateObj = new Date(date)
+        return dateObj.toISOString().split('T')[0]
+      },
     },
     {
       title: '操作',
@@ -501,6 +505,13 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // 格式化日期为YYYY-MM-DD
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-'
+    const date = new Date(dateString)
+    return date.toISOString().split('T')[0]
+  }
+
   return (
     <Tabs defaultActiveKey="1" className="customer-detail-tabs">
       <TabPane tab="基本信息" key="1">
@@ -537,7 +548,7 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
           <Descriptions.Item label="企业类型">{customer.enterprise_type || '-'}</Descriptions.Item>
           <Descriptions.Item label="老板姓名">{customer.boss_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="成立日期">
-            {customer.establishment_date || '-'}
+            {formatDate(customer.establishment_date)}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本">
             {customer.registered_capital ? `${customer.registered_capital}元` : '-'}
@@ -682,10 +693,10 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
           className="break-all"
         >
           <Descriptions.Item label="营业执照到期日期">
-            {customer.license_expiry_date || '-'}
+            {formatDate(customer.license_expiry_date)}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本认缴截止日期">
-            {customer.capital_contribution_deadline || '-'}
+            {formatDate(customer.capital_contribution_deadline)}
           </Descriptions.Item>
           <Descriptions.Item label="实缴资本">{customer.paid_in_capital || '-'}</Descriptions.Item>
           <Descriptions.Item label="年检密码">

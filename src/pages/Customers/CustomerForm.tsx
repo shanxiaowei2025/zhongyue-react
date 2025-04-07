@@ -215,7 +215,7 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
             </Form.Item>
 
             <Form.Item name="establishment_date" label="成立日期">
-              <DatePicker style={{ width: '100%' }} />
+              <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
             </Form.Item>
 
             <Form.Item name="registered_capital" label="注册资本">
@@ -381,11 +381,11 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
         <TabPane tab="证照信息" key="5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="license_expiry_date" label="营业执照到期日期">
-              <DatePicker style={{ width: '100%' }} />
+              <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
             </Form.Item>
 
             <Form.Item name="capital_contribution_deadline" label="注册资本认缴截止日期">
-              <DatePicker style={{ width: '100%' }} />
+              <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
             </Form.Item>
 
             <Form.Item name="paid_in_capital" label="实缴资本">
