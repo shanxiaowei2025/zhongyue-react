@@ -518,21 +518,34 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // 格式化日期为YYYY-MM-DD HH:mm:ss
-  const formatDate = (dateString: string | null) => {
+  // 格式化日期为YYYY-MM-DD HH:mm:ss 或 YYYY-MM-DD
+  const formatDate = (dateString: string | null, includeTime = true) => {
     if (!dateString) return '-'
     const date = new Date(dateString)
-    return date
-      .toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      })
-      .replace(/\//g, '-')
+
+    if (includeTime) {
+      // 格式化为 YYYY-MM-DD HH:mm:ss
+      return date
+        .toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        })
+        .replace(/\//g, '-')
+    } else {
+      // 只格式化为 YYYY-MM-DD
+      return date
+        .toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\//g, '-')
+    }
   }
 
   const tabItems: TabsProps['items'] = [
@@ -573,7 +586,7 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
           <Descriptions.Item label="企业类型">{customer.enterprise_type || '-'}</Descriptions.Item>
           <Descriptions.Item label="老板姓名">{customer.boss_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="成立日期">
-            {formatDate(customer.establishment_date)}
+            {formatDate(customer.establishment_date, false)}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本">
             {customer.registered_capital ? `${customer.registered_capital}元` : '-'}
@@ -734,10 +747,10 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
           className="break-all"
         >
           <Descriptions.Item label="营业执照到期日期">
-            {formatDate(customer.license_expiry_date)}
+            {formatDate(customer.license_expiry_date, false)}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本认缴截止日期">
-            {formatDate(customer.capital_contribution_deadline)}
+            {formatDate(customer.capital_contribution_deadline, false)}
           </Descriptions.Item>
           <Descriptions.Item label="实缴资本">{customer.paid_in_capital || '-'}</Descriptions.Item>
           <Descriptions.Item label="年检密码">
