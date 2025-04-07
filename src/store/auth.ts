@@ -38,24 +38,25 @@ export const useAuthStore = create<AuthState>()(
         } else {
           localStorage.removeItem('user')
         }
+        state.isAuthenticated = !!(state.token && user)
       }),
     setToken: token =>
       set(state => {
         state.token = token
-        state.isAuthenticated = !!(token && state.user)
         if (token) {
           localStorage.setItem('token', token)
         } else {
           localStorage.removeItem('token')
         }
+        state.isAuthenticated = !!(token && state.user)
       }),
     logout: () =>
       set(state => {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
         state.user = null
         state.token = null
         state.isAuthenticated = false
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
       }),
   }))
 )

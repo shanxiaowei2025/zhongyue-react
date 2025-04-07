@@ -1,7 +1,8 @@
 import { Formik, Form, Field, FieldInputProps } from 'formik'
 import { Button, Card, Input, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import * as Yup from 'yup'
 import { useAuthStore } from '../../store/auth'
 // import { login } from '../../api/user'
@@ -20,7 +21,12 @@ const mockUsers = [
 
 const Login = () => {
   const navigate = useNavigate()
-  const { setUser, setToken } = useAuthStore()
+  const { setUser, setToken, isAuthenticated } = useAuthStore()
+
+  // 如果用户已登录，则自动重定向到主页
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
 
   const handleSubmit = async (values: LoginForm) => {
     try {

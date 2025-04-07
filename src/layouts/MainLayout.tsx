@@ -149,8 +149,12 @@ const MainLayout = () => {
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'logout') {
-      logout()
-      navigate('/login')
+      // 先进行导航，确保不在需要验证的路由
+      navigate('/login', { replace: true })
+      // 然后清除用户状态
+      setTimeout(() => {
+        logout()
+      }, 0)
     } else if (key === 'profile') {
       navigate('/profile')
     } else if (key === 'settings') {
@@ -161,7 +165,7 @@ const MainLayout = () => {
       message.info('通知中心功能即将上线')
     } else if (key.startsWith('notification')) {
       // 处理通知点击事件
-      setNotificationCount(prevCount => Math.max(0, prevCount - 1))
+      setNotifications(notifications.filter(n => n.id !== parseInt(key)))
     } else {
       navigate(key)
       if (isMobile) {
