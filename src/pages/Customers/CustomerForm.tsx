@@ -5,6 +5,7 @@ import type { UploadProps } from 'antd'
 import type { Customer } from '../../types'
 import { createCustomer, updateCustomer } from '../../api/customer'
 import dayjs from 'dayjs'
+import type { Dayjs } from 'dayjs'
 
 const { TabPane } = Tabs
 
@@ -14,8 +15,18 @@ interface CustomerFormProps {
   onCancel: () => void
 }
 
+// 为表单值创建类型，允许日期字段为Dayjs类型
+type FormCustomer = Omit<
+  Customer,
+  'establishment_date' | 'license_expiry_date' | 'capital_contribution_deadline'
+> & {
+  establishment_date?: Dayjs | null
+  license_expiry_date?: Dayjs | null
+  capital_contribution_deadline?: Dayjs | null
+}
+
 const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps) => {
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<FormCustomer>()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('1')
 
@@ -41,22 +52,14 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
     try {
       const values = await form.validateFields()
 
-      // 格式化日期字段
-      const formattedValues = { ...values }
-      if (formattedValues.establishment_date) {
-        formattedValues.establishment_date = dayjs(formattedValues.establishment_date).format(
-          'YYYY-MM-DD'
-        )
-      }
-      if (formattedValues.license_expiry_date) {
-        formattedValues.license_expiry_date = dayjs(formattedValues.license_expiry_date).format(
-          'YYYY-MM-DD'
-        )
-      }
-      if (formattedValues.capital_contribution_deadline) {
-        formattedValues.capital_contribution_deadline = dayjs(
-          formattedValues.capital_contribution_deadline
-        ).format('YYYY-MM-DD')
+      // 创建一个新对象用于API提交，并转换日期
+      const formattedValues: Customer = {
+        ...(values as any), // 基础字段直接复制
+        // 覆盖日期字段，确保它们是字符串类型
+        establishment_date: values.establishment_date?.format('YYYY-MM-DD') || null,
+        license_expiry_date: values.license_expiry_date?.format('YYYY-MM-DD') || null,
+        capital_contribution_deadline:
+          values.capital_contribution_deadline?.format('YYYY-MM-DD') || null,
       }
 
       setLoading(true)
@@ -84,23 +87,23 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
   }
 
   // 设置初始值
-  const getInitialValues = () => {
+  const getInitialValues = (): Partial<FormCustomer> => {
     if (!initialValues) return {}
 
-    const values = { ...initialValues }
-
-    // 转换日期字段为 dayjs 对象
-    if (values.establishment_date) {
-      values.establishment_date = dayjs(values.establishment_date)
+    // 将API数据转换为表单数据，特别处理日期字段
+    return {
+      ...initialValues,
+      // 转换日期字符串为dayjs对象
+      establishment_date: initialValues.establishment_date
+        ? dayjs(initialValues.establishment_date)
+        : null,
+      license_expiry_date: initialValues.license_expiry_date
+        ? dayjs(initialValues.license_expiry_date)
+        : null,
+      capital_contribution_deadline: initialValues.capital_contribution_deadline
+        ? dayjs(initialValues.capital_contribution_deadline)
+        : null,
     }
-    if (values.license_expiry_date) {
-      values.license_expiry_date = dayjs(values.license_expiry_date)
-    }
-    if (values.capital_contribution_deadline) {
-      values.capital_contribution_deadline = dayjs(values.capital_contribution_deadline)
-    }
-
-    return values
   }
 
   return (
