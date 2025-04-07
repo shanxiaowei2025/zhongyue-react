@@ -75,9 +75,11 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-96">
-        <h1 className="text-2xl font-bold text-center mb-8">后台管理系统</h1>
+        <div className="flex justify-center mb-8">
+          <img src="/images/logo.png" alt="中岳会计" className="w-48 h-auto" />
+        </div>
 
-        <div className="mb-4 p-3 bg-blue-50 rounded text-blue-700 text-sm">
+        <div className="mb-4 p-3 bg-red-50 rounded text-red-700 text-sm">
           <p>可用的测试账号:</p>
           <p>管理员: admin / admin</p>
           <p>普通用户: user / user</p>

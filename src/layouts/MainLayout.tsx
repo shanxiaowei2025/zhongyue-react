@@ -42,6 +42,13 @@ const MainLayout = () => {
   // 模拟通知数量
   const [notificationCount, setNotificationCount] = useState(5)
 
+  // 模拟通知数据
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: '系统通知', content: '欢迎使用中岳会计系统' },
+    { id: 2, title: '更新提醒', content: '系统已更新至最新版本' },
+    { id: 3, title: '任务提醒', content: '您有3个待处理的任务' },
+  ])
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
@@ -53,6 +60,21 @@ const MainLayout = () => {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // 检查用户状态，确保用户信息显示正确
+  useEffect(() => {
+    if (!user) {
+      // 如果没有用户信息但有 token，可能需要重新获取用户信息
+      const token = localStorage.getItem('token')
+      if (token) {
+        console.log('页面刷新后检测到 token 但没有用户信息，应该重新获取用户信息')
+        // 如果是真实环境，这里可以调用 API 重新获取用户信息
+        // fetchUserInfo(token)
+      }
+    } else {
+      console.log('用户信息已加载:', user.username)
+    }
+  }, [user])
 
   const menuItems: MenuProps['items'] = [
     {
@@ -169,13 +191,13 @@ const MainLayout = () => {
     let color = ''
 
     if (roleName === '管理员' || roleName === 'admin') {
-      color = '#f50'
+      color = '#9D174D'
     } else if (roleName === '财务主管') {
-      color = '#108ee9'
+      color = '#9D4221'
     } else if (roleName === '会计') {
-      color = '#87d068'
+      color = '#9D5D16'
     } else {
-      color = '#999999' // 默认颜色
+      color = '#4B5563'
     }
 
     return (
@@ -203,9 +225,13 @@ const MainLayout = () => {
           <div
             className={`h-16 flex items-center ${collapsed ? 'justify-center' : 'justify-start pl-4'}`}
           >
-            <h1 className={`${collapsed ? 'text-lg' : 'text-xl'} font-bold truncate`}>
-              {collapsed ? 'ZY' : '后台管理系统'}
-            </h1>
+            <div className="flex items-center">
+              <img
+                src="/images/logo.png"
+                alt="中岳会计"
+                className={`${collapsed ? 'w-10' : 'w-32'} h-auto`}
+              />
+            </div>
           </div>
           {renderMenu()}
         </Sider>
@@ -214,12 +240,17 @@ const MainLayout = () => {
         <Header className="bg-white p-0 flex items-center justify-between shadow-sm">
           <div className="flex items-center">
             {isMobile ? (
-              <Button
-                type="text"
-                icon={<MenuOutlined />}
-                onClick={() => setDrawerVisible(true)}
-                className="ml-4"
-              />
+              <>
+                <Button
+                  type="text"
+                  icon={<MenuOutlined />}
+                  onClick={() => setDrawerVisible(true)}
+                  className="ml-4"
+                />
+                <div className="flex items-center ml-2">
+                  <img src="/images/logo.png" alt="中岳会计" className="h-10 w-auto" />
+                </div>
+              </>
             ) : (
               <Button
                 type="text"
@@ -228,7 +259,6 @@ const MainLayout = () => {
                 className="ml-4"
               />
             )}
-            <h1 className="ml-4 text-lg font-medium md:hidden">后台管理系统</h1>
           </div>
 
           <div className="flex items-center">
@@ -273,16 +303,16 @@ const MainLayout = () => {
                 <Avatar
                   src={user?.avatar}
                   icon={<UserOutlined />}
-                  className="border-2 border-blue-100"
-                  style={{ backgroundColor: user?.avatar ? 'transparent' : '#1890ff' }}
+                  className="border-2 border-pink-100"
+                  style={{ backgroundColor: user?.avatar ? 'transparent' : '#9D174D' }}
                 />
                 {!isMobile && (
-                  <div className="ml-2 flex flex-col justify-center">
+                  <div className="ml-2">
                     <div className="flex items-center">
                       <span className="font-medium mr-1">{user?.username}</span>
                       {getRoleTag()}
                     </div>
-                    <span className="text-xs text-gray-500">{user?.nickname || '欢迎回来'}</span>
+                    <div className="text-xs text-gray-500">{user?.nickname}</div>
                   </div>
                 )}
               </div>
