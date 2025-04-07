@@ -14,14 +14,26 @@ interface CustomerFormProps {
   onCancel: () => void
 }
 
-// 为表单值创建类型，允许日期字段为Dayjs类型
+// 为表单值创建类型，允许日期字段为Dayjs类型，图片字段为上传文件列表
 type FormCustomer = Omit<
   Customer,
-  'establishment_date' | 'license_expiry_date' | 'capital_contribution_deadline'
+  | 'establishment_date'
+  | 'license_expiry_date'
+  | 'capital_contribution_deadline'
+  | 'legal_person_id_images'
+  | 'business_license_images'
+  | 'bank_account_license_images'
+  | 'other_id_images'
+  | 'supplementary_images'
 > & {
   establishment_date?: Dayjs | null
   license_expiry_date?: Dayjs | null
   capital_contribution_deadline?: Dayjs | null
+  legal_person_id_images?: any[]
+  business_license_images?: any[]
+  bank_account_license_images?: any[]
+  other_id_images?: any[]
+  supplementary_images?: any[]
 }
 
 const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps) => {
@@ -51,7 +63,18 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
     try {
       const values = await form.validateFields()
 
-      // 创建一个新对象用于API提交，并转换日期
+      // 处理文件上传字段
+      const processUploadField = (fileList: any[] | undefined) => {
+        if (!fileList || fileList.length === 0) return '[]'
+        // 从文件列表中提取URL，并转为JSON字符串
+        return JSON.stringify(
+          fileList
+            .map(file => file.url || (file.response && file.response.url) || '')
+            .filter(url => url)
+        )
+      }
+
+      // 创建一个新对象用于API提交，并转换日期和文件字段
       const formattedValues: Customer = {
         ...(values as any), // 基础字段直接复制
         // 覆盖日期字段，确保它们是字符串类型
@@ -59,6 +82,12 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
         license_expiry_date: values.license_expiry_date?.format('YYYY-MM-DD') || null,
         capital_contribution_deadline:
           values.capital_contribution_deadline?.format('YYYY-MM-DD') || null,
+        // 转换文件上传字段为字符串
+        legal_person_id_images: processUploadField(values.legal_person_id_images),
+        business_license_images: processUploadField(values.business_license_images),
+        bank_account_license_images: processUploadField(values.bank_account_license_images),
+        other_id_images: processUploadField(values.other_id_images),
+        supplementary_images: processUploadField(values.supplementary_images),
       }
 
       setLoading(true)
@@ -89,7 +118,25 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
   const getInitialValues = (): Partial<FormCustomer> => {
     if (!initialValues) return {}
 
-    // 将API数据转换为表单数据，特别处理日期字段
+    // 尝试解析图片字段的 JSON 字符串
+    const parseImageList = (jsonString: string | null) => {
+      if (!jsonString) return []
+      try {
+        const parsed = JSON.parse(jsonString)
+        return Array.isArray(parsed)
+          ? parsed.map((url, index) => ({
+              uid: `-${index}`,
+              name: `图片${index + 1}`,
+              status: 'done',
+              url: url,
+            }))
+          : []
+      } catch {
+        return []
+      }
+    }
+
+    // 将API数据转换为表单数据，特别处理日期字段和图片字段
     return {
       ...initialValues,
       // 转换日期字符串为dayjs对象
@@ -102,6 +149,12 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
       capital_contribution_deadline: initialValues.capital_contribution_deadline
         ? dayjs(initialValues.capital_contribution_deadline)
         : null,
+      // 转换图片字段
+      legal_person_id_images: parseImageList(initialValues.legal_person_id_images),
+      business_license_images: parseImageList(initialValues.business_license_images),
+      bank_account_license_images: parseImageList(initialValues.bank_account_license_images),
+      other_id_images: parseImageList(initialValues.other_id_images),
+      supplementary_images: parseImageList(initialValues.supplementary_images),
     }
   }
 
@@ -443,6 +496,13 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
                   name="legal_person_id_images"
                   label="法人身份证照片"
                   className="col-span-2"
+                  valuePropName="fileList"
+                  getValueFromEvent={e => {
+                    if (Array.isArray(e)) {
+                      return e
+                    }
+                    return e?.fileList
+                  }}
                 >
                   <Upload {...uploadProps} listType="picture" maxCount={2}>
                     <Button icon={<UploadOutlined />}>上传法人身份证照片（正反面）</Button>
@@ -453,6 +513,13 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
                   name="business_license_images"
                   label="营业执照照片"
                   className="col-span-2"
+                  valuePropName="fileList"
+                  getValueFromEvent={e => {
+                    if (Array.isArray(e)) {
+                      return e
+                    }
+                    return e?.fileList
+                  }}
                 >
                   <Upload {...uploadProps} listType="picture" maxCount={1}>
                     <Button icon={<UploadOutlined />}>上传营业执照照片</Button>
@@ -463,19 +530,48 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
                   name="bank_account_license_images"
                   label="开户许可证照片"
                   className="col-span-2"
+                  valuePropName="fileList"
+                  getValueFromEvent={e => {
+                    if (Array.isArray(e)) {
+                      return e
+                    }
+                    return e?.fileList
+                  }}
                 >
                   <Upload {...uploadProps} listType="picture" maxCount={1}>
                     <Button icon={<UploadOutlined />}>上传开户许可证照片</Button>
                   </Upload>
                 </Form.Item>
 
-                <Form.Item name="other_id_images" label="其他人员身份证照片" className="col-span-2">
+                <Form.Item
+                  name="other_id_images"
+                  label="其他人员身份证照片"
+                  className="col-span-2"
+                  valuePropName="fileList"
+                  getValueFromEvent={e => {
+                    if (Array.isArray(e)) {
+                      return e
+                    }
+                    return e?.fileList
+                  }}
+                >
                   <Upload {...uploadProps} listType="picture">
                     <Button icon={<UploadOutlined />}>上传其他人员身份证照片</Button>
                   </Upload>
                 </Form.Item>
 
-                <Form.Item name="supplementary_images" label="补充资料照片" className="col-span-2">
+                <Form.Item
+                  name="supplementary_images"
+                  label="补充资料照片"
+                  className="col-span-2"
+                  valuePropName="fileList"
+                  getValueFromEvent={e => {
+                    if (Array.isArray(e)) {
+                      return e
+                    }
+                    return e?.fileList
+                  }}
+                >
                   <Upload {...uploadProps} listType="picture">
                     <Button icon={<UploadOutlined />}>上传补充资料照片</Button>
                   </Upload>
