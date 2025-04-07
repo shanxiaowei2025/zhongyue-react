@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Layout, Menu, Avatar, Dropdown, Button, Drawer } from 'antd'
+import {
+  Layout,
+  Menu,
+  Avatar,
+  Dropdown,
+  Button,
+  Drawer,
+  Badge,
+  Tooltip,
+  Space,
+  message,
+} from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   DashboardOutlined,
@@ -11,6 +22,9 @@ import {
   MenuOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  BellOutlined,
+  SettingOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import type { MenuProps } from 'antd'
@@ -24,6 +38,9 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  // 模拟通知数量
+  const [notificationCount, setNotificationCount] = useState(5)
 
   useEffect(() => {
     const handleResize = () => {
@@ -72,9 +89,39 @@ const MainLayout = () => {
       label: '个人资料',
     },
     {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: '账号设置',
+    },
+    {
+      type: 'divider',
+    },
+    {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: '退出登录',
+    },
+  ]
+
+  const notificationMenuItems: MenuProps['items'] = [
+    {
+      key: 'notification1',
+      label: '有新的客户信息需要处理',
+    },
+    {
+      key: 'notification2',
+      label: '系统更新通知',
+    },
+    {
+      key: 'notification3',
+      label: '欢迎使用中岳会计系统',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'viewAll',
+      label: '查看全部通知',
     },
   ]
 
@@ -84,6 +131,15 @@ const MainLayout = () => {
       navigate('/login')
     } else if (key === 'profile') {
       navigate('/profile')
+    } else if (key === 'settings') {
+      // 跳转到账号设置页面
+      message.info('账号设置功能即将上线')
+    } else if (key === 'viewAll') {
+      // 跳转到通知中心
+      message.info('通知中心功能即将上线')
+    } else if (key.startsWith('notification')) {
+      // 处理通知点击事件
+      setNotificationCount(prevCount => Math.max(0, prevCount - 1))
     } else {
       navigate(key)
       if (isMobile) {
@@ -100,6 +156,37 @@ const MainLayout = () => {
       onClick={handleMenuClick}
     />
   )
+
+  // 获取用户角色显示
+  const getRoleTag = () => {
+    let roleName = '普通用户'
+
+    // 从字符串数组中获取角色名称
+    if (user && user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+      roleName = user.roles[0] || '普通用户'
+    }
+
+    let color = ''
+
+    if (roleName === '管理员' || roleName === 'admin') {
+      color = '#f50'
+    } else if (roleName === '财务主管') {
+      color = '#108ee9'
+    } else if (roleName === '会计') {
+      color = '#87d068'
+    } else {
+      color = '#999999' // 默认颜色
+    }
+
+    return (
+      <span
+        className="text-xs px-1 py-0.5 rounded"
+        style={{ backgroundColor: color, color: 'white' }}
+      >
+        {roleName}
+      </span>
+    )
+  }
 
   return (
     <Layout className="min-h-screen">
@@ -143,18 +230,64 @@ const MainLayout = () => {
             )}
             <h1 className="ml-4 text-lg font-medium md:hidden">后台管理系统</h1>
           </div>
-          <Dropdown
-            menu={{
-              items: userMenuItems,
-              onClick: handleMenuClick,
-            }}
-            placement="bottomRight"
-          >
-            <div className="flex items-center cursor-pointer px-4">
-              <Avatar src={user?.avatar} icon={<UserOutlined />} />
-              <span className="ml-2 max-w-[100px] truncate">{user?.username}</span>
-            </div>
-          </Dropdown>
+
+          <div className="flex items-center">
+            {/* 帮助按钮 */}
+            {!isMobile && (
+              <Tooltip title="帮助中心">
+                <Button
+                  type="text"
+                  icon={<QuestionCircleOutlined />}
+                  onClick={() => message.info('帮助中心功能即将上线')}
+                  className="mx-2"
+                />
+              </Tooltip>
+            )}
+
+            {/* 通知中心 */}
+            <Dropdown
+              menu={{
+                items: notificationMenuItems,
+                onClick: handleMenuClick,
+              }}
+              placement="bottomRight"
+              arrow={{ pointAtCenter: true }}
+            >
+              <div className="mx-3 cursor-pointer">
+                <Badge count={notificationCount} size="small">
+                  <BellOutlined className="text-lg" />
+                </Badge>
+              </div>
+            </Dropdown>
+
+            {/* 用户信息下拉菜单 */}
+            <Dropdown
+              menu={{
+                items: userMenuItems,
+                onClick: handleMenuClick,
+              }}
+              placement="bottomRight"
+              arrow={{ pointAtCenter: true }}
+            >
+              <div className="flex items-center cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md">
+                <Avatar
+                  src={user?.avatar}
+                  icon={<UserOutlined />}
+                  className="border-2 border-blue-100"
+                  style={{ backgroundColor: user?.avatar ? 'transparent' : '#1890ff' }}
+                />
+                {!isMobile && (
+                  <div className="ml-2 flex flex-col justify-center">
+                    <div className="flex items-center">
+                      <span className="font-medium mr-1">{user?.username}</span>
+                      {getRoleTag()}
+                    </div>
+                    <span className="text-xs text-gray-500">{user?.nickname || '欢迎回来'}</span>
+                  </div>
+                )}
+              </div>
+            </Dropdown>
+          </div>
         </Header>
         <Content className="p-4 md:p-6 bg-gray-50">
           <Outlet />
