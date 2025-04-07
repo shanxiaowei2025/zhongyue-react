@@ -476,7 +476,9 @@ const Customers = () => {
         width={isMobile ? '100%' : 1000}
         footer={null}
         style={{ top: isMobile ? 0 : 20 }}
-        bodyStyle={{ padding: isMobile ? '12px 8px' : '24px' }}
+        styles={{
+          body: { padding: isMobile ? '12px 8px' : '24px' },
+        }}
         className={isMobile ? 'full-height-modal' : ''}
       >
         <CustomerForm
