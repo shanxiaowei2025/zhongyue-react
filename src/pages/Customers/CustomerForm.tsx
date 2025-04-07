@@ -42,15 +42,21 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
       const values = await form.validateFields()
 
       // 格式化日期字段
-      if (values.establishment_date) {
-        values.establishment_date = values.establishment_date.format('YYYY-MM-DD')
+      const formattedValues = { ...values }
+      if (formattedValues.establishment_date) {
+        formattedValues.establishment_date = dayjs(formattedValues.establishment_date).format(
+          'YYYY-MM-DD'
+        )
       }
-      if (values.license_expiry_date) {
-        values.license_expiry_date = values.license_expiry_date.format('YYYY-MM-DD')
+      if (formattedValues.license_expiry_date) {
+        formattedValues.license_expiry_date = dayjs(formattedValues.license_expiry_date).format(
+          'YYYY-MM-DD'
+        )
       }
-      if (values.capital_contribution_deadline) {
-        values.capital_contribution_deadline =
-          values.capital_contribution_deadline.format('YYYY-MM-DD')
+      if (formattedValues.capital_contribution_deadline) {
+        formattedValues.capital_contribution_deadline = dayjs(
+          formattedValues.capital_contribution_deadline
+        ).format('YYYY-MM-DD')
       }
 
       setLoading(true)
@@ -58,11 +64,11 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
       try {
         if (isEdit && initialValues) {
           // 实际项目中这里应该使用 API 请求
-          // await updateCustomer(initialValues.id, values)
+          // await updateCustomer(initialValues.id, formattedValues)
           message.success('更新成功')
         } else {
           // 实际项目中这里应该使用 API 请求
-          // await createCustomer(values)
+          // await createCustomer(formattedValues)
           message.success('创建成功')
         }
         onSuccess()
@@ -103,16 +109,17 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
       layout="vertical"
       initialValues={getInitialValues()}
       style={{ maxHeight: '70vh', overflow: 'auto' }}
+      className="px-1 md:px-4"
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} className="overflow-x-auto">
         <TabPane tab="基本信息" key="1">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item
               name="company_name"
-              label="公司名称"
-              rules={[{ required: true, message: '请输入公司名称' }]}
+              label="企业名称"
+              rules={[{ required: true, message: '请输入企业名称' }]}
             >
-              <Input placeholder="请输入公司名称" />
+              <Input placeholder="请输入企业名称" />
             </Form.Item>
 
             <Form.Item
@@ -221,7 +228,7 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
         </TabPane>
 
         <TabPane tab="业务详情" key="2">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="main_business" label="主营业务" className="col-span-2">
               <Input.TextArea rows={2} placeholder="请输入主营业务" />
             </Form.Item>
@@ -249,7 +256,7 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
         </TabPane>
 
         <TabPane tab="银行账户" key="3">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="basic_bank" label="基本户银行">
               <Input placeholder="请输入基本户银行" />
             </Form.Item>
@@ -296,7 +303,7 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
 
         <TabPane tab="税务信息" key="4">
           <h3 className="mb-3 font-medium">税种信息</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="tax_categories" label="税种" className="col-span-2">
               <Input.TextArea rows={2} placeholder="请输入需要缴纳的税种" />
             </Form.Item>
@@ -310,8 +317,8 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
             </Form.Item>
           </div>
 
-          <h3 className="mt-6 mb-3 font-medium">法定代表人</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="mt-4 md:mt-6 mb-3 font-medium">法定代表人</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="legal_representative_name" label="姓名">
               <Input placeholder="请输入法定代表人姓名" />
             </Form.Item>
@@ -329,8 +336,8 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
             </Form.Item>
           </div>
 
-          <h3 className="mt-6 mb-3 font-medium">财务负责人</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="mt-4 md:mt-6 mb-3 font-medium">财务负责人</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="financial_contact_name" label="姓名">
               <Input placeholder="请输入财务负责人姓名" />
             </Form.Item>
@@ -348,8 +355,8 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
             </Form.Item>
           </div>
 
-          <h3 className="mt-6 mb-3 font-medium">办税员</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="mt-4 md:mt-6 mb-3 font-medium">办税员</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="tax_officer_name" label="姓名">
               <Input placeholder="请输入办税员姓名" />
             </Form.Item>
@@ -369,7 +376,7 @@ const CustomerForm = ({ initialValues, onSuccess, onCancel }: CustomerFormProps)
         </TabPane>
 
         <TabPane tab="证照信息" key="5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="license_expiry_date" label="营业执照到期日期">
               <DatePicker style={{ width: '100%' }} />
             </Form.Item>

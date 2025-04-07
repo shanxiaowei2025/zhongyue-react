@@ -33,11 +33,17 @@ const Customers = () => {
   const [total, setTotal] = useState(0)
   const [current, setCurrent] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [searchText, setSearchText] = useState('')
+  const [searchParams, setSearchParams] = useState({
+    company_name: '',
+    boss_name: '',
+    daily_contact: '',
+    tax_bureau: '',
+  })
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null)
   const [detailType, setDetailType] = useState<'view' | 'edit' | 'add'>('view')
+  const [isMobile, setIsMobile] = useState(false)
 
   // 模拟客户数据
   const mockCustomerData: Customer[] = [
@@ -175,7 +181,19 @@ const Customers = () => {
 
   useEffect(() => {
     fetchCustomers()
-  }, [current, pageSize, searchText])
+  }, [current, pageSize, searchParams])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    // 初始化判断
+    handleResize()
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const fetchCustomers = async () => {
     setLoading(true)
@@ -184,7 +202,7 @@ const Customers = () => {
       // const res = await getCustomerList({
       //   page: current,
       //   pageSize,
-      //   keyword: searchText,
+      //   ...searchParams
       // })
       // setCustomers(res.data.data)
       // setTotal(res.data.total)
@@ -192,9 +210,14 @@ const Customers = () => {
       // 使用模拟数据
       const filteredData = mockCustomerData.filter(
         customer =>
-          customer.company_name?.includes(searchText) ||
-          customer.daily_contact?.includes(searchText) ||
-          customer.sales_representative?.includes(searchText)
+          (searchParams.company_name
+            ? customer.company_name?.includes(searchParams.company_name)
+            : true) &&
+          (searchParams.boss_name ? customer.boss_name?.includes(searchParams.boss_name) : true) &&
+          (searchParams.daily_contact
+            ? customer.daily_contact?.includes(searchParams.daily_contact)
+            : true) &&
+          (searchParams.tax_bureau ? customer.tax_bureau?.includes(searchParams.tax_bureau) : true)
       )
       setCustomers(filteredData)
       setTotal(filteredData.length)
@@ -206,8 +229,18 @@ const Customers = () => {
     }
   }
 
-  const handleSearch = (value: string) => {
-    setSearchText(value)
+  const handleSearch = () => {
+    setCurrent(1)
+    fetchCustomers()
+  }
+
+  const resetSearch = () => {
+    setSearchParams({
+      company_name: '',
+      boss_name: '',
+      daily_contact: '',
+      tax_bureau: '',
+    })
     setCurrent(1)
   }
 
@@ -252,28 +285,34 @@ const Customers = () => {
 
   const columns: ColumnsType<Customer> = [
     {
-      title: '公司名称',
+      title: '企业名称',
       dataIndex: 'company_name',
       key: 'company_name',
-      width: 200,
     },
     {
-      title: '业务联系人',
+      title: '统一社会信用代码',
+      dataIndex: 'social_credit_code',
+      key: 'social_credit_code',
+    },
+    {
+      title: '老板姓名',
+      dataIndex: 'boss_name',
+      key: 'boss_name',
+    },
+    {
+      title: '日常联系人',
       dataIndex: 'daily_contact',
       key: 'daily_contact',
-      width: 120,
     },
     {
       title: '联系电话',
       dataIndex: 'daily_contact_phone',
       key: 'daily_contact_phone',
-      width: 150,
     },
     {
-      title: '业务员',
-      dataIndex: 'sales_representative',
-      key: 'sales_representative',
-      width: 120,
+      title: '所属税局',
+      dataIndex: 'tax_bureau',
+      key: 'tax_bureau',
     },
     {
       title: '状态',
@@ -328,15 +367,53 @@ const Customers = () => {
   ]
 
   return (
-    <div>
-      <div className="flex justify-between mb-4">
-        <Input.Search
-          placeholder="搜索客户名称/联系人/业务员"
-          allowClear
-          onSearch={handleSearch}
-          className="w-64"
-        />
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+    <div className="p-2 md:p-6">
+      <div className="mb-4 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full md:w-auto">
+          <Input
+            placeholder="企业名称"
+            value={searchParams.company_name}
+            onChange={e => setSearchParams({ ...searchParams, company_name: e.target.value })}
+            className="w-full md:w-[200px]"
+          />
+          <Input
+            placeholder="老板姓名"
+            value={searchParams.boss_name}
+            onChange={e => setSearchParams({ ...searchParams, boss_name: e.target.value })}
+            className="w-full md:w-[200px]"
+          />
+          <Input
+            placeholder="日常联系人"
+            value={searchParams.daily_contact}
+            onChange={e => setSearchParams({ ...searchParams, daily_contact: e.target.value })}
+            className="w-full md:w-[200px]"
+          />
+          <Input
+            placeholder="所属税局"
+            value={searchParams.tax_bureau}
+            onChange={e => setSearchParams({ ...searchParams, tax_bureau: e.target.value })}
+            className="w-full md:w-[200px]"
+          />
+          <div className="flex gap-2 mt-2 md:mt-0">
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
+              onClick={handleSearch}
+              className="flex-1 md:flex-none"
+            >
+              搜索
+            </Button>
+            <Button onClick={resetSearch} className="flex-1 md:flex-none">
+              重置
+            </Button>
+          </div>
+        </div>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleAdd}
+          className="mt-2 md:mt-0 w-full md:w-auto"
+        >
           添加客户
         </Button>
       </div>
@@ -355,14 +432,19 @@ const Customers = () => {
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: total => `共 ${total} 条`,
+          responsive: true,
+          size: 'small',
         }}
-        scroll={{ x: 1300 }}
+        scroll={{ x: 'max-content' }}
+        size="small"
+        className="overflow-x-auto"
+        rowClassName="text-sm"
       />
 
       {/* 客户详情抽屉 */}
       <Drawer
         title="客户详情"
-        width={800}
+        width={isMobile ? '100%' : 800}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
         extra={
@@ -387,8 +469,11 @@ const Customers = () => {
         title={detailType === 'add' ? '添加客户' : '编辑客户'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
-        width={1000}
+        width={isMobile ? '100%' : 1000}
         footer={null}
+        style={{ top: isMobile ? 0 : 20 }}
+        bodyStyle={{ padding: isMobile ? '12px 8px' : '24px' }}
+        className={isMobile ? 'full-height-modal' : ''}
       >
         <CustomerForm
           initialValues={currentCustomer}
@@ -405,11 +490,27 @@ const Customers = () => {
 
 // 客户详情组件
 const CustomerDetail = ({ customer }: { customer: Customer }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return (
-    <Tabs defaultActiveKey="1">
+    <Tabs defaultActiveKey="1" className="customer-detail-tabs">
       <TabPane tab="基本信息" key="1">
-        <Descriptions bordered column={2}>
-          <Descriptions.Item label="公司名称">{customer.company_name || '-'}</Descriptions.Item>
+        <Descriptions
+          bordered
+          column={isMobile ? 1 : 2}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
+          <Descriptions.Item label="企业名称">{customer.company_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="统一社会信用代码">
             {customer.social_credit_code || '-'}
           </Descriptions.Item>
@@ -445,7 +546,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
       </TabPane>
 
       <TabPane tab="业务详情" key="2">
-        <Descriptions bordered column={1}>
+        <Descriptions
+          bordered
+          column={1}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="主营业务">{customer.main_business || '-'}</Descriptions.Item>
           <Descriptions.Item label="经营范围">{customer.business_scope || '-'}</Descriptions.Item>
           <Descriptions.Item label="经营地址">{customer.business_address || '-'}</Descriptions.Item>
@@ -460,7 +566,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
       </TabPane>
 
       <TabPane tab="银行账户" key="3">
-        <Descriptions bordered column={2}>
+        <Descriptions
+          bordered
+          column={isMobile ? 1 : 2}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="基本户银行">{customer.basic_bank || '-'}</Descriptions.Item>
           <Descriptions.Item label="基本户账号">
             {customer.basic_bank_account || '-'}
@@ -488,7 +599,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
       </TabPane>
 
       <TabPane tab="税务信息" key="4">
-        <Descriptions bordered column={2}>
+        <Descriptions
+          bordered
+          column={isMobile ? 1 : 2}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="税种">{customer.tax_categories || '-'}</Descriptions.Item>
           <Descriptions.Item label="个税申报密码">
             {customer.personal_income_tax_password || '-'}
@@ -499,7 +615,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
         </Descriptions>
 
         <h3 className="mt-4 mb-2 font-medium">法定代表人</h3>
-        <Descriptions bordered column={2}>
+        <Descriptions
+          bordered
+          column={isMobile ? 1 : 2}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="姓名">
             {customer.legal_representative_name || '-'}
           </Descriptions.Item>
@@ -515,7 +636,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
         </Descriptions>
 
         <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
-        <Descriptions bordered column={2}>
+        <Descriptions
+          bordered
+          column={isMobile ? 1 : 2}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="姓名">
             {customer.financial_contact_name || '-'}
           </Descriptions.Item>
@@ -531,7 +657,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
         </Descriptions>
 
         <h3 className="mt-4 mb-2 font-medium">办税员</h3>
-        <Descriptions bordered column={2}>
+        <Descriptions
+          bordered
+          column={isMobile ? 1 : 2}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="姓名">{customer.tax_officer_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="联系电话">
             {customer.tax_officer_phone || '-'}
@@ -544,7 +675,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
       </TabPane>
 
       <TabPane tab="证照信息" key="5">
-        <Descriptions bordered column={1}>
+        <Descriptions
+          bordered
+          column={1}
+          size={isMobile ? 'small' : 'default'}
+          className="break-all"
+        >
           <Descriptions.Item label="营业执照到期日期">
             {customer.license_expiry_date || '-'}
           </Descriptions.Item>
