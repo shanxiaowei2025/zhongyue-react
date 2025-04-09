@@ -2,22 +2,15 @@ import { Formik, Form, Field, FieldInputProps } from 'formik'
 import { Button, Card, Input, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
 import * as Yup from 'yup'
 import { useAuthStore } from '../../store/auth'
-// import { login } from '../../api/user'
-import type { LoginForm, User } from '../../types'
+import { login } from '../../api/auth'
+import type { LoginForm, ApiResponse } from '../../types'
 
 const loginSchema = Yup.object().shape({
   username: Yup.string().required('请输入用户名'),
   password: Yup.string().required('请输入密码'),
 })
-
-// 模拟用户数据
-const mockUsers = [
-  { username: 'admin', password: 'admin', role: 'admin' },
-  { username: 'user', password: 'user', role: 'user' },
-]
 
 const Login = () => {
   const navigate = useNavigate()
@@ -30,47 +23,63 @@ const Login = () => {
 
   const handleSubmit = async (values: LoginForm) => {
     try {
-      // 模拟登录逻辑
-      const user = mockUsers.find(
-        u => u.username === values.username && u.password === values.password
-      )
-
-      if (user) {
-        // 模拟成功响应
-        const mockResponse = {
-          token: `mock-token-${Date.now()}`,
-          user: {
-            id: 1,
-            username: user.username,
-            password: user.password,
-            nickname: '管理员',
-            email: `${user.username}@example.com`,
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg',
-            phone: '13800138000',
-            sex: 0 as 0 | 1,
-            status: 1 as 0 | 1,
-            remark: '系统管理员',
-            roles: ['admin'],
-            user_groups: ['admin'],
-            user_permissions: ['all'],
-            is_superuser: true,
-            is_staff: true,
-            is_active: true,
-            is_expense_auditor: true,
-            date_joined: new Date().toISOString(),
-            first_name: 'Admin',
-            last_name: 'User',
-            create_time: new Date().toISOString(),
-            update_time: new Date().toISOString(),
-          } as User,
+      // 调用实际的登录API
+      const response = await login(values) as ApiResponse<{
+        access_token: string;
+        user_info: {
+          id: number;
+          username: string;
+          roles: string[];
+          phone: string | null;
+          email: string;
         }
-
-        setToken(mockResponse.token)
-        setUser(mockResponse.user)
+      }>
+      
+      console.log('登录响应完整数据:', response)
+      
+      // 判断是否有数据
+      if (response && response.code === 0 && response.data) {
+        // access_token 和 user_info 在response.data里面
+        const { access_token, user_info } = response.data
+        
+        console.log('获取到token和用户信息:', { access_token, user_info })
+        
+        // 保存token
+        setToken(access_token)
+        
+        // 将用户信息转换为应用需要的格式
+        const user = {
+          id: user_info.id,
+          username: user_info.username,
+          email: user_info.email,
+          phone: user_info.phone || '',
+          roles: user_info.roles,
+          // 以下是必要的字段，但API没有返回，设置默认值
+          password: '',
+          nickname: user_info.username,
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg',
+          sex: 0 as 0 | 1,
+          status: 1 as 0 | 1,
+          remark: '',
+          user_groups: user_info.roles,
+          user_permissions: [],
+          is_superuser: user_info.roles.includes('admin'),
+          is_staff: true,
+          is_active: true,
+          is_expense_auditor: false,
+          date_joined: new Date().toISOString(),
+          first_name: '',
+          last_name: '',
+          create_time: new Date().toISOString(),
+          update_time: new Date().toISOString(),
+        }
+        
+        setUser(user)
         message.success('登录成功')
         navigate('/')
       } else {
-        throw new Error('用户名或密码错误')
+        console.error('登录响应格式不符合预期:', response)
+        throw new Error('登录失败，响应数据格式不正确')
       }
     } catch (error) {
       console.error('登录失败:', error)
@@ -86,13 +95,11 @@ const Login = () => {
         </div>
 
         <div className="mb-4 p-3 bg-blue-50 rounded text-blue-700 text-sm">
-          <p>可用的测试账号:</p>
-          <p>管理员: admin / admin</p>
-          <p>普通用户: user / user</p>
+          <p>请输入您的账号和密码</p>
         </div>
 
         <Formik
-          initialValues={{ username: '', password: '', remember: false }}
+          initialValues={{ username: '管理员', password: '', remember: false }}
           validationSchema={loginSchema}
           onSubmit={handleSubmit}
         >

@@ -1,5 +1,22 @@
 import request from './request'
-import type { Permission, Role } from '../types'
+import type { Permission, Role, LoginForm, ApiResponse } from '../types'
+
+// 登录接口
+export const login = (data: LoginForm) => {
+  return request.post<ApiResponse<{
+    access_token: string;
+    user_info: {
+      id: number;
+      username: string;
+      roles: string[];
+      phone: string | null;
+      email: string;
+    }
+  }>>('/auth/login', {
+    username: data.username,
+    password: data.password
+  })
+}
 
 // 获取所有权限
 export const getAllPermissions = () => {

@@ -53,6 +53,7 @@ export interface ApiResponse<T> {
   code: number
   data: T
   message: string
+  timestamp?: number
 }
 
 // 分页参数类型
