@@ -1013,7 +1013,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer, onClose?: (
           defaultActiveKey="basic" 
           items={tabs} 
           className="customer-detail-tabs"
-          size={isMobile ? "small" : "large"}
         />
         
         {/* 图片预览组件 */}

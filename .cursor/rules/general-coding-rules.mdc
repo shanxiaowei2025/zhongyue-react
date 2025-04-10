@@ -16,3 +16,6 @@ Globs: src/**/*.ts, src/**/*.tsx
 - 使用 Vite 作为构建工具，提升构建效率。
 - 保持命名规范一致：变量和函数使用 camelCase，组件和接口使用 PascalCase。
 - 处理图片上传时（涉及 src/assets），正确进行文件转换和 URL 提取。
+- 每次修改后自动使用 Prettier 格式化代码，自动修复 eslint、typescript 报错。
+- 每次修改后更新 README 文件。
+- 每次修改后执行 git add 和 git commit 提交修改。
