@@ -1,0 +1,18 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Description: 项目通用编码规则
+Globs: src/**/*.ts, src/**/*.tsx
+
+本项目使用技术栈：TypeScript, ESLint, Prettier, Vite, Day.js
+
+- 使用 TypeScript 编写所有代码，利用类型安全。
+- 在 TypeScript 中启用严格模式以增强类型安全。
+- 使用 Prettier 确保代码格式一致。
+- 遵循 ESLint 规则以维护代码质量。
+- 使用 Day.js 处理日期解析和格式化。
+- 使用 Vite 作为构建工具，提升构建效率。
+- 保持命名规范一致：变量和函数使用 camelCase，组件和接口使用 PascalCase。
+- 处理图片上传时（涉及 src/assets），正确进行文件转换和 URL 提取。

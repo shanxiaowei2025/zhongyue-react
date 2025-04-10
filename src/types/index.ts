@@ -61,6 +61,14 @@ export interface PaginationParams {
   page: number
   pageSize: number
   keyword?: string
+  socialCreditCode?: string
+  salesRepresentative?: string
+  taxBureau?: string
+  taxRegistrationType?: string
+  enterpriseStatus?: string
+  businessStatus?: string
+  startDate?: string
+  endDate?: string
 }
 
 // 分页响应类型
@@ -107,66 +115,74 @@ export interface AuthGroupPermission {
 // 客户相关类型
 export interface Customer {
   id: number
-  company_name: string | null
-  daily_contact: string | null
-  daily_contact_phone: string | null
-  sales_representative: string | null
-  social_credit_code: string | null
-  tax_bureau: string | null
-  business_source: string | null
-  tax_registration_type: string | null
-  chief_accountant: string | null
-  responsible_accountant: string | null
-  enterprise_status: string | null
-  affiliated_enterprises: string | null
-  main_business: string | null
-  boss_profile: string | null
-  communication_notes: string | null
-  business_scope: string | null
-  business_address: string | null
-  registered_capital: number | null
-  establishment_date: string | null
-  license_expiry_date: string | null
-  capital_contribution_deadline: string | null
-  enterprise_type: string | null
+  companyName: string | null
+  dailyContact: string | null
+  dailyContactPhone: string | null
+  salesRepresentative: string | null
+  socialCreditCode: string | null
+  taxBureau: string | null
+  businessSource: string | null
+  taxRegistrationType: string | null
+  chiefAccountant: string | null
+  responsibleAccountant: string | null
+  enterpriseStatus: string | null
+  affiliatedEnterprises: string | null
+  mainBusiness: string | null
+  bossProfile: string | null
+  communicationNotes: string | null
+  businessScope: string | null
+  businessAddress: string | null
+  registeredCapital: string | null
+  establishmentDate: string | null
+  licenseExpiryDate: string | null
+  capitalContributionDeadline: string | null
+  enterpriseType: string | null
   shareholders: string | null
   supervisors: string | null
-  annual_inspection_password: string | null
-  paid_in_capital: number | null
-  administrative_licenses: string | null
-  capital_contribution_records: string | null
-  basic_bank: string | null
-  basic_bank_account: string | null
-  basic_bank_number: string | null
-  general_bank: string | null
-  general_bank_account: string | null
-  general_bank_number: string | null
-  has_online_banking: string | null
-  is_online_banking_custodian: string | null
-  legal_representative_name: string | null
-  legal_representative_phone: string | null
-  legal_representative_id: string | null
-  legal_representative_tax_password: string | null
-  financial_contact_name: string | null
-  financial_contact_phone: string | null
-  financial_contact_id: string | null
-  financial_contact_tax_password: string | null
-  tax_officer_name: string | null
-  tax_officer_phone: string | null
-  tax_officer_id: string | null
-  tax_officer_tax_password: string | null
-  tripartite_agreement_account: string | null
-  tax_categories: string | null
-  personal_income_tax_staff: string | null
-  personal_income_tax_password: string | null
-  legal_person_id_images: string
-  other_id_images: string
-  business_license_images: string
-  bank_account_license_images: string
-  supplementary_images: string
-  update_time: string | null
-  create_time: string | null
+  annualInspectionPassword: string | null
+  paidInCapital: string | null
+  administrativeLicenses: string | null
+  capitalContributionRecords: string | null
+  basicBank: string | null
+  basicBankAccount: string | null
+  basicBankNumber: string | null
+  generalBank: string | null
+  generalBankAccount: string | null
+  generalBankNumber: string | null
+  hasOnlineBanking: string | null
+  isOnlineBankingCustodian: string | null
+  legalRepresentativeName: string | null
+  legalRepresentativePhone: string | null
+  legalRepresentativeId: string | null
+  legalRepresentativeTaxPassword: string | null
+  financialContactName: string | null
+  financialContactPhone: string | null
+  financialContactId: string | null
+  financialContactTaxPassword: string | null
+  taxOfficerName: string | null
+  taxOfficerPhone: string | null
+  taxOfficerId: string | null
+  taxOfficerTaxPassword: string | null
+  tripartiteAgreementAccount: string | null
+  taxCategories: string | null
+  personalIncomeTaxStaff: string | null
+  personalIncomeTaxPassword: string | null
+  legalPersonIdImages: {
+    front?: string
+    back?: string
+  }
+  otherIdImages: Record<string, string>
+  businessLicenseImages: {
+    main?: string
+  }
+  bankAccountLicenseImages: {
+    basic?: string
+    general?: string
+  }
+  supplementaryImages: Record<string, string>
+  createTime: string | null
+  updateTime: string | null
   submitter: string | null
-  business_status: string | null
-  boss_name: string | null
+  businessStatus: string | null
+  bossName: string | null
 }

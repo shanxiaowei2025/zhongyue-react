@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Description: 表单相关的规则
+Globs: src/**/form*.tsx, src/**/Form*.tsx
+
+本项目使用技术栈：Ant Design, Yup, TypeScript
+
+- 使用 Yup 库实现结构化且简洁的表单验证。
+- 使用 Ant Design 表单时，确保 FormItem 配置适当的验证规则。
+- 将复杂表单结构化为选项卡，提升用户体验和组织性。
+- 仔细管理表单组件的 props，确保声明和使用时一致。
+- 使用 src/utils/antdCompatible.ts 中的工具函数处理 Ant Design 兼容性问题。

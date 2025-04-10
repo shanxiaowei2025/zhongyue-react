@@ -193,6 +193,87 @@ button:focus-visible {
   overflow-x: auto;
 }
 
+/* 表格中的链接样式优化 */
+.company-name-link {
+  color: #1890ff;
+  transition: all 0.3s;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  position: relative;
+}
+
+.company-name-link:hover {
+  color: #40a9ff;
+  text-decoration: none;
+}
+
+.company-name-link:active {
+  color: #096dd9;
+}
+
+.company-name-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.company-name-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* 图片资料展示样式 */
+.customer-image-preview {
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid #f0f0f0;
+  padding: 4px;
+  border-radius: 2px;
+}
+
+.customer-image-preview:hover {
+  border-color: #1890ff;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 图片标签样式 */
+.customer-image-tag {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 图片部分容器 */
+.customer-images-section {
+  margin-bottom: 24px;
+}
+
+.customer-images-section h3 {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 8px;
+  color: #333;
+}
+
+/* 客户详情TAB内容 */
+.customer-detail-tabs .ant-tabs-content {
+  padding-bottom: 20px;
+}
+
 @media (max-width: 768px) {
   .ant-btn {
     padding: 4px 8px;

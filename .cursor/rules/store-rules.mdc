@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Description: 状态管理相关的规则
+Globs: src/store/*.ts
+
+本项目使用技术栈：Zustand, TypeScript
+
+- 使用 Zustand 管理组件间的状态。
+- 使用 TypeScript 编写所有代码，利用类型安全。
+- 在 TypeScript 中启用严格模式以增强类型安全。
+- 保持命名规范一致：变量和函数使用 camelCase，接口使用 PascalCase。
+- 从 src/types/index.ts 中导入共享类型定义。

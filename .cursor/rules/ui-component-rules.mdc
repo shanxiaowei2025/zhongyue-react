@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Description: UI 组件和布局相关的规则
+Globs: src/**/*.tsx, src/layouts/*.tsx
+
+本项目使用技术栈：React, React Router, Ant Design, Tailwind CSS, TypeScript
+
+- 使用 React 函数组件和 Hooks 构建组件架构。
+- 使用 Ant Design 构建 UI 组件，确保一致且可维护的布局。
+- 使用 Tailwind CSS 以 utility-first 的方式样式化组件。
+- 使用 Tailwind CSS 断点（sm, md, lg, xl）实现响应式布局。
+- 使用 TypeScript 编写所有代码，利用类型安全。
+- 在 TypeScript 中启用严格模式以增强类型安全。
+- 保持命名规范一致：组件使用 PascalCase，变量和函数使用 camelCase。
+- 从 src/types/index.ts 中导入共享类型定义。
+- 在 src/layouts/MainLayout.tsx 中定义全局布局结构。
