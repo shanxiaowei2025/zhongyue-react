@@ -151,10 +151,14 @@ const Customers = () => {
     setCurrentCustomer(record)
     setDetailType('view')
     setDetailLoading(true)
-    isMobile ? setDrawerVisible(true) : setModalVisible(true)
     
-    // 设置选中的客户ID，触发SWR请求完整数据
+    // 确保先设置选中的客户ID再打开对话框，避免重复触发请求
     setSelectedCustomerId(record.id)
+    
+    // 打开对话框
+    setTimeout(() => {
+      isMobile ? setDrawerVisible(true) : setModalVisible(true)
+    }, 0)
   }
 
   const handleEdit = (record: Customer) => {
@@ -521,7 +525,14 @@ const Customers = () => {
         placement="right"
         width={isMobile ? '100%' : '80%'}
         open={drawerVisible}
-        onClose={() => setDrawerVisible(false)}
+        onClose={() => {
+          setDrawerVisible(false)
+          // 重置详情加载状态和选中的客户ID
+          setDetailLoading(false)
+          if (detailType === 'view') {
+            setSelectedCustomerId(undefined)
+          }
+        }}
         closable={true}
         height="100vh"
         styles={{ 
@@ -559,7 +570,14 @@ const Customers = () => {
       <Modal
         title={detailType === 'view' ? '客户详情' : detailType === 'edit' ? '编辑客户' : '添加客户'}
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => {
+          setModalVisible(false)
+          // 重置详情加载状态和选中的客户ID
+          setDetailLoading(false)
+          if (detailType === 'view') {
+            setSelectedCustomerId(undefined)
+          }
+        }}
         footer={null}
         width="80%"
         style={{ top: 20 }}

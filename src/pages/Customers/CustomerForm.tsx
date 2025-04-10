@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Upload, message, Space } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
@@ -6,6 +6,7 @@ import type { Customer } from '../../types'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 import { useCustomerDetail } from '../../hooks/useCustomer'
+import React from 'react'
 
 interface CustomerFormProps {
   customer?: Customer | null
@@ -82,8 +83,81 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
       }
       
       return true;
+    },
+    // 在上传列表中处理图片加载失败的情况
+    onPreview: (file) => {
+      if (file.url || (file.response && file.response.url)) {
+        const imgUrl = file.url || (file.response && file.response.url);
+        // 检查图片是否存在
+        const img = new Image();
+        img.src = imgUrl;
+        img.onload = () => {
+          // 图片加载成功，正常预览
+          window.open(imgUrl, '_blank');
+        };
+        img.onerror = () => {
+          // 图片加载失败，显示提示
+          message.error('图片无法加载，可能已被删除或链接失效');
+        };
+      }
     }
   }
+
+  // 添加一个处理缩略图加载错误的CSS样式
+  useEffect(() => {
+    // 创建样式标签
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .ant-upload-list-item-thumbnail img[src="error"], 
+      .ant-upload-list-item-thumbnail img:not([src]), 
+      .ant-upload-list-item-thumbnail img[src=""] {
+        opacity: 0.6;
+        background: url('/images/image-placeholder.svg') no-repeat center center;
+        background-size: contain;
+      }
+      
+      /* 添加新的样式以处理图片加载错误 */
+      .ant-upload-list-item-image {
+        position: relative;
+      }
+      
+      .ant-upload-list-item-image.error::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/images/image-placeholder.svg') no-repeat center center;
+        background-size: contain;
+        opacity: 0.8;
+      }
+    `;
+    // 添加到head
+    document.head.appendChild(style);
+    
+    // 添加全局事件监听器
+    const handleImageError = (e: ErrorEvent) => {
+      const target = e.target as HTMLImageElement;
+      if (target.tagName === 'IMG' && 
+          target.parentElement && 
+          target.parentElement.classList.contains('ant-upload-list-item-thumbnail')) {
+        // 图片加载错误时，替换为占位图
+        target.onerror = null;
+        target.src = '/images/image-placeholder.svg';
+        target.style.opacity = '0.6';
+      }
+    };
+    
+    // 添加全局事件监听
+    window.addEventListener('error', handleImageError, true);
+    
+    // 在组件卸载时移除
+    return () => {
+      document.head.removeChild(style);
+      window.removeEventListener('error', handleImageError, true);
+    };
+  }, []);
 
   const handleSubmit = async () => {
     try {
@@ -407,7 +481,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                   >
                     <Select placeholder="请选择业务状态">
                       <Select.Option value="normal">正常</Select.Option>
-                      <Select.Option value="pending">待处理</Select.Option>
+                      <Select.Option value="terminated">终止</Select.Option>
                       <Select.Option value="suspended">暂停</Select.Option>
                     </Select>
                   </Form.Item>
@@ -656,7 +730,11 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload {...uploadProps} listType="picture" maxCount={2}>
+                    <Upload 
+                      {...uploadProps} 
+                      listType="picture" 
+                      maxCount={2}
+                    >
                       <Button icon={<UploadOutlined />}>上传法人身份证照片（正反面）</Button>
                     </Upload>
                   </Form.Item>
@@ -673,7 +751,11 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload {...uploadProps} listType="picture" maxCount={1}>
+                    <Upload 
+                      {...uploadProps} 
+                      listType="picture" 
+                      maxCount={1}
+                    >
                       <Button icon={<UploadOutlined />}>上传营业执照照片</Button>
                     </Upload>
                   </Form.Item>
@@ -690,7 +772,11 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload {...uploadProps} listType="picture" maxCount={1}>
+                    <Upload 
+                      {...uploadProps} 
+                      listType="picture" 
+                      maxCount={1}
+                    >
                       <Button icon={<UploadOutlined />}>上传开户许可证照片</Button>
                     </Upload>
                   </Form.Item>
@@ -707,7 +793,10 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload {...uploadProps} listType="picture">
+                    <Upload 
+                      {...uploadProps} 
+                      listType="picture"
+                    >
                       <Button icon={<UploadOutlined />}>上传其他人员身份证照片</Button>
                     </Upload>
                   </Form.Item>
@@ -724,7 +813,10 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload {...uploadProps} listType="picture">
+                    <Upload 
+                      {...uploadProps} 
+                      listType="picture"
+                    >
                       <Button icon={<UploadOutlined />}>上传补充资料照片</Button>
                     </Upload>
                   </Form.Item>
