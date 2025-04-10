@@ -600,7 +600,7 @@ const Customers = () => {
         footer={null}
         width="80%"
         style={{ top: 20 }}
-        bodyStyle={{ maxHeight: 'calc(90vh - 120px)', overflowY: 'auto' }}
+        bodyStyle={{ height: '90vh', overflowY: 'auto' }}
         destroyOnClose={true}
         className={isMobile ? '' : 'full-height-modal'}
       >

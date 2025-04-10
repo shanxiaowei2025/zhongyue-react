@@ -172,7 +172,6 @@ button:focus-visible {
 .full-height-modal .ant-modal-content {
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
 }
 
 .full-height-modal .ant-modal-body {
@@ -381,40 +380,16 @@ button:focus-visible {
   transition: all 0.2s;
   margin-right: 0;
   position: relative;
-  overflow: hidden;
+  background-color: white;
 }
 
-.action-buttons .action-btn::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background-color: currentColor;
-  border-radius: 50%;
-  opacity: 0.15;
-  transform: translate(-50%, -50%);
-  transition: width 0.3s, height 0.3s;
-  z-index: -1;
-}
-
-.action-buttons .action-btn:hover::before {
-  width: 140%;
-  height: 400%;
-}
-
-.action-buttons .action-btn:active::before {
-  opacity: 0.25;
+.action-buttons .action-btn:hover {
+  background-color: #f5f5f5;
 }
 
 .action-buttons .action-btn .anticon {
   font-size: 16px;
   margin-right: 4px;
-}
-
-.action-buttons .action-btn:hover {
-  background: transparent;
 }
 
 .action-buttons .view-btn {
@@ -466,10 +441,14 @@ button:focus-visible {
   background-color: #e6f7ff !important;
 }
 
-/* 优化表格固定列阴影 */
+/* 表格固定列样式 */
 .customer-table .ant-table-cell-fix-right {
-  background-color: inherit;
+  background-color: white !important;
   transition: background 0.3s;
+}
+
+.customer-table .ant-table-tbody > tr:hover .ant-table-cell-fix-right {
+  background-color: #f5f9ff !important;
 }
 
 /* 保证视觉一致性 */
