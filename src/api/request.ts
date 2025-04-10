@@ -1,15 +1,40 @@
 import axios, { AxiosResponse } from 'axios'
+import { message } from 'antd'
 import type { ApiResponse } from '../types'
 
-console.log('当前API基础URL:', import.meta.env.VITE_API_BASE_URL)
+// 从环境变量获取API基础URL，如果未定义则默认为/api
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+console.log('API服务器地址:', import.meta.env.VITE_API_SERVER)
+console.log('API配置 - 基础URL:', apiBaseUrl)
 
 // 创建 axios 实例
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: apiBaseUrl,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
+  paramsSerializer: params => {
+    // 创建一个URLSearchParams对象用于序列化
+    const searchParams = new URLSearchParams();
+    
+    // 遍历参数对象的所有key
+    Object.entries(params).forEach(([key, value]) => {
+      // 过滤掉空值
+      if (value !== undefined && value !== null && value !== '') {
+        // 如果是对象或数组，转为JSON字符串
+        if (typeof value === 'object' && value !== null) {
+          searchParams.append(key, JSON.stringify(value));
+        } else {
+          searchParams.append(key, String(value));
+        }
+      }
+    });
+    
+    const queryString = searchParams.toString();
+    console.log(`🔍 参数序列化: ${JSON.stringify(params)} → ${queryString}`);
+    return queryString;
+  }
 })
 
 // 请求拦截器
@@ -45,15 +70,27 @@ instance.interceptors.response.use(
     console.log('API响应原始数据:', response.data)
     
     const res = response.data as ApiResponse<unknown>
-    // 后端接口返回的 code 为 0 表示成功
+    
+    // 后端接口返回的code不为0表示业务逻辑错误
     if (res.code !== 0) {
-      console.error('响应错误:', res)
-      // 处理错误
+      console.warn('API业务逻辑错误:', res)
+      
+      // 显示错误信息
+      message.error(res.message || '请求失败');
+      
+      // 特定的错误码可以在这里处理
+      if (res.code === 403) {
+        // 权限不足
+        setTimeout(() => {
+          window.location.href = '/403'
+        }, 1000)
+      }
+      
       return Promise.reject(new Error(res.message || '请求失败'))
     }
     
-    // 返回原始响应，适应AxiosResponse类型
-    return Promise.resolve(response)
+    // 返回原始响应，以适应原有代码
+    return response
   },
   error => {
     // 添加详细的错误日志
@@ -65,13 +102,21 @@ instance.interceptors.response.use(
       config: error.config
     })
     
-    // 处理错误
+    // 处理401未授权错误
     if (error.response?.status === 401) {
-      // 未授权，清除 token 并跳转到登录页
+      // 未授权，清除token并跳转到登录页
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      
+      // 显示错误信息
+      message.error('登录已过期，请重新登录');
+      
+      // 延迟跳转，以便用户看到提示
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 1500)
     }
+    
     return Promise.reject(error)
   }
 )
@@ -86,6 +131,9 @@ const request = {
   },
   put<T>(url: string, data?: object): Promise<T> {
     return instance.put(url, data).then(res => res.data)
+  },
+  patch<T>(url: string, data?: object): Promise<T> {
+    return instance.patch(url, data).then(res => res.data)
   },
   delete<T>(url: string): Promise<T> {
     return instance.delete(url).then(res => res.data)
