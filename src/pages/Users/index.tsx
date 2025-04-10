@@ -3,20 +3,37 @@ import { Table, Button, Input, Space, Modal, Form, Select, message, Tag, Switch 
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { User, Role } from '../../types'
-import { getUserList, createUser, updateUser, deleteUser } from '../../api/user'
-import { getAllRoles } from '../../api/auth'
+import { usePageStates, PageStatesStore } from '../../store/pageStates'
 
 const Users = () => {
+  // 使用 pageStates 存储来保持状态
+  const getState = usePageStates((state: PageStatesStore) => state.getState);
+  const setState = usePageStates((state: PageStatesStore) => state.setState);
+  
+  // 从 pageStates 恢复搜索参数
+  const savedSearchText = getState('usersSearchText');
+  const savedPagination = getState('usersPagination');
+  
   const [form] = Form.useForm()
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(false)
-  const [total, setTotal] = useState(0)
-  const [current, setCurrent] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [searchText, setSearchText] = useState('')
+  const [_total] = useState(0)
+  const [_current] = useState(savedPagination?.current || 1)
+  const [pageSize] = useState(savedPagination?.pageSize || 10)
+  const [_searchText] = useState(savedSearchText || '')
   const [modalVisible, setModalVisible] = useState(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
+
+  // 当搜索文本变化时，保存到 pageStates
+  useEffect(() => {
+    setState('usersSearchText', _searchText);
+  }, [_searchText, setState]);
+
+  // 当分页参数变化时，保存到 pageStates
+  useEffect(() => {
+    setState('usersPagination', { _current, pageSize });
+  }, [_current, pageSize, setState]);
 
   // 模拟数据
   const mockUserData: User[] = [
@@ -128,23 +145,22 @@ const Users = () => {
   useEffect(() => {
     fetchRoles()
     fetchUsers()
-  }, [current, pageSize, searchText])
+  }, [_current, pageSize, _searchText])
 
   const fetchUsers = async () => {
     setLoading(true)
     try {
       // 实际项目中这里应该使用 API 请求
       // const res = await getUserList({
-      //   page: current,
+      //   page: _current,
       //   pageSize,
-      //   keyword: searchText,
+      //   keyword: _searchText,
       // })
       // setUsers(res.items)
       // setTotal(res.total)
 
       // 使用模拟数据
       setUsers(mockUserData)
-      setTotal(mockUserData.length)
     } catch (error) {
       console.error('获取用户列表失败', error)
       message.error('获取用户列表失败')
@@ -167,11 +183,6 @@ const Users = () => {
     }
   }
 
-  const handleSearch = (value: string) => {
-    setSearchText(value)
-    setCurrent(1)
-  }
-
   const handleAdd = () => {
     setCurrentId(null)
     form.resetFields()
@@ -189,7 +200,7 @@ const Users = () => {
     setModalVisible(true)
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (_id: number) => {
     try {
       // 实际项目中这里应该使用 API 请求
       // await deleteUser(id)
@@ -208,7 +219,7 @@ const Users = () => {
 
   const handleOk = async () => {
     try {
-      const values = await form.validateFields()
+      await form.validateFields()
       if (currentId) {
         // 模拟更新用户
         // await updateUser(currentId, values)

@@ -8,8 +8,8 @@ import {
   Drawer,
   Badge,
   Tooltip,
-  Space,
   message,
+  Tabs,
 } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -31,6 +31,65 @@ import type { MenuProps } from 'antd'
 
 const { Header, Sider, Content } = Layout
 
+// 定义Tab类型
+interface TabItem {
+  key: string;
+  label: string;
+  icon?: React.ReactNode;
+  closable: boolean;
+}
+
+// 创建tabs存储，用于保持组件状态
+const useTabsStore = () => {
+  const [tabs, setTabs] = useState<TabItem[]>([
+    { key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false }
+  ]);
+  const [activeKey, setActiveKey] = useState('/');
+  
+  // 缓存组件状态的对象
+  const [cachedViews] = useState<Record<string, boolean>>({
+    '/': true
+  });
+  
+  // 添加新标签
+  const addTab = (newTab: TabItem) => {
+    setTabs(prev => {
+      // 检查标签是否已存在
+      if (!prev.some(tab => tab.key === newTab.key)) {
+        return [...prev, newTab];
+      }
+      return prev;
+    });
+    setActiveKey(newTab.key);
+    cachedViews[newTab.key] = true;
+  };
+  
+  // 移除标签
+  const removeTab = (targetKey: string) => {
+    // 找出要删除的标签索引
+    const targetIndex = tabs.findIndex(tab => tab.key === targetKey);
+    
+    // 删除标签
+    const newTabs = tabs.filter(tab => tab.key !== targetKey);
+    setTabs(newTabs);
+    
+    // 从缓存中删除视图
+    delete cachedViews[targetKey];
+    
+    // 如果删除的是当前激活的标签，需要激活其他标签
+    if (newTabs.length && activeKey === targetKey) {
+      // 优先激活右侧标签，如果没有右侧标签则激活左侧标签
+      const newActiveKey = newTabs[targetIndex === newTabs.length ? targetIndex - 1 : targetIndex].key;
+      setActiveKey(newActiveKey);
+    }
+  };
+  
+  // 检查视图是否被缓存
+  const isCached = (key: string) => !!cachedViews[key];
+  
+  return { tabs, activeKey, setActiveKey, addTab, removeTab, isCached };
+};
+
 const MainLayout = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -38,9 +97,12 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  
+  // 使用自定义的tabsStore
+  const tabsStore = useTabsStore();
 
   // 模拟通知数量
-  const [notificationCount, setNotificationCount] = useState(5)
+  const [notificationCount] = useState(5)
 
   // 模拟通知数据
   const [notifications, setNotifications] = useState([
@@ -49,33 +111,7 @@ const MainLayout = () => {
     { id: 3, title: '任务提醒', content: '您有3个待处理的任务' },
   ])
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth >= 768) {
-        setDrawerVisible(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // 检查用户状态，确保用户信息显示正确
-  useEffect(() => {
-    if (!user) {
-      // 如果没有用户信息但有 token，可能需要重新获取用户信息
-      const token = localStorage.getItem('token')
-      if (token) {
-        console.log('页面刷新后检测到 token 但没有用户信息，应该重新获取用户信息')
-        // 如果是真实环境，这里可以调用 API 重新获取用户信息
-        // fetchUserInfo(token)
-      }
-    } else {
-      console.log('用户信息已加载:', user.username)
-    }
-  }, [user])
-
+  // 菜单项配置
   const menuItems: MenuProps['items'] = [
     {
       key: '/',
@@ -103,6 +139,59 @@ const MainLayout = () => {
       label: '客户管理',
     },
   ]
+
+  // 获取菜单项图标和标签
+  const getMenuItemByKey = (key: string) => {
+    const flatMenuItems = menuItems?.flatMap(item => item) || [];
+    // 使用类型守卫确保找到的菜单项具有所需属性
+    const menuItem = flatMenuItems.find(item => item && 'key' in item && item.key === key);
+    return menuItem;
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth >= 768) {
+        setDrawerVisible(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // 跟踪路由变化，添加新标签
+  useEffect(() => {
+    const { pathname } = location;
+    
+    // 根据当前路径找到对应的菜单项
+    const currentMenuItem = getMenuItemByKey(pathname);
+    
+    if (currentMenuItem && 'label' in currentMenuItem) {
+      // 添加新标签或切换到已有标签
+      tabsStore.addTab({
+        key: pathname,
+        label: currentMenuItem.label as string,
+        icon: 'icon' in currentMenuItem ? currentMenuItem.icon : undefined,
+        closable: pathname !== '/' // 仪表盘不可关闭
+      });
+    }
+  }, [location.pathname]);
+
+  // 检查用户状态，确保用户信息显示正确
+  useEffect(() => {
+    if (!user) {
+      // 如果没有用户信息但有 token，可能需要重新获取用户信息
+      const token = localStorage.getItem('token')
+      if (token) {
+        console.log('页面刷新后检测到 token 但没有用户信息，应该重新获取用户信息')
+        // 如果是真实环境，这里可以调用 API 重新获取用户信息
+        // fetchUserInfo(token)
+      }
+    } else {
+      console.log('用户信息已加载:', user.username)
+    }
+  }, [user])
 
   const userMenuItems: MenuProps['items'] = [
     {
@@ -173,6 +262,43 @@ const MainLayout = () => {
       }
     }
   }
+
+  // 处理标签页变化
+  const handleTabChange = (activeKey: string) => {
+    tabsStore.setActiveKey(activeKey);
+    navigate(activeKey);
+  };
+
+  // 处理关闭标签页
+  const handleTabEdit = (
+    targetKey: React.MouseEvent<Element> | React.KeyboardEvent<Element> | string, 
+    action: 'add' | 'remove'
+  ) => {
+    if (action === 'remove' && typeof targetKey === 'string') {
+      // 找出要删除的标签所在位置和前后标签
+      const currentTabs = tabsStore.tabs;
+      const targetIndex = currentTabs.findIndex(tab => tab.key === targetKey);
+      
+      // 关闭当前标签，需要激活其他标签
+      if (tabsStore.activeKey === targetKey) {
+        // 找出新的激活标签
+        const newActiveIndex = targetIndex === 0 ? 0 : targetIndex - 1;
+        const newActiveKey = currentTabs[newActiveIndex].key;
+        navigate(newActiveKey);
+      }
+      
+      // 移除标签
+      tabsStore.removeTab(targetKey);
+    }
+  };
+  
+  // 自定义标签页标题，添加图标和关闭按钮
+  const renderTabLabel = (tab: TabItem) => (
+    <div className="flex items-center">
+      {tab.icon && <span className="mr-1">{tab.icon}</span>}
+      <span>{tab.label}</span>
+    </div>
+  );
 
   const renderMenu = () => (
     <Menu
@@ -309,10 +435,29 @@ const MainLayout = () => {
             </Dropdown>
           </div>
         </Header>
+        
+        {/* 添加标签页系统 */}
+        <div className="bg-white border-b border-gray-200">
+          <Tabs
+            type="editable-card"
+            activeKey={tabsStore.activeKey}
+            onChange={handleTabChange}
+            onEdit={handleTabEdit}
+            items={tabsStore.tabs.map(tab => ({
+              key: tab.key,
+              label: renderTabLabel(tab),
+              closable: tab.closable,
+              children: null // 标签内容由Outlet渲染
+            }))}
+            className="tabs-container px-4"
+            hideAdd
+          />
+        </div>
+        
         <Content 
           className="p-4 md:p-6 bg-white content-container"
           style={{ 
-            minHeight: 'calc(100vh - 64px)',
+            minHeight: 'calc(100vh - 64px - 48px)', // 减去header和tabs的高度
             overflow: 'auto'
           }}
         >
@@ -326,6 +471,7 @@ const MainLayout = () => {
         placement="left"
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
+        styles={{ body: { padding: 0 } }}
       >
         {renderMenu()}
       </Drawer>

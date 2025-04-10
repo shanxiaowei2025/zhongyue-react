@@ -3,7 +3,6 @@ import { Card, Button, Form, Input, Upload, message, Tabs, Spin, Tag, Descriptio
 import { UserOutlined, LockOutlined, UploadOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useAuthStore } from '../../store/auth'
-import { getCurrentUser, updateUser, changePassword } from '../../api/user'
 import { getUserProfile } from '../../api/auth'
 import type { User } from '../../types'
 

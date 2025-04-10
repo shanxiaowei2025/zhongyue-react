@@ -9,7 +9,6 @@ import {
   Modal,
   Drawer,
   Tabs,
-  Form,
   Descriptions,
   Select,
   DatePicker,
@@ -29,15 +28,24 @@ import { getCustomerList, deleteCustomer, getCustomerById } from '../../api/cust
 import CustomerForm from './CustomerForm'
 import type { TabsProps } from 'antd'
 import dayjs from 'dayjs'
+import { usePageStates, PageStatesStore } from '../../store/pageStates'
 
 const { confirm } = Modal
 
 const Customers = () => {
+  // 使用 pageStates 存储来保持状态
+  const getState = usePageStates((state: PageStatesStore) => state.getState);
+  const setState = usePageStates((state: PageStatesStore) => state.setState);
+  
+  // 从 pageStates 恢复搜索参数
+  const savedSearchParams = getState('customersSearchParams');
+  const savedPagination = getState('customersPagination');
+
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
-  const [current, setCurrent] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [current, setCurrent] = useState(savedPagination?.current || 1)
+  const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState({
     keyword: '',
     socialCreditCode: '',
@@ -48,6 +56,7 @@ const Customers = () => {
     businessStatus: '',
     startDate: '',
     endDate: '',
+    ...(savedSearchParams || {}) // 恢复之前保存的搜索条件
   })
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -55,6 +64,16 @@ const Customers = () => {
   const [detailType, setDetailType] = useState<'view' | 'edit' | 'add'>('view')
   const [isMobile, setIsMobile] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
+
+  // 当搜索参数变化时，保存到 pageStates
+  useEffect(() => {
+    setState('customersSearchParams', searchParams);
+  }, [searchParams, setState]);
+
+  // 当分页参数变化时，保存到 pageStates
+  useEffect(() => {
+    setState('customersPagination', { current, pageSize });
+  }, [current, pageSize, setState]);
 
   useEffect(() => {
     fetchCustomers()
@@ -569,10 +588,12 @@ const Customers = () => {
         onClose={() => setDrawerVisible(false)}
         closable={true}
         height="100vh"
-        bodyStyle={{ 
-          paddingBottom: 0, 
-          padding: '16px 16px 0',
-          overflow: 'hidden' // 使用容器自己的滚动
+        styles={{ 
+          body: { 
+            paddingBottom: 0, 
+            padding: '16px 16px 0',
+            overflow: 'hidden' // 使用容器自己的滚动
+          }
         }}
         destroyOnClose={true}
         className="customer-drawer"
@@ -606,10 +627,12 @@ const Customers = () => {
         footer={null}
         width="80%"
         style={{ top: 20 }}
-        bodyStyle={{ 
-          height: 'calc(100vh - 160px)', 
-          padding: '24px 24px 0',
-          overflow: 'hidden'  // 重要：让内部内容自己滚动
+        styles={{ 
+          body: { 
+            height: 'calc(100vh - 160px)', 
+            padding: '24px 24px 0',
+            overflow: 'hidden'  // 重要：让内部内容自己滚动
+          }
         }}
         destroyOnClose={true}
         className={isMobile ? '' : 'full-height-modal'}

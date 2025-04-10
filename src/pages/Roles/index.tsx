@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Space, Modal, Form, Input, message, Tree, Tag, Switch } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Role, Permission } from '../../types'
-import {
-  getAllRoles,
-  createRole,
-  updateRole,
-  deleteRole,
-  assignRolePermissions,
-} from '../../api/auth'
-import { getAllPermissions } from '../../api/auth'
+import { usePageStates, PageStatesStore } from '../../store/pageStates'
 
 const Roles = () => {
+  // 使用 pageStates 存储来保持状态
+  const getState = usePageStates((state: PageStatesStore) => state.getState);
+  const setState = usePageStates((state: PageStatesStore) => state.setState);
+  
+  // 从 pageStates 恢复表单状态
+  const savedPermissions = getState('rolesPermissions');
+  
   const [form] = Form.useForm()
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
@@ -20,9 +20,13 @@ const Roles = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false)
   const [currentRole, setCurrentRole] = useState<Role | null>(null)
-  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([])
-  const [isEdit, setIsEdit] = useState(false)
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>(savedPermissions || [])
   const [currentId, setCurrentId] = useState<number | null>(null)
+
+  // 当权限选择变化时，保存到 pageStates
+  useEffect(() => {
+    setState('rolesPermissions', selectedPermissions);
+  }, [selectedPermissions, setState]);
 
   // 模拟角色数据
   const mockRoleData: Role[] = [
@@ -143,7 +147,7 @@ const Roles = () => {
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (_id: number) => {
     try {
       // 实际项目中这里应该使用 API 请求
       // await deleteRole(id)
@@ -190,14 +194,6 @@ const Roles = () => {
       console.error('操作失败:', error)
       message.error('操作失败')
     }
-  }
-
-  const handleAssignPermissions = (record: Role) => {
-    setCurrentRole(record)
-    // 获取当前角色对应的权限ID列表
-    const rolePermissions = permissions.filter(p => p.role_id === record.id).map(p => p.id)
-    setSelectedPermissions(rolePermissions)
-    setIsPermissionModalOpen(true)
   }
 
   const handlePermissionCancel = () => {

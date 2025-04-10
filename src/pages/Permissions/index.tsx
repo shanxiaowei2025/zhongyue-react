@@ -3,14 +3,28 @@ import { Table, Button, Input, Space, Modal, Form, message, Tag, Switch, Select 
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Permission, Role } from '../../types'
+import { usePageStates, PageStatesStore } from '../../store/pageStates'
 
 const Permissions = () => {
+  // 使用 pageStates 存储来保持状态
+  const getState = usePageStates((state: PageStatesStore) => state.getState);
+  const setState = usePageStates((state: PageStatesStore) => state.setState);
+  
+  // 从 pageStates 恢复搜索参数
+  const savedSearchText = getState('permissionsSearchText');
+  
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
+  const [searchText, setSearchText] = useState(savedSearchText || '')
   const [form] = Form.useForm()
+  
+  // 当搜索文本变化时，保存到 pageStates
+  useEffect(() => {
+    setState('permissionsSearchText', searchText);
+  }, [searchText, setState]);
 
   useEffect(() => {
     fetchPermissions()
@@ -83,7 +97,7 @@ const Permissions = () => {
     setModalVisible(true)
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (_id: number) => {
     try {
       // 模拟API调用
       // await deletePermission(id)
@@ -102,7 +116,7 @@ const Permissions = () => {
 
   const handleOk = async () => {
     try {
-      const values = await form.validateFields()
+      await form.validateFields()
       if (currentId) {
         // 模拟更新权限
         // await updatePermission(currentId, values)
@@ -175,6 +189,8 @@ const Permissions = () => {
       <div className="flex justify-between mb-4">
         <Input.Search
           placeholder="搜索权限"
+          value={searchText}
+          onChange={e => setSearchText(e.target.value)}
           onSearch={value => console.log(value)}
           className="w-64"
         />
