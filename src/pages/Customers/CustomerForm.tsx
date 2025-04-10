@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Upload, message, Space } from 'antd'
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  DatePicker,
+  InputNumber,
+  Tabs,
+  Upload,
+  message,
+  Space,
+} from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import type { Customer } from '../../types'
@@ -7,6 +18,13 @@ import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 import { useCustomerDetail } from '../../hooks/useCustomer'
 import React from 'react'
+
+// 业务状态映射
+const BUSINESS_STATUS_MAP = {
+  normal: '正常',
+  terminated: '终止',
+  suspended: '暂停',
+} as const
 
 interface CustomerFormProps {
   customer?: Customer | null
@@ -59,54 +77,54 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
         message.success(`${info.file.name} 上传成功`)
       } else if (info.file.status === 'error') {
         message.error(`${info.file.name} 上传失败: ${info.file.error?.message || '未知错误'}`)
-        
+
         // 检查是否是身份验证问题
         if (info.file.error && info.file.error.status === 401) {
-          message.error('身份验证失败，请重新登录');
+          message.error('身份验证失败，请重新登录')
           setTimeout(() => {
-            window.location.href = '/login';
-          }, 1500);
+            window.location.href = '/login'
+          }, 1500)
         }
       }
     },
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
+    beforeUpload: file => {
+      const isImage = file.type.startsWith('image/')
       if (!isImage) {
-        message.error(`${file.name} 不是图片文件`);
-        return false;
+        message.error(`${file.name} 不是图片文件`)
+        return false
       }
-      
-      const isLt5M = file.size / 1024 / 1024 < 5;
+
+      const isLt5M = file.size / 1024 / 1024 < 5
       if (!isLt5M) {
-        message.error(`图片大小不能超过5MB!`);
-        return false;
+        message.error(`图片大小不能超过5MB!`)
+        return false
       }
-      
-      return true;
+
+      return true
     },
     // 在上传列表中处理图片加载失败的情况
-    onPreview: (file) => {
+    onPreview: file => {
       if (file.url || (file.response && file.response.url)) {
-        const imgUrl = file.url || (file.response && file.response.url);
+        const imgUrl = file.url || (file.response && file.response.url)
         // 检查图片是否存在
-        const img = new Image();
-        img.src = imgUrl;
+        const img = new Image()
+        img.src = imgUrl
         img.onload = () => {
           // 图片加载成功，正常预览
-          window.open(imgUrl, '_blank');
-        };
+          window.open(imgUrl, '_blank')
+        }
         img.onerror = () => {
           // 图片加载失败，显示提示
-          message.error('图片无法加载，可能已被删除或链接失效');
-        };
+          message.error('图片无法加载，可能已被删除或链接失效')
+        }
       }
-    }
+    },
   }
 
   // 添加一个处理缩略图加载错误的CSS样式
   useEffect(() => {
     // 创建样式标签
-    const style = document.createElement('style');
+    const style = document.createElement('style')
     style.innerHTML = `
       .ant-upload-list-item-thumbnail img[src="error"], 
       .ant-upload-list-item-thumbnail img:not([src]), 
@@ -132,48 +150,50 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
         background-size: contain;
         opacity: 0.8;
       }
-    `;
+    `
     // 添加到head
-    document.head.appendChild(style);
-    
+    document.head.appendChild(style)
+
     // 添加全局事件监听器
     const handleImageError = (e: ErrorEvent) => {
-      const target = e.target as HTMLImageElement;
-      if (target.tagName === 'IMG' && 
-          target.parentElement && 
-          target.parentElement.classList.contains('ant-upload-list-item-thumbnail')) {
+      const target = e.target as HTMLImageElement
+      if (
+        target.tagName === 'IMG' &&
+        target.parentElement &&
+        target.parentElement.classList.contains('ant-upload-list-item-thumbnail')
+      ) {
         // 图片加载错误时，替换为占位图
-        target.onerror = null;
-        target.src = '/images/image-placeholder.svg';
-        target.style.opacity = '0.6';
+        target.onerror = null
+        target.src = '/images/image-placeholder.svg'
+        target.style.opacity = '0.6'
       }
-    };
-    
+    }
+
     // 添加全局事件监听
-    window.addEventListener('error', handleImageError, true);
-    
+    window.addEventListener('error', handleImageError, true)
+
     // 在组件卸载时移除
     return () => {
-      document.head.removeChild(style);
-      window.removeEventListener('error', handleImageError, true);
-    };
-  }, []);
+      document.head.removeChild(style)
+      window.removeEventListener('error', handleImageError, true)
+    }
+  }, [])
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      console.log('表单验证通过，准备提交数据:', values);
+      console.log('表单验证通过，准备提交数据:', values)
 
       // 获取token并验证
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       if (!token) {
-        message.error('您尚未登录或登录已过期，请重新登录');
+        message.error('您尚未登录或登录已过期，请重新登录')
         setTimeout(() => {
-          window.location.href = '/login';
-        }, 1500);
-        return;
+          window.location.href = '/login'
+        }, 1500)
+        return
       }
-      
+
       // 从文件列表中提取单个URL
       const fileList2Url = (fileList: any[] | undefined, index: number = 0): string | undefined => {
         if (!fileList || !fileList[index]) return undefined
@@ -192,135 +212,138 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
         // 转换图片字段
         legalPersonIdImages: {
           front: fileList2Url(values.legalPersonIdImages, 0),
-          back: fileList2Url(values.legalPersonIdImages, 1)
+          back: fileList2Url(values.legalPersonIdImages, 1),
         },
         businessLicenseImages: {
-          main: fileList2Url(values.businessLicenseImages, 0)
+          main: fileList2Url(values.businessLicenseImages, 0),
         },
         bankAccountLicenseImages: {
           basic: fileList2Url(values.bankAccountLicenseImages, 0),
-          general: fileList2Url(values.bankAccountLicenseImages, 1)
+          general: fileList2Url(values.bankAccountLicenseImages, 1),
         },
-        otherIdImages: values.otherIdImages ? 
-          values.otherIdImages.reduce((acc, file, index) => {
-            if (file.url || (file.response && file.response.url)) {
-              acc[`person${index + 1}`] = file.url || file.response.url;
-            }
-            return acc;
-          }, {} as Record<string, string>) : {},
-        supplementaryImages: values.supplementaryImages ? 
-          values.supplementaryImages.reduce((acc, file, index) => {
-            if (file.url || (file.response && file.response.url)) {
-              acc[`doc${index + 1}`] = file.url || file.response.url;
-            }
-            return acc;
-          }, {} as Record<string, string>) : {},
+        otherIdImages: values.otherIdImages
+          ? values.otherIdImages.reduce(
+              (acc, file, index) => {
+                if (file.url || (file.response && file.response.url)) {
+                  acc[`person${index + 1}`] = file.url || file.response.url
+                }
+                return acc
+              },
+              {} as Record<string, string>
+            )
+          : {},
+        supplementaryImages: values.supplementaryImages
+          ? values.supplementaryImages.reduce(
+              (acc, file, index) => {
+                if (file.url || (file.response && file.response.url)) {
+                  acc[`doc${index + 1}`] = file.url || file.response.url
+                }
+                return acc
+              },
+              {} as Record<string, string>
+            )
+          : {},
       }
 
       setLoading(true)
 
       try {
-        let success = false;
-        
+        let success = false
+
         if (isEdit && customer) {
           // 仅发送实际修改过的字段（PATCH 请求最佳实践）
-          const originalValues = getInitialValues();
-          const changedValues: Partial<Customer> = {};
-          
+          const originalValues = getInitialValues()
+          const changedValues: Partial<Customer> = {}
+
           // 检查哪些字段发生了变化
           Object.keys(formattedValues).forEach(key => {
-            const k = key as keyof Customer;
-            const formattedValue = formattedValues[k];
-            const originalValue = (originalValues as any)[k];
-            
+            const k = key as keyof Customer
+            const formattedValue = formattedValues[k]
+            const originalValue = (originalValues as any)[k]
+
             // 日期字段需要特殊处理
             if (
-              k === 'establishmentDate' || 
-              k === 'licenseExpiryDate' || 
+              k === 'establishmentDate' ||
+              k === 'licenseExpiryDate' ||
               k === 'capitalContributionDeadline'
             ) {
-              const formattedDate = formattedValue ? String(formattedValue) : null;
-              const originalDate = originalValue ? 
-                originalValue.format('YYYY-MM-DD') : null;
-                
+              const formattedDate = formattedValue ? String(formattedValue) : null
+              const originalDate = originalValue ? originalValue.format('YYYY-MM-DD') : null
+
               if (formattedDate !== originalDate) {
                 // 使用类型断言确保类型匹配
-                (changedValues as any)[k] = formattedValue;
+                ;(changedValues as any)[k] = formattedValue
               }
-              return;
+              return
             }
-            
+
             // 数字字段特殊处理
-            if (
-              k === 'registeredCapital' ||
-              k === 'paidInCapital'
-            ) {
+            if (k === 'registeredCapital' || k === 'paidInCapital') {
               // 转换为数字类型
               if (formattedValue !== originalValue) {
                 // 使用类型断言确保类型匹配
-                (changedValues as any)[k] = typeof formattedValue === 'string' 
-                  ? parseFloat(formattedValue) 
-                  : formattedValue;
+                ;(changedValues as any)[k] =
+                  typeof formattedValue === 'string' ? parseFloat(formattedValue) : formattedValue
               }
-              return;
+              return
             }
-            
+
             // 图片字段需要特殊处理
             if (
-              k === 'legalPersonIdImages' || 
-              k === 'businessLicenseImages' || 
-              k === 'bankAccountLicenseImages' || 
-              k === 'otherIdImages' || 
+              k === 'legalPersonIdImages' ||
+              k === 'businessLicenseImages' ||
+              k === 'bankAccountLicenseImages' ||
+              k === 'otherIdImages' ||
               k === 'supplementaryImages'
             ) {
               // 图片字段始终发送，因为难以比较复杂对象
               if (formattedValue) {
-                (changedValues as any)[k] = formattedValue;
+                ;(changedValues as any)[k] = formattedValue
               }
-              return;
+              return
             }
-            
+
             // 其他字段的一般情况
             if (formattedValue !== originalValue) {
-              (changedValues as any)[k] = formattedValue;
+              ;(changedValues as any)[k] = formattedValue
             }
-          });
-          
+          })
+
           // 更新客户信息
-          success = await updateCustomer(customer.id, changedValues);
+          success = await updateCustomer(customer.id, changedValues)
         } else {
           // 创建新客户
-          const result = await createCustomer(formattedValues);
-          success = !!result;
+          const result = await createCustomer(formattedValues)
+          success = !!result
         }
 
         if (success) {
-          onSuccess?.();
+          onSuccess?.()
         }
       } catch (error: any) {
-        console.error('API操作失败', error);
-        
+        console.error('API操作失败', error)
+
         // 错误处理
         if (error.response?.data) {
-          const errorData = error.response.data;
-          
+          const errorData = error.response.data
+
           if (Array.isArray(errorData.message)) {
             // 处理多个错误信息
             errorData.message.forEach((msg: string) => {
-              message.error(msg);
-            });
+              message.error(msg)
+            })
           } else {
-            message.error(errorData.message || '操作失败，请稍后重试');
+            message.error(errorData.message || '操作失败，请稍后重试')
           }
         } else {
-          message.error('网络错误，请检查网络连接后重试');
+          message.error('网络错误，请检查网络连接后重试')
         }
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     } catch (error) {
-      console.error('表单验证失败', error);
-      message.error('请检查表单填写是否正确');
+      console.error('表单验证失败', error)
+      message.error('请检查表单填写是否正确')
     }
   }
 
@@ -331,7 +354,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
     // 尝试解析图片字段的 JSON 字符串
     const parseImageList = (imageData: any): any[] => {
       if (!imageData) return []
-      
+
       // 处理对象格式
       if (typeof imageData === 'object' && !Array.isArray(imageData)) {
         return Object.entries(imageData).map(([key, url], index) => ({
@@ -341,7 +364,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
           url: url as string,
         }))
       }
-      
+
       // 处理字符串格式 (JSON字符串)
       if (typeof imageData === 'string') {
         try {
@@ -358,7 +381,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
           // 解析失败，返回空数组
         }
       }
-      
+
       return []
     }
 
@@ -366,12 +389,8 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
     return {
       ...customer,
       // 转换日期字符串为dayjs对象
-      establishmentDate: customer.establishmentDate
-        ? dayjs(customer.establishmentDate)
-        : null,
-      licenseExpiryDate: customer.licenseExpiryDate
-        ? dayjs(customer.licenseExpiryDate)
-        : null,
+      establishmentDate: customer.establishmentDate ? dayjs(customer.establishmentDate) : null,
+      licenseExpiryDate: customer.licenseExpiryDate ? dayjs(customer.licenseExpiryDate) : null,
       capitalContributionDeadline: customer.capitalContributionDeadline
         ? dayjs(customer.capitalContributionDeadline)
         : null,
@@ -480,9 +499,11 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                     rules={[{ required: true, message: '请选择业务状态' }]}
                   >
                     <Select placeholder="请选择业务状态">
-                      <Select.Option value="normal">正常</Select.Option>
-                      <Select.Option value="terminated">终止</Select.Option>
-                      <Select.Option value="suspended">暂停</Select.Option>
+                      {Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => (
+                        <Select.Option key={value} value={value}>
+                          {label}
+                        </Select.Option>
+                      ))}
                     </Select>
                   </Form.Item>
 
@@ -730,11 +751,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload 
-                      {...uploadProps} 
-                      listType="picture" 
-                      maxCount={2}
-                    >
+                    <Upload {...uploadProps} listType="picture" maxCount={2}>
                       <Button icon={<UploadOutlined />}>上传法人身份证照片（正反面）</Button>
                     </Upload>
                   </Form.Item>
@@ -751,11 +768,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload 
-                      {...uploadProps} 
-                      listType="picture" 
-                      maxCount={1}
-                    >
+                    <Upload {...uploadProps} listType="picture" maxCount={1}>
                       <Button icon={<UploadOutlined />}>上传营业执照照片</Button>
                     </Upload>
                   </Form.Item>
@@ -772,11 +785,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload 
-                      {...uploadProps} 
-                      listType="picture" 
-                      maxCount={1}
-                    >
+                    <Upload {...uploadProps} listType="picture" maxCount={1}>
                       <Button icon={<UploadOutlined />}>上传开户许可证照片</Button>
                     </Upload>
                   </Form.Item>
@@ -793,10 +802,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload 
-                      {...uploadProps} 
-                      listType="picture"
-                    >
+                    <Upload {...uploadProps} listType="picture">
                       <Button icon={<UploadOutlined />}>上传其他人员身份证照片</Button>
                     </Upload>
                   </Form.Item>
@@ -813,10 +819,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
                       return e?.fileList
                     }}
                   >
-                    <Upload 
-                      {...uploadProps} 
-                      listType="picture"
-                    >
+                    <Upload {...uploadProps} listType="picture">
                       <Button icon={<UploadOutlined />}>上传补充资料照片</Button>
                     </Upload>
                   </Form.Item>
@@ -828,11 +831,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
       </Form>
       <div className="customer-form-footer">
         <Space>
-          {onCancel && (
-            <Button onClick={onCancel}>
-              {mode === 'view' ? '关闭' : '取消'}
-            </Button>
-          )}
+          {onCancel && <Button onClick={onCancel}>{mode === 'view' ? '关闭' : '取消'}</Button>}
           {mode !== 'view' && (
             <Button type="primary" onClick={handleSubmit} loading={loading}>
               {isEdit ? '保存修改' : '提交'}
