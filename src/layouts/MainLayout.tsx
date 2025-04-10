@@ -180,11 +180,12 @@ const MainLayout = () => {
       selectedKeys={[location.pathname]}
       items={menuItems}
       onClick={handleMenuClick}
+      className="menu-container"
     />
   )
 
   return (
-    <Layout className="min-h-screen">
+    <Layout className="min-h-screen layout-container">
       {/* 桌面端侧边栏 */}
       {!isMobile && (
         <Sider
@@ -193,7 +194,15 @@ const MainLayout = () => {
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
-          className="hidden md:block"
+          className="hidden md:block sider-container"
+          style={{ 
+            height: '100vh', 
+            position: 'fixed', 
+            left: 0, 
+            top: 0,
+            zIndex: 10,
+            overflow: 'auto' 
+          }}
         >
           <div
             className={`h-16 flex items-center ${collapsed ? 'justify-center' : 'justify-start pl-4'}`}
@@ -209,8 +218,19 @@ const MainLayout = () => {
           {renderMenu()}
         </Sider>
       )}
-      <Layout>
-        <Header className="bg-white p-0 flex items-center justify-between shadow-sm">
+      <Layout style={{ 
+        marginLeft: isMobile ? 0 : (collapsed ? 80 : 200),
+        transition: 'margin-left 0.2s' 
+      }}>
+        <Header 
+          className="bg-white p-0 flex items-center justify-between shadow-sm" 
+          style={{ 
+            position: 'sticky', 
+            top: 0, 
+            zIndex: 9, 
+            width: '100%' 
+          }}
+        >
           <div className="flex items-center">
             {isMobile ? (
               <>
@@ -289,7 +309,13 @@ const MainLayout = () => {
             </Dropdown>
           </div>
         </Header>
-        <Content className="p-4 md:p-6 bg-gray-50">
+        <Content 
+          className="p-4 md:p-6 bg-white content-container"
+          style={{ 
+            minHeight: 'calc(100vh - 64px)',
+            overflow: 'auto'
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
