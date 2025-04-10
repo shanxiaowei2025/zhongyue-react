@@ -605,7 +605,7 @@ const Customers = () => {
         width="80%"
         style={{ top: 20 }}
         bodyStyle={{ 
-          height: 'calc(100vh - 140px)', 
+          height: 'calc(100vh - 150px)', 
           padding: '24px',
           overflow: 'hidden'  // 重要：让内部内容自己滚动
         }}
