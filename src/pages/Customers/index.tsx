@@ -25,7 +25,7 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Customer } from '../../types'
-import CustomerForm from './CustomerForm'
+import CustomerForm, { BUSINESS_STATUS_MAP } from './CustomerForm'
 import type { TabsProps } from 'antd'
 import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
@@ -35,12 +35,12 @@ const { confirm } = Modal
 
 const Customers = () => {
   // 使用 pageStates 存储来保持状态
-  const getState = usePageStates((state: PageStatesStore) => state.getState);
-  const setState = usePageStates((state: PageStatesStore) => state.setState);
-  
+  const getState = usePageStates((state: PageStatesStore) => state.getState)
+  const setState = usePageStates((state: PageStatesStore) => state.setState)
+
   // 从 pageStates 恢复搜索参数
-  const savedSearchParams = getState('customersSearchParams');
-  const savedPagination = getState('customersPagination');
+  const savedSearchParams = getState('customersSearchParams')
+  const savedPagination = getState('customersPagination')
 
   const [current, setCurrent] = useState(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
@@ -54,7 +54,7 @@ const Customers = () => {
     businessStatus: '',
     startDate: '',
     endDate: '',
-    ...(savedSearchParams || {}) // 恢复之前保存的搜索条件
+    ...(savedSearchParams || {}), // 恢复之前保存的搜索条件
   })
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -68,16 +68,16 @@ const Customers = () => {
   const requestParams = {
     page: current,
     pageSize,
-    ...searchParams
+    ...searchParams,
   }
 
   // 使用SWR获取客户列表数据
-  const { 
-    customerList: customers, 
-    pagination: { total }, 
-    loading: isLoading, 
+  const {
+    customerList: customers,
+    pagination: { total },
+    loading: isLoading,
     refreshCustomerList: refreshCustomers,
-    deleteCustomer: removeCustomer
+    deleteCustomer: removeCustomer,
   } = useCustomerList(requestParams)
 
   // 使用SWR获取客户详情数据
@@ -86,7 +86,7 @@ const Customers = () => {
     loading: isDetailLoading,
     refreshCustomerDetail: refreshCustomerDetail,
     updateCustomer: updateCustomerDetail,
-    createCustomer: createNewCustomer
+    createCustomer: createNewCustomer,
   } = useCustomerDetail(selectedCustomerId)
 
   // 当客户详情数据更新时，更新当前客户状态
@@ -99,13 +99,13 @@ const Customers = () => {
 
   // 当搜索参数变化时，保存到 pageStates
   useEffect(() => {
-    setState('customersSearchParams', searchParams);
-  }, [searchParams, setState]);
+    setState('customersSearchParams', searchParams)
+  }, [searchParams, setState])
 
   // 当分页参数变化时，保存到 pageStates
   useEffect(() => {
-    setState('customersPagination', { current, pageSize });
-  }, [current, pageSize, setState]);
+    setState('customersPagination', { current, pageSize })
+  }, [current, pageSize, setState])
 
   useEffect(() => {
     const handleResize = () => {
@@ -151,10 +151,10 @@ const Customers = () => {
     setCurrentCustomer(record)
     setDetailType('view')
     setDetailLoading(true)
-    
+
     // 确保先设置选中的客户ID再打开对话框，避免重复触发请求
     setSelectedCustomerId(record.id)
-    
+
     // 打开对话框
     setTimeout(() => {
       isMobile ? setDrawerVisible(true) : setModalVisible(true)
@@ -166,10 +166,10 @@ const Customers = () => {
     setCurrentCustomer(record)
     setDetailType('edit')
     setDetailLoading(true)
-    
+
     // 设置选中的客户ID，触发SWR请求完整数据
     setSelectedCustomerId(record.id)
-    
+
     // 打开对话框（等数据加载完成后再显示）
     setTimeout(() => {
       isMobile ? setDrawerVisible(true) : setModalVisible(true)
@@ -192,10 +192,10 @@ const Customers = () => {
     // 关闭抽屉和弹窗
     setDrawerVisible(false)
     setModalVisible(false)
-    
+
     // 刷新列表数据
     refreshCustomers()
-    
+
     // 如果提供了ID，并且正在查看或编辑，则刷新详情
     if (id && (detailType === 'edit' || detailType === 'view')) {
       // 确保选择的是当前ID
@@ -211,8 +211,8 @@ const Customers = () => {
       dataIndex: 'companyName',
       key: 'companyName',
       render: (text, record) => (
-        <a 
-          onClick={() => handleView(record)} 
+        <a
+          onClick={() => handleView(record)}
           className="company-name-link"
           title={text || '未设置公司名称'}
         >
@@ -277,28 +277,28 @@ const Customers = () => {
       title: '业务状态',
       dataIndex: 'businessStatus',
       key: 'businessStatus',
-      render: (status) => {
-        let color = 'default';
-        let text = status || '未设置';
+      render: status => {
+        let color = 'default'
+        let text = status || '未设置'
 
-        switch(status) {
+        switch (status) {
           case 'normal':
-            color = 'success';
-            text = '正常';
-            break;
-          case 'pending':
-            color = 'warning';
-            text = '待处理';
-            break;
+            color = 'success'
+            text = BUSINESS_STATUS_MAP.normal
+            break
+          case 'terminated':
+            color = 'error'
+            text = BUSINESS_STATUS_MAP.terminated
+            break
           case 'suspended':
-            color = 'error';
-            text = '暂停';
-            break;
+            color = 'warning'
+            text = BUSINESS_STATUS_MAP.suspended
+            break
           default:
-            color = 'default';
+            color = 'default'
         }
 
-        return <Tag color={color}>{text}</Tag>;
+        return <Tag color={color}>{text}</Tag>
       },
     },
     {
@@ -313,16 +313,18 @@ const Customers = () => {
       key: 'createTime',
       width: 180,
       responsive: ['md'],
-      render: (text) => {
-        if (!text) return '-';
-        return new Date(text).toLocaleString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }).replace(/\//g, '-');
+      render: text => {
+        if (!text) return '-'
+        return new Date(text)
+          .toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })
+          .replace(/\//g, '-')
       },
     },
     {
@@ -331,16 +333,18 @@ const Customers = () => {
       key: 'updateTime',
       responsive: ['lg'],
       width: 180,
-      render: (text) => {
-        if (!text) return '-';
-        return new Date(text).toLocaleString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }).replace(/\//g, '-');
+      render: text => {
+        if (!text) return '-'
+        return new Date(text)
+          .toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })
+          .replace(/\//g, '-')
       },
     },
     {
@@ -407,7 +411,9 @@ const Customers = () => {
           <Input
             placeholder="业务员"
             value={searchParams.salesRepresentative}
-            onChange={e => setSearchParams({ ...searchParams, salesRepresentative: e.target.value })}
+            onChange={e =>
+              setSearchParams({ ...searchParams, salesRepresentative: e.target.value })
+            }
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
@@ -424,7 +430,7 @@ const Customers = () => {
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
             options={[
               { value: '一般纳税人', label: '一般纳税人' },
-              { value: '小规模纳税人', label: '小规模纳税人' }
+              { value: '小规模纳税人', label: '小规模纳税人' },
             ]}
           />
           <Select
@@ -436,7 +442,7 @@ const Customers = () => {
             options={[
               { value: 'active', label: '正常经营' },
               { value: 'inactive', label: '停业' },
-              { value: 'closed', label: '注销' }
+              { value: 'closed', label: '注销' },
             ]}
           />
           <Select
@@ -448,19 +454,23 @@ const Customers = () => {
             options={[
               { value: 'normal', label: '正常' },
               { value: 'pending', label: '待处理' },
-              { value: 'suspended', label: '暂停' }
+              { value: 'suspended', label: '暂停' },
             ]}
           />
           <DatePicker
             placeholder="开始日期"
             value={searchParams.startDate ? dayjs(searchParams.startDate) : null}
-            onChange={(date) => setSearchParams({ ...searchParams, startDate: date ? date.format('YYYY-MM-DD') : '' })}
+            onChange={date =>
+              setSearchParams({ ...searchParams, startDate: date ? date.format('YYYY-MM-DD') : '' })
+            }
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <DatePicker
             placeholder="结束日期"
             value={searchParams.endDate ? dayjs(searchParams.endDate) : null}
-            onChange={(date) => setSearchParams({ ...searchParams, endDate: date ? date.format('YYYY-MM-DD') : '' })}
+            onChange={date =>
+              setSearchParams({ ...searchParams, endDate: date ? date.format('YYYY-MM-DD') : '' })
+            }
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
 
@@ -475,20 +485,11 @@ const Customers = () => {
           <Button onClick={resetSearch} className="w-full sm:w-auto">
             重置
           </Button>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={refreshCustomers}
-            className="w-full sm:w-auto"
-          >
+          <Button icon={<ReloadOutlined />} onClick={refreshCustomers} className="w-full sm:w-auto">
             刷新
           </Button>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleAdd}
-          className="min-w-max"
-        >
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="min-w-max">
           添加客户
         </Button>
       </div>
@@ -535,12 +536,12 @@ const Customers = () => {
         }}
         closable={true}
         height="100vh"
-        styles={{ 
-          body: { 
-            paddingBottom: 0, 
+        styles={{
+          body: {
+            paddingBottom: 0,
             padding: '16px 16px 0',
-            overflow: 'hidden' // 使用容器自己的滚动
-          }
+            overflow: 'hidden', // 使用容器自己的滚动
+          },
         }}
         destroyOnClose={true}
         className="customer-drawer"
@@ -581,12 +582,12 @@ const Customers = () => {
         footer={null}
         width="80%"
         style={{ top: 20 }}
-        styles={{ 
-          body: { 
-            height: 'calc(100vh - 160px)', 
+        styles={{
+          body: {
+            height: 'calc(100vh - 160px)',
             padding: '24px 24px 0',
-            overflow: 'hidden'  // 重要：让内部内容自己滚动
-          }
+            overflow: 'hidden', // 重要：让内部内容自己滚动
+          },
         }}
         destroyOnClose={true}
         className={isMobile ? '' : 'full-height-modal'}
@@ -618,7 +619,7 @@ const Customers = () => {
 // 客户详情组件
 const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: () => void }) => {
   const [isMobile, setIsMobile] = useState(false)
-  const [imagePreview, setImagePreview] = useState<{visible: boolean, url: string}>({
+  const [imagePreview, setImagePreview] = useState<{ visible: boolean; url: string }>({
     visible: false,
     url: '',
   })
@@ -626,15 +627,17 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   const [activeTabKey, setActiveTabKey] = useState(
     usePageStates.getState().getState('customerDetailTab') || 'basic'
   )
-  
+
   const handleTabChange = (key: string) => {
     setActiveTabKey(key)
     // Save tab state
     usePageStates.getState().setState('customerDetailTab', key)
     // Save scroll position
-    usePageStates.getState().setState('customerDetailScrollPosition', document.documentElement.scrollTop)
+    usePageStates
+      .getState()
+      .setState('customerDetailScrollPosition', document.documentElement.scrollTop)
   }
-  
+
   useEffect(() => {
     // Restore scroll position when tab changes
     const scrollPosition = usePageStates.getState().getState('customerDetailScrollPosition')
@@ -667,94 +670,96 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
   // 渲染图片预览
   const renderImage = (url: string | undefined, label: string) => {
-    if (!url) return <div className="no-image-placeholder">暂无图片</div>;
-    
+    if (!url) return <div className="no-image-placeholder">暂无图片</div>
+
     return (
       <div className="customer-image-preview">
-        <img 
-          src={url} 
-          alt={label} 
-          className="w-24 h-24 object-cover rounded-md" 
-          onClick={(e) => {
+        <img
+          src={url}
+          alt={label}
+          className="w-24 h-24 object-cover rounded-md"
+          onClick={e => {
             // 只有当图片加载成功时才启用预览
             if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
-              setImagePreview({ visible: true, url });
+              setImagePreview({ visible: true, url })
             }
           }}
-          onError={(e) => {
-            (e.target as HTMLImageElement).onerror = null;
-            (e.target as HTMLImageElement).src = '/images/image-placeholder.svg';
-            (e.target as HTMLImageElement).className = 'w-24 h-24 object-contain rounded-md opacity-60';
-            (e.target as HTMLImageElement).style.cursor = 'not-allowed';
+          onError={e => {
+            ;(e.target as HTMLImageElement).onerror = null
+            ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+            ;(e.target as HTMLImageElement).className =
+              'w-24 h-24 object-contain rounded-md opacity-60'
+            ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
           }}
         />
         <div className="customer-image-tag">{label}</div>
       </div>
-    );
+    )
   }
 
   // 渲染图片集合
   const renderImages = (images: Record<string, string> | undefined) => {
     if (!images || Object.keys(images).length === 0) {
-      return <div className="no-image-placeholder">暂无图片</div>;
+      return <div className="no-image-placeholder">暂无图片</div>
     }
-    
+
     return (
       <div className="flex flex-wrap gap-3">
         {Object.entries(images).map(([key, url]) => (
           <div key={key} className="customer-image-preview">
-            <img 
-              src={url} 
-              alt={key} 
-              className="w-24 h-24 object-cover rounded-md" 
-              onClick={(e) => {
+            <img
+              src={url}
+              alt={key}
+              className="w-24 h-24 object-cover rounded-md"
+              onClick={e => {
                 // 只有当图片加载成功时才启用预览
                 if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
-                  setImagePreview({ visible: true, url });
+                  setImagePreview({ visible: true, url })
                 }
               }}
-              onError={(e) => {
-                (e.target as HTMLImageElement).onerror = null;
-                (e.target as HTMLImageElement).src = '/images/image-placeholder.svg';
-                (e.target as HTMLImageElement).className = 'w-24 h-24 object-contain rounded-md opacity-60';
-                (e.target as HTMLImageElement).style.cursor = 'not-allowed';
+              onError={e => {
+                ;(e.target as HTMLImageElement).onerror = null
+                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                ;(e.target as HTMLImageElement).className =
+                  'w-24 h-24 object-contain rounded-md opacity-60'
+                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
               }}
             />
             <div className="customer-image-tag">{key}</div>
           </div>
         ))}
       </div>
-    );
+    )
   }
 
   // 格式化状态显示
   const formatStatus = (status: string | null, type: 'business' | 'enterprise') => {
-    if (!status) return <Tag color="default">未设置</Tag>;
-    
+    if (!status) return <Tag color="default">未设置</Tag>
+
     if (type === 'business') {
-      switch(status) {
+      switch (status) {
         case 'normal':
-          return <Tag color="success">正常</Tag>;
+          return <Tag color="success">正常</Tag>
         case 'pending':
-          return <Tag color="warning">待处理</Tag>;
+          return <Tag color="warning">待处理</Tag>
         case 'suspended':
-          return <Tag color="error">暂停</Tag>;
+          return <Tag color="error">暂停</Tag>
         default:
-          return <Tag color="default">{status}</Tag>;
+          return <Tag color="default">{status}</Tag>
       }
     } else {
-      switch(status) {
+      switch (status) {
         case 'active':
-          return <Tag color="success">正常经营</Tag>;
+          return <Tag color="success">正常经营</Tag>
         case 'inactive':
-          return <Tag color="warning">停业</Tag>;
+          return <Tag color="warning">停业</Tag>
         case 'closed':
-          return <Tag color="error">注销</Tag>;
+          return <Tag color="error">注销</Tag>
         default:
-          return <Tag color="default">{status}</Tag>;
+          return <Tag color="default">{status}</Tag>
       }
     }
-  };
+  }
 
   const tabs: TabsProps['items'] = [
     {
@@ -769,8 +774,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             {customer.socialCreditCode || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="日常联系人">{customer.dailyContact || '-'}</Descriptions.Item>
-          <Descriptions.Item label="联系电话">{customer.dailyContactPhone || '-'}</Descriptions.Item>
-          <Descriptions.Item label="业务员">{customer.salesRepresentative || '-'}</Descriptions.Item>
+          <Descriptions.Item label="联系电话">
+            {customer.dailyContactPhone || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="业务员">
+            {customer.salesRepresentative || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="业务来源">{customer.businessSource || '-'}</Descriptions.Item>
           <Descriptions.Item label="企业老板">{customer.bossName || '-'}</Descriptions.Item>
           <Descriptions.Item label="老板信息" span={3}>
@@ -975,17 +984,17 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
             </div>
           </div>
-          
+
           <div className="customer-images-section">
             <h3 className="text-lg font-medium">其他身份证件</h3>
             {renderImages(customer.otherIdImages)}
           </div>
-          
+
           <div className="customer-images-section">
             <h3 className="text-lg font-medium">营业执照</h3>
             {renderImage(customer.businessLicenseImages?.main, '营业执照')}
           </div>
-          
+
           <div className="customer-images-section">
             <h3 className="text-lg font-medium">银行开户许可证</h3>
             <div className="flex flex-wrap gap-4">
@@ -993,7 +1002,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
             </div>
           </div>
-          
+
           <div className="customer-images-section">
             <h3 className="text-lg font-medium">补充资料</h3>
             {renderImages(customer.supplementaryImages)}
@@ -1006,14 +1015,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   return (
     <div className="customer-detail-container">
       <div className="customer-detail-scroll-container">
-        <Tabs 
-          defaultActiveKey="basic" 
-          items={tabs} 
+        <Tabs
+          defaultActiveKey="basic"
+          items={tabs}
           className="customer-detail-tabs"
           activeKey={activeTabKey}
           onChange={handleTabChange}
         />
-        
+
         {/* 图片预览组件 */}
         <Image
           width={0}
@@ -1022,16 +1031,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           preview={{
             visible: imagePreview.visible,
             src: imagePreview.url,
-            onVisibleChange: (visible) => {
-              setImagePreview((prev) => ({ ...prev, visible }));
+            onVisibleChange: visible => {
+              setImagePreview(prev => ({ ...prev, visible }))
             },
           }}
         />
       </div>
       <div className="customer-detail-footer">
-        <Button onClick={onClose}>
-          关闭
-        </Button>
+        <Button onClick={onClose}>关闭</Button>
       </div>
     </div>
   )

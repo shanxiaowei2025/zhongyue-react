@@ -20,7 +20,7 @@ import { useCustomerDetail } from '../../hooks/useCustomer'
 import React from 'react'
 
 // 业务状态映射
-const BUSINESS_STATUS_MAP = {
+export const BUSINESS_STATUS_MAP = {
   normal: '正常',
   terminated: '终止',
   suspended: '暂停',
