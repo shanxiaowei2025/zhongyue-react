@@ -30,8 +30,16 @@ import CustomerForm from './CustomerForm'
 import { BUSINESS_STATUS_MAP } from './CustomerForm'
 import { getMinioUrl } from '../../utils/minio'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
+import useSWR from 'swr'
+import { getCustomerDetail } from '../../api/customer'
+
+// 启用 dayjs 插件
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 const { confirm } = Modal
 
@@ -109,6 +117,7 @@ const Customers = () => {
     setState('customersPagination', { current, pageSize })
   }, [current, pageSize, setState])
 
+  // 处理窗口大小变化
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
@@ -164,18 +173,18 @@ const Customers = () => {
   }
 
   const handleEdit = (record: Customer) => {
-    // 先设置基本信息，保证界面快速响应
-    setCurrentCustomer(record)
+    // 重置状态
+    setCurrentCustomer(null)
     setDetailType('edit')
     setDetailLoading(true)
-
-    // 设置选中的客户ID，触发SWR请求完整数据
     setSelectedCustomerId(record.id)
 
-    // 打开对话框（等数据加载完成后再显示）
-    setTimeout(() => {
-      isMobile ? setDrawerVisible(true) : setModalVisible(true)
-    }, 0)
+    // 打开对话框
+    if (isMobile) {
+      setDrawerVisible(true)
+    } else {
+      setModalVisible(true)
+    }
   }
 
   const handleDelete = (id: number) => {
@@ -194,6 +203,8 @@ const Customers = () => {
     // 关闭抽屉和弹窗
     setDrawerVisible(false)
     setModalVisible(false)
+    setCurrentCustomer(null)
+    setSelectedCustomerId(undefined)
 
     // 刷新列表数据
     refreshCustomers()
@@ -212,6 +223,8 @@ const Customers = () => {
       title: '公司名称',
       dataIndex: 'companyName',
       key: 'companyName',
+      fixed: 'left',
+      width: 200,
       render: (text, record) => (
         <a
           onClick={() => handleView(record)}
@@ -227,58 +240,69 @@ const Customers = () => {
       dataIndex: 'socialCreditCode',
       key: 'socialCreditCode',
       responsive: ['lg'],
+      width: 180,
     },
     {
       title: '联系人',
       dataIndex: 'dailyContact',
       key: 'dailyContact',
+      responsive: ['md'],
+      width: 120,
     },
     {
       title: '联系人电话',
       dataIndex: 'dailyContactPhone',
       key: 'dailyContactPhone',
       responsive: ['md'],
+      width: 150,
     },
     {
       title: '业务员',
       dataIndex: 'salesRepresentative',
       key: 'salesRepresentative',
       responsive: ['xl'],
+      width: 120,
     },
     {
       title: '业务来源',
       dataIndex: 'businessSource',
       key: 'businessSource',
       responsive: ['xl'],
+      width: 120,
     },
     {
       title: '纳税人类型',
       dataIndex: 'taxRegistrationType',
       key: 'taxRegistrationType',
       responsive: ['xxl'],
+      width: 120,
     },
     {
       title: '所属税局',
       dataIndex: 'taxBureau',
       key: 'taxBureau',
       responsive: ['lg'],
+      width: 150,
     },
     {
       title: '主管会计',
       dataIndex: 'chiefAccountant',
       key: 'chiefAccountant',
       responsive: ['xl'],
+      width: 120,
     },
     {
       title: '责任会计',
       dataIndex: 'responsibleAccountant',
       key: 'responsibleAccountant',
       responsive: ['xxl'],
+      width: 120,
     },
     {
       title: '业务状态',
       dataIndex: 'businessStatus',
       key: 'businessStatus',
+      width: 100,
       render: status => {
         let color = 'default'
         let text = status || '未设置'
@@ -308,6 +332,7 @@ const Customers = () => {
       dataIndex: 'enterpriseType',
       key: 'enterpriseType',
       width: 120,
+      responsive: ['lg'],
     },
     {
       title: '创建时间',
@@ -315,19 +340,7 @@ const Customers = () => {
       key: 'createTime',
       width: 180,
       responsive: ['md'],
-      render: text => {
-        if (!text) return '-'
-        return new Date(text)
-          .toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          })
-          .replace(/\//g, '-')
-      },
+      render: text => (text ? dayjs.utc(text).format('YYYY/MM/DD HH:mm') : '-'),
     },
     {
       title: '更新时间',
@@ -335,19 +348,7 @@ const Customers = () => {
       key: 'updateTime',
       responsive: ['lg'],
       width: 180,
-      render: text => {
-        if (!text) return '-'
-        return new Date(text)
-          .toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          })
-          .replace(/\//g, '-')
-      },
+      render: text => (text ? dayjs.utc(text).format('YYYY/MM/DD HH:mm') : '-'),
     },
     {
       title: '操作',
@@ -392,7 +393,7 @@ const Customers = () => {
   ]
 
   return (
-    <div>
+    <div className="customer-management-container">
       <h1 className="text-2xl font-bold mb-6">客户管理</h1>
 
       {/* 搜索和操作工具栏 */}
@@ -461,7 +462,7 @@ const Customers = () => {
           />
           <DatePicker
             placeholder="开始日期"
-            value={searchParams.startDate ? dayjs(searchParams.startDate) : null}
+            value={searchParams.startDate ? dayjs.utc(searchParams.startDate) : null}
             onChange={date =>
               setSearchParams({ ...searchParams, startDate: date ? date.format('YYYY-MM-DD') : '' })
             }
@@ -469,7 +470,7 @@ const Customers = () => {
           />
           <DatePicker
             placeholder="结束日期"
-            value={searchParams.endDate ? dayjs(searchParams.endDate) : null}
+            value={searchParams.endDate ? dayjs.utc(searchParams.endDate) : null}
             onChange={date =>
               setSearchParams({ ...searchParams, endDate: date ? date.format('YYYY-MM-DD') : '' })
             }
@@ -491,7 +492,12 @@ const Customers = () => {
             刷新
           </Button>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="min-w-max">
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleAdd}
+          className="w-full sm:w-auto mt-2 sm:mt-0"
+        >
           添加客户
         </Button>
       </div>
@@ -530,11 +536,9 @@ const Customers = () => {
         open={drawerVisible}
         onClose={() => {
           setDrawerVisible(false)
-          // 重置详情加载状态和选中的客户ID
           setDetailLoading(false)
-          if (detailType === 'view') {
-            setSelectedCustomerId(undefined)
-          }
+          setCurrentCustomer(null)
+          setSelectedCustomerId(undefined)
         }}
         closable={true}
         height="100vh"
@@ -542,7 +546,7 @@ const Customers = () => {
           body: {
             paddingBottom: 0,
             padding: '16px 16px 0',
-            overflow: 'hidden', // 使用容器自己的滚动
+            overflow: 'hidden',
           },
         }}
         destroyOnClose={true}
@@ -575,11 +579,9 @@ const Customers = () => {
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false)
-          // 重置详情加载状态和选中的客户ID
           setDetailLoading(false)
-          if (detailType === 'view') {
-            setSelectedCustomerId(undefined)
-          }
+          setCurrentCustomer(null)
+          setSelectedCustomerId(undefined)
         }}
         footer={null}
         width="80%"
@@ -588,7 +590,7 @@ const Customers = () => {
           body: {
             height: 'calc(100vh - 160px)',
             padding: '24px 24px 0',
-            overflow: 'hidden', // 重要：让内部内容自己滚动
+            overflow: 'hidden',
           },
         }}
         destroyOnClose={true}
@@ -630,6 +632,20 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     usePageStates.getState().getState('customerDetailTab') || 'basic'
   )
 
+  // 使用 useSWR 获取客户详情数据
+  const { data: customerDetail, isLoading } = useSWR(
+    customer.id ? `/api/customers/${customer.id}` : null,
+    () => getCustomerDetail(customer.id),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 0,
+      revalidateIfStale: true,
+      shouldRetryOnError: true,
+      refreshInterval: 0,
+    }
+  )
+
   const handleTabChange = (key: string) => {
     setActiveTabKey(key)
     // Save tab state
@@ -660,11 +676,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   const formatDate = (dateString: string | null, includeTime = true) => {
     if (!dateString) return '-'
     try {
-      const date = new Date(dateString)
       if (includeTime) {
-        return date.toLocaleString()
+        return dayjs.utc(dateString).format('YYYY/MM/DD HH:mm')
       }
-      return date.toLocaleDateString()
+      return dayjs.utc(dateString).format('YYYY/MM/DD')
     } catch (e) {
       return dateString || '-'
     }
@@ -797,65 +812,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="沟通注意事项" span={3}>
             {customer.communicationNotes || '-'}
           </Descriptions.Item>
+          <Descriptions.Item label="提交人">{customer.submitter || '-'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">{formatDate(customer.createTime)}</Descriptions.Item>
           <Descriptions.Item label="更新时间">{formatDate(customer.updateTime)}</Descriptions.Item>
-          <Descriptions.Item label="提交人">{customer.submitter || '-'}</Descriptions.Item>
-          <Descriptions.Item label="营业执照" span={3}>
-            {customer.licenseImage ? (
-              <Image
-                width={200}
-                src={getMinioUrl(customer.licenseImage)}
-                alt="营业执照"
-                className="customer-image-preview"
-              />
-            ) : (
-              <span>-</span>
-            )}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="税务登记证" span={3}>
-            {customer.taxRegistrationImage ? (
-              <Image
-                width={200}
-                src={getMinioUrl(customer.taxRegistrationImage)}
-                alt="税务登记证"
-                className="customer-image-preview"
-              />
-            ) : (
-              <span>-</span>
-            )}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="银行开户许可证" span={3}>
-            {customer.bankAccountImage ? (
-              <Image
-                width={200}
-                src={getMinioUrl(customer.bankAccountImage)}
-                alt="银行开户许可证"
-                className="customer-image-preview"
-              />
-            ) : (
-              <span>-</span>
-            )}
-          </Descriptions.Item>
-
-          <Descriptions.Item label="其他证照" span={3}>
-            {customer.otherImages && customer.otherImages.length > 0 ? (
-              <div className="customer-images-section">
-                {customer.otherImages.map((image, index) => (
-                  <Image
-                    key={index}
-                    width={200}
-                    src={getMinioUrl(image)}
-                    alt={`其他证照 ${index + 1}`}
-                    className="customer-image-preview"
-                  />
-                ))}
-              </div>
-            ) : (
-              <span>-</span>
-            )}
-          </Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1036,7 +995,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       children: (
         <div className="space-y-8">
           <div className="customer-images-section">
-            <h3 className="text-lg font-medium">法定代表人身份证</h3>
+            <h3 className="text-lg font-medium">法人身份证照片</h3>
             <div className="flex flex-wrap gap-4">
               {renderImage(customer.legalPersonIdImages?.front, '身份证正面')}
               {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
@@ -1044,17 +1003,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </div>
 
           <div className="customer-images-section">
-            <h3 className="text-lg font-medium">其他身份证件</h3>
-            {renderImages(customer.otherIdImages)}
-          </div>
-
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium">营业执照</h3>
+            <h3 className="text-lg font-medium">营业执照照片</h3>
             {renderImage(customer.businessLicenseImages?.main, '营业执照')}
           </div>
 
           <div className="customer-images-section">
-            <h3 className="text-lg font-medium">银行开户许可证</h3>
+            <h3 className="text-lg font-medium">开户许可证照片</h3>
             <div className="flex flex-wrap gap-4">
               {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
               {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
@@ -1062,13 +1016,27 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </div>
 
           <div className="customer-images-section">
-            <h3 className="text-lg font-medium">补充资料</h3>
+            <h3 className="text-lg font-medium">其他人员身份证照片</h3>
+            {renderImages(customer.otherIdImages)}
+          </div>
+
+          <div className="customer-images-section">
+            <h3 className="text-lg font-medium">补充资料照片</h3>
             {renderImages(customer.supplementaryImages)}
           </div>
         </div>
       ),
     },
   ]
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingOutlined style={{ fontSize: 48 }} />
+        <span className="ml-3 text-lg">加载客户详情...</span>
+      </div>
+    )
+  }
 
   return (
     <div className="customer-detail-container">

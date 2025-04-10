@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { message } from 'antd'
+import { message, Image } from 'antd'
 import { Upload, Button } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
+import { getUploadUrl } from '../api/upload'
 import { getMinioUrl } from '../utils/minio'
 
 interface MinioUploadProps {
@@ -16,84 +17,90 @@ interface MinioUploadProps {
 const MinioUpload: React.FC<MinioUploadProps> = ({
   value,
   onChange,
-  accept = '*',
-  maxSize = 5,
+  accept = 'image/*',
+  maxSize = 5 * 1024 * 1024, // 默认5MB
   multiple = false,
-  directory = '',
+  directory = 'uploads',
 }) => {
-  const [loading, setLoading] = useState(false)
+  const [imagePreview, setImagePreview] = useState<{ visible: boolean; url: string }>({
+    visible: false,
+    url: '',
+  })
 
   const handleUpload = async (file: File) => {
-    setLoading(true)
     try {
-      // 这里需要调用后端 API 获取预签名 URL
-      const response = await fetch('/api/upload/url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          filename: file.name,
-          directory,
-        }),
-      })
+      const data = await getUploadUrl(file.name, directory)
+      if (data.success) {
+        const response = await fetch(data.data.url, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        })
 
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.message || '获取上传 URL 失败')
+        if (response.ok) {
+          message.success('上传成功')
+          onChange?.(data.data.path)
+        } else {
+          throw new Error('上传失败')
+        }
+      } else {
+        throw new Error(data.message || '获取上传地址失败')
       }
-
-      // 使用预签名 URL 上传文件
-      const uploadResponse = await fetch(data.data.url, {
-        method: 'PUT',
-        body: file,
-      })
-
-      if (!uploadResponse.ok) {
-        throw new Error('文件上传失败')
-      }
-
-      // 更新文件路径
-      onChange?.(data.data.path)
-      message.success('上传成功')
-    } catch (error: any) {
+    } catch (error) {
       message.error(error?.message || '上传失败')
-    } finally {
-      setLoading(false)
     }
-  }
-
-  const beforeUpload = (file: File) => {
-    // 检查文件大小
-    const isLtMaxSize = file.size / 1024 / 1024 < maxSize
-    if (!isLtMaxSize) {
-      message.error(`文件大小不能超过 ${maxSize}MB!`)
-      return false
-    }
-    return true
   }
 
   return (
     <div>
       <Upload
-        beforeUpload={beforeUpload}
-        customRequest={({ file }) => handleUpload(file as File)}
-        showUploadList={false}
         accept={accept}
+        beforeUpload={file => {
+          if (file.size > maxSize) {
+            message.error(`文件大小不能超过 ${maxSize / 1024 / 1024}MB`)
+            return false
+          }
+          handleUpload(file)
+          return false
+        }}
+        showUploadList={false}
         multiple={multiple}
       >
-        <Button icon={<UploadOutlined />} loading={loading}>
-          点击上传
-        </Button>
+        <Button icon={<UploadOutlined />}>上传文件</Button>
       </Upload>
       {value && (
         <div style={{ marginTop: 8 }}>
-          <a href={getMinioUrl(value)} target="_blank" rel="noopener noreferrer">
-            查看文件
-          </a>
+          <div className="customer-image-preview">
+            <img
+              src={getMinioUrl(String(value))}
+              alt="预览"
+              className="w-24 h-24 object-cover rounded-md"
+              onClick={() => setImagePreview({ visible: true, url: getMinioUrl(String(value)) })}
+              onError={e => {
+                ;(e.target as HTMLImageElement).onerror = null
+                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                ;(e.target as HTMLImageElement).className =
+                  'w-24 h-24 object-contain rounded-md opacity-60'
+                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
+              }}
+            />
+          </div>
         </div>
       )}
+      <Image
+        width={0}
+        style={{ display: 'none' }}
+        src={imagePreview.url}
+        preview={{
+          visible: imagePreview.visible,
+          src: imagePreview.url,
+          onVisibleChange: visible => {
+            setImagePreview(prev => ({ ...prev, visible }))
+          },
+        }}
+      />
     </div>
   )
 }

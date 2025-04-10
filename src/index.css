@@ -575,45 +575,36 @@ body.ant-modal-open {
   }
 }
 
-/* 客户表单布局样式 */
+/* 客户表单样式 */
 .customer-form-container {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
 }
 
-.customer-form-scroll-container {
+.customer-form {
   flex: 1;
-  overflow-y: auto;
-  height: 100%;
-  padding-bottom: 70px;
-  box-sizing: border-box;
-}
-
-.customer-form-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  padding: 12px 24px;
-  background: white;
-  text-align: right;
-  z-index: 10;
+  overflow: hidden;
   display: flex;
-  justify-content: flex-end;
-  box-sizing: border-box;
+  flex-direction: column;
 }
 
 .customer-form-tabs {
-  height: 100%;
+  flex: 1;
+  overflow: auto;
+  padding: 0 16px;
 }
 
 .customer-form-tabs .ant-tabs-content {
   height: 100%;
-  padding-bottom: 16px;
+  overflow: auto;
+}
+
+.customer-form-footer {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+  text-align: right;
 }
 
 /* 客户详情布局样式 */
@@ -669,4 +660,93 @@ body.ant-modal-open {
   color: #333;
   border-bottom: 1px solid #f0f0f0;
   padding-bottom: 8px;
+}
+
+/* 客户管理页面样式 */
+.customer-management-container {
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .customer-management-container {
+    padding: 24px;
+  }
+}
+
+/* 表格样式 */
+.customer-table {
+  margin-top: 16px;
+}
+
+.customer-table .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 500;
+}
+
+.customer-table .ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5;
+}
+
+/* 操作按钮样式 */
+.action-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.action-buttons .ant-btn {
+  padding: 4px 8px;
+}
+
+/* 图片预览样式 */
+.customer-image-preview {
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  padding: 4px;
+  transition: all 0.3s;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.customer-image-preview:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.customer-images-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.customer-images-section h3 {
+  width: 100%;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .customer-management-container {
+    padding: 12px;
+  }
+
+  .customer-table {
+    margin-top: 12px;
+  }
+
+  .action-buttons {
+    gap: 2px;
+  }
+
+  .action-buttons .ant-btn {
+    padding: 2px 4px;
+  }
+
+  .customer-image-preview {
+    margin-bottom: 4px;
+  }
+
+  .customer-images-section {
+    gap: 8px;
+  }
 }
