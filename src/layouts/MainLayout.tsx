@@ -1,16 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  Layout,
-  Menu,
-  Avatar,
-  Dropdown,
-  Button,
-  Drawer,
-  Badge,
-  Tooltip,
-  message,
-  Tabs,
-} from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Button, Drawer, Badge, Tooltip, message, Tabs } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   DashboardOutlined,
@@ -33,62 +22,63 @@ const { Header, Sider, Content } = Layout
 
 // 定义Tab类型
 interface TabItem {
-  key: string;
-  label: string;
-  icon?: React.ReactNode;
-  closable: boolean;
+  key: string
+  label: string
+  icon?: React.ReactNode
+  closable: boolean
 }
 
 // 创建tabs存储，用于保持组件状态
 const useTabsStore = () => {
   const [tabs, setTabs] = useState<TabItem[]>([
-    { key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false }
-  ]);
-  const [activeKey, setActiveKey] = useState('/');
-  
+    { key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false },
+  ])
+  const [activeKey, setActiveKey] = useState('/')
+
   // 缓存组件状态的对象
   const [cachedViews] = useState<Record<string, boolean>>({
-    '/': true
-  });
-  
+    '/': true,
+  })
+
   // 添加新标签
   const addTab = (newTab: TabItem) => {
     setTabs(prev => {
       // 检查标签是否已存在
       if (!prev.some(tab => tab.key === newTab.key)) {
-        return [...prev, newTab];
+        return [...prev, newTab]
       }
-      return prev;
-    });
-    setActiveKey(newTab.key);
-    cachedViews[newTab.key] = true;
-  };
-  
+      return prev
+    })
+    setActiveKey(newTab.key)
+    cachedViews[newTab.key] = true
+  }
+
   // 移除标签
   const removeTab = (targetKey: string) => {
     // 找出要删除的标签索引
-    const targetIndex = tabs.findIndex(tab => tab.key === targetKey);
-    
+    const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
+
     // 删除标签
-    const newTabs = tabs.filter(tab => tab.key !== targetKey);
-    setTabs(newTabs);
-    
+    const newTabs = tabs.filter(tab => tab.key !== targetKey)
+    setTabs(newTabs)
+
     // 从缓存中删除视图
-    delete cachedViews[targetKey];
-    
+    delete cachedViews[targetKey]
+
     // 如果删除的是当前激活的标签，需要激活其他标签
     if (newTabs.length && activeKey === targetKey) {
       // 优先激活右侧标签，如果没有右侧标签则激活左侧标签
-      const newActiveKey = newTabs[targetIndex === newTabs.length ? targetIndex - 1 : targetIndex].key;
-      setActiveKey(newActiveKey);
+      const newActiveKey =
+        newTabs[targetIndex === newTabs.length ? targetIndex - 1 : targetIndex].key
+      setActiveKey(newActiveKey)
     }
-  };
-  
+  }
+
   // 检查视图是否被缓存
-  const isCached = (key: string) => !!cachedViews[key];
-  
-  return { tabs, activeKey, setActiveKey, addTab, removeTab, isCached };
-};
+  const isCached = (key: string) => !!cachedViews[key]
+
+  return { tabs, activeKey, setActiveKey, addTab, removeTab, isCached }
+}
 
 const MainLayout = () => {
   const navigate = useNavigate()
@@ -97,9 +87,9 @@ const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  
+
   // 使用自定义的tabsStore
-  const tabsStore = useTabsStore();
+  const tabsStore = useTabsStore()
 
   // 模拟通知数量
   const [notificationCount] = useState(5)
@@ -142,11 +132,11 @@ const MainLayout = () => {
 
   // 获取菜单项图标和标签
   const getMenuItemByKey = (key: string) => {
-    const flatMenuItems = menuItems?.flatMap(item => item) || [];
+    const flatMenuItems = menuItems?.flatMap(item => item) || []
     // 使用类型守卫确保找到的菜单项具有所需属性
-    const menuItem = flatMenuItems.find(item => item && 'key' in item && item.key === key);
-    return menuItem;
-  };
+    const menuItem = flatMenuItems.find(item => item && 'key' in item && item.key === key)
+    return menuItem
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -162,21 +152,21 @@ const MainLayout = () => {
 
   // 跟踪路由变化，添加新标签
   useEffect(() => {
-    const { pathname } = location;
-    
+    const { pathname } = location
+
     // 根据当前路径找到对应的菜单项
-    const currentMenuItem = getMenuItemByKey(pathname);
-    
+    const currentMenuItem = getMenuItemByKey(pathname)
+
     if (currentMenuItem && 'label' in currentMenuItem) {
       // 添加新标签或切换到已有标签
       tabsStore.addTab({
         key: pathname,
         label: currentMenuItem.label as string,
         icon: 'icon' in currentMenuItem ? currentMenuItem.icon : undefined,
-        closable: pathname !== '/' // 仪表盘不可关闭
-      });
+        closable: pathname !== '/', // 仪表盘不可关闭
+      })
     }
-  }, [location.pathname]);
+  }, [location.pathname])
 
   // 检查用户状态，确保用户信息显示正确
   useEffect(() => {
@@ -265,40 +255,40 @@ const MainLayout = () => {
 
   // 处理标签页变化
   const handleTabChange = (activeKey: string) => {
-    tabsStore.setActiveKey(activeKey);
-    navigate(activeKey);
-  };
+    tabsStore.setActiveKey(activeKey)
+    navigate(activeKey)
+  }
 
   // 处理关闭标签页
   const handleTabEdit = (
-    targetKey: React.MouseEvent<Element> | React.KeyboardEvent<Element> | string, 
+    targetKey: React.MouseEvent<Element> | React.KeyboardEvent<Element> | string,
     action: 'add' | 'remove'
   ) => {
     if (action === 'remove' && typeof targetKey === 'string') {
       // 找出要删除的标签所在位置和前后标签
-      const currentTabs = tabsStore.tabs;
-      const targetIndex = currentTabs.findIndex(tab => tab.key === targetKey);
-      
+      const currentTabs = tabsStore.tabs
+      const targetIndex = currentTabs.findIndex(tab => tab.key === targetKey)
+
       // 关闭当前标签，需要激活其他标签
       if (tabsStore.activeKey === targetKey) {
         // 找出新的激活标签
-        const newActiveIndex = targetIndex === 0 ? 0 : targetIndex - 1;
-        const newActiveKey = currentTabs[newActiveIndex].key;
-        navigate(newActiveKey);
+        const newActiveIndex = targetIndex === 0 ? 0 : targetIndex - 1
+        const newActiveKey = currentTabs[newActiveIndex].key
+        navigate(newActiveKey)
       }
-      
+
       // 移除标签
-      tabsStore.removeTab(targetKey);
+      tabsStore.removeTab(targetKey)
     }
-  };
-  
+  }
+
   // 自定义标签页标题，添加图标和关闭按钮
   const renderTabLabel = (tab: TabItem) => (
     <div className="flex items-center">
       {tab.icon && <span className="mr-1">{tab.icon}</span>}
       <span>{tab.label}</span>
     </div>
-  );
+  )
 
   const renderMenu = () => (
     <Menu
@@ -321,13 +311,13 @@ const MainLayout = () => {
           collapsed={collapsed}
           onCollapse={setCollapsed}
           className="hidden md:block sider-container"
-          style={{ 
-            height: '100vh', 
-            position: 'fixed', 
-            left: 0, 
+          style={{
+            height: '100vh',
+            position: 'fixed',
+            left: 0,
             top: 0,
             zIndex: 10,
-            overflow: 'auto' 
+            overflow: 'auto',
           }}
         >
           <div
@@ -344,17 +334,19 @@ const MainLayout = () => {
           {renderMenu()}
         </Sider>
       )}
-      <Layout style={{ 
-        marginLeft: isMobile ? 0 : (collapsed ? 80 : 200),
-        transition: 'margin-left 0.2s' 
-      }}>
-        <Header 
-          className="bg-white p-0 flex items-center justify-between shadow-sm" 
-          style={{ 
-            position: 'sticky', 
-            top: 0, 
-            zIndex: 9, 
-            width: '100%' 
+      <Layout
+        style={{
+          marginLeft: isMobile ? 0 : collapsed ? 80 : 200,
+          transition: 'margin-left 0.2s',
+        }}
+      >
+        <Header
+          className="bg-white p-0 flex items-center justify-between shadow-sm"
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 9,
+            width: '100%',
           }}
         >
           <div className="flex items-center">
@@ -435,7 +427,7 @@ const MainLayout = () => {
             </Dropdown>
           </div>
         </Header>
-        
+
         {/* 添加标签页系统 */}
         <div className="bg-white border-b border-gray-200">
           <Tabs
@@ -447,18 +439,18 @@ const MainLayout = () => {
               key: tab.key,
               label: renderTabLabel(tab),
               closable: tab.closable,
-              children: null // 标签内容由Outlet渲染
+              children: null, // 标签内容由Outlet渲染
             }))}
             className="tabs-container px-4"
             hideAdd
           />
         </div>
-        
-        <Content 
+
+        <Content
           className="p-4 md:p-6 bg-white content-container"
-          style={{ 
+          style={{
             minHeight: 'calc(100vh - 64px - 48px)', // 减去header和tabs的高度
-            overflow: 'auto'
+            overflow: 'auto',
           }}
         >
           <Outlet />

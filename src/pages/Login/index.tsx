@@ -24,29 +24,29 @@ const Login = () => {
   const handleSubmit = async (values: LoginForm) => {
     try {
       // 调用实际的登录API
-      const response = await login(values) as ApiResponse<{
-        access_token: string;
+      const response = (await login(values)) as ApiResponse<{
+        access_token: string
         user_info: {
-          id: number;
-          username: string;
-          roles: string[];
-          phone: string | null;
-          email: string;
+          id: number
+          username: string
+          roles: string[]
+          phone: string | null
+          email: string
         }
       }>
-      
+
       console.log('登录响应完整数据:', response)
-      
+
       // 判断是否有数据
       if (response && response.code === 0 && response.data) {
         // access_token 和 user_info 在response.data里面
         const { access_token, user_info } = response.data
-        
+
         console.log('获取到token和用户信息:', { access_token, user_info })
-        
+
         // 保存token
         setToken(access_token)
-        
+
         // 将用户信息转换为应用需要的格式
         const user = {
           id: user_info.id,
@@ -73,7 +73,7 @@ const Login = () => {
           create_time: new Date().toISOString(),
           update_time: new Date().toISOString(),
         }
-        
+
         setUser(user)
         message.success('登录成功')
         navigate('/')

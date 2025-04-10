@@ -739,11 +739,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     if (type === 'business') {
       switch (status) {
         case 'normal':
-          return <Tag color="success">正常</Tag>
-        case 'pending':
-          return <Tag color="warning">待处理</Tag>
+          return <Tag color="success">{BUSINESS_STATUS_MAP.normal}</Tag>
+        case 'terminated':
+          return <Tag color="error">{BUSINESS_STATUS_MAP.terminated}</Tag>
         case 'suspended':
-          return <Tag color="error">暂停</Tag>
+          return <Tag color="warning">{BUSINESS_STATUS_MAP.suspended}</Tag>
         default:
           return <Tag color="default">{status}</Tag>
       }
