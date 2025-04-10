@@ -668,14 +668,26 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
 
   // 渲染图片预览
   const renderImage = (url: string | undefined, label: string) => {
-    if (!url) return '-';
+    if (!url) return <div className="no-image-placeholder">暂无图片</div>;
+    
     return (
       <div className="customer-image-preview">
         <img 
           src={url} 
           alt={label} 
           className="w-24 h-24 object-cover rounded-md" 
-          onClick={() => setImagePreview({ visible: true, url })}
+          onClick={(e) => {
+            // 只有当图片加载成功时才启用预览
+            if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
+              setImagePreview({ visible: true, url });
+            }
+          }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).onerror = null;
+            (e.target as HTMLImageElement).src = '/images/image-placeholder.svg';
+            (e.target as HTMLImageElement).className = 'w-24 h-24 object-contain rounded-md opacity-60';
+            (e.target as HTMLImageElement).style.cursor = 'not-allowed';
+          }}
         />
         <div className="customer-image-tag">{label}</div>
       </div>
@@ -684,7 +696,9 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
 
   // 渲染图片集合
   const renderImages = (images: Record<string, string> | undefined) => {
-    if (!images || Object.keys(images).length === 0) return '-';
+    if (!images || Object.keys(images).length === 0) {
+      return <div className="no-image-placeholder">暂无图片</div>;
+    }
     
     return (
       <div className="flex flex-wrap gap-3">
@@ -694,7 +708,18 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
               src={url} 
               alt={key} 
               className="w-24 h-24 object-cover rounded-md" 
-              onClick={() => setImagePreview({ visible: true, url })}
+              onClick={(e) => {
+                // 只有当图片加载成功时才启用预览
+                if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
+                  setImagePreview({ visible: true, url });
+                }
+              }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).onerror = null;
+                (e.target as HTMLImageElement).src = '/images/image-placeholder.svg';
+                (e.target as HTMLImageElement).className = 'w-24 h-24 object-contain rounded-md opacity-60';
+                (e.target as HTMLImageElement).style.cursor = 'not-allowed';
+              }}
             />
             <div className="customer-image-tag">{key}</div>
           </div>
