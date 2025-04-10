@@ -395,6 +395,7 @@ const Customers = () => {
       title: '操作',
       key: 'action',
       width: isMobile ? 80 : 160,
+      fixed: 'right',
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -550,6 +551,8 @@ const Customers = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         size={isMobile ? 'small' : 'middle'}
+        sticky
+        className="customer-table"
       />
 
       {/* 客户详情抽屉（移动端） */}
@@ -560,6 +563,8 @@ const Customers = () => {
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
         closable={true}
+        height="100vh"
+        bodyStyle={{ paddingBottom: 80, overflowY: 'auto' }}
         destroyOnClose={true}
         className="customer-drawer"
       >
@@ -589,6 +594,8 @@ const Customers = () => {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width="80%"
+        style={{ top: 20 }}
+        bodyStyle={{ maxHeight: 'calc(90vh - 120px)', overflowY: 'auto' }}
         destroyOnClose={true}
         className={isMobile ? '' : 'full-height-modal'}
       >

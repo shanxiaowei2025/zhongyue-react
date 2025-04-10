@@ -170,21 +170,69 @@ button:focus-visible {
 
 /* 全屏模态框样式 */
 .full-height-modal .ant-modal-content {
-  border-radius: 0;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  max-height: 90vh;
 }
 
 .full-height-modal .ant-modal-body {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  padding-bottom: 24px;
 }
 
-/* 抽屉内的表格样式 */
-.ant-drawer-body .ant-tabs-content {
-  height: auto;
-  padding-bottom: 60px;
+.customer-detail-tabs .ant-tabs-content-holder {
+  overflow-y: auto;
+}
+
+.customer-detail-tabs .ant-tabs-content {
+  padding-bottom: 24px;
+}
+
+/* 图片预览样式 */
+.customer-image-preview {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.customer-image-preview:hover {
+  transform: scale(1.05);
+}
+
+.customer-image-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 2px 4px;
+  font-size: 12px;
+  text-align: center;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* 表格固定列样式修复 */
+.ant-table-fixed-right {
+  box-shadow: -6px 0 6px -4px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 客户表单响应式调整 */
+@media (max-width: 768px) {
+  .ant-table .ant-table-cell {
+    padding: 8px !important;
+  }
+  
+  .customer-drawer .ant-drawer-body {
+    padding: 12px;
+  }
+  
+  .customer-detail-tabs .ant-tabs-tab {
+    padding: 8px 12px;
+  }
 }
 
 /* 表格响应式样式 */
@@ -283,4 +331,35 @@ button:focus-visible {
   .ant-input {
     padding: 4px 8px;
   }
+}
+
+/* 客户管理表格样式优化 */
+.customer-table {
+  margin-bottom: 24px;
+}
+
+.customer-table .ant-table-thead > tr > th {
+  background-color: #f7f7f7;
+  font-weight: 600;
+}
+
+.customer-table .ant-table-sticky-scroll {
+  display: none !important;
+}
+
+.customer-table .company-name-link {
+  color: #1890ff;
+  text-decoration: none;
+  transition: color 0.3s;
+  font-weight: 500;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-table .company-name-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
 }
