@@ -18,7 +18,6 @@ import type { Customer } from '../../types'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 import { useCustomerDetail } from '../../hooks/useCustomer'
-import React from 'react'
 import MinioUpload from '../../components/MinioUpload'
 import { getMinioUrl } from '../../utils/minio'
 import type { TabsProps } from 'antd'
@@ -116,7 +115,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
       if (file.url || (file.response && file.response.url)) {
         const imgUrl = file.url || (file.response && file.response.url)
         // 检查图片是否存在
-        const img = new Image()
+        const img = new window.Image()
         img.src = imgUrl
         img.onload = () => {
           // 图片加载成功，正常预览
@@ -231,25 +230,22 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           general: fileList2Url(values.bankAccountLicenseImages, 1),
         },
         otherIdImages: values.otherIdImages
-          ? values.otherIdImages.reduce(
-              (acc, file, index) => {
-                if (file.url || (file.response && file.response.url)) {
-                  acc[`person${index + 1}`] = file.url || file.response.url
-                }
-                return acc
-              },
-              {} as Record<string, string>
-            )
+          ? values.otherIdImages.reduce((acc: Record<string, string>, file: any, index: number) => {
+              if (file.url || (file.response && file.response.url)) {
+                acc[`person${index + 1}`] = file.url || file.response.url
+              }
+              return acc
+            }, {})
           : {},
         supplementaryImages: values.supplementaryImages
           ? values.supplementaryImages.reduce(
-              (acc, file, index) => {
+              (acc: Record<string, string>, file: any, index: number) => {
                 if (file.url || (file.response && file.response.url)) {
                   acc[`doc${index + 1}`] = file.url || file.response.url
                 }
                 return acc
               },
-              {} as Record<string, string>
+              {}
             )
           : {},
       }
