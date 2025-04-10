@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Card, Button, Form, Input, Upload, message, Tabs, Spin } from 'antd'
-import { UserOutlined, LockOutlined, UploadOutlined } from '@ant-design/icons'
+import { Card, Button, Form, Input, Upload, message, Tabs, Spin, Tag, Descriptions } from 'antd'
+import { UserOutlined, LockOutlined, UploadOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useAuthStore } from '../../store/auth'
 import { getCurrentUser, updateUser, changePassword } from '../../api/user'
+import { getUserProfile } from '../../api/auth'
 import type { User } from '../../types'
 
 const { TabPane } = Tabs
@@ -13,6 +14,7 @@ const Profile = () => {
   const [passwordForm] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const { user, setUser } = useAuthStore()
 
   useEffect(() => {
@@ -24,15 +26,22 @@ const Profile = () => {
 
     setLoading(true)
     try {
-      // 实际项目中这里应该使用 API 请求
-      // const userInfo = await getCurrentUser()
-      // setUser(userInfo)
+      // 从后端获取用户信息
+      const response = await getUserProfile()
+      console.log('获取到的用户资料:', response)
 
-      // 使用 store 中的用户信息
-      profileForm.setFieldsValue({
-        username: user.username,
-        email: user.email,
-      })
+      if (response && response.code === 0 && response.data) {
+        setUserProfile(response.data)
+        
+        // 设置表单初始值
+        profileForm.setFieldsValue({
+          username: response.data.username,
+          email: response.data.email,
+          phone: response.data.phone || '',
+        })
+      } else {
+        message.error('获取用户资料失败')
+      }
     } catch (error) {
       console.error('获取用户信息失败', error)
       message.error('获取用户信息失败')
@@ -154,8 +163,15 @@ const Profile = () => {
                   </Upload>
                 </div>
                 <div>
-                  <h2 className="text-lg font-medium">{user?.username}</h2>
-                  <p className="text-gray-500">{user?.email}</p>
+                  <h2 className="text-lg font-medium">{userProfile?.username || user?.username}</h2>
+                  <p className="text-gray-500">{userProfile?.email || user?.email}</p>
+                  <div className="mt-1">
+                    {userProfile?.roles && userProfile.roles.map((role: string) => (
+                      <Tag color={role === 'admin' ? 'red' : 'blue'} key={role}>
+                        {role === 'admin' ? '管理员' : '普通用户'}
+                      </Tag>
+                    ))}
+                  </div>
                   <Upload {...uploadProps}>
                     <Button icon={<UploadOutlined />} loading={uploading} className="mt-2">
                       上传头像
@@ -164,13 +180,39 @@ const Profile = () => {
                 </div>
               </div>
 
+              {userProfile && (
+                <Descriptions title="用户详情" bordered className="mb-6">
+                  <Descriptions.Item label="用户ID" span={3}>{userProfile.id}</Descriptions.Item>
+                  <Descriptions.Item label="用户名" span={3}>{userProfile.username}</Descriptions.Item>
+                  <Descriptions.Item label="电子邮箱" span={3}>
+                    <div className="flex items-center">
+                      <MailOutlined className="mr-2" />
+                      {userProfile.email || '未设置'}
+                    </div>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="手机号码" span={3}>
+                    <div className="flex items-center">
+                      <PhoneOutlined className="mr-2" />
+                      {userProfile.phone || '未设置'}
+                    </div>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="角色" span={3}>
+                    {userProfile.roles && userProfile.roles.map((role: string) => (
+                      <Tag color={role === 'admin' ? 'red' : 'blue'} key={role} className="mr-1">
+                        {role === 'admin' ? '管理员' : '普通用户'}
+                      </Tag>
+                    ))}
+                  </Descriptions.Item>
+                </Descriptions>
+              )}
+
               <Form form={profileForm} layout="vertical" onFinish={handleUpdateProfile}>
                 <Form.Item
                   name="username"
                   label="用户名"
                   rules={[{ required: true, message: '请输入用户名' }]}
                 >
-                  <Input prefix={<UserOutlined />} placeholder="用户名" />
+                  <Input prefix={<UserOutlined />} placeholder="用户名" disabled />
                 </Form.Item>
                 <Form.Item
                   name="email"
@@ -180,7 +222,16 @@ const Profile = () => {
                     { type: 'email', message: '请输入有效的邮箱地址' },
                   ]}
                 >
-                  <Input prefix={<UserOutlined />} placeholder="邮箱" />
+                  <Input prefix={<MailOutlined />} placeholder="邮箱" />
+                </Form.Item>
+                <Form.Item
+                  name="phone"
+                  label="手机号码"
+                  rules={[
+                    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号码', validateTrigger: 'onBlur' },
+                  ]}
+                >
+                  <Input prefix={<PhoneOutlined />} placeholder="手机号码" />
                 </Form.Item>
                 <Form.Item>
                   <Button type="primary" htmlType="submit" loading={loading}>

@@ -18,6 +18,17 @@ export const login = (data: LoginForm) => {
   })
 }
 
+// 获取当前登录用户的个人资料
+export const getUserProfile = () => {
+  return request.get<ApiResponse<{
+    id: number;
+    username: string;
+    roles: string[];
+    phone: string | null;
+    email: string;
+  }>>('/auth/profile')
+}
+
 // 获取所有权限
 export const getAllPermissions = () => {
   return request.get<Permission[]>('/permissions')
