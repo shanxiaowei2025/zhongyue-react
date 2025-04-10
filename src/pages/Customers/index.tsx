@@ -25,8 +25,9 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Customer } from '../../types'
-import CustomerForm, { BUSINESS_STATUS_MAP } from './CustomerForm'
 import type { TabsProps } from 'antd'
+import CustomerForm from './CustomerForm'
+import { getMinioUrl } from '../../utils/minio'
 import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
@@ -798,6 +799,62 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="创建时间">{formatDate(customer.createTime)}</Descriptions.Item>
           <Descriptions.Item label="更新时间">{formatDate(customer.updateTime)}</Descriptions.Item>
           <Descriptions.Item label="提交人">{customer.submitter || '-'}</Descriptions.Item>
+          <Descriptions.Item label="营业执照" span={3}>
+            {customer.licenseImage ? (
+              <Image
+                width={200}
+                src={getMinioUrl(customer.licenseImage)}
+                alt="营业执照"
+                className="customer-image-preview"
+              />
+            ) : (
+              <span>-</span>
+            )}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="税务登记证" span={3}>
+            {customer.taxRegistrationImage ? (
+              <Image
+                width={200}
+                src={getMinioUrl(customer.taxRegistrationImage)}
+                alt="税务登记证"
+                className="customer-image-preview"
+              />
+            ) : (
+              <span>-</span>
+            )}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="银行开户许可证" span={3}>
+            {customer.bankAccountImage ? (
+              <Image
+                width={200}
+                src={getMinioUrl(customer.bankAccountImage)}
+                alt="银行开户许可证"
+                className="customer-image-preview"
+              />
+            ) : (
+              <span>-</span>
+            )}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="其他证照" span={3}>
+            {customer.otherImages && customer.otherImages.length > 0 ? (
+              <div className="customer-images-section">
+                {customer.otherImages.map((image, index) => (
+                  <Image
+                    key={index}
+                    width={200}
+                    src={getMinioUrl(image)}
+                    alt={`其他证照 ${index + 1}`}
+                    className="customer-image-preview"
+                  />
+                ))}
+              </div>
+            ) : (
+              <span>-</span>
+            )}
+          </Descriptions.Item>
         </Descriptions>
       ),
     },

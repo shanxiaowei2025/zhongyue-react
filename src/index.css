@@ -277,18 +277,16 @@ body.ant-modal-open {
 
 /* 图片预览样式 */
 .customer-image-preview {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-  transition: all 0.3s;
+  border: 1px solid #f0f0f0;
   border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+  transition: all 0.3s;
+  cursor: pointer;
 }
 
 .customer-image-preview:hover {
-  transform: scale(1.05);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .customer-image-preview img {
@@ -393,14 +391,15 @@ body.ant-modal-open {
 
 /* 图片部分容器 */
 .customer-images-section {
-  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .customer-images-section h3 {
-  margin-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
-  padding-bottom: 8px;
-  color: #333;
+  width: 100%;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 /* 客户详情TAB内容 */
