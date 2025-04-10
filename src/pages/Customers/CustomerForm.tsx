@@ -3,9 +3,9 @@ import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Upload, mes
 import { UploadOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import type { Customer } from '../../types'
-import { createCustomer, updateCustomer } from '../../api/customer'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
+import { useCustomerDetail } from '../../hooks/useCustomer'
 
 interface CustomerFormProps {
   customer?: Customer | null
@@ -40,6 +40,9 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
   const [form] = Form.useForm<FormCustomer>()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('1')
+
+  // 使用SWR钩子代替直接API调用
+  const { updateCustomer, createCustomer } = useCustomerDetail(customer?.id)
 
   const isEdit = mode === 'edit' && !!customer
 
@@ -143,7 +146,7 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
       setLoading(true)
 
       try {
-        let response;
+        let success = false;
         
         if (isEdit && customer) {
           // 仅发送实际修改过的字段（PATCH 请求最佳实践）
@@ -198,59 +201,37 @@ const CustomerForm = ({ customer, mode, onSuccess, onCancel }: CustomerFormProps
             ) {
               // 图片字段始终发送，因为难以比较复杂对象
               if (formattedValue) {
-                // 使用类型断言确保类型匹配
                 (changedValues as any)[k] = formattedValue;
               }
               return;
             }
             
-            // 普通字段比较
+            // 其他字段的一般情况
             if (formattedValue !== originalValue) {
-              // 使用类型断言确保类型匹配
               (changedValues as any)[k] = formattedValue;
             }
           });
           
-          // 如果没有变更，直接返回成功
-          if (Object.keys(changedValues).length === 0) {
-            message.info('未检测到修改内容');
-            onSuccess();
-            return;
-          }
-          
-          console.log('检测到已修改的字段:', changedValues);
-          
-          // 只发送修改过的字段
-          response = await updateCustomer(customer.id, changedValues);
-          console.log('更新客户响应:', response);
-          
-          if (response && response.code === 0) {
-            message.success('客户信息更新成功');
-            onSuccess();
-          } else {
-            message.error(response?.message || '更新失败，请稍后重试');
-          }
+          // 更新客户信息
+          success = await updateCustomer(customer.id, changedValues);
         } else {
           // 创建新客户
-          response = await createCustomer(formattedValues);
-          console.log('创建客户响应:', response);
-          
-          if (response && response.code === 0) {
-            message.success('客户创建成功');
-            onSuccess();
-          } else {
-            message.error(response?.message || '创建失败，请稍后重试');
-          }
+          const result = await createCustomer(formattedValues);
+          success = !!result;
+        }
+
+        if (success) {
+          onSuccess?.();
         }
       } catch (error: any) {
         console.error('API操作失败', error);
         
-        // 处理API错误
+        // 错误处理
         if (error.response?.data) {
           const errorData = error.response.data;
           
           if (Array.isArray(errorData.message)) {
-            // 显示所有错误消息
+            // 处理多个错误信息
             errorData.message.forEach((msg: string) => {
               message.error(msg);
             });

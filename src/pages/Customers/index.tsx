@@ -21,14 +21,15 @@ import {
   EyeOutlined,
   SearchOutlined,
   LoadingOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Customer } from '../../types'
-import { getCustomerList, deleteCustomer, getCustomerById } from '../../api/customer'
 import CustomerForm from './CustomerForm'
 import type { TabsProps } from 'antd'
 import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
+import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 
 const { confirm } = Modal
 
@@ -41,9 +42,6 @@ const Customers = () => {
   const savedSearchParams = getState('customersSearchParams');
   const savedPagination = getState('customersPagination');
 
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(false)
-  const [total, setTotal] = useState(0)
   const [current, setCurrent] = useState(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState({
@@ -64,6 +62,40 @@ const Customers = () => {
   const [detailType, setDetailType] = useState<'view' | 'edit' | 'add'>('view')
   const [isMobile, setIsMobile] = useState(false)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number>()
+
+  // 构建请求参数
+  const requestParams = {
+    page: current,
+    pageSize,
+    ...searchParams
+  }
+
+  // 使用SWR获取客户列表数据
+  const { 
+    customerList: customers, 
+    pagination: { total }, 
+    loading: isLoading, 
+    refreshCustomerList: refreshCustomers,
+    deleteCustomer: removeCustomer
+  } = useCustomerList(requestParams)
+
+  // 使用SWR获取客户详情数据
+  const {
+    customer: customerDetail,
+    loading: isDetailLoading,
+    refreshCustomerDetail: refreshCustomerDetail,
+    updateCustomer: updateCustomerDetail,
+    createCustomer: createNewCustomer
+  } = useCustomerDetail(selectedCustomerId)
+
+  // 当客户详情数据更新时，更新当前客户状态
+  useEffect(() => {
+    if (customerDetail && (detailType === 'view' || detailType === 'edit')) {
+      setCurrentCustomer(customerDetail)
+      setDetailLoading(false)
+    }
+  }, [customerDetail, detailType])
 
   // 当搜索参数变化时，保存到 pageStates
   useEffect(() => {
@@ -74,10 +106,6 @@ const Customers = () => {
   useEffect(() => {
     setState('customersPagination', { current, pageSize });
   }, [current, pageSize, setState]);
-
-  useEffect(() => {
-    fetchCustomers()
-  }, [current, pageSize, searchParams])
 
   useEffect(() => {
     const handleResize = () => {
@@ -91,45 +119,9 @@ const Customers = () => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const fetchCustomers = async () => {
-    setLoading(true)
-    try {
-      const params = {
-        page: current,
-        pageSize,
-        keyword: searchParams.keyword,
-        socialCreditCode: searchParams.socialCreditCode,
-        salesRepresentative: searchParams.salesRepresentative,
-        taxBureau: searchParams.taxBureau,
-        taxRegistrationType: searchParams.taxRegistrationType,
-        enterpriseStatus: searchParams.enterpriseStatus,
-        businessStatus: searchParams.businessStatus,
-        startDate: searchParams.startDate,
-        endDate: searchParams.endDate
-      }
-      
-      console.log('Fetching customers with params:', params)
-      
-      const response = await getCustomerList(params)
-      console.log('Customer response:', response)
-      
-      if (response && response.code === 0 && response.data) {
-        setCustomers(response.data.items || [])
-        setTotal(response.data.total || 0)
-      } else {
-        message.error('获取客户列表失败')
-      }
-    } catch (error) {
-      console.error('获取客户列表出错:', error)
-      message.error('获取客户列表失败，请稍后重试')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleSearch = () => {
     setCurrent(1) // 重置到第一页
-    fetchCustomers()
+    // SWR会自动触发新请求
   }
 
   const resetSearch = () => {
@@ -149,59 +141,35 @@ const Customers = () => {
 
   const handleAdd = () => {
     setCurrentCustomer(null)
+    setSelectedCustomerId(undefined)
     setDetailType('add')
     isMobile ? setDrawerVisible(true) : setModalVisible(true)
   }
 
-  const handleView = async (record: Customer) => {
-    setCurrentCustomer(record) // 先设置列表中的基本数据，保证界面快速响应
+  const handleView = (record: Customer) => {
+    // 先设置基本信息，保证界面快速响应
+    setCurrentCustomer(record)
     setDetailType('view')
+    setDetailLoading(true)
     isMobile ? setDrawerVisible(true) : setModalVisible(true)
     
-    try {
-      // 设置加载状态
-      setDetailLoading(true)
-      
-      // 使用API获取完整的客户详情数据
-      const response = await getCustomerById(record.id)
-      console.log('获取客户详情响应:', response)
-      
-      if (response && response.code === 0 && response.data) {
-        // 更新客户详情数据
-        setCurrentCustomer(response.data)
-      } else {
-        message.error('获取客户详情失败')
-      }
-    } catch (error) {
-      console.error('获取客户详情出错:', error)
-      message.error('获取客户详情失败，请稍后重试')
-    } finally {
-      setDetailLoading(false)
-    }
+    // 设置选中的客户ID，触发SWR请求完整数据
+    setSelectedCustomerId(record.id)
   }
 
-  const handleEdit = async (record: Customer) => {
-    setCurrentCustomer(record) // 先设置列表中的基本数据，保证界面快速响应
+  const handleEdit = (record: Customer) => {
+    // 先设置基本信息，保证界面快速响应
+    setCurrentCustomer(record)
     setDetailType('edit')
     setDetailLoading(true)
     
-    try {
-      // 获取最新的客户详情数据
-      const response = await getCustomerById(record.id)
-      console.log('获取客户详情响应 (编辑模式):', response)
-      
-      if (response && response.code === 0 && response.data) {
-        setCurrentCustomer(response.data)
-      } else {
-        message.error('获取客户详情失败')
-      }
-    } catch (error) {
-      console.error('获取客户详情出错:', error)
-      message.error('获取客户详情失败，请稍后重试')
-    } finally {
-      setDetailLoading(false)
+    // 设置选中的客户ID，触发SWR请求完整数据
+    setSelectedCustomerId(record.id)
+    
+    // 打开对话框（等数据加载完成后再显示）
+    setTimeout(() => {
       isMobile ? setDrawerVisible(true) : setModalVisible(true)
-    }
+    }, 0)
   }
 
   const handleDelete = (id: number) => {
@@ -211,66 +179,27 @@ const Customers = () => {
       okText: '确认',
       okType: 'danger',
       cancelText: '取消',
-      onOk: async () => {
-        try {
-          const response = await deleteCustomer(id);
-          
-          if (response && response.code === 0) {
-            message.success('删除成功');
-            fetchCustomers();
-          } else {
-            message.error(response?.message || '删除客户失败，请稍后重试');
-          }
-        } catch (error: any) {
-          console.error('删除客户失败:', error);
-          
-          // 处理404错误（客户不存在）
-          if (error.response?.status === 404 || (error.response?.data?.code === 404)) {
-            message.error(error.response?.data?.message || '客户不存在');
-            // 刷新列表，因为可能客户已经被删除
-            fetchCustomers();
-          } else {
-            message.error('删除客户失败，请稍后重试');
-          }
-        }
-      },
+      onOk: () => removeCustomer(id),
     })
   }
 
-  const refreshCustomerDetail = async (id: number) => {
-    setDetailLoading(true);
-    try {
-      const response = await getCustomerById(id);
-      if (response && response.code === 0 && response.data) {
-        setCurrentCustomer(response.data);
-        return response.data;
-      } else {
-        message.error('刷新客户数据失败');
-        return null;
-      }
-    } catch (error) {
-      console.error('刷新客户数据失败:', error);
-      message.error('刷新客户数据失败，请稍后重试');
-      return null;
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  // 保存成功后的回调，刷新列表和详情数据
+  // 保存成功后的回调
   const handleSaveSuccess = async (id?: number) => {
     // 关闭抽屉和弹窗
-    setDrawerVisible(false);
-    setModalVisible(false);
+    setDrawerVisible(false)
+    setModalVisible(false)
     
     // 刷新列表数据
-    await fetchCustomers();
+    refreshCustomers()
     
-    // 如果是编辑模式且有ID，刷新详情数据
+    // 如果提供了ID，并且正在查看或编辑，则刷新详情
     if (id && (detailType === 'edit' || detailType === 'view')) {
-      await refreshCustomerDetail(id);
+      // 确保选择的是当前ID
+      setSelectedCustomerId(id)
+      // 刷新详情数据
+      refreshCustomerDetail()
     }
-  };
+  }
 
   const columns: ColumnsType<Customer> = [
     {
@@ -542,6 +471,13 @@ const Customers = () => {
           <Button onClick={resetSearch} className="w-full sm:w-auto">
             重置
           </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={refreshCustomers}
+            className="w-full sm:w-auto"
+          >
+            刷新
+          </Button>
         </div>
         <Button
           type="primary"
@@ -572,7 +508,7 @@ const Customers = () => {
             }
           },
         }}
-        loading={loading}
+        loading={isLoading}
         scroll={{ x: 'max-content' }}
         size={isMobile ? 'small' : 'middle'}
         sticky={{ offsetHeader: 0 }}
@@ -600,7 +536,7 @@ const Customers = () => {
         maskClosable={false}
         footer={null}
       >
-        {detailLoading ? (
+        {isDetailLoading || detailLoading ? (
           <div className="flex justify-center items-center h-64">
             <LoadingOutlined style={{ fontSize: 48 }} />
             <span className="ml-3 text-lg">
@@ -639,7 +575,7 @@ const Customers = () => {
         maskClosable={false}
         getContainer={document.body}
       >
-        {detailLoading ? (
+        {isDetailLoading || detailLoading ? (
           <div className="flex justify-center items-center h-64">
             <LoadingOutlined style={{ fontSize: 48 }} />
             <span className="ml-3 text-lg">
@@ -662,12 +598,32 @@ const Customers = () => {
 }
 
 // 客户详情组件
-const CustomerDetail = ({ customer, onClose }: { customer: Customer, onClose?: () => void }) => {
+const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: () => void }) => {
   const [isMobile, setIsMobile] = useState(false)
   const [imagePreview, setImagePreview] = useState<{visible: boolean, url: string}>({
     visible: false,
     url: '',
   })
+
+  const [activeTabKey, setActiveTabKey] = useState(
+    usePageStates.getState().getState('customerDetailTab') || 'basic'
+  )
+  
+  const handleTabChange = (key: string) => {
+    setActiveTabKey(key)
+    // Save tab state
+    usePageStates.getState().setState('customerDetailTab', key)
+    // Save scroll position
+    usePageStates.getState().setState('customerDetailScrollPosition', document.documentElement.scrollTop)
+  }
+  
+  useEffect(() => {
+    // Restore scroll position when tab changes
+    const scrollPosition = usePageStates.getState().getState('customerDetailScrollPosition')
+    if (scrollPosition) {
+      window.scrollTo(0, scrollPosition)
+    }
+  }, [activeTabKey])
 
   useEffect(() => {
     const handleResize = () => {
@@ -1036,6 +992,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer, onClose?: (
           defaultActiveKey="basic" 
           items={tabs} 
           className="customer-detail-tabs"
+          activeKey={activeTabKey}
+          onChange={handleTabChange}
         />
         
         {/* 图片预览组件 */}
