@@ -308,11 +308,11 @@ body.ant-modal-open {
   .ant-table .ant-table-cell {
     padding: 8px !important;
   }
-  
+
   .customer-drawer .ant-drawer-body {
     padding: 12px;
   }
-  
+
   .customer-detail-tabs .ant-tabs-tab {
     padding: 8px 12px;
   }
@@ -327,18 +327,19 @@ body.ant-modal-open {
 /* 表格中的链接样式优化 */
 .company-name-link {
   color: #1890ff;
-  transition: all 0.3s;
-  display: inline-block;
-  max-width: 100%;
+  text-decoration: none;
+  transition: color 0.3s;
+  font-weight: 500;
+  display: block;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  position: relative;
 }
 
 .company-name-link:hover {
   color: #40a9ff;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .company-name-link:active {
@@ -348,17 +349,16 @@ body.ant-modal-open {
 .company-name-link::after {
   content: '';
   position: absolute;
-  bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;
+  bottom: 0;
   height: 1px;
-  background-color: currentColor;
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
+  background-color: transparent;
+  transition: background-color 0.3s;
 }
 
 .company-name-link:hover::after {
-  transform: scaleX(1);
+  background-color: transparent;
 }
 
 /* 图片标签样式 */
@@ -503,7 +503,7 @@ body.ant-modal-open {
   .action-buttons {
     column-gap: 0;
   }
-  
+
   .action-buttons .action-btn {
     padding: 0 4px;
     min-width: 28px;
@@ -534,18 +534,18 @@ body.ant-modal-open {
   .action-buttons .view-btn {
     color: #1890ff;
   }
-  
+
   .action-buttons .edit-btn {
     color: #52c41a;
   }
-  
+
   .action-buttons .delete-btn {
     color: #ff4d4f;
   }
 }
 
 /* 进一步优化模态框内容滚动 */
-.full-height-modal .ant-tabs, 
+.full-height-modal .ant-tabs,
 .customer-drawer .ant-tabs {
   height: 100%;
   display: flex;
@@ -566,11 +566,11 @@ body.ant-modal-open {
     width: 4px;
     height: 4px;
   }
-  
+
   .ant-modal-body {
     padding: 16px !important;
   }
-  
+
   .ant-drawer-body {
     padding: 16px !important;
   }
