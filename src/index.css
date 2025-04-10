@@ -201,6 +201,7 @@ body.ant-modal-open {
   flex-direction: column;
   height: calc(100vh - 50px); /* 修改高度设置，50px是顶部和底部的间隙总和 */
   overflow: hidden; /* 防止模态框本身出现滚动条 */
+  box-sizing: border-box;
 }
 
 .full-height-modal .ant-modal-body {
@@ -580,13 +581,16 @@ body.ant-modal-open {
   flex-direction: column;
   height: 100%;
   position: relative;
+  overflow: hidden;
 }
 
 .customer-form-scroll-container {
   flex: 1;
   overflow-y: auto;
   padding: 0 16px;
-  height: calc(100% - 60px); /* 留出底部按钮的空间 */
+  padding-bottom: 70px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .customer-form-footer {
@@ -594,6 +598,7 @@ body.ant-modal-open {
   bottom: 0;
   left: 0;
   right: 0;
+  height: 60px;
   padding: 12px 24px;
   background: white;
   border-top: 1px solid #f0f0f0;
@@ -601,6 +606,7 @@ body.ant-modal-open {
   z-index: 10;
   display: flex;
   justify-content: flex-end;
+  box-sizing: border-box;
 }
 
 .customer-form-tabs {
