@@ -587,7 +587,7 @@ const Customers = () => {
             </span>
           </div>
         ) : detailType === 'view' && currentCustomer ? (
-          <CustomerDetail customer={currentCustomer} />
+          <CustomerDetail customer={currentCustomer} onClose={() => setDrawerVisible(false)} />
         ) : (
           <CustomerForm
             customer={currentCustomer}
@@ -624,7 +624,7 @@ const Customers = () => {
             </span>
           </div>
         ) : detailType === 'view' && currentCustomer ? (
-          <CustomerDetail customer={currentCustomer} />
+          <CustomerDetail customer={currentCustomer} onClose={() => setModalVisible(false)} />
         ) : (
           <CustomerForm
             customer={currentCustomer}
@@ -639,7 +639,7 @@ const Customers = () => {
 }
 
 // 客户详情组件
-const CustomerDetail = ({ customer }: { customer: Customer }) => {
+const CustomerDetail = ({ customer, onClose }: { customer: Customer, onClose?: () => void }) => {
   const [isMobile, setIsMobile] = useState(false)
   const [imagePreview, setImagePreview] = useState<{visible: boolean, url: string}>({
     visible: false,
@@ -1029,6 +1029,11 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
             },
           }}
         />
+      </div>
+      <div className="customer-detail-footer">
+        <Button onClick={onClose}>
+          关闭
+        </Button>
       </div>
     </div>
   )
