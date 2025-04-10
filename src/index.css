@@ -363,3 +363,131 @@ button:focus-visible {
   color: #40a9ff;
   text-decoration: underline;
 }
+
+/* 操作按钮样式优化 */
+.action-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.action-buttons .action-btn {
+  padding: 0 8px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-right: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-buttons .action-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background-color: currentColor;
+  border-radius: 50%;
+  opacity: 0.15;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+  z-index: -1;
+}
+
+.action-buttons .action-btn:hover::before {
+  width: 140%;
+  height: 400%;
+}
+
+.action-buttons .action-btn:active::before {
+  opacity: 0.25;
+}
+
+.action-buttons .action-btn .anticon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.action-buttons .action-btn:hover {
+  background: transparent;
+}
+
+.action-buttons .view-btn {
+  color: #1890ff;
+}
+
+.action-buttons .view-btn:hover {
+  color: #40a9ff;
+}
+
+.action-buttons .edit-btn {
+  color: #52c41a;
+}
+
+.action-buttons .edit-btn:hover {
+  color: #73d13d;
+}
+
+.action-buttons .delete-btn {
+  color: #ff4d4f;
+}
+
+.action-buttons .delete-btn:hover {
+  color: #ff7875;
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    column-gap: 0;
+  }
+  
+  .action-buttons .action-btn {
+    padding: 0 4px;
+    min-width: 28px;
+  }
+}
+
+.customer-table .ant-table-tbody > tr > td {
+  transition: background 0.3s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.customer-table .ant-table-tbody > tr:hover > td {
+  background-color: #f5f9ff !important;
+}
+
+/* 优化表格行选中效果 */
+.customer-table .ant-table-tbody > tr.ant-table-row-selected > td {
+  background-color: #e6f7ff !important;
+}
+
+/* 优化表格固定列阴影 */
+.customer-table .ant-table-cell-fix-right {
+  background-color: inherit;
+  transition: background 0.3s;
+}
+
+/* 保证视觉一致性 */
+.customer-table .ant-table-cell-fix-right-first::after {
+  box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 适配浅色主题 */
+@media (prefers-color-scheme: light) {
+  .action-buttons .view-btn {
+    color: #1890ff;
+  }
+  
+  .action-buttons .edit-btn {
+    color: #52c41a;
+  }
+  
+  .action-buttons .delete-btn {
+    color: #ff4d4f;
+  }
+}

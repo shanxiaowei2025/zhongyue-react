@@ -394,35 +394,40 @@ const Customers = () => {
     {
       title: '操作',
       key: 'action',
-      width: isMobile ? 80 : 160,
+      width: isMobile ? 100 : 140,
       fixed: 'right',
       render: (_, record) => (
-        <Space size="small">
+        <Space size={isMobile ? 2 : 4} className="action-buttons">
           <Button
-            type="text"
+            type="link"
+            className="action-btn view-btn"
             icon={<EyeOutlined />}
             onClick={() => handleView(record)}
             title="查看"
             size={isMobile ? 'small' : 'middle'}
-          />
-          {!isMobile && <span>查看</span>}
+          >
+            {!isMobile && '查看'}
+          </Button>
           <Button
-            type="text"
+            type="link"
+            className="action-btn edit-btn"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
             title="编辑"
             size={isMobile ? 'small' : 'middle'}
-          />
-          {!isMobile && <span>编辑</span>}
+          >
+            {!isMobile && '编辑'}
+          </Button>
           <Button
-            type="text"
-            danger
+            type="link"
+            className="action-btn delete-btn"
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record.id)}
             title="删除"
             size={isMobile ? 'small' : 'middle'}
-          />
-          {!isMobile && <span>删除</span>}
+          >
+            {!isMobile && '删除'}
+          </Button>
         </Space>
       ),
     },
