@@ -570,12 +570,14 @@ const Customers = () => {
         closable={true}
         height="100vh"
         bodyStyle={{ 
-          paddingBottom: 80, 
+          paddingBottom: 0, 
+          padding: '16px 16px 0',
           overflow: 'hidden' // 使用容器自己的滚动
         }}
         destroyOnClose={true}
         className="customer-drawer"
         maskClosable={false}
+        footer={null}
       >
         {detailLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -606,7 +608,7 @@ const Customers = () => {
         style={{ top: 20 }}
         bodyStyle={{ 
           height: 'calc(100vh - 150px)', 
-          padding: '24px',
+          padding: '24px 24px 0',
           overflow: 'hidden'  // 重要：让内部内容自己滚动
         }}
         destroyOnClose={true}
@@ -1005,28 +1007,30 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
   ]
 
   return (
-    <>
-      <Tabs 
-        defaultActiveKey="basic" 
-        items={tabs} 
-        className="customer-detail-tabs"
-        size={isMobile ? "small" : "large"}
-      />
-      
-      {/* 图片预览组件 */}
-      <Image
-        width={0}
-        style={{ display: 'none' }}
-        src={imagePreview.url}
-        preview={{
-          visible: imagePreview.visible,
-          src: imagePreview.url,
-          onVisibleChange: (visible) => {
-            setImagePreview((prev) => ({ ...prev, visible }));
-          },
-        }}
-      />
-    </>
+    <div className="customer-detail-container">
+      <div className="customer-detail-scroll-container">
+        <Tabs 
+          defaultActiveKey="basic" 
+          items={tabs} 
+          className="customer-detail-tabs"
+          size={isMobile ? "small" : "large"}
+        />
+        
+        {/* 图片预览组件 */}
+        <Image
+          width={0}
+          style={{ display: 'none' }}
+          src={imagePreview.url}
+          preview={{
+            visible: imagePreview.visible,
+            src: imagePreview.url,
+            onVisibleChange: (visible) => {
+              setImagePreview((prev) => ({ ...prev, visible }));
+            },
+          }}
+        />
+      </div>
+    </div>
   )
 }
 
