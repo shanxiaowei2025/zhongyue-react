@@ -556,7 +556,7 @@ const Customers = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         size={isMobile ? 'small' : 'middle'}
-        sticky
+        sticky={{ offsetHeader: 0 }}
         className="customer-table"
       />
 
@@ -569,9 +569,13 @@ const Customers = () => {
         onClose={() => setDrawerVisible(false)}
         closable={true}
         height="100vh"
-        bodyStyle={{ paddingBottom: 80, overflowY: 'auto' }}
+        bodyStyle={{ 
+          paddingBottom: 80, 
+          overflow: 'hidden' // 使用容器自己的滚动
+        }}
         destroyOnClose={true}
         className="customer-drawer"
+        maskClosable={false}
       >
         {detailLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -600,9 +604,15 @@ const Customers = () => {
         footer={null}
         width="80%"
         style={{ top: 20 }}
-        bodyStyle={{ height: 'calc(100vh - 140px)', overflowY: 'auto', padding: '24px' }}
+        bodyStyle={{ 
+          height: 'calc(100vh - 140px)', 
+          padding: '24px',
+          overflow: 'hidden'  // 重要：让内部内容自己滚动
+        }}
         destroyOnClose={true}
         className={isMobile ? '' : 'full-height-modal'}
+        maskClosable={false}
+        getContainer={document.body}
       >
         {detailLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -971,7 +981,12 @@ const CustomerDetail = ({ customer }: { customer: Customer }) => {
 
   return (
     <>
-      <Tabs defaultActiveKey="basic" items={tabs} className="customer-detail-tabs" />
+      <Tabs 
+        defaultActiveKey="basic" 
+        items={tabs} 
+        className="customer-detail-tabs"
+        size={isMobile ? "small" : "large"}
+      />
       
       {/* 图片预览组件 */}
       <Image

@@ -168,11 +168,39 @@ button:focus-visible {
   }
 }
 
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d9d9d9;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #bfbfbf;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* 防止模态框打开时背景滚动 */
+body.ant-modal-open {
+  overflow: hidden !important;
+  padding-right: 0 !important; /* 防止出现抖动 */
+}
+
 /* 全屏模态框样式 */
 .full-height-modal .ant-modal-content {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 40px); /* 修改为视口高度减去顶部和底部的间隙 */
+  overflow: hidden; /* 防止模态框本身出现滚动条 */
 }
 
 .full-height-modal .ant-modal-body {
@@ -182,12 +210,68 @@ button:focus-visible {
   padding-bottom: 24px;
 }
 
+/* 覆盖之前的滚动条样式，使用全局样式 */
+.menu-container::-webkit-scrollbar,
+.content-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.menu-container::-webkit-scrollbar-thumb,
+.content-container::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 4px;
+}
+
+.menu-container::-webkit-scrollbar-thumb:hover,
+.content-container::-webkit-scrollbar-thumb:hover {
+  background: #bfbfbf;
+}
+
+.menu-container::-webkit-scrollbar-track,
+.content-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
 .customer-detail-tabs .ant-tabs-content-holder {
   overflow-y: auto;
 }
 
 .customer-detail-tabs .ant-tabs-content {
   padding-bottom: 24px;
+}
+
+/* 固定抽屉高度并允许内容滚动 */
+.customer-drawer .ant-drawer-body {
+  overflow-y: auto;
+  height: calc(100% - 55px); /* 减去抽屉头部的高度 */
+}
+
+/* 表格滚动区域样式优化 */
+.ant-table-body {
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+/* 移除不必要的滚动条显示 */
+.customer-table .ant-table-sticky-scroll {
+  display: none !important;
+}
+
+/* 表格固定列样式 */
+.customer-table .ant-table-cell-fix-right {
+  background-color: white !important;
+}
+
+/* 确保表格行悬停时固定列也使用相应的背景色 */
+.customer-table .ant-table-tbody > tr:hover .ant-table-cell-fix-right {
+  background-color: #f5f9ff !important;
+}
+
+/* 确保选中行的固定列也使用正确的背景色 */
+.customer-table .ant-table-tbody > tr.ant-table-row-selected .ant-table-cell-fix-right {
+  background-color: #e6f7ff !important;
 }
 
 /* 图片预览样式 */
@@ -344,10 +428,6 @@ button:focus-visible {
   font-weight: 600;
 }
 
-.customer-table .ant-table-sticky-scroll {
-  display: none !important;
-}
-
 .customer-table .company-name-link {
   color: #1890ff;
   text-decoration: none;
@@ -443,26 +523,6 @@ button:focus-visible {
   background-color: #e6f7ff !important;
 }
 
-/* 表格固定列样式 */
-.customer-table .ant-table-cell-fix-right {
-  background-color: white !important;
-}
-
-/* 确保表格行悬停时固定列也使用相应的背景色 */
-.customer-table .ant-table-tbody > tr:hover .ant-table-cell-fix-right {
-  background-color: #f5f9ff !important;
-}
-
-/* 确保选中行的固定列也使用正确的背景色 */
-.customer-table .ant-table-tbody > tr.ant-table-row-selected .ant-table-cell-fix-right {
-  background-color: #e6f7ff !important;
-}
-
-/* 操作列单元格样式，确保内容不会穿透 */
-.customer-table .ant-table-cell-fix-right {
-  z-index: 2;
-}
-
 /* 保证视觉一致性 */
 .customer-table .ant-table-cell-fix-right-first::after {
   box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, 0.08) !important;
@@ -480,5 +540,36 @@ button:focus-visible {
   
   .action-buttons .delete-btn {
     color: #ff4d4f;
+  }
+}
+
+/* 进一步优化模态框内容滚动 */
+.full-height-modal .ant-tabs, 
+.customer-drawer .ant-tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-height-modal .ant-tabs-content-holder,
+.customer-drawer .ant-tabs-content-holder {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 优化响应式布局时滚动条的显示 */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .ant-modal-body {
+    padding: 16px !important;
+  }
+  
+  .ant-drawer-body {
+    padding: 16px !important;
   }
 }
