@@ -55,5 +55,6 @@ export const updateCustomer = (id: number, data: Partial<Customer>) => {
 
 // 删除客户
 export const deleteCustomer = (id: number) => {
-  return request.delete<ApiResponse<null>>(`/customer/${id}`)
+  console.log('删除客户, ID:', id);
+  return request.delete<ApiResponse<Customer>>(`/customer/${id}`);
 }

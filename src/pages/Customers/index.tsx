@@ -194,12 +194,25 @@ const Customers = () => {
       cancelText: '取消',
       onOk: async () => {
         try {
-          await deleteCustomer(id)
-          message.success('删除成功')
-          fetchCustomers()
-        } catch (error) {
-          console.error('删除客户失败:', error)
-          message.error('删除客户失败，请稍后重试')
+          const response = await deleteCustomer(id);
+          
+          if (response && response.code === 0) {
+            message.success('删除成功');
+            fetchCustomers();
+          } else {
+            message.error(response?.message || '删除客户失败，请稍后重试');
+          }
+        } catch (error: any) {
+          console.error('删除客户失败:', error);
+          
+          // 处理404错误（客户不存在）
+          if (error.response?.status === 404 || (error.response?.data?.code === 404)) {
+            message.error(error.response?.data?.message || '客户不存在');
+            // 刷新列表，因为可能客户已经被删除
+            fetchCustomers();
+          } else {
+            message.error('删除客户失败，请稍后重试');
+          }
         }
       },
     })
