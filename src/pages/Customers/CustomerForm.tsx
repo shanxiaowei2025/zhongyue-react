@@ -11,6 +11,7 @@ import {
   message,
   Space,
   Image,
+  Switch,
 } from 'antd'
 import { UploadOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
@@ -21,6 +22,10 @@ import { useCustomerDetail } from '../../hooks/useCustomer'
 import MinioUpload from '../../components/MinioUpload'
 import { getMinioUrl } from '../../utils/minio'
 import type { TabsProps } from 'antd'
+import ImageUpload from '../../components/ImageUpload'
+import MultiImageUpload from '../../components/MultiImageUpload'
+import { processCustomerImages } from '../../utils/customer'
+import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 
 // 业务状态映射
 export const BUSINESS_STATUS_MAP = {
@@ -32,7 +37,7 @@ export const BUSINESS_STATUS_MAP = {
 interface CustomerFormProps {
   customer?: Customer | null
   mode: 'add' | 'edit' | 'view'
-  onSuccess?: () => void
+  onSuccess?: (isAutoSave: boolean) => void
   onCancel?: () => void
 }
 
@@ -44,16 +49,19 @@ type FormCustomer = Omit<
   establishmentDate?: Dayjs | null
   licenseExpiryDate?: Dayjs | null
   capitalContributionDeadline?: Dayjs | null
+  [key: string]: any // 添加索引签名
 }
 
 const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, onCancel }) => {
-  const [form] = Form.useForm()
-  const [activeTab, setActiveTab] = useState('basic')
+  const [form] = Form.useForm<FormCustomer>()
+  const [activeTab, setActiveTab] = useState<string>('basic')
+  const [isSaving, setIsSaving] = useState(false)
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
 
   useEffect(() => {
-    if (customer) {
+    if (customer && mode !== 'add') {
       form.setFieldsValue({
         ...customer,
         establishmentDate: customer.establishmentDate
@@ -69,32 +77,95 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     }
   }, [customer, form])
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: any, isAutoSave = false) => {
+    if (isSaving) return
+
     try {
-      // 处理日期字段
+      setIsSaving(true)
+      // 处理日期字段和图片字段
       const processedValues = {
         ...values,
         establishmentDate: values.establishmentDate?.format('YYYY-MM-DD'),
         licenseExpiryDate: values.licenseExpiryDate?.format('YYYY-MM-DD'),
         capitalContributionDeadline: values.capitalContributionDeadline?.format('YYYY-MM-DD'),
+        // 确保图片字段是对象类型
+        legalPersonIdImages: values.legalPersonIdImages || {},
+        otherIdImages: values.otherIdImages || {},
+        businessLicenseImages: values.businessLicenseImages || {},
+        bankAccountLicenseImages: values.bankAccountLicenseImages || {},
+        supplementaryImages: values.supplementaryImages || {},
       }
+
+      console.log('提交处理后的客户数据:', processedValues)
 
       if (mode === 'add') {
         // 调用创建客户 API
-        await createCustomer(processedValues)
-        message.success('创建成功')
+        const success = await createCustomer(processedValues)
+        if (success) {
+          message.success('创建客户成功')
+          onSuccess?.(isAutoSave)
+        }
       } else {
         // 调用更新客户 API
         if (!customer?.id) {
           message.error('客户ID不存在')
           return
         }
-        await updateCustomer(customer.id, processedValues)
-        message.success('更新成功')
+        const success = await updateCustomer(customer.id, processedValues)
+        if (success) {
+          message.success('更新客户成功')
+          onSuccess?.(isAutoSave)
+        }
       }
-      onSuccess?.()
     } catch (error) {
-      message.error('操作失败')
+      console.error('保存客户信息出错:', error)
+      message.error('操作失败：' + (error instanceof Error ? error.message : '未知错误'))
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleAutoSave = async () => {
+    if (!autoSaveEnabled || isSaving || mode === 'view') return
+
+    try {
+      // 验证表单必填项，如果有错误则不自动保存
+      const fields = [
+        'companyName',
+        'socialCreditCode',
+        'dailyContact',
+        'dailyContactPhone',
+        'salesRepresentative',
+        'taxBureau',
+        'taxRegistrationType',
+        'enterpriseStatus',
+        'businessStatus',
+      ]
+
+      const values = form.getFieldsValue()
+      let hasError = false
+
+      // 检查必填字段
+      for (const field of fields) {
+        if (!values[field]) {
+          console.log(`自动保存：${field} 字段为空，跳过自动保存`)
+          hasError = true
+          break
+        }
+      }
+
+      if (hasError) {
+        console.log('自动保存：表单验证未通过，跳过自动保存')
+        return
+      }
+
+      // 提交表单
+      console.log('自动保存：图片更新后触发自动保存')
+      await form.validateFields()
+      await handleSubmit(form.getFieldsValue(), true) // 传递isAutoSave=true参数
+    } catch (error) {
+      console.error('自动保存出错:', error)
+      // 不显示错误消息，避免干扰用户
     }
   }
 
@@ -151,7 +222,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Select>
               {Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => (
                 <Select.Option key={value} value={value}>
-                  {label}
+                  {String(label)}
                 </Select.Option>
               ))}
             </Select>
@@ -373,78 +444,98 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       key: '6',
       label: '图片资料',
       children: (
-        <div className="grid grid-cols-1 gap-4">
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium mb-4">法人身份证照片</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-medium mb-2">法人身份证照片</h3>
               <Form.Item name={['legalPersonIdImages', 'front']} label="身份证正面">
-                <MinioUpload
-                  accept="image/*"
-                  maxSize={5 * 1024 * 1024}
-                  directory="customer/legal-person-id"
+                <ImageUpload
+                  label="身份证正面"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['legalPersonIdImages', 'front'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
+                  }
+                  onSuccess={handleAutoSave}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">
-                <MinioUpload
-                  accept="image/*"
-                  maxSize={5 * 1024 * 1024}
-                  directory="customer/legal-person-id"
+                <ImageUpload
+                  label="身份证反面"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['legalPersonIdImages', 'back'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['legalPersonIdImages', 'back'], value)
+                  }
+                  onSuccess={handleAutoSave}
+                />
+              </Form.Item>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">营业执照照片</h3>
+              <Form.Item name={['businessLicenseImages', 'main']} label="营业执照">
+                <ImageUpload
+                  label="营业执照"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['businessLicenseImages', 'main'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['businessLicenseImages', 'main'], value)
+                  }
+                  onSuccess={handleAutoSave}
                 />
               </Form.Item>
             </div>
           </div>
 
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium mb-4">营业执照照片</h3>
-            <Form.Item name={['businessLicenseImages', 'main']} label="营业执照">
-              <MinioUpload
-                accept="image/*"
-                maxSize={5 * 1024 * 1024}
-                directory="customer/business-license"
-              />
-            </Form.Item>
-          </div>
-
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium mb-4">开户许可证照片</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="font-medium mb-2">开户许可证照片</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item name={['bankAccountLicenseImages', 'basic']} label="基本户开户许可证">
-                <MinioUpload
-                  accept="image/*"
-                  maxSize={5 * 1024 * 1024}
-                  directory="customer/bank-account-license"
+                <ImageUpload
+                  label="基本户开户许可证"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['bankAccountLicenseImages', 'basic'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['bankAccountLicenseImages', 'basic'], value)
+                  }
+                  onSuccess={handleAutoSave}
                 />
               </Form.Item>
               <Form.Item name={['bankAccountLicenseImages', 'general']} label="一般户开户许可证">
-                <MinioUpload
-                  accept="image/*"
-                  maxSize={5 * 1024 * 1024}
-                  directory="customer/bank-account-license"
+                <ImageUpload
+                  label="一般户开户许可证"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['bankAccountLicenseImages', 'general'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['bankAccountLicenseImages', 'general'], value)
+                  }
+                  onSuccess={handleAutoSave}
                 />
               </Form.Item>
             </div>
           </div>
 
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium mb-4">其他人员身份证照片</h3>
-            <Form.Item name="otherIdImages">
-              <MinioUpload
-                accept="image/*"
-                maxSize={5 * 1024 * 1024}
-                multiple
-                directory="customer/other-id"
+          <div>
+            <Form.Item name="otherIdImages" label="其他人员身份证照片">
+              <MultiImageUpload
+                title="其他人员身份证照片"
+                disabled={mode === 'view'}
+                value={form.getFieldValue('otherIdImages')}
+                onChange={value => form.setFieldValue('otherIdImages', value)}
+                onSuccess={handleAutoSave}
               />
             </Form.Item>
           </div>
 
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium mb-4">补充资料照片</h3>
-            <Form.Item name="supplementaryImages">
-              <MinioUpload
-                accept="image/*"
-                maxSize={5 * 1024 * 1024}
-                multiple
-                directory="customer/supplementary"
+          <div>
+            <Form.Item name="supplementaryImages" label="补充资料照片">
+              <MultiImageUpload
+                title="补充资料照片"
+                disabled={mode === 'view'}
+                value={form.getFieldValue('supplementaryImages')}
+                onChange={value => form.setFieldValue('supplementaryImages', value)}
+                onSuccess={handleAutoSave}
               />
             </Form.Item>
           </div>
@@ -462,6 +553,18 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         onFinish={handleSubmit}
         className="customer-form"
       >
+        <div className="mb-4 flex justify-between items-center">
+          <div className="font-medium text-lg">
+            {mode === 'add' ? '添加客户' : mode === 'edit' ? '编辑客户' : '客户详情'}
+          </div>
+          {mode !== 'view' && (
+            <div className="flex items-center">
+              <span className="mr-2">图片自动保存:</span>
+              <Switch checked={autoSaveEnabled} onChange={setAutoSaveEnabled} size="small" />
+            </div>
+          )}
+        </div>
+
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -471,7 +574,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         <div className="customer-form-footer">
           <Space>
             <Button onClick={onCancel}>取消</Button>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={isSaving}>
               {mode === 'add' ? '创建' : '保存'}
             </Button>
           </Space>

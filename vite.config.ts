@@ -6,9 +6,9 @@ export default defineConfig(({ mode }) => {
   // 加载环境变量
   const env = loadEnv(mode, process.cwd())
   const apiServer = env.VITE_API_SERVER || 'http://localhost:3000'
-  
+
   console.log('API服务器地址:', apiServer)
-  
+
   return {
     plugins: [react()],
     server: {
@@ -23,15 +23,21 @@ export default defineConfig(({ mode }) => {
           // rewrite: (path) => path.replace(/^\/api/, ''),
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
-              console.log('代理错误:', err);
-            });
+              console.log('代理错误:', err)
+            })
             proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('代理请求:', req.method, req.url);
-            });
+              console.log('代理请求:', req.method, req.url)
+            })
             proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('代理响应:', proxyRes.statusCode, req.url);
-            });
+              console.log('代理响应:', proxyRes.statusCode, req.url)
+            })
           },
+        },
+        // Minio服务器代理
+        '^/zhongyue/.*': {
+          target: 'https://zhongyue-minio-api.starlogic.tech',
+          changeOrigin: true,
+          secure: false,
         },
       },
     },

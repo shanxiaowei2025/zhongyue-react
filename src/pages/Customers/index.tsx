@@ -27,7 +27,7 @@ import type { ColumnsType } from 'antd/es/table'
 import type { Customer } from '../../types'
 import type { TabsProps } from 'antd'
 import CustomerForm from './CustomerForm'
-import { BUSINESS_STATUS_MAP } from './CustomerForm'
+import { BUSINESS_STATUS_MAP } from '../../constants'
 import { getMinioUrl } from '../../utils/minio'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -199,15 +199,18 @@ const Customers = () => {
   }
 
   // 保存成功后的回调
-  const handleSaveSuccess = async (id?: number) => {
-    // 关闭抽屉和弹窗
-    setDrawerVisible(false)
-    setModalVisible(false)
-    setCurrentCustomer(null)
-    setSelectedCustomerId(undefined)
-
+  const handleSaveSuccess = async (isAutoSave = false, id?: number) => {
     // 刷新列表数据
     refreshCustomers()
+
+    // 只有在非自动保存时才关闭抽屉和弹窗
+    if (!isAutoSave) {
+      // 关闭抽屉和弹窗
+      setDrawerVisible(false)
+      setModalVisible(false)
+      setCurrentCustomer(null)
+      setSelectedCustomerId(undefined)
+    }
 
     // 如果提供了ID，并且正在查看或编辑，则刷新详情
     if (id && (detailType === 'edit' || detailType === 'view')) {
@@ -530,44 +533,27 @@ const Customers = () => {
 
       {/* 客户详情抽屉（移动端） */}
       <Drawer
-        title={detailType === 'view' ? '客户详情' : detailType === 'edit' ? '编辑客户' : '添加客户'}
-        placement="right"
-        width={isMobile ? '100%' : '80%'}
+        title={detailType === 'add' ? '添加客户' : detailType === 'edit' ? '编辑客户' : '客户详情'}
+        width={isMobile ? '100%' : 900}
+        onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
-        onClose={() => {
-          setDrawerVisible(false)
-          setDetailLoading(false)
-          setCurrentCustomer(null)
-          setSelectedCustomerId(undefined)
-        }}
-        closable={true}
-        height="100vh"
-        styles={{
-          body: {
-            paddingBottom: 0,
-            padding: '16px 16px 0',
-            overflow: 'hidden',
-          },
-        }}
-        destroyOnClose={true}
-        className="customer-drawer"
-        maskClosable={false}
-        footer={null}
+        destroyOnClose
+        bodyStyle={{ padding: '16px' }}
       >
-        {isDetailLoading || detailLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <LoadingOutlined style={{ fontSize: 48 }} />
-            <span className="ml-3 text-lg">
-              {detailType === 'view' ? '加载客户详情...' : '加载客户数据...'}
-            </span>
-          </div>
-        ) : detailType === 'view' && currentCustomer ? (
-          <CustomerDetail customer={currentCustomer} onClose={() => setDrawerVisible(false)} />
+        {detailType === 'view' ? (
+          customerDetail ? (
+            <CustomerDetail customer={customerDetail} onClose={() => setDrawerVisible(false)} />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <LoadingOutlined style={{ fontSize: 24 }} spin />
+              <p>加载中...</p>
+            </div>
+          )
         ) : (
           <CustomerForm
             customer={currentCustomer}
             mode={detailType}
-            onSuccess={() => handleSaveSuccess(currentCustomer?.id)}
+            onSuccess={isAutoSave => handleSaveSuccess(isAutoSave, currentCustomer?.id)}
             onCancel={() => setDrawerVisible(false)}
           />
         )}
@@ -575,43 +561,27 @@ const Customers = () => {
 
       {/* 客户详情模态框（桌面端） */}
       <Modal
-        title={detailType === 'view' ? '客户详情' : detailType === 'edit' ? '编辑客户' : '添加客户'}
+        title={detailType === 'add' ? '添加客户' : detailType === 'edit' ? '编辑客户' : '客户详情'}
         open={modalVisible}
-        onCancel={() => {
-          setModalVisible(false)
-          setDetailLoading(false)
-          setCurrentCustomer(null)
-          setSelectedCustomerId(undefined)
-        }}
+        onCancel={() => setModalVisible(false)}
         footer={null}
-        width="80%"
-        style={{ top: 20 }}
-        styles={{
-          body: {
-            height: 'calc(100vh - 160px)',
-            padding: '24px 24px 0',
-            overflow: 'hidden',
-          },
-        }}
-        destroyOnClose={true}
-        className={isMobile ? '' : 'full-height-modal'}
-        maskClosable={false}
-        getContainer={document.body}
+        width={1000}
+        destroyOnClose
       >
-        {isDetailLoading || detailLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <LoadingOutlined style={{ fontSize: 48 }} />
-            <span className="ml-3 text-lg">
-              {detailType === 'view' ? '加载客户详情...' : '加载客户数据...'}
-            </span>
-          </div>
-        ) : detailType === 'view' && currentCustomer ? (
-          <CustomerDetail customer={currentCustomer} onClose={() => setModalVisible(false)} />
+        {detailType === 'view' ? (
+          customerDetail ? (
+            <CustomerDetail customer={customerDetail} onClose={() => setModalVisible(false)} />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <LoadingOutlined style={{ fontSize: 24 }} spin />
+              <p>加载中...</p>
+            </div>
+          )
         ) : (
           <CustomerForm
             customer={currentCustomer}
             mode={detailType}
-            onSuccess={() => handleSaveSuccess(currentCustomer?.id)}
+            onSuccess={isAutoSave => handleSaveSuccess(isAutoSave, currentCustomer?.id)}
             onCancel={() => setModalVisible(false)}
           />
         )}
