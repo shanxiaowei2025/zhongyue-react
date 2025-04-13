@@ -8,7 +8,6 @@ import {
   LoadingOutlined,
   FileImageOutlined,
 } from '@ant-design/icons'
-import type { UploadFile } from 'antd/es/upload/interface'
 import { uploadFile, deleteFile } from '../utils/upload'
 
 interface MultiImageUploadProps {

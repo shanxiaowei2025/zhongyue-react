@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # 前端应用服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zhongyue-frontend
+    ports:
+      - '80:80'
+    restart: unless-stopped
+    # 如果有API服务器，可以取消注释以下部分
+    # depends_on:
+    #   - api
+    networks:
+      - zhongyue-network
+
+  # API服务（如果有后端API，取消注释此部分）
+  # api:
+  #   image: your-api-image:latest
+  #   container_name: zhongyue-api
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3000
+  #     - DB_HOST=db
+  #     - DB_PORT=5432
+  #     - DB_NAME=zhongyue
+  #     - DB_USER=postgres
+  #     - DB_PASSWORD=postgres
+  #   networks:
+  #     - zhongyue-network
+  #   depends_on:
+  #     - db
+
+  # 数据库服务（如果有数据库，取消注释此部分）
+  # db:
+  #   image: postgres:13-alpine
+  #   container_name: zhongyue-db
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=zhongyue
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   networks:
+  #     - zhongyue-network
+
+networks:
+  zhongyue-network:
+    driver: bridge
+# 如果有数据库，取消注释此部分
+# volumes:
+#   pgdata:

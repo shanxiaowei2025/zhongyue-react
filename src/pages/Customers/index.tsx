@@ -43,7 +43,7 @@ dayjs.extend(timezone)
 
 const { confirm } = Modal
 
-const Customers = () => {
+export default function Customers() {
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
@@ -71,7 +71,6 @@ const Customers = () => {
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null)
   const [detailType, setDetailType] = useState<'view' | 'edit' | 'add'>('view')
   const [isMobile, setIsMobile] = useState(false)
-  const [detailLoading, setDetailLoading] = useState(false)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number>()
 
   // 构建请求参数
@@ -95,8 +94,6 @@ const Customers = () => {
     customer: customerDetail,
     loading: isDetailLoading,
     refreshCustomerDetail: refreshCustomerDetail,
-    updateCustomer: updateCustomerDetail,
-    createCustomer: createNewCustomer,
   } = useCustomerDetail(selectedCustomerId)
 
   // 当客户详情数据更新时，更新当前客户状态
@@ -104,7 +101,6 @@ const Customers = () => {
     if (customerDetail && (detailType === 'view' || detailType === 'edit')) {
       // 更新当前客户信息，确保图片字段正确保留
       setCurrentCustomer(customerDetail)
-      setDetailLoading(false)
     }
   }, [customerDetail, detailType])
 
@@ -162,7 +158,6 @@ const Customers = () => {
     // 先设置基本信息，保证界面快速响应
     setCurrentCustomer(record)
     setDetailType('view')
-    setDetailLoading(true)
 
     // 确保先设置选中的客户ID再打开对话框，避免重复触发请求
     setSelectedCustomerId(record.id)
@@ -177,7 +172,6 @@ const Customers = () => {
     // 先使用列表中的记录，确保图片等信息在加载完整数据前可见
     setCurrentCustomer(record)
     setDetailType('edit')
-    setDetailLoading(true)
     setSelectedCustomerId(record.id)
 
     // 打开对话框
@@ -1214,5 +1208,3 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     </div>
   )
 }
-
-export default Customers

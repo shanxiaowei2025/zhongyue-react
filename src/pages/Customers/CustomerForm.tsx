@@ -1,30 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Form,
-  Input,
-  Button,
-  Select,
-  DatePicker,
-  InputNumber,
-  Tabs,
-  Upload,
-  message,
-  Space,
-  Image,
-  Switch,
-} from 'antd'
-import { UploadOutlined } from '@ant-design/icons'
-import type { UploadProps } from 'antd'
+import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Space, message } from 'antd'
 import type { Customer } from '../../types'
-import dayjs from 'dayjs'
-import type { Dayjs } from 'dayjs'
-import { useCustomerDetail } from '../../hooks/useCustomer'
+import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
 import ImageUpload from '../../components/ImageUpload'
 import MultiImageUpload from '../../components/MultiImageUpload'
-import { processCustomerImages } from '../../utils/customer'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
+import { useCustomerDetail } from '../../hooks/useCustomer'
 
 // 业务状态映射
 export const BUSINESS_STATUS_MAP = {
@@ -172,11 +155,34 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     }
   }
 
-  // 处理图片上传成功
-  const handleImageUploadSuccess = (fileName: string, isAutoSave = false) => {
+  // 处理图片上传成功 - 修正类型问题
+  const handleImageUploadSuccess = (isAutoSave: boolean) => {
     if (mode === 'add') {
-      // 添加模式下，记录上传的图片用于可能的取消操作
-      setUploadedImages(prev => [...prev, fileName])
+      // 获取表单中的所有图片字段，提取文件名
+      const formValues = form.getFieldsValue()
+      const {
+        legalPersonIdImages,
+        businessLicenseImages,
+        bankAccountLicenseImages,
+        otherIdImages,
+        supplementaryImages,
+      } = formValues
+
+      // 收集图片文件名到uploadedImages中
+      const collectFileName = (obj: any) => {
+        if (!obj) return
+        Object.values(obj).forEach(item => {
+          if (item && typeof item === 'object' && 'fileName' in item) {
+            setUploadedImages(prev => [...prev, item.fileName as string])
+          }
+        })
+      }
+
+      collectFileName(legalPersonIdImages)
+      collectFileName(businessLicenseImages)
+      collectFileName(bankAccountLicenseImages)
+      collectFileName(otherIdImages)
+      collectFileName(supplementaryImages)
     } else if (autoSaveEnabled) {
       // 编辑模式下，调用自动保存
       handleAutoSave()
@@ -500,12 +506,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
                   }
-                  onSuccess={isAutoSave => {
-                    const value = safeGetFieldValue(form, ['legalPersonIdImages', 'front'])
-                    if (value?.fileName) {
-                      handleImageUploadSuccess(value.fileName, isAutoSave)
-                    }
-                  }}
+                  onSuccess={handleImageUploadSuccess}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">
@@ -516,12 +517,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'back'], value)
                   }
-                  onSuccess={isAutoSave => {
-                    const value = safeGetFieldValue(form, ['legalPersonIdImages', 'back'])
-                    if (value?.fileName) {
-                      handleImageUploadSuccess(value.fileName, isAutoSave)
-                    }
-                  }}
+                  onSuccess={handleImageUploadSuccess}
                 />
               </Form.Item>
             </div>
@@ -536,12 +532,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['businessLicenseImages', 'main'], value)
                   }
-                  onSuccess={isAutoSave => {
-                    const value = safeGetFieldValue(form, ['businessLicenseImages', 'main'])
-                    if (value?.fileName) {
-                      handleImageUploadSuccess(value.fileName, isAutoSave)
-                    }
-                  }}
+                  onSuccess={handleImageUploadSuccess}
                 />
               </Form.Item>
             </div>
@@ -558,12 +549,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'basic'], value)
                   }
-                  onSuccess={isAutoSave => {
-                    const value = safeGetFieldValue(form, ['bankAccountLicenseImages', 'basic'])
-                    if (value?.fileName) {
-                      handleImageUploadSuccess(value.fileName, isAutoSave)
-                    }
-                  }}
+                  onSuccess={handleImageUploadSuccess}
                 />
               </Form.Item>
               <Form.Item name={['bankAccountLicenseImages', 'general']} label="一般户开户许可证">
@@ -574,12 +560,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'general'], value)
                   }
-                  onSuccess={isAutoSave => {
-                    const value = safeGetFieldValue(form, ['bankAccountLicenseImages', 'general'])
-                    if (value?.fileName) {
-                      handleImageUploadSuccess(value.fileName, isAutoSave)
-                    }
-                  }}
+                  onSuccess={handleImageUploadSuccess}
                 />
               </Form.Item>
             </div>
@@ -592,20 +573,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 disabled={mode === 'view'}
                 value={form.getFieldValue('otherIdImages')}
                 onChange={value => form.setFieldValue('otherIdImages', value)}
-                onSuccess={isAutoSave => {
-                  // 对于多图片上传，需要从表单获取所有图片URL
-                  const images = form.getFieldValue('otherIdImages') || {}
-                  // 提取各图片的文件名
-                  Object.values(images).forEach(url => {
-                    if (typeof url === 'string' && url) {
-                      const urlParts = url.split('/')
-                      const fileName = urlParts[urlParts.length - 1].split('?')[0]
-                      if (fileName) {
-                        handleImageUploadSuccess(fileName, isAutoSave)
-                      }
-                    }
-                  })
-                }}
+                onSuccess={handleImageUploadSuccess}
               />
             </Form.Item>
           </div>
@@ -617,20 +585,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 disabled={mode === 'view'}
                 value={form.getFieldValue('supplementaryImages')}
                 onChange={value => form.setFieldValue('supplementaryImages', value)}
-                onSuccess={isAutoSave => {
-                  // 对于多图片上传，需要从表单获取所有图片URL
-                  const images = form.getFieldValue('supplementaryImages') || {}
-                  // 提取各图片的文件名
-                  Object.values(images).forEach(url => {
-                    if (typeof url === 'string' && url) {
-                      const urlParts = url.split('/')
-                      const fileName = urlParts[urlParts.length - 1].split('?')[0]
-                      if (fileName) {
-                        handleImageUploadSuccess(fileName, isAutoSave)
-                      }
-                    }
-                  })
-                }}
+                onSuccess={handleImageUploadSuccess}
               />
             </Form.Item>
           </div>

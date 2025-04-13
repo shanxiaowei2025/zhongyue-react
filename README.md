@@ -251,3 +251,54 @@ src/
   - 使用SWR进行数据获取
   - 优化了图片预览功能
   - 改进了表单提交逻辑
+
+## Docker部署
+
+本项目支持使用Docker进行容器化部署，简化了部署流程。
+
+### 使用Docker部署
+
+1. 构建Docker镜像:
+
+```bash
+docker build -t zhongyue-react .
+```
+
+2. 运行Docker容器:
+
+```bash
+docker run -d -p 80:80 --name zhongyue-frontend zhongyue-react
+```
+
+### 使用Docker Compose部署
+
+如果你希望使用Docker Compose来简化多容器部署:
+
+1. 启动服务:
+
+```bash
+docker-compose up -d
+```
+
+2. 停止服务:
+
+```bash
+docker-compose down
+```
+
+### 自定义API服务器地址
+
+若要连接到自定义的API服务器，可以修改`nginx/nginx.conf`文件中的`proxy_pass`配置，或在部署时挂载自定义配置:
+
+```bash
+docker run -d -p 80:80 -v /path/to/custom/nginx.conf:/etc/nginx/conf.d/default.conf zhongyue-frontend
+```
+
+### 生产环境注意事项
+
+在生产环境中部署时，建议:
+
+1. 使用HTTPS加密通信
+2. 为API服务配置适当的CORS策略
+3. 使用环境变量管理敏感信息
+4. 配置适当的日志记录和监控

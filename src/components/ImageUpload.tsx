@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Button, message, Modal, Spin, Image } from 'antd'
 import { UploadOutlined, DeleteOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons'
-import type { UploadFile, UploadProps } from 'antd/es/upload/interface'
+import type { UploadFile } from 'antd/es/upload/interface'
 import { uploadFile, deleteFile } from '../utils/upload'
 
 interface ImageUploadProps {
