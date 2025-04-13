@@ -17,7 +17,7 @@ interface MultiImageUploadProps {
   onChange?: (value: Record<string, string>) => void
   maxCount?: number
   disabled?: boolean
-  onSuccess?: () => void
+  onSuccess?: (isAutoSave: boolean) => void
 }
 
 interface ImageItem {
@@ -148,8 +148,9 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         setSelectedFile(null)
         setFilePreview(null)
 
-        // 上传成功后，调用外部回调进行自动保存
-        setTimeout(() => onSuccess?.(), 300)
+        // 上传成功后，调用外部回调进行自动保存，传递true表示这是自动保存
+        console.log('MultiImageUpload: 图片上传成功，调用onSuccess回调，传递isAutoSave=true')
+        setTimeout(() => onSuccess?.(true), 300)
       }
     } catch (error) {
       console.error('上传出错:', error)
@@ -203,8 +204,9 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
       message.success('删除成功')
 
-      // 删除成功后，调用外部回调进行自动保存
-      setTimeout(() => onSuccess?.(), 300)
+      // 删除成功后，调用外部回调进行自动保存，传递true表示这是自动保存
+      console.log('MultiImageUpload: 图片删除成功，调用onSuccess回调，传递isAutoSave=true')
+      setTimeout(() => onSuccess?.(true), 300)
     } catch (error) {
       console.error('删除出错:', error)
       message.error('删除失败')

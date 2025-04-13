@@ -200,16 +200,21 @@ const Customers = () => {
 
   // 保存成功后的回调
   const handleSaveSuccess = async (isAutoSave = false, id?: number) => {
+    console.log('handleSaveSuccess被调用，isAutoSave =', isAutoSave)
+
     // 刷新列表数据
     refreshCustomers()
 
     // 只有在非自动保存时才关闭抽屉和弹窗
     if (!isAutoSave) {
+      console.log('关闭抽屉和弹窗 (非自动保存)')
       // 关闭抽屉和弹窗
       setDrawerVisible(false)
       setModalVisible(false)
       setCurrentCustomer(null)
       setSelectedCustomerId(undefined)
+    } else {
+      console.log('自动保存模式，保持抽屉和弹窗打开')
     }
 
     // 如果提供了ID，并且正在查看或编辑，则刷新详情
@@ -664,24 +669,23 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         </div>
       )
 
-    // 添加时间戳避免浏览器缓存
-    const timestamp = new Date().getTime()
-    const urlWithTimestamp = url.includes('?')
-      ? `${url.split('?')[0]}?t=${timestamp}`
-      : `${url}?t=${timestamp}`
+    const handlePreviewClick = (e: React.MouseEvent) => {
+      // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
+      const targetElement = e.target as HTMLElement
+      const imgElement =
+        targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
+      if (imgElement && imgElement.classList.contains('opacity-60')) {
+        return
+      }
+      setImagePreview({ visible: true, url })
+    }
 
     return (
-      <div className="customer-image-preview">
+      <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
         <img
-          src={urlWithTimestamp}
+          src={url}
           alt={label}
           className="w-full h-24 object-cover rounded-md border border-gray-200"
-          onClick={e => {
-            // 只有当图片加载成功时才启用预览
-            if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
-              setImagePreview({ visible: true, url: urlWithTimestamp })
-            }
-          }}
           onError={e => {
             ;(e.target as HTMLImageElement).onerror = null
             ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
@@ -689,39 +693,46 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
             ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
           }}
-          crossOrigin="anonymous"
         />
       </div>
     )
   }
 
   // 渲染图片集合
-  const renderImages = (images: Record<string, string> | undefined) => {
+  const renderImages = (images: Record<string, any> | undefined) => {
     if (!images || Object.keys(images).length === 0) {
       return <div className="no-image-placeholder">暂无图片</div>
     }
 
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {Object.entries(images).map(([key, url]) => {
-          // 添加时间戳避免浏览器缓存
-          const timestamp = new Date().getTime()
-          const urlWithTimestamp = url.includes('?')
-            ? `${url.split('?')[0]}?t=${timestamp}`
-            : `${url}?t=${timestamp}`
+        {Object.entries(images).map(([key, imageData]) => {
+          // 处理不同的数据结构，保证能正确获取URL
+          const url = typeof imageData === 'string' ? imageData : imageData?.url
+
+          if (!url) return null
+
+          const handlePreviewClick = (e: React.MouseEvent) => {
+            // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
+            const targetElement = e.target as HTMLElement
+            const imgElement =
+              targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
+            if (imgElement && imgElement.classList.contains('opacity-60')) {
+              return
+            }
+            setImagePreview({ visible: true, url })
+          }
 
           return (
-            <div key={key} className="customer-image-preview">
+            <div
+              key={key}
+              className="customer-image-preview cursor-pointer"
+              onClick={handlePreviewClick}
+            >
               <img
-                src={urlWithTimestamp}
+                src={url}
                 alt={key}
                 className="w-full h-24 object-cover rounded-md"
-                onClick={e => {
-                  // 只有当图片加载成功时才启用预览
-                  if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
-                    setImagePreview({ visible: true, url: urlWithTimestamp })
-                  }
-                }}
                 onError={e => {
                   ;(e.target as HTMLImageElement).onerror = null
                   ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
@@ -729,9 +740,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                     'w-full h-24 object-contain rounded-md opacity-60'
                   ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
                 }}
-                crossOrigin="anonymous"
               />
-              <div className="customer-image-tag mt-1 text-center text-sm text-gray-500">{key}</div>
+              <div className="customer-image-tag">{key}</div>
             </div>
           )
         })}
@@ -989,18 +999,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               <h3 className="font-medium mb-2">法人身份证照片</h3>
               <div className="mb-4">
                 <div className="mb-1">身份证正面</div>
-                {renderImage(customer.legalPersonIdImages?.front, '身份证正面')}
+                {renderImage(customer.legalPersonIdImages?.front?.url, '身份证正面')}
               </div>
               <div>
                 <div className="mb-1">身份证反面</div>
-                {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
+                {renderImage(customer.legalPersonIdImages?.back?.url, '身份证反面')}
               </div>
             </div>
 
             <div>
               <h3 className="font-medium mb-2">营业执照照片</h3>
               <div className="mb-1">营业执照</div>
-              {renderImage(customer.businessLicenseImages?.main, '营业执照')}
+              {renderImage(customer.businessLicenseImages?.main?.url, '营业执照')}
             </div>
           </div>
 
@@ -1009,11 +1019,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <div className="mb-1">基本户开户许可证</div>
-                {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
+                {renderImage(customer.bankAccountLicenseImages?.basic?.url, '基本户开户许可证')}
               </div>
               <div>
                 <div className="mb-1">一般户开户许可证</div>
-                {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
+                {renderImage(customer.bankAccountLicenseImages?.general?.url, '一般户开户许可证')}
               </div>
             </div>
           </div>
@@ -1064,8 +1074,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               setImagePreview(prev => ({ ...prev, visible }))
             },
           }}
-          crossOrigin="anonymous"
-          fallback="/images/image-placeholder.svg"
         />
       </div>
       <div className="customer-detail-footer">

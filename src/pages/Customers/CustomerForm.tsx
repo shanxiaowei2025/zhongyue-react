@@ -76,6 +76,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }, [customer, form])
 
   const handleSubmit = async (values: any, isAutoSave = false) => {
+    console.log('CustomerForm.handleSubmit被调用，isAutoSave =', isAutoSave)
     if (isSaving) return
 
     try {
@@ -101,6 +102,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         const success = await createCustomer(processedValues)
         if (success) {
           message.success('创建客户成功')
+          console.log('创建客户成功，调用onSuccess，isAutoSave =', isAutoSave)
           onSuccess?.(isAutoSave)
         }
       } else {
@@ -112,6 +114,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         const success = await updateCustomer(customer.id, processedValues)
         if (success) {
           message.success('更新客户成功')
+          console.log('更新客户成功，调用onSuccess，isAutoSave =', isAutoSave)
           onSuccess?.(isAutoSave)
         }
       }
@@ -124,7 +127,15 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   const handleAutoSave = async () => {
-    if (!autoSaveEnabled || isSaving || mode === 'view') return
+    console.log('CustomerForm.handleAutoSave被调用')
+    if (!autoSaveEnabled || isSaving || mode === 'view') {
+      console.log('自动保存条件不满足：', {
+        autoSaveEnabled,
+        isSaving,
+        mode,
+      })
+      return
+    }
 
     try {
       // 验证表单必填项，如果有错误则不自动保存
@@ -158,7 +169,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       }
 
       // 提交表单
-      console.log('自动保存：图片更新后触发自动保存')
+      console.log('自动保存：图片更新后触发自动保存，将传递isAutoSave=true给handleSubmit')
       await form.validateFields()
       await handleSubmit(form.getFieldsValue(), true) // 传递isAutoSave=true参数
     } catch (error) {
@@ -551,7 +562,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         onFinish={handleSubmit}
         className="customer-form"
       >
-        <div className="mb-4 flex justify-between items-center">
+        {/* <div className="mb-4 flex justify-between items-center">
           <div className="font-medium text-lg">
             {mode === 'add' ? '添加客户' : mode === 'edit' ? '编辑客户' : '客户详情'}
           </div>
@@ -561,7 +572,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               <Switch checked={autoSaveEnabled} onChange={setAutoSaveEnabled} size="small" />
             </div>
           )}
-        </div>
+        </div> */}
 
         <Tabs
           activeKey={activeTab}

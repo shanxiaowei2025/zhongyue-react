@@ -9,7 +9,7 @@ interface ImageUploadProps {
   value?: { fileName: string; url: string }
   onChange?: (value: { fileName: string; url: string } | undefined) => void
   disabled?: boolean
-  onSuccess?: () => void
+  onSuccess?: (isAutoSave: boolean) => void
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -68,8 +68,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         message.success('上传成功')
         setImageError(false)
 
-        // 上传成功后，调用外部回调进行自动保存
-        setTimeout(() => onSuccess?.(), 300)
+        // 上传成功后，调用外部回调进行自动保存，传递true表示这是自动保存
+        console.log('ImageUpload: 图片上传成功，调用onSuccess回调，传递isAutoSave=true')
+        setTimeout(() => onSuccess?.(true), 300)
       } else {
         onError('上传失败')
       }
@@ -106,8 +107,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         onChange?.(undefined)
         message.success('删除成功')
 
-        // 删除成功后，调用外部回调进行自动保存
-        setTimeout(() => onSuccess?.(), 300)
+        // 删除成功后，调用外部回调进行自动保存，传递true表示这是自动保存
+        console.log('ImageUpload: 图片删除成功，调用onSuccess回调，传递isAutoSave=true')
+        setTimeout(() => onSuccess?.(true), 300)
         return true
       }
       return false

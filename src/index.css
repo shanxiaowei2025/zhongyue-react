@@ -282,6 +282,8 @@ body.ant-modal-open {
   padding: 4px;
   transition: all 0.3s;
   cursor: pointer;
+  margin-bottom: 8px;
+  position: relative;
 }
 
 .customer-image-preview:hover {
@@ -291,7 +293,7 @@ body.ant-modal-open {
 
 .customer-image-preview img {
   display: block;
-  width: 96px;
+  width: max-content;
   height: 96px;
   object-fit: cover;
 }
