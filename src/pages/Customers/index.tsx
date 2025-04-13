@@ -251,8 +251,6 @@ const Customers = () => {
       processStringImages(customer.supplementaryImages)
 
       // 批量删除图片文件
-      console.log(`准备删除客户(ID: ${customerId})的图片文件:`, imagesToDelete)
-
       for (const fileName of imagesToDelete) {
         try {
           const success = await deleteFile(fileName)
@@ -263,8 +261,6 @@ const Customers = () => {
           console.error(`删除图片文件 ${fileName} 失败:`, error)
         }
       }
-
-      console.log(`已成功删除 ${deletedCount}/${imagesToDelete.length} 个图片文件`)
     } catch (error) {
       console.error('删除客户图片出错:', error)
     }
@@ -305,21 +301,16 @@ const Customers = () => {
 
   // 保存成功后的回调
   const handleSaveSuccess = async (isAutoSave = false, id?: number) => {
-    console.log('handleSaveSuccess被调用，isAutoSave =', isAutoSave)
-
     // 刷新列表数据
     refreshCustomers()
 
     // 只有在非自动保存时才关闭抽屉和弹窗
     if (!isAutoSave) {
-      console.log('关闭抽屉和弹窗 (非自动保存)')
       // 关闭抽屉和弹窗
       setDrawerVisible(false)
       setModalVisible(false)
       setCurrentCustomer(null)
       setSelectedCustomerId(undefined)
-    } else {
-      console.log('自动保存模式，保持抽屉和弹窗打开')
     }
 
     // 如果提供了ID，并且正在查看或编辑，则刷新详情
@@ -505,6 +496,42 @@ const Customers = () => {
     },
   ]
 
+  // 处理关闭抽屉
+  const handleCloseDrawer = () => {
+    if (detailType === 'add' || detailType === 'edit') {
+      // 如果表单引用还存在，应该调用它的取消方法（包含图片清理等操作）
+      const formElement = document.querySelector('.customer-form')
+      if (formElement) {
+        // 模拟点击取消按钮
+        const cancelButton = formElement.querySelector('.customer-form-footer button')
+        if (cancelButton) {
+          ;(cancelButton as HTMLButtonElement).click()
+          return // 点击取消按钮会触发handleCancel，会自动关闭抽屉
+        }
+      }
+    }
+    // 如果不是表单模式或无法找到取消按钮，直接关闭
+    setDrawerVisible(false)
+  }
+
+  // 处理关闭模态框
+  const handleCloseModal = () => {
+    if (detailType === 'add' || detailType === 'edit') {
+      // 如果表单引用还存在，应该调用它的取消方法（包含图片清理等操作）
+      const formElement = document.querySelector('.customer-form')
+      if (formElement) {
+        // 模拟点击取消按钮
+        const cancelButton = formElement.querySelector('.customer-form-footer button')
+        if (cancelButton) {
+          ;(cancelButton as HTMLButtonElement).click()
+          return // 点击取消按钮会触发handleCancel，会自动关闭模态框
+        }
+      }
+    }
+    // 如果不是表单模式或无法找到取消按钮，直接关闭
+    setModalVisible(false)
+  }
+
   return (
     <div className="customer-management-container">
       <h1 className="text-2xl font-bold mb-6">客户管理</h1>
@@ -645,7 +672,7 @@ const Customers = () => {
       <Drawer
         title={detailType === 'add' ? '添加客户' : detailType === 'edit' ? '编辑客户' : '客户详情'}
         width={isMobile ? '100%' : 900}
-        onClose={() => setDrawerVisible(false)}
+        onClose={handleCloseDrawer}
         open={drawerVisible}
         destroyOnClose
         bodyStyle={{ padding: '16px' }}
@@ -673,7 +700,7 @@ const Customers = () => {
       <Modal
         title={detailType === 'add' ? '添加客户' : detailType === 'edit' ? '编辑客户' : '客户详情'}
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={handleCloseModal}
         footer={null}
         width={1000}
         destroyOnClose

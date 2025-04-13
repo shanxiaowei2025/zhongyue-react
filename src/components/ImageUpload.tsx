@@ -68,8 +68,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         message.success('上传成功')
         setImageError(false)
 
-        // 上传成功后，调用外部回调进行自动保存，传递true表示这是自动保存
-        console.log('ImageUpload: 图片上传成功，调用onSuccess回调，传递isAutoSave=true')
+        // 上传成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)
       } else {
         onError('上传失败')
@@ -87,7 +86,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     setLoading(true)
     try {
-      console.log('正在删除文件:', value.fileName, value.url)
       // 尝试使用url中的文件名进行删除
       let fileNameToDelete = value.fileName
 
@@ -98,7 +96,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         const lastPart = urlParts[urlParts.length - 1]
         if (lastPart && lastPart.includes('-')) {
           fileNameToDelete = lastPart.split('?')[0] // 移除可能的查询参数
-          console.log('从URL中提取文件名:', fileNameToDelete)
         }
       }
 
@@ -107,8 +104,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         onChange?.(undefined)
         message.success('删除成功')
 
-        // 删除成功后，调用外部回调进行自动保存，传递true表示这是自动保存
-        console.log('ImageUpload: 图片删除成功，调用onSuccess回调，传递isAutoSave=true')
+        // 删除成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)
         return true
       }
@@ -131,7 +127,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         ? `${url.split('?')[0]}?t=${timestamp}`
         : `${url}?t=${timestamp}`
 
-      console.log('预览图片URL:', urlWithTimestamp)
       setPreviewImage(urlWithTimestamp)
       setPreviewVisible(true)
 

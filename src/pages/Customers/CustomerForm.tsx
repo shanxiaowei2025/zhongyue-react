@@ -24,6 +24,7 @@ import ImageUpload from '../../components/ImageUpload'
 import MultiImageUpload from '../../components/MultiImageUpload'
 import { processCustomerImages } from '../../utils/customer'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
+import { deleteFile } from '../../utils/upload'
 
 // 业务状态映射
 export const BUSINESS_STATUS_MAP = {
@@ -55,6 +56,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [activeTab, setActiveTab] = useState<string>('basic')
   const [isSaving, setIsSaving] = useState(false)
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]) // 跟踪已上传的图片文件名
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
 
@@ -76,7 +78,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }, [customer, form])
 
   const handleSubmit = async (values: any, isAutoSave = false) => {
-    console.log('CustomerForm.handleSubmit被调用，isAutoSave =', isAutoSave)
     if (isSaving) return
 
     try {
@@ -95,14 +96,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         supplementaryImages: values.supplementaryImages || {},
       }
 
-      console.log('提交处理后的客户数据:', processedValues)
-
       if (mode === 'add') {
         // 调用创建客户 API
         const success = await createCustomer(processedValues)
         if (success) {
-          message.success('创建客户成功')
-          console.log('创建客户成功，调用onSuccess，isAutoSave =', isAutoSave)
+          // 创建成功后清空已上传图片跟踪列表
+          setUploadedImages([])
           onSuccess?.(isAutoSave)
         }
       } else {
@@ -114,7 +113,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         const success = await updateCustomer(customer.id, processedValues)
         if (success) {
           message.success('更新客户成功')
-          console.log('更新客户成功，调用onSuccess，isAutoSave =', isAutoSave)
           onSuccess?.(isAutoSave)
         }
       }
@@ -127,13 +125,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   const handleAutoSave = async () => {
-    console.log('CustomerForm.handleAutoSave被调用')
     if (!autoSaveEnabled || isSaving || mode === 'view') {
-      console.log('自动保存条件不满足：', {
-        autoSaveEnabled,
-        isSaving,
-        mode,
-      })
+      return
+    }
+
+    // 添加客户模式下不执行自动保存，只更新表单数据
+    if (mode === 'add') {
       return
     }
 
@@ -157,24 +154,62 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       // 检查必填字段
       for (const field of fields) {
         if (!values[field]) {
-          console.log(`自动保存：${field} 字段为空，跳过自动保存`)
           hasError = true
           break
         }
       }
 
       if (hasError) {
-        console.log('自动保存：表单验证未通过，跳过自动保存')
         return
       }
 
       // 提交表单
-      console.log('自动保存：图片更新后触发自动保存，将传递isAutoSave=true给handleSubmit')
       await form.validateFields()
       await handleSubmit(form.getFieldsValue(), true) // 传递isAutoSave=true参数
     } catch (error) {
       console.error('自动保存出错:', error)
       // 不显示错误消息，避免干扰用户
+    }
+  }
+
+  // 处理图片上传成功
+  const handleImageUploadSuccess = (fileName: string, isAutoSave = false) => {
+    if (mode === 'add') {
+      // 添加模式下，记录上传的图片用于可能的取消操作
+      setUploadedImages(prev => [...prev, fileName])
+    } else if (autoSaveEnabled) {
+      // 编辑模式下，调用自动保存
+      handleAutoSave()
+    }
+  }
+
+  // 处理表单取消
+  const handleCancel = async () => {
+    if (mode === 'add' && uploadedImages.length > 0) {
+      // 在添加模式下，删除所有已上传的图片
+      message.loading('正在清理已上传的图片...', 0)
+      let deletedCount = 0
+
+      try {
+        for (const fileName of uploadedImages) {
+          try {
+            await deleteFile(fileName)
+            deletedCount++
+          } catch (error) {
+            console.error(`删除图片文件 ${fileName} 失败:`, error)
+          }
+        }
+      } finally {
+        message.destroy() // 关闭loading消息
+        if (deletedCount > 0) {
+          message.success(`已清理 ${deletedCount} 张图片`)
+        }
+        // 无论删除是否成功，都调用取消回调
+        onCancel?.()
+      }
+    } else {
+      // 非添加模式或没有上传图片，直接调用取消回调
+      onCancel?.()
     }
   }
 
@@ -465,7 +500,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
                   }
-                  onSuccess={handleAutoSave}
+                  onSuccess={isAutoSave => {
+                    const value = safeGetFieldValue(form, ['legalPersonIdImages', 'front'])
+                    if (value?.fileName) {
+                      handleImageUploadSuccess(value.fileName, isAutoSave)
+                    }
+                  }}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">
@@ -476,7 +516,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'back'], value)
                   }
-                  onSuccess={handleAutoSave}
+                  onSuccess={isAutoSave => {
+                    const value = safeGetFieldValue(form, ['legalPersonIdImages', 'back'])
+                    if (value?.fileName) {
+                      handleImageUploadSuccess(value.fileName, isAutoSave)
+                    }
+                  }}
                 />
               </Form.Item>
             </div>
@@ -491,7 +536,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['businessLicenseImages', 'main'], value)
                   }
-                  onSuccess={handleAutoSave}
+                  onSuccess={isAutoSave => {
+                    const value = safeGetFieldValue(form, ['businessLicenseImages', 'main'])
+                    if (value?.fileName) {
+                      handleImageUploadSuccess(value.fileName, isAutoSave)
+                    }
+                  }}
                 />
               </Form.Item>
             </div>
@@ -508,7 +558,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'basic'], value)
                   }
-                  onSuccess={handleAutoSave}
+                  onSuccess={isAutoSave => {
+                    const value = safeGetFieldValue(form, ['bankAccountLicenseImages', 'basic'])
+                    if (value?.fileName) {
+                      handleImageUploadSuccess(value.fileName, isAutoSave)
+                    }
+                  }}
                 />
               </Form.Item>
               <Form.Item name={['bankAccountLicenseImages', 'general']} label="一般户开户许可证">
@@ -519,7 +574,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'general'], value)
                   }
-                  onSuccess={handleAutoSave}
+                  onSuccess={isAutoSave => {
+                    const value = safeGetFieldValue(form, ['bankAccountLicenseImages', 'general'])
+                    if (value?.fileName) {
+                      handleImageUploadSuccess(value.fileName, isAutoSave)
+                    }
+                  }}
                 />
               </Form.Item>
             </div>
@@ -532,7 +592,20 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 disabled={mode === 'view'}
                 value={form.getFieldValue('otherIdImages')}
                 onChange={value => form.setFieldValue('otherIdImages', value)}
-                onSuccess={handleAutoSave}
+                onSuccess={isAutoSave => {
+                  // 对于多图片上传，需要从表单获取所有图片URL
+                  const images = form.getFieldValue('otherIdImages') || {}
+                  // 提取各图片的文件名
+                  Object.values(images).forEach(url => {
+                    if (typeof url === 'string' && url) {
+                      const urlParts = url.split('/')
+                      const fileName = urlParts[urlParts.length - 1].split('?')[0]
+                      if (fileName) {
+                        handleImageUploadSuccess(fileName, isAutoSave)
+                      }
+                    }
+                  })
+                }}
               />
             </Form.Item>
           </div>
@@ -544,7 +617,20 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 disabled={mode === 'view'}
                 value={form.getFieldValue('supplementaryImages')}
                 onChange={value => form.setFieldValue('supplementaryImages', value)}
-                onSuccess={handleAutoSave}
+                onSuccess={isAutoSave => {
+                  // 对于多图片上传，需要从表单获取所有图片URL
+                  const images = form.getFieldValue('supplementaryImages') || {}
+                  // 提取各图片的文件名
+                  Object.values(images).forEach(url => {
+                    if (typeof url === 'string' && url) {
+                      const urlParts = url.split('/')
+                      const fileName = urlParts[urlParts.length - 1].split('?')[0]
+                      if (fileName) {
+                        handleImageUploadSuccess(fileName, isAutoSave)
+                      }
+                    }
+                  })
+                }}
               />
             </Form.Item>
           </div>
@@ -582,7 +668,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         />
         <div className="customer-form-footer">
           <Space>
-            <Button onClick={onCancel}>取消</Button>
+            <Button onClick={handleCancel}>取消</Button>
             <Button type="primary" htmlType="submit" loading={isSaving}>
               {mode === 'add' ? '创建' : '保存'}
             </Button>

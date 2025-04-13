@@ -103,8 +103,6 @@ export const deleteFile = async (fileName: string): Promise<boolean> => {
       }
     }
 
-    console.log('删除文件:', processedFileName)
-
     // 从localStorage获取token
     const token = localStorage.getItem('token')
 

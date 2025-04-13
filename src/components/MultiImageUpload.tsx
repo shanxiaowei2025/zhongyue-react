@@ -148,8 +148,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         setSelectedFile(null)
         setFilePreview(null)
 
-        // 上传成功后，调用外部回调进行自动保存，传递true表示这是自动保存
-        console.log('MultiImageUpload: 图片上传成功，调用onSuccess回调，传递isAutoSave=true')
+        // 上传成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)
       }
     } catch (error) {
@@ -164,8 +163,6 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     const fileName = item.fileName
     setLoading(true)
     try {
-      console.log('正在删除多图片文件:', fileName, item.url)
-
       // 提取实际的文件名，处理不同的情况
       let actualFileName = ''
 
@@ -188,7 +185,6 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       }
 
       if (actualFileName) {
-        console.log('最终用于删除的文件名:', actualFileName)
         await deleteFile(actualFileName)
       }
 
@@ -204,8 +200,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
 
       message.success('删除成功')
 
-      // 删除成功后，调用外部回调进行自动保存，传递true表示这是自动保存
-      console.log('MultiImageUpload: 图片删除成功，调用onSuccess回调，传递isAutoSave=true')
+      // 删除成功后，调用外部回调进行自动保存
       setTimeout(() => onSuccess?.(true), 300)
     } catch (error) {
       console.error('删除出错:', error)

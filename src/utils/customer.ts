@@ -7,23 +7,23 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
   // 处理法人身份证照片
   if (formData.legalPersonIdImages) {
     processedData.legalPersonIdImages = {
-      front: processImageValue(formData.legalPersonIdImages.front),
-      back: processImageValue(formData.legalPersonIdImages.back),
+      front: formData.legalPersonIdImages.front,
+      back: formData.legalPersonIdImages.back,
     }
   }
 
   // 处理营业执照照片
   if (formData.businessLicenseImages) {
     processedData.businessLicenseImages = {
-      main: processImageValue(formData.businessLicenseImages.main),
+      main: formData.businessLicenseImages.main,
     }
   }
 
   // 处理开户许可证照片
   if (formData.bankAccountLicenseImages) {
     processedData.bankAccountLicenseImages = {
-      basic: processImageValue(formData.bankAccountLicenseImages.basic),
-      general: processImageValue(formData.bankAccountLicenseImages.general),
+      basic: formData.bankAccountLicenseImages.basic,
+      general: formData.bankAccountLicenseImages.general,
     }
   }
 

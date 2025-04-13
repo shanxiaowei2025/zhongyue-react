@@ -168,16 +168,16 @@ export interface Customer {
   personalIncomeTaxStaff: string | null
   personalIncomeTaxPassword: string | null
   legalPersonIdImages: {
-    front?: string
-    back?: string
+    front?: ImageType
+    back?: ImageType
   }
   otherIdImages: Record<string, string>
   businessLicenseImages: {
-    main?: string
+    main?: ImageType
   }
   bankAccountLicenseImages: {
-    basic?: string
-    general?: string
+    basic?: ImageType
+    general?: ImageType
   }
   supplementaryImages: Record<string, string>
   createTime: string | null
@@ -185,8 +185,9 @@ export interface Customer {
   submitter: string | null
   businessStatus: string | null
   bossName: string | null
-  licenseImage?: string // 营业执照图片路径
-  taxRegistrationImage?: string // 税务登记证图片路径
-  bankAccountImage?: string // 银行开户许可证图片路径
-  otherImages?: string[] // 其他证照图片路径数组
+}
+
+interface ImageType {
+  fileName?: string
+  url?: string
 }
