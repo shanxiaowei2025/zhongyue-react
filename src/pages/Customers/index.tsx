@@ -34,7 +34,8 @@ import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import useSWR from 'swr'
-import { getCustomerDetail } from '../../api/customer'
+import { getCustomerDetail, getCustomerById } from '../../api/customer'
+import { deleteFile } from '../../utils/upload'
 
 // 启用 dayjs 插件
 dayjs.extend(utc)
@@ -187,14 +188,118 @@ const Customers = () => {
     }
   }
 
+  // 删除客户相关的所有图片
+  const deleteAllCustomerImages = async (customerId: number) => {
+    try {
+      // 获取完整的客户详细信息
+      const response = await getCustomerById(customerId)
+
+      if (!response || response.code !== 0 || !response.data) {
+        console.error('获取客户详情失败，无法删除图片')
+        return
+      }
+
+      const customer = response.data
+      let deletedCount = 0
+
+      // 提取所有图片文件名准备删除
+      const imagesToDelete: string[] = []
+
+      // 处理对象格式的图片字段 {key: {fileName, url}}
+      const processObjectImages = (imagesObj: Record<string, any> | undefined) => {
+        if (!imagesObj) return
+
+        Object.values(imagesObj).forEach(item => {
+          if (item && typeof item === 'object' && item.fileName) {
+            imagesToDelete.push(item.fileName)
+          }
+        })
+      }
+
+      // 处理字符串形式的图片URL {key: string}
+      const processStringImages = (imagesObj: Record<string, any> | undefined) => {
+        if (!imagesObj) return
+
+        Object.values(imagesObj).forEach(url => {
+          if (typeof url === 'string' && url) {
+            // 从URL中提取文件名
+            const urlParts = url.split('/')
+            const fileNameWithParams = urlParts[urlParts.length - 1]
+            const fileName = fileNameWithParams.split('?')[0] // 移除查询参数
+
+            if (fileName) {
+              imagesToDelete.push(fileName)
+            }
+          }
+        })
+      }
+
+      // 处理各种图片字段
+      // 处理法人身份证图片
+      processObjectImages(customer.legalPersonIdImages)
+
+      // 处理营业执照图片
+      processObjectImages(customer.businessLicenseImages)
+
+      // 处理开户许可证图片
+      processObjectImages(customer.bankAccountLicenseImages)
+
+      // 处理其他人员身份证照片
+      processStringImages(customer.otherIdImages)
+
+      // 处理补充资料照片
+      processStringImages(customer.supplementaryImages)
+
+      // 批量删除图片文件
+      console.log(`准备删除客户(ID: ${customerId})的图片文件:`, imagesToDelete)
+
+      for (const fileName of imagesToDelete) {
+        try {
+          const success = await deleteFile(fileName)
+          if (success) {
+            deletedCount++
+          }
+        } catch (error) {
+          console.error(`删除图片文件 ${fileName} 失败:`, error)
+        }
+      }
+
+      console.log(`已成功删除 ${deletedCount}/${imagesToDelete.length} 个图片文件`)
+    } catch (error) {
+      console.error('删除客户图片出错:', error)
+    }
+  }
+
   const handleDelete = (id: number) => {
     confirm({
       title: '确认删除',
-      content: '确定要删除这个客户吗？此操作不可恢复。',
+      content: '确定要删除这个客户吗？此操作不可恢复，相关的图片文件也会被删除。',
       okText: '确认',
       okType: 'danger',
       cancelText: '取消',
-      onOk: () => removeCustomer(id),
+      onOk: async () => {
+        try {
+          // 先删除图片文件
+          message.loading('正在删除客户数据及相关图片...', 0)
+          await deleteAllCustomerImages(id)
+
+          // 再删除客户记录
+          const success = await removeCustomer(id)
+
+          message.destroy() // 关闭loading消息
+
+          if (success) {
+            message.success('客户及相关图片已成功删除')
+          }
+
+          return success
+        } catch (error) {
+          message.destroy() // 关闭loading消息
+          console.error('删除客户过程中出错:', error)
+          message.error('删除客户失败')
+          return false
+        }
+      },
     })
   }
 
