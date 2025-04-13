@@ -102,6 +102,7 @@ const Customers = () => {
   // 当客户详情数据更新时，更新当前客户状态
   useEffect(() => {
     if (customerDetail && (detailType === 'view' || detailType === 'edit')) {
+      // 更新当前客户信息，确保图片字段正确保留
       setCurrentCustomer(customerDetail)
       setDetailLoading(false)
     }
@@ -173,8 +174,8 @@ const Customers = () => {
   }
 
   const handleEdit = (record: Customer) => {
-    // 重置状态
-    setCurrentCustomer(null)
+    // 先使用列表中的记录，确保图片等信息在加载完整数据前可见
+    setCurrentCustomer(record)
     setDetailType('edit')
     setDetailLoading(true)
     setSelectedCustomerId(record.id)
@@ -657,14 +658,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
   // 渲染图片预览
   const renderImage = (url: string | undefined, label: string) => {
-    if (!url) return <div className="no-image-placeholder">暂无图片</div>
+    if (!url)
+      return (
+        <div className="no-image-placeholder border border-dashed border-gray-300 rounded-md h-24 flex items-center justify-center text-gray-400">
+          暂无图片
+        </div>
+      )
 
     return (
       <div className="customer-image-preview">
         <img
           src={url}
           alt={label}
-          className="w-24 h-24 object-cover rounded-md"
+          className="w-full h-24 object-cover rounded-md border border-gray-200"
           onClick={e => {
             // 只有当图片加载成功时才启用预览
             if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
@@ -675,11 +681,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             ;(e.target as HTMLImageElement).onerror = null
             ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
             ;(e.target as HTMLImageElement).className =
-              'w-24 h-24 object-contain rounded-md opacity-60'
+              'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
             ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
           }}
         />
-        <div className="customer-image-tag">{label}</div>
       </div>
     )
   }
@@ -691,13 +696,13 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     }
 
     return (
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {Object.entries(images).map(([key, url]) => (
           <div key={key} className="customer-image-preview">
             <img
               src={url}
               alt={key}
-              className="w-24 h-24 object-cover rounded-md"
+              className="w-full h-24 object-cover rounded-md"
               onClick={e => {
                 // 只有当图片加载成功时才启用预览
                 if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
@@ -708,11 +713,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 ;(e.target as HTMLImageElement).onerror = null
                 ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
                 ;(e.target as HTMLImageElement).className =
-                  'w-24 h-24 object-contain rounded-md opacity-60'
+                  'w-full h-24 object-contain rounded-md opacity-60'
                 ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
               }}
             />
-            <div className="customer-image-tag">{key}</div>
+            <div className="customer-image-tag mt-1 text-center text-sm text-gray-500">{key}</div>
           </div>
         ))}
       </div>
@@ -963,35 +968,48 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: '6',
       label: '图片资料',
       children: (
-        <div className="space-y-8">
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium">法人身份证照片</h3>
-            <div className="flex flex-wrap gap-4">
-              {renderImage(customer.legalPersonIdImages?.front, '身份证正面')}
-              {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-medium mb-2">法人身份证照片</h3>
+              <div className="mb-4">
+                <div className="mb-1">身份证正面</div>
+                {renderImage(customer.legalPersonIdImages?.front, '身份证正面')}
+              </div>
+              <div>
+                <div className="mb-1">身份证反面</div>
+                {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2">营业执照照片</h3>
+              <div className="mb-1">营业执照</div>
+              {renderImage(customer.businessLicenseImages?.main, '营业执照')}
             </div>
           </div>
 
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium">营业执照照片</h3>
-            {renderImage(customer.businessLicenseImages?.main, '营业执照')}
-          </div>
-
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium">开户许可证照片</h3>
-            <div className="flex flex-wrap gap-4">
-              {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
-              {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
+          <div>
+            <h3 className="font-medium mb-2">开户许可证照片</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="mb-1">基本户开户许可证</div>
+                {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
+              </div>
+              <div>
+                <div className="mb-1">一般户开户许可证</div>
+                {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
+              </div>
             </div>
           </div>
 
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium">其他人员身份证照片</h3>
+          <div>
+            <h3 className="font-medium mb-2">其他人员身份证照片</h3>
             {renderImages(customer.otherIdImages)}
           </div>
 
-          <div className="customer-images-section">
-            <h3 className="text-lg font-medium">补充资料照片</h3>
+          <div>
+            <h3 className="font-medium mb-2">补充资料照片</h3>
             {renderImages(customer.supplementaryImages)}
           </div>
         </div>
