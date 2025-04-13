@@ -7,6 +7,11 @@ WORKDIR /app
 # 安装pnpm
 RUN npm install -g pnpm
 
+# 配置pnpm使用国内镜像源
+RUN pnpm config set registry https://registry.npmmirror.com
+RUN pnpm config set disturl https://npmmirror.com/mirrors/node
+RUN pnpm config set electron_mirror https://npmmirror.com/mirrors/electron/
+
 # 复制package.json和pnpm-lock.yaml（如果存在）
 COPY package.json pnpm-lock.yaml* ./
 
