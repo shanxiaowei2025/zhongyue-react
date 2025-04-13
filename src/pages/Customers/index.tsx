@@ -664,16 +664,22 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         </div>
       )
 
+    // 添加时间戳避免浏览器缓存
+    const timestamp = new Date().getTime()
+    const urlWithTimestamp = url.includes('?')
+      ? `${url.split('?')[0]}?t=${timestamp}`
+      : `${url}?t=${timestamp}`
+
     return (
       <div className="customer-image-preview">
         <img
-          src={url}
+          src={urlWithTimestamp}
           alt={label}
           className="w-full h-24 object-cover rounded-md border border-gray-200"
           onClick={e => {
             // 只有当图片加载成功时才启用预览
             if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
-              setImagePreview({ visible: true, url })
+              setImagePreview({ visible: true, url: urlWithTimestamp })
             }
           }}
           onError={e => {
@@ -683,6 +689,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
             ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
           }}
+          crossOrigin="anonymous"
         />
       </div>
     )
@@ -696,29 +703,38 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {Object.entries(images).map(([key, url]) => (
-          <div key={key} className="customer-image-preview">
-            <img
-              src={url}
-              alt={key}
-              className="w-full h-24 object-cover rounded-md"
-              onClick={e => {
-                // 只有当图片加载成功时才启用预览
-                if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
-                  setImagePreview({ visible: true, url })
-                }
-              }}
-              onError={e => {
-                ;(e.target as HTMLImageElement).onerror = null
-                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-                ;(e.target as HTMLImageElement).className =
-                  'w-full h-24 object-contain rounded-md opacity-60'
-                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
-              }}
-            />
-            <div className="customer-image-tag mt-1 text-center text-sm text-gray-500">{key}</div>
-          </div>
-        ))}
+        {Object.entries(images).map(([key, url]) => {
+          // 添加时间戳避免浏览器缓存
+          const timestamp = new Date().getTime()
+          const urlWithTimestamp = url.includes('?')
+            ? `${url.split('?')[0]}?t=${timestamp}`
+            : `${url}?t=${timestamp}`
+
+          return (
+            <div key={key} className="customer-image-preview">
+              <img
+                src={urlWithTimestamp}
+                alt={key}
+                className="w-full h-24 object-cover rounded-md"
+                onClick={e => {
+                  // 只有当图片加载成功时才启用预览
+                  if (!(e.target as HTMLImageElement).classList.contains('opacity-60')) {
+                    setImagePreview({ visible: true, url: urlWithTimestamp })
+                  }
+                }}
+                onError={e => {
+                  ;(e.target as HTMLImageElement).onerror = null
+                  ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                  ;(e.target as HTMLImageElement).className =
+                    'w-full h-24 object-contain rounded-md opacity-60'
+                  ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
+                }}
+                crossOrigin="anonymous"
+              />
+              <div className="customer-image-tag mt-1 text-center text-sm text-gray-500">{key}</div>
+            </div>
+          )
+        })}
       </div>
     )
   }
@@ -1048,6 +1064,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               setImagePreview(prev => ({ ...prev, visible }))
             },
           }}
+          crossOrigin="anonymous"
+          fallback="/images/image-placeholder.svg"
         />
       </div>
       <div className="customer-detail-footer">
