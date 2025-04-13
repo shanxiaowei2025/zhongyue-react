@@ -10,31 +10,39 @@ services:
     ports:
       - '80:80'
     restart: unless-stopped
-    # 如果有API服务器，可以取消注释以下部分
-    # depends_on:
-    #   - api
+    depends_on:
+      - api
     networks:
-      - zhongyue-network
+      - web_network
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
-  # API服务（如果有后端API，取消注释此部分）
-  # api:
-  #   image: your-api-image:latest
-  #   container_name: zhongyue-api
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - NODE_ENV=production
-  #     - PORT=3000
-  #     - DB_HOST=db
-  #     - DB_PORT=5432
-  #     - DB_NAME=zhongyue
-  #     - DB_USER=postgres
-  #     - DB_PASSWORD=postgres
-  #   networks:
-  #     - zhongyue-network
-  #   depends_on:
-  #     - db
+  # API服务
+  api:
+    container_name: zhongyue-nodejs-api-dev
+    build:
+      context: ../zhongyue-api # 调整为后端API项目的相对路径
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../zhongyue-api:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+    command: pnpm run start:dev
+    env_file:
+      - ../zhongyue-api/.env # 调整为后端API项目的环境变量文件路径
+    networks:
+      - web_network
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   # 数据库服务（如果有数据库，取消注释此部分）
   # db:

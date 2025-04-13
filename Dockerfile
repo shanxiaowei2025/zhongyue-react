@@ -34,7 +34,7 @@ RUN echo 'server { \
         access_log off; \
     } \
     location /api/ { \
-        proxy_pass http://host.docker.internal:3000/api/; \
+        proxy_pass http://api:3000/api/; \
         proxy_set_header Host $host; \
         proxy_set_header X-Real-IP $remote_addr; \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
