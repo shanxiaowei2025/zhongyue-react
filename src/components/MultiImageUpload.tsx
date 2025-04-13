@@ -76,17 +76,6 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     if (!url) return ''
 
     try {
-      // 检查是否为Minio服务器上的URL
-      if (
-        url.includes('zhongyue-minio-api.starlogic.tech') ||
-        url.includes('minio') ||
-        url.includes('X-Amz-Algorithm')
-      ) {
-        // 外部托管的图片，直接返回完整URL
-        console.log('检测到 Minio 图片:', url)
-        return url
-      }
-
       // 检查是否为完整的URL（包含http或https协议）
       if (url.startsWith('http://') || url.startsWith('https://')) {
         // 尝试转换为相对路径
@@ -179,20 +168,8 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       // 提取实际的文件名，处理不同的情况
       let actualFileName = ''
 
-      // Minio URL的情况
-      if (item.url.includes('zhongyue-minio-api') || item.url.includes('X-Amz-Algorithm')) {
-        const urlParts = item.url.split('/')
-        // 查找包含文件名的部分 (通常格式为: timestamp-filename.extension)
-        for (const part of urlParts) {
-          if (part.match(/\d{13}-[\w.-]+/)) {
-            actualFileName = part.split('?')[0] // 移除查询参数
-            break
-          }
-        }
-        console.log('从 Minio URL 提取文件名:', actualFileName)
-      }
       // 标准文件名的情况
-      else if (fileName.includes('-')) {
+      if (fileName.includes('-')) {
         actualFileName = fileName
       }
       // 从路径中提取的情况

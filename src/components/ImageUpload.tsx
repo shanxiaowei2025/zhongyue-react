@@ -160,17 +160,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!url) return ''
 
     try {
-      // 检查是否为Minio服务器上的URL
-      if (
-        url.includes('zhongyue-minio-api.starlogic.tech') ||
-        url.includes('minio') ||
-        url.includes('X-Amz-Algorithm')
-      ) {
-        // 外部托管的图片，直接返回完整URL
-        console.log('检测到 Minio 图片:', url)
-        return url
-      }
-
       // 检查是否为完整的URL（包含http或https协议）
       if (url.startsWith('http://') || url.startsWith('https://')) {
         // 尝试转换为相对路径

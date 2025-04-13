@@ -33,12 +33,6 @@ export default defineConfig(({ mode }) => {
             })
           },
         },
-        // Minio服务器代理
-        '^/zhongyue/.*': {
-          target: 'https://zhongyue-minio-api.starlogic.tech',
-          changeOrigin: true,
-          secure: false,
-        },
       },
     },
     resolve: {
