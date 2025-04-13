@@ -21,10 +21,10 @@ services:
   api:
     container_name: zhongyue-nodejs-api-dev
     build:
-      context: ../zhongyue-api # 调整为后端API项目的相对路径
+      context: ../zhongyue-nodejs # 调整为后端API项目的相对路径
       dockerfile: Dockerfile.dev
     volumes:
-      - ../zhongyue-api:/usr/src/app
+      - ../zhongyue-nodejs:/usr/src/app
       - /usr/src/app/node_modules
     ports:
       - '3000:3000'
@@ -32,7 +32,7 @@ services:
       - NODE_ENV=development
     command: pnpm run start:dev
     env_file:
-      - ../zhongyue-api/.env # 调整为后端API项目的环境变量文件路径
+      - ../zhongyue-nodejs/.env # 调整为后端API项目的环境变量文件路径
     networks:
       - web_network
     extra_hosts:
@@ -61,7 +61,7 @@ services:
   #     - zhongyue-network
 
 networks:
-  zhongyue-network:
+  web_network:
     driver: bridge
 # 如果有数据库，取消注释此部分
 # volumes:
