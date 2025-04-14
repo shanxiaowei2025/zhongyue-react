@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Table,
   Button,
@@ -13,6 +14,9 @@ import {
   Select,
   DatePicker,
   Image,
+  Row,
+  Col,
+  Form,
 } from 'antd'
 import {
   PlusOutlined,
@@ -24,10 +28,15 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { Customer } from '../../types'
+import type { Customer, ImageType } from '../../types'
 import type { TabsProps } from 'antd'
 import CustomerForm from './CustomerForm'
-import { BUSINESS_STATUS_MAP } from '../../constants'
+import { 
+  BUSINESS_STATUS_MAP, 
+  ENTERPRISE_STATUS_MAP,
+  BUSINESS_STATUS_COLOR_MAP,
+  ENTERPRISE_STATUS_COLOR_MAP
+} from '../../constants'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
@@ -36,6 +45,7 @@ import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import useSWR from 'swr'
 import { getCustomerDetail, getCustomerById } from '../../api/customer'
 import { deleteFile } from '../../utils/upload'
+import usePageTitle from '@/hooks/usePageTitle'
 
 // 启用 dayjs 插件
 dayjs.extend(utc)
@@ -56,10 +66,12 @@ export default function Customers() {
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState({
     keyword: '',
-    companyName: '',
     taxNumber: '',
-    enterpriseType: '',
+    consultantAccountant: '',
+    bookkeepingAccountant: '',
     taxBureau: '',
+    enterpriseType: '',
+    industryCategory: '',
     enterpriseStatus: '',
     businessStatus: '',
     startDate: '',
@@ -135,10 +147,12 @@ export default function Customers() {
   const resetSearch = () => {
     setSearchParams({
       keyword: '',
-      companyName: '',
       taxNumber: '',
-      enterpriseType: '',
+      consultantAccountant: '',
+      bookkeepingAccountant: '',
       taxBureau: '',
+      enterpriseType: '',
+      industryCategory: '',
       enterpriseStatus: '',
       businessStatus: '',
       startDate: '',
@@ -228,8 +242,6 @@ export default function Customers() {
         })
       }
 
-      // 处理各种图片字段
-      // 处理法人身份证图片
       processObjectImages(customer.legalPersonIdImages)
 
       // 处理营业执照图片
@@ -359,22 +371,28 @@ export default function Customers() {
       dataIndex: 'enterpriseStatus',
       key: 'enterpriseStatus',
       width: 100,
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'default'}>
-          {status === 'active' ? '正常' : '停用'}
-        </Tag>
-      ),
+      render: (status: string) => {
+        if (!status) return <Tag color="default">未设置</Tag>
+        
+        const color = ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default';
+        const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status;
+        
+        return <Tag color={color}>{label}</Tag>;
+      },
     },
     {
       title: '业务状态',
       dataIndex: 'businessStatus',
       key: 'businessStatus',
       width: 100,
-      render: (status: string) => (
-        <Tag color={BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] === '正常' ? 'success' : 'warning'}>
-          {BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP]}
-        </Tag>
-      ),
+      render: (status: string) => {
+        if (!status) return <Tag color="default">未设置</Tag>
+        
+        const color = BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default';
+        const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status;
+        
+        return <Tag color={color}>{label}</Tag>;
+      },
     },
     {
       title: '创建时间',
@@ -455,13 +473,11 @@ export default function Customers() {
 
   return (
     <div className="customer-management-container">
-      <h1 className="text-2xl font-bold mb-6">客户管理</h1>
-
       {/* 搜索和操作工具栏 */}
       <div className="mb-4 flex flex-wrap gap-2 items-center">
         <div className="flex flex-wrap gap-2 flex-1">
           <Input
-            placeholder="企业名称"
+            placeholder="企业名称关键词"
             value={searchParams.keyword}
             onChange={e => setSearchParams({ ...searchParams, keyword: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
@@ -470,6 +486,18 @@ export default function Customers() {
             placeholder="税号"
             value={searchParams.taxNumber}
             onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
+          />
+          <Input
+            placeholder="顾问会计"
+            value={searchParams.consultantAccountant}
+            onChange={e => setSearchParams({ ...searchParams, consultantAccountant: e.target.value })}
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
+          />
+          <Input
+            placeholder="记账会计"
+            value={searchParams.bookkeepingAccountant}
+            onChange={e => setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
@@ -484,6 +512,12 @@ export default function Customers() {
             onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
+          <Input
+            placeholder="行业大类"
+            value={searchParams.industryCategory}
+            onChange={e => setSearchParams({ ...searchParams, industryCategory: e.target.value })}
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
+          />
           <Select
             placeholder="企业状态"
             value={searchParams.enterpriseStatus || undefined}
@@ -493,7 +527,7 @@ export default function Customers() {
             options={[
               { value: 'active', label: '正常经营' },
               { value: 'inactive', label: '停业' },
-              { value: 'closed', label: '注销' },
+              { value: 'pending', label: '待处理' },
             ]}
           />
           <Select
@@ -502,11 +536,10 @@ export default function Customers() {
             onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
             allowClear
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-            options={[
-              { value: 'normal', label: '正常' },
-              { value: 'pending', label: '待处理' },
-              { value: 'suspended', label: '暂停' },
-            ]}
+            options={Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
+              value,
+              label,
+            }))}
           />
           <DatePicker
             placeholder="开始日期"
@@ -701,8 +734,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   }
 
   // 渲染图片预览
-  const renderImage = (url: string | undefined, label: string) => {
-    if (!url)
+  const renderImage = (image: ImageType | undefined, label: string) => {
+    if (!image?.url)
       return (
         <div className="no-image-placeholder border border-dashed border-gray-300 rounded-md h-24 flex items-center justify-center text-gray-400">
           暂无图片
@@ -717,13 +750,13 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       if (imgElement && imgElement.classList.contains('opacity-60')) {
         return
       }
-      setImagePreview({ visible: true, url })
+      setImagePreview({ visible: true, url: image.url! })
     }
 
     return (
       <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
         <img
-          src={url}
+          src={image.url}
           alt={label}
           className="w-full h-24 object-cover rounded-md border border-gray-200"
           onError={e => {
@@ -739,17 +772,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   }
 
   // 渲染图片集合
-  const renderImages = (images: Record<string, any> | undefined) => {
+  const renderImages = (images: Record<string, string> | undefined) => {
     if (!images || Object.keys(images).length === 0) {
       return <div className="no-image-placeholder">暂无图片</div>
     }
 
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {Object.entries(images).map(([key, imageData]) => {
-          // 处理不同的数据结构，保证能正确获取URL
-          const url = typeof imageData === 'string' ? imageData : imageData?.url
-
+        {Object.entries(images).map(([key, url]) => {
           if (!url) return null
 
           const handlePreviewClick = (e: React.MouseEvent) => {
@@ -794,27 +824,13 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     if (!status) return <Tag color="default">未设置</Tag>
 
     if (type === 'business') {
-      switch (status) {
-        case 'normal':
-          return <Tag color="success">{BUSINESS_STATUS_MAP.normal}</Tag>
-        case 'terminated':
-          return <Tag color="error">{BUSINESS_STATUS_MAP.terminated}</Tag>
-        case 'suspended':
-          return <Tag color="warning">{BUSINESS_STATUS_MAP.suspended}</Tag>
-        default:
-          return <Tag color="default">{status}</Tag>
-      }
+      const color = BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default';
+      const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status;
+      return <Tag color={color}>{label}</Tag>;
     } else {
-      switch (status) {
-        case 'active':
-          return <Tag color="success">正常经营</Tag>
-        case 'inactive':
-          return <Tag color="warning">停业</Tag>
-        case 'closed':
-          return <Tag color="error">注销</Tag>
-        default:
-          return <Tag color="default">{status}</Tag>
-      }
+      const color = ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default';
+      const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status;
+      return <Tag color={color}>{label}</Tag>;
     }
   }
 
@@ -836,6 +852,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="所属分局">
             {customer.taxBureau || '-'}
           </Descriptions.Item>
+          <Descriptions.Item label="顾问会计">
+            {customer.consultantAccountant || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="记账会计">
+            {customer.bookkeepingAccountant || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="实际负责人">
             {customer.actualResponsibleName || '-'}
           </Descriptions.Item>
@@ -845,8 +867,53 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="企业状态">
             {formatStatus(customer.enterpriseStatus, 'enterprise')}
           </Descriptions.Item>
-          <Descriptions.Item label="沟通注意事项" span={3}>
-            {customer.communicationNotes || '-'}
+          <Descriptions.Item label="业务状态">
+            {formatStatus(customer.businessStatus, 'business')}
+          </Descriptions.Item>
+          <Descriptions.Item label="注册地址" span={3}>
+            {customer.registeredAddress || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="经营地址" span={3}>
+            {customer.businessAddress || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="老板画像" span={3}>
+            {customer.bossProfile || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业画像" span={3}>
+            {customer.enterpriseProfile || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="同宗企业" span={3}>
+            {customer.affiliatedEnterprises || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="行业大类">
+            {customer.industryCategory || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="行业细分">
+            {customer.industrySubcategory || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="是否有税收优惠">
+            {customer.hasTaxBenefits ? '是' : '否'}
+          </Descriptions.Item>
+          <Descriptions.Item label="工商公示密码">
+            {customer.businessPublicationPassword || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="营业执照到期日期">
+            {formatDate(customer.licenseExpiryDate, false)}
+          </Descriptions.Item>
+          <Descriptions.Item label="注册资本">
+            {customer.registeredCapital ? `${customer.registeredCapital.toLocaleString()}元` : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="认缴到期日期">
+            {formatDate(customer.capitalContributionDeadline, false)}
+          </Descriptions.Item>
+          <Descriptions.Item label="实缴资本">
+            {customer.paidInCapital ? `${customer.paidInCapital.toLocaleString()}元` : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="行政许可类型">
+            {customer.administrativeLicenseType || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="行政许可到期日期">
+            {formatDate(customer.administrativeLicenseExpiryDate, false)}
           </Descriptions.Item>
           <Descriptions.Item label="提交人">{customer.submitter || '-'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">{formatDate(customer.createTime)}</Descriptions.Item>
@@ -855,91 +922,73 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       ),
     },
     {
-      key: '2',
-      label: '业务详情',
+      key: 'bank',
+      label: '银行信息',
       children: (
-        <Descriptions
-          bordered
-          column={1}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="主营业务">{customer.mainBusiness || '-'}</Descriptions.Item>
-          <Descriptions.Item label="经营范围">{customer.businessScope || '-'}</Descriptions.Item>
-          <Descriptions.Item label="经营地址">{customer.businessAddress || '-'}</Descriptions.Item>
-          <Descriptions.Item label="老板简介">{customer.bossProfile || '-'}</Descriptions.Item>
-          <Descriptions.Item label="沟通注意事项">
-            {customer.communicationNotes || '-'}
+        <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+          <Descriptions.Item label="对公开户行">
+            {customer.publicBank || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="关联企业">
-            {customer.affiliatedEnterprises || '-'}
+          <Descriptions.Item label="开户行账号">
+            {customer.bankAccountNumber || '-'}
           </Descriptions.Item>
-        </Descriptions>
-      ),
-    },
-    {
-      key: '3',
-      label: '银行账户',
-      children: (
-        <Descriptions
-          bordered
-          column={isMobile ? 1 : 2}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="基本户银行">{customer.basicBank || '-'}</Descriptions.Item>
-          <Descriptions.Item label="基本户账号">
-            {customer.basicBankAccount || '-'}
+          <Descriptions.Item label="对公开户时间">
+            {formatDate(customer.publicBankOpeningDate, false)}
           </Descriptions.Item>
-          <Descriptions.Item label="基本户行号">
-            {customer.basicBankNumber || '-'}
+          <Descriptions.Item label="网银托管档案号">
+            {customer.onlineBankingArchiveNumber || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="一般户银行">{customer.generalBank || '-'}</Descriptions.Item>
-          <Descriptions.Item label="一般户账号">
-            {customer.generalBankAccount || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="一般户行号">
-            {customer.generalBankNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="是否有网银">
-            {customer.hasOnlineBanking || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="网银是否托管">
-            {customer.isOnlineBankingCustodian || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="三方协议账户">
+          <Descriptions.Item label="三方协议扣款账户">
             {customer.tripartiteAgreementAccount || '-'}
           </Descriptions.Item>
         </Descriptions>
       ),
     },
     {
-      key: '4',
+      key: 'tax',
       label: '税务信息',
       children: (
+        <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+          <Descriptions.Item label="报税登录方式">
+            {customer.taxReportLoginMethod || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="税种">
+            {customer.taxCategories || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="社保险种">
+            {customer.socialInsuranceTypes || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="参保人员">
+            {customer.insuredPersonnel || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="个税密码">
+            {customer.personalIncomeTaxPassword || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="个税申报人员">
+            {customer.personalIncomeTaxStaff || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业信息表编号">
+            {customer.enterpriseInfoSheetNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="章存放编号">
+            {customer.sealStorageNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="开票软件">
+            {customer.invoicingSoftware || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="开票注意事项" span={2}>
+            {customer.invoicingNotes || '-'}
+          </Descriptions.Item>
+        </Descriptions>
+      ),
+    },
+    {
+      key: 'personnel',
+      label: '人员信息',
+      children: (
         <>
-          <Descriptions
-            bordered
-            column={isMobile ? 1 : 2}
-            size={isMobile ? 'small' : 'default'}
-            className="break-all"
-          >
-            <Descriptions.Item label="税种">{customer.taxCategories || '-'}</Descriptions.Item>
-            <Descriptions.Item label="个税申报密码">
-              {customer.personalIncomeTaxPassword || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="个税申报人员" span={2}>
-              {customer.personalIncomeTaxStaff || '-'}
-            </Descriptions.Item>
-          </Descriptions>
-
           <h3 className="mt-4 mb-2 font-medium">法定代表人</h3>
-          <Descriptions
-            bordered
-            column={isMobile ? 1 : 2}
-            size={isMobile ? 'small' : 'default'}
-            className="break-all"
-          >
+          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
             <Descriptions.Item label="姓名">
               {customer.legalRepresentativeName || '-'}
             </Descriptions.Item>
@@ -949,18 +998,13 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <Descriptions.Item label="身份证号">
               {customer.legalRepresentativeId || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="电子税务局密码">
+            <Descriptions.Item label="税务密码">
               {customer.legalRepresentativeTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
-          <Descriptions
-            bordered
-            column={isMobile ? 1 : 2}
-            size={isMobile ? 'small' : 'default'}
-            className="break-all"
-          >
+          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
             <Descriptions.Item label="姓名">
               {customer.financialContactName || '-'}
             </Descriptions.Item>
@@ -970,63 +1014,47 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <Descriptions.Item label="身份证号">
               {customer.financialContactId || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="电子税务局密码">
+            <Descriptions.Item label="税务密码">
               {customer.financialContactTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">办税员</h3>
-          <Descriptions
-            bordered
-            column={isMobile ? 1 : 2}
-            size={isMobile ? 'small' : 'default'}
-            className="break-all"
-          >
-            <Descriptions.Item label="姓名">{customer.taxOfficerName || '-'}</Descriptions.Item>
+          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+            <Descriptions.Item label="姓名">
+              {customer.taxOfficerName || '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="联系电话">
               {customer.taxOfficerPhone || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="身份证号">{customer.taxOfficerId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="电子税务局密码">
+            <Descriptions.Item label="身份证号">
+              {customer.taxOfficerId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="税务密码">
               {customer.taxOfficerTaxPassword || '-'}
+            </Descriptions.Item>
+          </Descriptions>
+
+          <h3 className="mt-4 mb-2 font-medium">开票员</h3>
+          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+            <Descriptions.Item label="姓名">
+              {customer.invoiceOfficerName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {customer.invoiceOfficerPhone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {customer.invoiceOfficerId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="税务密码">
+              {customer.invoiceOfficerTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
         </>
       ),
     },
     {
-      key: '5',
-      label: '证照信息',
-      children: (
-        <Descriptions
-          bordered
-          column={1}
-          size={isMobile ? 'small' : 'default'}
-          className="break-all"
-        >
-          <Descriptions.Item label="营业执照到期日期">
-            {formatDate(customer.licenseExpiryDate, false)}
-          </Descriptions.Item>
-          <Descriptions.Item label="注册资本认缴截止日期">
-            {formatDate(customer.capitalContributionDeadline, false)}
-          </Descriptions.Item>
-          <Descriptions.Item label="实缴资本">{customer.paidInCapital || '-'}</Descriptions.Item>
-          <Descriptions.Item label="年检密码">
-            {customer.annualInspectionPassword || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="股东信息">{customer.shareholders || '-'}</Descriptions.Item>
-          <Descriptions.Item label="监事信息">{customer.supervisors || '-'}</Descriptions.Item>
-          <Descriptions.Item label="行政许可">
-            {customer.administrativeLicenses || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="资本实缴记录">
-            {customer.capitalContributionRecords || '-'}
-          </Descriptions.Item>
-        </Descriptions>
-      ),
-    },
-    {
-      key: '6',
+      key: 'images',
       label: '图片资料',
       children: (
         <div className="space-y-6">
@@ -1035,18 +1063,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               <h3 className="font-medium mb-2">法人身份证照片</h3>
               <div className="mb-4">
                 <div className="mb-1">身份证正面</div>
-                {renderImage(customer.legalPersonIdImages?.front?.url, '身份证正面')}
+                {renderImage(customer.legalPersonIdImages?.front, '身份证正面')}
               </div>
               <div>
                 <div className="mb-1">身份证反面</div>
-                {renderImage(customer.legalPersonIdImages?.back?.url, '身份证反面')}
+                {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
               </div>
             </div>
 
             <div>
               <h3 className="font-medium mb-2">营业执照照片</h3>
               <div className="mb-1">营业执照</div>
-              {renderImage(customer.businessLicenseImages?.main?.url, '营业执照')}
+              {renderImage(customer.businessLicenseImages?.main, '营业执照')}
             </div>
           </div>
 
@@ -1055,11 +1083,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <div className="mb-1">基本户开户许可证</div>
-                {renderImage(customer.bankAccountLicenseImages?.basic?.url, '基本户开户许可证')}
+                {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
               </div>
               <div>
                 <div className="mb-1">一般户开户许可证</div>
-                {renderImage(customer.bankAccountLicenseImages?.general?.url, '一般户开户许可证')}
+                {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
               </div>
             </div>
           </div>

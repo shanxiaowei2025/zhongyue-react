@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Space, message } from 'antd'
-import type { Customer } from '../../types'
+import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Space, message, Switch } from 'antd'
+import type { Customer, ImageType } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
 import ImageUpload from '../../components/ImageUpload'
@@ -16,28 +16,179 @@ export const BUSINESS_STATUS_MAP = {
   suspended: '暂停',
 } as const
 
+// 字段名到标签页的映射
+const FIELD_TO_TAB_MAP: Record<string, string> = {
+  // 基本信息标签页字段
+  companyName: 'basic',
+  taxNumber: 'basic',
+  enterpriseType: 'basic',
+  taxBureau: 'basic',
+  consultantAccountant: 'basic',
+  bookkeepingAccountant: 'basic',
+  actualResponsibleName: 'basic',
+  actualResponsiblePhone: 'basic',
+  enterpriseStatus: 'basic',
+  businessStatus: 'basic',
+  registeredAddress: 'basic',
+  businessAddress: 'basic',
+  bossProfile: 'basic',
+  enterpriseProfile: 'basic',
+  affiliatedEnterprises: 'basic',
+  industryCategory: 'basic',
+  industrySubcategory: 'basic',
+  hasTaxBenefits: 'basic',
+  businessPublicationPassword: 'basic',
+  licenseExpiryDate: 'basic',
+  registeredCapital: 'basic',
+  capitalContributionDeadline: 'basic',
+  paidInCapital: 'basic',
+  administrativeLicenseType: 'basic',
+  administrativeLicenseExpiryDate: 'basic',
+  submitter: 'basic',
+  
+  // 银行信息标签页字段
+  publicBank: 'bank',
+  bankAccountNumber: 'bank',
+  publicBankOpeningDate: 'bank',
+  onlineBankingArchiveNumber: 'bank',
+  tripartiteAgreementAccount: 'bank',
+  
+  // 税务信息标签页字段
+  taxReportLoginMethod: 'tax',
+  taxCategories: 'tax',
+  socialInsuranceTypes: 'tax',
+  insuredPersonnel: 'tax',
+  personalIncomeTaxPassword: 'tax',
+  personalIncomeTaxStaff: 'tax',
+  enterpriseInfoSheetNumber: 'tax',
+  sealStorageNumber: 'tax',
+  invoicingSoftware: 'tax',
+  invoicingNotes: 'tax',
+  
+  // 人员信息标签页字段
+  legalRepresentativeName: 'personnel',
+  legalRepresentativePhone: 'personnel',
+  legalRepresentativeId: 'personnel',
+  legalRepresentativeTaxPassword: 'personnel',
+  financialContactName: 'personnel',
+  financialContactPhone: 'personnel',
+  financialContactId: 'personnel',
+  financialContactTaxPassword: 'personnel',
+  taxOfficerName: 'personnel',
+  taxOfficerPhone: 'personnel',
+  taxOfficerId: 'personnel',
+  taxOfficerTaxPassword: 'personnel',
+  invoiceOfficerName: 'personnel',
+  invoiceOfficerPhone: 'personnel',
+  invoiceOfficerId: 'personnel',
+  invoiceOfficerTaxPassword: 'personnel',
+  
+  // 图片资料标签页字段
+  legalPersonIdImages: '6',
+  businessLicenseImages: '6',
+  bankAccountLicenseImages: '6',
+  otherIdImages: '6',
+  supplementaryImages: '6',
+};
+
 interface CustomerFormProps {
   customer?: Customer | null
   mode: 'add' | 'edit' | 'view'
-  onSuccess?: (isAutoSave: boolean) => void
+  onSuccess?: (isAutoSave: boolean, id?: number) => void
   onCancel?: () => void
 }
 
 // 为表单值创建类型，允许日期字段为Dayjs类型
 type FormCustomer = Omit<
   Customer,
-  'establishmentDate' | 'licenseExpiryDate' | 'capitalContributionDeadline'
+  'licenseExpiryDate' | 'capitalContributionDeadline' | 'administrativeLicenseExpiryDate' | 'publicBankOpeningDate'
 > & {
-  establishmentDate?: Dayjs | null
   licenseExpiryDate?: Dayjs | null
   capitalContributionDeadline?: Dayjs | null
+  administrativeLicenseExpiryDate?: Dayjs | null
+  publicBankOpeningDate?: Dayjs | null
   [key: string]: any // 添加索引签名
 }
 
-// Add this type near the top after FormCustomer
-type APICustomer = Omit<FormCustomer, 'licenseExpiryDate' | 'administrativeLicenseExpiryDate'> & {
+// API提交时的客户数据类型
+type APICustomer = Omit<
+  FormCustomer, 
+  'licenseExpiryDate' | 'administrativeLicenseExpiryDate' | 'capitalContributionDeadline' | 'publicBankOpeningDate'
+> & {
   licenseExpiryDate?: string;
   administrativeLicenseExpiryDate?: string;
+  capitalContributionDeadline?: string;
+  publicBankOpeningDate?: string;
+};
+
+// 处理日期转换: Dayjs => string
+const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
+  const result = { ...values };
+  
+  // 只有当值存在且是Dayjs对象时才进行转换
+  if (values.licenseExpiryDate && dayjs.isDayjs(values.licenseExpiryDate) && values.licenseExpiryDate.isValid()) {
+    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    result.licenseExpiryDate = values.licenseExpiryDate.format('YYYY-MM-DD');
+  } else {
+    // 如果不是有效的日期，则设为undefined
+    result.licenseExpiryDate = undefined;
+  }
+  
+  if (values.administrativeLicenseExpiryDate && dayjs.isDayjs(values.administrativeLicenseExpiryDate) && values.administrativeLicenseExpiryDate.isValid()) {
+    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    result.administrativeLicenseExpiryDate = values.administrativeLicenseExpiryDate.format('YYYY-MM-DD');
+  } else {
+    result.administrativeLicenseExpiryDate = undefined;
+  }
+  
+  if (values.capitalContributionDeadline && dayjs.isDayjs(values.capitalContributionDeadline) && values.capitalContributionDeadline.isValid()) {
+    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    result.capitalContributionDeadline = values.capitalContributionDeadline.format('YYYY-MM-DD');
+  } else {
+    result.capitalContributionDeadline = undefined;
+  }
+  
+  if (values.publicBankOpeningDate && dayjs.isDayjs(values.publicBankOpeningDate) && values.publicBankOpeningDate.isValid()) {
+    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    result.publicBankOpeningDate = values.publicBankOpeningDate.format('YYYY-MM-DD');
+  } else {
+    result.publicBankOpeningDate = undefined;
+  }
+  
+  return result;
+};
+
+// 提取图片URL
+const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCustomer> => {
+  const result = { ...values };
+  
+  // 处理单个图片字段
+  const processImageField = (fieldKey: string) => {
+    const field = values[fieldKey];
+    if (field && typeof field === 'object') {
+      const processedField: Record<string, ImageType> = {};
+      
+      Object.entries(field).forEach(([key, value]) => {
+        if (value && typeof value === 'object' && 'url' in value) {
+          processedField[key] = value as ImageType;
+        }
+      });
+      
+      result[fieldKey] = processedField;
+    } else {
+      // 如果字段不存在或不是对象，设置为空对象
+      result[fieldKey] = {};
+    }
+  };
+  
+  // 处理所有图片字段 - 确保每个字段都被处理
+  processImageField('legalPersonIdImages');
+  processImageField('businessLicenseImages');
+  processImageField('bankAccountLicenseImages');
+  processImageField('otherIdImages');
+  processImageField('supplementaryImages');
+  
+  return result;
 };
 
 const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, onCancel }) => {
@@ -54,42 +205,108 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       // Convert string dates to Dayjs objects
       const formValues: Partial<FormCustomer> = {
         ...customer,
-        licenseExpiryDate: customer.licenseExpiryDate ? dayjs(customer.licenseExpiryDate) : undefined,
+        licenseExpiryDate: customer.licenseExpiryDate ? dayjs(customer.licenseExpiryDate) : null,
         administrativeLicenseExpiryDate: customer.administrativeLicenseExpiryDate ? 
-          dayjs(customer.administrativeLicenseExpiryDate) : undefined,
+          dayjs(customer.administrativeLicenseExpiryDate) : null,
+        capitalContributionDeadline: customer.capitalContributionDeadline ? 
+          dayjs(customer.capitalContributionDeadline) : null,
+        publicBankOpeningDate: customer.publicBankOpeningDate ? 
+          dayjs(customer.publicBankOpeningDate) : null,
       };
       form.setFieldsValue(formValues);
     }
   }, [customer, form, mode])
 
-  const handleSubmit = async (values: FormCustomer) => {
+  const handleSubmit = async (values: FormCustomer, isAutoSave = false) => {
     if (!customer && mode !== 'add') {
       message.error('客户信息不存在');
       return;
     }
 
     try {
+      // 不在这里调用 validateFields，让表单自己处理验证
+      // Form 组件的 onFinish 只会在验证通过后才会被调用
       setIsSaving(true);
       
-      // Convert dates to strings and handle image fields
-      const processedValues = convertImageFieldsToUrls(
-        convertDatesToString(values)
-      ) as APICustomer;
+      // 处理日期字段转换为字符串
+      const valuesWithDatesConverted = convertDatesToString(values);
+      
+      // 处理图片字段
+      const dataWithImages = convertImageFieldsToUrls(valuesWithDatesConverted);
+      
+      // 确保所有必需的图片字段都存在且为对象类型
+      if (!dataWithImages.otherIdImages || typeof dataWithImages.otherIdImages !== 'object') {
+        dataWithImages.otherIdImages = {};
+      }
+      
+      if (!dataWithImages.supplementaryImages || typeof dataWithImages.supplementaryImages !== 'object') {
+        dataWithImages.supplementaryImages = {};
+      }
+      
+      // 移除可能引起错误的createTime和updateTime字段
+      const { createTime, updateTime, ...cleanData } = dataWithImages;
 
       if (mode === 'add') {
-        await createCustomer(processedValues);
-        message.success('创建成功');
+        const newCustomer = await createCustomer(cleanData as Partial<Customer>);
+        if (!isAutoSave) {
+          // 创建成功后，直接调用 onSuccess 回调
+          onSuccess?.(isAutoSave, newCustomer?.id);
+          
+          // 创建成功后，清空 uploadedImages 数组但不删除已上传的图片
+          setUploadedImages([]);
+          
+          // 创建成功后直接调用 onCancel 回调，不经过 handleCancel 函数，这样不会触发图片清理
+          onCancel?.();
+        } else {
+          // 自动保存模式只调用 onSuccess
+          onSuccess?.(isAutoSave, newCustomer?.id);
+        }
       } else if (customer?.id) {
-        await updateCustomer(customer.id, processedValues);
-        message.success('保存成功');
+        await updateCustomer(customer.id, cleanData as Partial<Customer>);
+        if (!isAutoSave) {
+          message.success('保存成功');
+        }
+        onSuccess?.(isAutoSave, customer.id);
+        
+        if (!isAutoSave) {
+          handleCancel(false);
+        }
       }
-
-      handleCancel();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Form submission error:', error);
       message.error('提交失败，请重试');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  // 添加单独的处理函数来处理表单验证错误
+  const handleFormValidationError = (errorInfo: any) => {
+    console.error('Form validation error:', errorInfo);
+    
+    if (errorInfo?.errorFields && errorInfo.errorFields.length > 0) {
+      // 获取第一个错误字段
+      const firstErrorField = errorInfo.errorFields[0];
+      
+      // 获取字段名
+      const fieldName = firstErrorField.name[0];
+      
+      // 获取字段所在的标签页
+      const tabKey = FIELD_TO_TAB_MAP[fieldName] || 'basic';
+      
+      // 切换到对应标签页
+      setActiveTab(tabKey);
+      
+      // 使用setTimeout确保标签页切换后再滚动到对应字段
+      setTimeout(() => {
+        // 聚焦到错误字段
+        form.scrollToField(firstErrorField.name, {
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+      
+      message.error('请检查表单填写是否正确');
     }
   }
 
@@ -103,18 +320,15 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       return
     }
 
+    // 设置状态防止重复保存
+    setIsSaving(true)
+
     try {
       // 验证表单必填项，如果有错误则不自动保存
       const fields = [
         'companyName',
-        'socialCreditCode',
-        'dailyContact',
-        'dailyContactPhone',
-        'salesRepresentative',
-        'taxBureau',
-        'taxRegistrationType',
         'enterpriseStatus',
-        'businessStatus',
+        'businessStatus'
       ]
 
       const values = form.getFieldsValue()
@@ -129,15 +343,26 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       }
 
       if (hasError) {
+        setIsSaving(false)
         return
       }
 
-      // 提交表单
-      await form.validateFields()
-      await handleSubmit(form.getFieldsValue(), true) // 传递isAutoSave=true参数
-    } catch (error) {
+      // 提交表单，捕获验证错误
+      try {
+        // 使用 validateFields 验证指定字段而不是全部字段，避免阻止自动保存
+        await form.validateFields(['companyName', 'enterpriseStatus', 'businessStatus']) 
+        // 调用 handleSubmit 并传递 isAutoSave=true
+        await handleSubmit(form.getFieldsValue(), true) 
+        console.log('自动保存成功')
+      } catch (validationError: any) {
+        // 处理验证错误但不显示消息，避免干扰用户
+        console.error('自动保存验证错误:', validationError)
+      }
+    } catch (error: any) {
       console.error('自动保存出错:', error)
       // 不显示错误消息，避免干扰用户
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -176,9 +401,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   // 处理表单取消
-  const handleCancel = async () => {
-    if (mode === 'add' && uploadedImages.length > 0) {
-      // 在添加模式下，删除所有已上传的图片
+  const handleCancel = async (afterSuccessfulCreate = false) => {
+    if (mode === 'add' && uploadedImages.length > 0 && !afterSuccessfulCreate) {
+      // 在添加模式下且不是创建成功后的调用，删除所有已上传的图片
       message.loading('正在清理已上传的图片...', 0)
       let deletedCount = 0
 
@@ -215,42 +440,44 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
-          <Form.Item name="socialCreditCode" label="统一社会信用代码" rules={[{ required: true }]}>
+          <Form.Item name="taxNumber" label="税号">
             <Input />
           </Form.Item>
 
-          <Form.Item name="dailyContact" label="日常联系人" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="dailyContactPhone" label="联系电话" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="salesRepresentative" label="业务员" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="businessSource" label="业务来源">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="taxBureau" label="所属税局" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="taxRegistrationType" label="税务登记类型" rules={[{ required: true }]}>
+          <Form.Item name="enterpriseType" label="企业类型">
             <Select>
-              <Select.Option value="general">一般纳税人</Select.Option>
-              <Select.Option value="small">小规模纳税人</Select.Option>
+              <Select.Option value="有限责任公司">有限责任公司</Select.Option>
+              <Select.Option value="股份有限公司">股份有限公司</Select.Option>
+              <Select.Option value="个人独资企业">个人独资企业</Select.Option>
+              <Select.Option value="合伙企业">合伙企业</Select.Option>
             </Select>
+          </Form.Item>
+
+          <Form.Item name="taxBureau" label="所属分局">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="consultantAccountant" label="顾问会计">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="bookkeepingAccountant" label="记账会计">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="actualResponsibleName" label="实际负责人">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="actualResponsiblePhone" label="联系电话">
+            <Input />
           </Form.Item>
 
           <Form.Item name="enterpriseStatus" label="企业状态" rules={[{ required: true }]}>
             <Select>
               <Select.Option value="active">正常经营</Select.Option>
               <Select.Option value="inactive">停业</Select.Option>
-              <Select.Option value="closed">注销</Select.Option>
+              <Select.Option value="pending">待处理</Select.Option>
             </Select>
           </Form.Item>
 
@@ -264,120 +491,180 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             </Select>
           </Form.Item>
 
-          <Form.Item name="enterpriseType" label="企业类型">
-            <Select>
-              <Select.Option value="有限责任公司">有限责任公司</Select.Option>
-              <Select.Option value="股份有限公司">股份有限公司</Select.Option>
-              <Select.Option value="个人独资企业">个人独资企业</Select.Option>
-              <Select.Option value="合伙企业">合伙企业</Select.Option>
-            </Select>
+          <Form.Item name="registeredAddress" label="注册地址" className="col-span-1 md:col-span-2">
+            <Input.TextArea rows={2} />
           </Form.Item>
 
-          <Form.Item name="communicationNotes" label="沟通注意事项">
+          <Form.Item name="businessAddress" label="经营地址" className="col-span-1 md:col-span-2">
             <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="bossProfile" label="老板画像" className="col-span-1 md:col-span-2">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="enterpriseProfile" label="企业画像" className="col-span-1 md:col-span-2">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="affiliatedEnterprises" label="同宗企业" className="col-span-1 md:col-span-2">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="industryCategory" label="行业大类">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="industrySubcategory" label="行业细分">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="hasTaxBenefits" label="是否有税收优惠" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+
+          <Form.Item name="businessPublicationPassword" label="工商公示密码">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="licenseExpiryDate" label="营业执照到期日期">
+            <DatePicker 
+              style={{ width: '100%' }} 
+              allowClear 
+              format="YYYY-MM-DD"
+              onChange={(date) => {
+                // 手动更新表单，确保日期值正确
+                form.setFieldValue('licenseExpiryDate', date);
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item name="registeredCapital" label="注册资本">
+            <InputNumber style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item name="capitalContributionDeadline" label="认缴到期日期">
+            <DatePicker 
+              style={{ width: '100%' }} 
+              allowClear 
+              format="YYYY-MM-DD"
+              onChange={(date) => {
+                form.setFieldValue('capitalContributionDeadline', date);
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item name="paidInCapital" label="实缴资本">
+            <InputNumber style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item name="administrativeLicenseType" label="行政许可类型">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="administrativeLicenseExpiryDate" label="行政许可到期日期">
+            <DatePicker 
+              style={{ width: '100%' }} 
+              allowClear 
+              format="YYYY-MM-DD"
+              onChange={(date) => {
+                form.setFieldValue('administrativeLicenseExpiryDate', date);
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item name="submitter" label="提交人">
+            <Input />
           </Form.Item>
         </div>
       ),
     },
     {
-      key: '2',
-      label: '业务详情',
+      key: 'bank',
+      label: '银行信息',
       children: (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-          <Form.Item name="mainBusiness" label="主营业务">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="businessScope" label="经营范围">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="businessAddress" label="经营地址">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="bossProfile" label="老板简介">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="communicationNotes" label="沟通注意事项">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="affiliatedEnterprises" label="关联企业">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-        </div>
-      ),
-    },
-    {
-      key: '3',
-      label: '银行账户',
-      children: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-          <Form.Item name="basicBank" label="基本户银行">
+          <Form.Item name="publicBank" label="对公开户行">
             <Input />
           </Form.Item>
 
-          <Form.Item name="basicBankAccount" label="基本户账号">
+          <Form.Item name="bankAccountNumber" label="开户行账号">
             <Input />
           </Form.Item>
 
-          <Form.Item name="basicBankNumber" label="基本户行号">
+          <Form.Item name="publicBankOpeningDate" label="对公开户时间">
+            <DatePicker 
+              style={{ width: '100%' }} 
+              allowClear 
+              format="YYYY-MM-DD"
+              onChange={(date) => {
+                form.setFieldValue('publicBankOpeningDate', date);
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item name="onlineBankingArchiveNumber" label="网银托管档案号">
             <Input />
           </Form.Item>
 
-          <Form.Item name="generalBank" label="一般户银行">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="generalBankAccount" label="一般户账号">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="generalBankNumber" label="一般户行号">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="hasOnlineBanking" label="是否有网银">
-            <Select>
-              <Select.Option value="是">是</Select.Option>
-              <Select.Option value="否">否</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="isOnlineBankingCustodian" label="网银是否托管">
-            <Select>
-              <Select.Option value="是">是</Select.Option>
-              <Select.Option value="否">否</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="tripartiteAgreementAccount" label="三方协议账户">
+          <Form.Item name="tripartiteAgreementAccount" label="三方协议扣款账户">
             <Input />
           </Form.Item>
         </div>
       ),
     },
     {
-      key: '4',
+      key: 'tax',
       label: '税务信息',
       children: (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+          <Form.Item name="taxReportLoginMethod" label="报税登录方式">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="taxCategories" label="税种">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="socialInsuranceTypes" label="社保险种">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="insuredPersonnel" label="参保人员">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+
+          <Form.Item name="personalIncomeTaxPassword" label="个税密码">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="personalIncomeTaxStaff" label="个税申报人员">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="enterpriseInfoSheetNumber" label="企业信息表编号">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="sealStorageNumber" label="章存放编号">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="invoicingSoftware" label="开票软件">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="invoicingNotes" label="开票注意事项">
+            <Input.TextArea rows={2} />
+          </Form.Item>
+        </div>
+      ),
+    },
+    {
+      key: 'personnel',
+      label: '人员信息',
+      children: (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-            <Form.Item name="taxCategories" label="税种">
-              <Input.TextArea rows={2} />
-            </Form.Item>
-
-            <Form.Item name="personalIncomeTaxPassword" label="个税申报密码">
-              <Input />
-            </Form.Item>
-
-            <Form.Item name="personalIncomeTaxStaff" label="个税申报人员">
-              <Input />
-            </Form.Item>
-          </div>
-
           <h3 className="mt-4 md:mt-6 mb-3 font-medium">法定代表人</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             <Form.Item name="legalRepresentativeName" label="姓名">
@@ -434,46 +721,26 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               <Input />
             </Form.Item>
           </div>
+
+          <h3 className="mt-4 md:mt-6 mb-3 font-medium">开票员</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+            <Form.Item name="invoiceOfficerName" label="姓名">
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="invoiceOfficerPhone" label="联系电话">
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="invoiceOfficerId" label="身份证号">
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="invoiceOfficerTaxPassword" label="电子税务局密码">
+              <Input />
+            </Form.Item>
+          </div>
         </>
-      ),
-    },
-    {
-      key: '5',
-      label: '证照信息',
-      children: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-          <Form.Item name="licenseExpiryDate" label="营业执照到期日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item name="capitalContributionDeadline" label="注册资本认缴截止日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item name="paidInCapital" label="实缴资本">
-            <InputNumber style={{ width: '100%' }} />
-          </Form.Item>
-
-          <Form.Item name="annualInspectionPassword" label="年检密码">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="shareholders" label="股东信息">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="supervisors" label="监事信息">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="administrativeLicenses" label="行政许可">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-
-          <Form.Item name="capitalContributionRecords" label="资本实缴记录">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-        </div>
       ),
     },
     {
@@ -585,22 +852,20 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       <Form
         form={form}
         layout="vertical"
-        initialValues={customer as FormCustomer}
-        onFinish={handleSubmit}
+        initialValues={customer ? {
+          ...customer,
+          licenseExpiryDate: customer.licenseExpiryDate ? dayjs(customer.licenseExpiryDate) : null,
+          administrativeLicenseExpiryDate: customer.administrativeLicenseExpiryDate ? 
+            dayjs(customer.administrativeLicenseExpiryDate) : null,
+          capitalContributionDeadline: customer.capitalContributionDeadline ? 
+            dayjs(customer.capitalContributionDeadline) : null,
+          publicBankOpeningDate: customer.publicBankOpeningDate ? 
+            dayjs(customer.publicBankOpeningDate) : null,
+        } as any : undefined}
+        onFinish={values => handleSubmit(values)}
+        onFinishFailed={handleFormValidationError}
         className="customer-form"
       >
-        {/* <div className="mb-4 flex justify-between items-center">
-          <div className="font-medium text-lg">
-            {mode === 'add' ? '添加客户' : mode === 'edit' ? '编辑客户' : '客户详情'}
-          </div>
-          {mode !== 'view' && (
-            <div className="flex items-center">
-              <span className="mr-2">图片自动保存:</span>
-              <Switch checked={autoSaveEnabled} onChange={setAutoSaveEnabled} size="small" />
-            </div>
-          )}
-        </div> */}
-
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -609,10 +874,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         />
         <div className="customer-form-footer">
           <Space>
-            <Button onClick={handleCancel}>取消</Button>
-            <Button type="primary" htmlType="submit" loading={isSaving}>
-              {mode === 'add' ? '创建' : '保存'}
-            </Button>
+            <Button onClick={() => handleCancel()}>取消</Button>
+            {mode !== 'view' && (
+              <Button type="primary" htmlType="submit" loading={isSaving}>
+                {mode === 'add' ? '创建' : '保存'}
+              </Button>
+            )}
           </Space>
         </div>
       </Form>

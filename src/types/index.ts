@@ -182,14 +182,14 @@ export interface Customer {
   personalIncomeTaxStaff: string
   enterpriseInfoSheetNumber: string
   sealStorageNumber: string
-  enterpriseStatus: 'active' | 'inactive'
+  enterpriseStatus: 'active' | 'inactive' | 'pending'
   businessStatus: 'normal' | 'terminated' | 'suspended'
   createTime: string
   updateTime: string
   submitter: string
 }
 
-interface ImageType {
+export interface ImageType {
   fileName?: string
   url?: string
 }

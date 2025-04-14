@@ -50,6 +50,20 @@ export const updateCustomer = (id: number, data: Partial<Customer>) => {
   // 移除可能引起错误的createTime和updateTime字段
   const { createTime, updateTime, ...cleanData } = data
 
+  // 处理数值字段，确保发送到后端的是数字而不是字符串
+  if (typeof cleanData.registeredCapital === 'string') {
+    cleanData.registeredCapital = parseFloat(cleanData.registeredCapital)
+  }
+  
+  if (typeof cleanData.paidInCapital === 'string') {
+    cleanData.paidInCapital = parseFloat(cleanData.paidInCapital)
+  }
+
+  // 处理布尔值字段
+  if (cleanData.hasTaxBenefits !== undefined) {
+    cleanData.hasTaxBenefits = Boolean(cleanData.hasTaxBenefits)
+  }
+
   console.log('更新客户, ID:', id, '请求数据:', cleanData)
 
   return request.patch<ApiResponse<Customer>>(`/customer/${id}`, cleanData)
