@@ -19,27 +19,23 @@ services:
 
   # API服务
   api:
-    container_name: zhongyue-nodejs-api-dev
+    container_name: zhongyue-nodejs-api-prod
     build:
-      context: ../zhongyue-nodejs # 调整为后端API项目的相对路径
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ../zhongyue-nodejs:/usr/src/app
-      - /usr/src/app/node_modules
+      context: ../zhongyue-nodejs
+      dockerfile: Dockerfile
+      target: production
+    restart: always
     ports:
       - '3000:3000'
     environment:
-      - NODE_ENV=development
-    command: pnpm run start:dev
+      - NODE_ENV=production
     env_file:
-      - ../zhongyue-nodejs/.env # 调整为后端API项目的环境变量文件路径
+      - ../zhongyue-nodejs/.env
     networks:
       - web_network
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     healthcheck:
-      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:3000/api/health']
-      interval: 10s
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
