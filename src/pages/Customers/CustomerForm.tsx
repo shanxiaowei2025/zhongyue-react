@@ -34,6 +34,12 @@ type FormCustomer = Omit<
   [key: string]: any // 添加索引签名
 }
 
+// Add this type near the top after FormCustomer
+type APICustomer = Omit<FormCustomer, 'licenseExpiryDate' | 'administrativeLicenseExpiryDate'> & {
+  licenseExpiryDate?: string;
+  administrativeLicenseExpiryDate?: string;
+};
+
 const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, onCancel }) => {
   const [form] = Form.useForm<FormCustomer>()
   const [activeTab, setActiveTab] = useState<string>('basic')
@@ -45,65 +51,45 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
   useEffect(() => {
     if (customer && mode !== 'add') {
-      form.setFieldsValue({
+      // Convert string dates to Dayjs objects
+      const formValues: Partial<FormCustomer> = {
         ...customer,
-        establishmentDate: customer.establishmentDate
-          ? dayjs(customer.establishmentDate)
-          : undefined,
-        licenseExpiryDate: customer.licenseExpiryDate
-          ? dayjs(customer.licenseExpiryDate)
-          : undefined,
-        capitalContributionDeadline: customer.capitalContributionDeadline
-          ? dayjs(customer.capitalContributionDeadline)
-          : undefined,
-      })
+        licenseExpiryDate: customer.licenseExpiryDate ? dayjs(customer.licenseExpiryDate) : undefined,
+        administrativeLicenseExpiryDate: customer.administrativeLicenseExpiryDate ? 
+          dayjs(customer.administrativeLicenseExpiryDate) : undefined,
+      };
+      form.setFieldsValue(formValues);
     }
-  }, [customer, form])
+  }, [customer, form, mode])
 
-  const handleSubmit = async (values: any, isAutoSave = false) => {
-    if (isSaving) return
+  const handleSubmit = async (values: FormCustomer) => {
+    if (!customer && mode !== 'add') {
+      message.error('客户信息不存在');
+      return;
+    }
 
     try {
-      setIsSaving(true)
-      // 处理日期字段和图片字段
-      const processedValues = {
-        ...values,
-        establishmentDate: values.establishmentDate?.format('YYYY-MM-DD'),
-        licenseExpiryDate: values.licenseExpiryDate?.format('YYYY-MM-DD'),
-        capitalContributionDeadline: values.capitalContributionDeadline?.format('YYYY-MM-DD'),
-        // 确保图片字段是对象类型
-        legalPersonIdImages: values.legalPersonIdImages || {},
-        otherIdImages: values.otherIdImages || {},
-        businessLicenseImages: values.businessLicenseImages || {},
-        bankAccountLicenseImages: values.bankAccountLicenseImages || {},
-        supplementaryImages: values.supplementaryImages || {},
-      }
+      setIsSaving(true);
+      
+      // Convert dates to strings and handle image fields
+      const processedValues = convertImageFieldsToUrls(
+        convertDatesToString(values)
+      ) as APICustomer;
 
       if (mode === 'add') {
-        // 调用创建客户 API
-        const success = await createCustomer(processedValues)
-        if (success) {
-          // 创建成功后清空已上传图片跟踪列表
-          setUploadedImages([])
-          onSuccess?.(isAutoSave)
-        }
-      } else {
-        // 调用更新客户 API
-        if (!customer?.id) {
-          message.error('客户ID不存在')
-          return
-        }
-        const success = await updateCustomer(customer.id, processedValues)
-        if (success) {
-          message.success('更新客户成功')
-          onSuccess?.(isAutoSave)
-        }
+        await createCustomer(processedValues);
+        message.success('创建成功');
+      } else if (customer?.id) {
+        await updateCustomer(customer.id, processedValues);
+        message.success('保存成功');
       }
+
+      handleCancel();
     } catch (error) {
-      console.error('保存客户信息出错:', error)
-      message.error('操作失败：' + (error instanceof Error ? error.message : '未知错误'))
+      console.error('Form submission error:', error);
+      message.error('提交失败，请重试');
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 

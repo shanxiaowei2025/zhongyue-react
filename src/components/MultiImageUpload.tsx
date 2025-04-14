@@ -11,12 +11,13 @@ import {
 import { uploadFile, deleteFile } from '../utils/upload'
 
 interface MultiImageUploadProps {
-  title: string
+  title?: string
   value?: Record<string, string>
   onChange?: (value: Record<string, string>) => void
   maxCount?: number
   disabled?: boolean
   onSuccess?: (isAutoSave: boolean) => void
+  listType?: 'text' | 'picture' | 'picture-card'
 }
 
 interface ImageItem {
@@ -32,6 +33,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   maxCount = 10,
   disabled = false,
   onSuccess,
+  listType = 'picture-card',
 }) => {
   const [loading, setLoading] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)

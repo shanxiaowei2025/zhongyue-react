@@ -56,10 +56,10 @@ export default function Customers() {
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState({
     keyword: '',
-    socialCreditCode: '',
-    salesRepresentative: '',
+    companyName: '',
+    taxNumber: '',
+    enterpriseType: '',
     taxBureau: '',
-    taxRegistrationType: '',
     enterpriseStatus: '',
     businessStatus: '',
     startDate: '',
@@ -135,10 +135,10 @@ export default function Customers() {
   const resetSearch = () => {
     setSearchParams({
       keyword: '',
-      socialCreditCode: '',
-      salesRepresentative: '',
+      companyName: '',
+      taxNumber: '',
+      enterpriseType: '',
       taxBureau: '',
-      taxRegistrationType: '',
       enterpriseStatus: '',
       businessStatus: '',
       startDate: '',
@@ -318,172 +318,99 @@ export default function Customers() {
 
   const columns: ColumnsType<Customer> = [
     {
-      title: '公司名称',
+      title: '企业名称',
       dataIndex: 'companyName',
       key: 'companyName',
-      fixed: 'left',
       width: 200,
-      render: (text, record) => (
-        <a
-          onClick={() => handleView(record)}
-          className="company-name-link"
-          title={text || '未设置公司名称'}
-        >
-          {text || '未命名企业'}
-        </a>
-      ),
+      fixed: 'left',
     },
     {
-      title: '统一社会信用代码',
-      dataIndex: 'socialCreditCode',
-      key: 'socialCreditCode',
-      responsive: ['lg'],
-      width: 180,
-    },
-    {
-      title: '联系人',
-      dataIndex: 'dailyContact',
-      key: 'dailyContact',
-      responsive: ['md'],
-      width: 120,
-    },
-    {
-      title: '联系人电话',
-      dataIndex: 'dailyContactPhone',
-      key: 'dailyContactPhone',
-      responsive: ['md'],
+      title: '税号',
+      dataIndex: 'taxNumber',
+      key: 'taxNumber',
       width: 150,
-    },
-    {
-      title: '业务员',
-      dataIndex: 'salesRepresentative',
-      key: 'salesRepresentative',
-      responsive: ['xl'],
-      width: 120,
-    },
-    {
-      title: '业务来源',
-      dataIndex: 'businessSource',
-      key: 'businessSource',
-      responsive: ['xl'],
-      width: 120,
-    },
-    {
-      title: '纳税人类型',
-      dataIndex: 'taxRegistrationType',
-      key: 'taxRegistrationType',
-      responsive: ['xxl'],
-      width: 120,
-    },
-    {
-      title: '所属税局',
-      dataIndex: 'taxBureau',
-      key: 'taxBureau',
-      responsive: ['lg'],
-      width: 150,
-    },
-    {
-      title: '主管会计',
-      dataIndex: 'chiefAccountant',
-      key: 'chiefAccountant',
-      responsive: ['xl'],
-      width: 120,
-    },
-    {
-      title: '责任会计',
-      dataIndex: 'responsibleAccountant',
-      key: 'responsibleAccountant',
-      responsive: ['xxl'],
-      width: 120,
-    },
-    {
-      title: '业务状态',
-      dataIndex: 'businessStatus',
-      key: 'businessStatus',
-      width: 100,
-      render: status => {
-        let color = 'default'
-        let text = status || '未设置'
-
-        switch (status) {
-          case 'normal':
-            color = 'success'
-            text = BUSINESS_STATUS_MAP.normal
-            break
-          case 'terminated':
-            color = 'error'
-            text = BUSINESS_STATUS_MAP.terminated
-            break
-          case 'suspended':
-            color = 'warning'
-            text = BUSINESS_STATUS_MAP.suspended
-            break
-          default:
-            color = 'default'
-        }
-
-        return <Tag color={color}>{text}</Tag>
-      },
     },
     {
       title: '企业类型',
       dataIndex: 'enterpriseType',
       key: 'enterpriseType',
       width: 120,
-      responsive: ['lg'],
+    },
+    {
+      title: '所属分局',
+      dataIndex: 'taxBureau',
+      key: 'taxBureau',
+      width: 150,
+    },
+    {
+      title: '实际负责人',
+      dataIndex: 'actualResponsibleName',
+      key: 'actualResponsibleName',
+      width: 120,
+    },
+    {
+      title: '联系电话',
+      dataIndex: 'actualResponsiblePhone',
+      key: 'actualResponsiblePhone',
+      width: 120,
+    },
+    {
+      title: '企业状态',
+      dataIndex: 'enterpriseStatus',
+      key: 'enterpriseStatus',
+      width: 100,
+      render: (status: string) => (
+        <Tag color={status === 'active' ? 'success' : 'default'}>
+          {status === 'active' ? '正常' : '停用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '业务状态',
+      dataIndex: 'businessStatus',
+      key: 'businessStatus',
+      width: 100,
+      render: (status: string) => (
+        <Tag color={BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] === '正常' ? 'success' : 'warning'}>
+          {BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP]}
+        </Tag>
+      ),
     },
     {
       title: '创建时间',
       dataIndex: 'createTime',
       key: 'createTime',
       width: 180,
-      responsive: ['md'],
-      render: text => (text ? dayjs.utc(text).format('YYYY/MM/DD HH:mm') : '-'),
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updateTime',
-      key: 'updateTime',
-      responsive: ['lg'],
-      width: 180,
-      render: text => (text ? dayjs.utc(text).format('YYYY/MM/DD HH:mm') : '-'),
+      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '操作',
       key: 'action',
-      width: isMobile ? 100 : 140,
       fixed: 'right',
+      width: 150,
       render: (_, record) => (
-        <Space size={isMobile ? 2 : 4} className="action-buttons">
+        <Space size="middle">
           <Button
             type="link"
-            className="action-btn view-btn"
             icon={<EyeOutlined />}
             onClick={() => handleView(record)}
-            title="查看"
-            size={isMobile ? 'small' : 'middle'}
           >
-            {!isMobile && '查看'}
+            查看
           </Button>
           <Button
             type="link"
-            className="action-btn edit-btn"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
-            title="编辑"
-            size={isMobile ? 'small' : 'middle'}
           >
-            {!isMobile && '编辑'}
+            编辑
           </Button>
           <Button
             type="link"
-            className="action-btn delete-btn"
+            danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record.id)}
-            title="删除"
-            size={isMobile ? 'small' : 'middle'}
           >
-            {!isMobile && '删除'}
+            删除
           </Button>
         </Space>
       ),
@@ -540,35 +467,22 @@ export default function Customers() {
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
-            placeholder="统一社会信用代码"
-            value={searchParams.socialCreditCode}
-            onChange={e => setSearchParams({ ...searchParams, socialCreditCode: e.target.value })}
+            placeholder="税号"
+            value={searchParams.taxNumber}
+            onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
-            placeholder="业务员"
-            value={searchParams.salesRepresentative}
-            onChange={e =>
-              setSearchParams({ ...searchParams, salesRepresentative: e.target.value })
-            }
+            placeholder="企业类型"
+            value={searchParams.enterpriseType}
+            onChange={e => setSearchParams({ ...searchParams, enterpriseType: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
-            placeholder="所属税局"
+            placeholder="所属分局"
             value={searchParams.taxBureau}
             onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Select
-            placeholder="税务登记类型"
-            value={searchParams.taxRegistrationType || undefined}
-            onChange={value => setSearchParams({ ...searchParams, taxRegistrationType: value })}
-            allowClear
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-            options={[
-              { value: '一般纳税人', label: '一般纳税人' },
-              { value: '小规模纳税人', label: '小规模纳税人' },
-            ]}
           />
           <Select
             placeholder="企业状态"
@@ -913,28 +827,24 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="企业名称" span={3}>
             {customer.companyName || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="统一社会信用代码">
-            {customer.socialCreditCode || '-'}
+          <Descriptions.Item label="税号">
+            {customer.taxNumber || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="日常联系人">{customer.dailyContact || '-'}</Descriptions.Item>
+          <Descriptions.Item label="企业类型">
+            {customer.enterpriseType || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="所属分局">
+            {customer.taxBureau || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="实际负责人">
+            {customer.actualResponsibleName || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="联系电话">
-            {customer.dailyContactPhone || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="业务员">
-            {customer.salesRepresentative || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="业务来源">{customer.businessSource || '-'}</Descriptions.Item>
-          <Descriptions.Item label="企业老板">{customer.bossName || '-'}</Descriptions.Item>
-          <Descriptions.Item label="老板信息" span={3}>
-            {customer.bossProfile || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="业务状态">
-            {formatStatus(customer.businessStatus, 'business')}
+            {customer.actualResponsiblePhone || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="企业状态">
             {formatStatus(customer.enterpriseStatus, 'enterprise')}
           </Descriptions.Item>
-          <Descriptions.Item label="企业类型">{customer.enterpriseType || '-'}</Descriptions.Item>
           <Descriptions.Item label="沟通注意事项" span={3}>
             {customer.communicationNotes || '-'}
           </Descriptions.Item>

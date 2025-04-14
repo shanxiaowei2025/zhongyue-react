@@ -61,10 +61,10 @@ export interface PaginationParams {
   page: number
   pageSize: number
   keyword?: string
-  socialCreditCode?: string
-  salesRepresentative?: string
+  companyName?: string
+  taxNumber?: string
+  enterpriseType?: string
   taxBureau?: string
-  taxRegistrationType?: string
   enterpriseStatus?: string
   businessStatus?: string
   startDate?: string
@@ -115,58 +115,27 @@ export interface AuthGroupPermission {
 // 客户相关类型
 export interface Customer {
   id: number
-  companyName: string | null
-  dailyContact: string | null
-  dailyContactPhone: string | null
-  salesRepresentative: string | null
-  socialCreditCode: string | null
-  taxBureau: string | null
-  businessSource: string | null
-  taxRegistrationType: string | null
-  chiefAccountant: string | null
-  responsibleAccountant: string | null
-  enterpriseStatus: string | null
-  affiliatedEnterprises: string | null
-  mainBusiness: string | null
-  bossProfile: string | null
-  communicationNotes: string | null
-  businessScope: string | null
-  businessAddress: string | null
-  registeredCapital: string | null
-  establishmentDate: string | null
-  licenseExpiryDate: string | null
-  capitalContributionDeadline: string | null
-  enterpriseType: string | null
-  shareholders: string | null
-  supervisors: string | null
-  annualInspectionPassword: string | null
-  paidInCapital: string | null
-  administrativeLicenses: string | null
-  capitalContributionRecords: string | null
-  basicBank: string | null
-  basicBankAccount: string | null
-  basicBankNumber: string | null
-  generalBank: string | null
-  generalBankAccount: string | null
-  generalBankNumber: string | null
-  hasOnlineBanking: string | null
-  isOnlineBankingCustodian: string | null
-  legalRepresentativeName: string | null
-  legalRepresentativePhone: string | null
-  legalRepresentativeId: string | null
-  legalRepresentativeTaxPassword: string | null
-  financialContactName: string | null
-  financialContactPhone: string | null
-  financialContactId: string | null
-  financialContactTaxPassword: string | null
-  taxOfficerName: string | null
-  taxOfficerPhone: string | null
-  taxOfficerId: string | null
-  taxOfficerTaxPassword: string | null
-  tripartiteAgreementAccount: string | null
-  taxCategories: string | null
-  personalIncomeTaxStaff: string | null
-  personalIncomeTaxPassword: string | null
+  companyName: string
+  consultantAccountant: string
+  bookkeepingAccountant: string
+  enterpriseType: string
+  taxNumber: string
+  registeredAddress: string
+  businessAddress: string
+  taxBureau: string
+  actualResponsibleName: string
+  actualResponsiblePhone: string
+  affiliatedEnterprises: string
+  bossProfile: string
+  enterpriseProfile: string
+  industryCategory: string
+  industrySubcategory: string
+  hasTaxBenefits: boolean
+  businessPublicationPassword: string
+  licenseExpiryDate: string
+  registeredCapital: number
+  capitalContributionDeadline: string
+  paidInCapital: number
   legalPersonIdImages: {
     front?: ImageType
     back?: ImageType
@@ -180,11 +149,44 @@ export interface Customer {
     general?: ImageType
   }
   supplementaryImages: Record<string, string>
-  createTime: string | null
-  updateTime: string | null
-  submitter: string | null
-  businessStatus: string | null
-  bossName: string | null
+  administrativeLicenseType: string
+  administrativeLicenseExpiryDate: string
+  publicBank: string
+  bankAccountNumber: string
+  publicBankOpeningDate: string
+  onlineBankingArchiveNumber: string
+  taxReportLoginMethod: string
+  legalRepresentativeName: string
+  legalRepresentativePhone: string
+  legalRepresentativeId: string
+  legalRepresentativeTaxPassword: string
+  taxOfficerName: string
+  taxOfficerPhone: string
+  taxOfficerId: string
+  taxOfficerTaxPassword: string
+  invoicingSoftware: string
+  invoicingNotes: string
+  invoiceOfficerName: string
+  invoiceOfficerPhone: string
+  invoiceOfficerId: string
+  invoiceOfficerTaxPassword: string
+  financialContactName: string
+  financialContactPhone: string
+  financialContactId: string
+  financialContactTaxPassword: string
+  taxCategories: string
+  socialInsuranceTypes: string
+  insuredPersonnel: string
+  tripartiteAgreementAccount: string
+  personalIncomeTaxPassword: string
+  personalIncomeTaxStaff: string
+  enterpriseInfoSheetNumber: string
+  sealStorageNumber: string
+  enterpriseStatus: 'active' | 'inactive'
+  businessStatus: 'normal' | 'terminated' | 'suspended'
+  createTime: string
+  updateTime: string
+  submitter: string
 }
 
 interface ImageType {
