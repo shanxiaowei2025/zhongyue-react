@@ -664,17 +664,6 @@ body.ant-modal-open {
   padding-bottom: 8px;
 }
 
-/* 客户管理页面样式 */
-.customer-management-container {
-  padding: 16px;
-}
-
-@media (min-width: 640px) {
-  .customer-management-container {
-    padding: 24px;
-  }
-}
-
 /* 表格样式 */
 .customer-table {
   margin-top: 16px;
@@ -728,12 +717,18 @@ body.ant-modal-open {
 
 /* 响应式布局 */
 @media (max-width: 768px) {
-  .customer-management-container {
-    padding: 12px;
-  }
-
   .customer-table {
     margin-top: 12px;
+  }
+  
+  .customer-table .ant-table-cell {
+    padding: 8px 6px !important;
+    font-size: 13px;
+  }
+
+  .customer-table .ant-table-thead > tr > th {
+    padding: 8px 6px !important;
+    font-size: 13px;
   }
 
   .action-buttons {
@@ -750,6 +745,44 @@ body.ant-modal-open {
 
   .customer-images-section {
     gap: 8px;
+  }
+  
+  /* 移动端详情页调整 */
+  .customer-detail-container {
+    margin: -12px;
+  }
+  
+  .customer-detail-scroll-container {
+    padding-bottom: 60px;
+  }
+  
+  .customer-detail-tabs .ant-tabs-nav {
+    margin-bottom: 8px;
+    padding: 0 8px;
+  }
+  
+  .customer-detail-tabs .ant-descriptions-header {
+    padding: 8px;
+  }
+  
+  .customer-detail-tabs .ant-descriptions-view {
+    padding: 0;
+  }
+  
+  .customer-detail-tabs .ant-descriptions-item-label, 
+  .customer-detail-tabs .ant-descriptions-item-content {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  .customer-detail-footer {
+    height: 52px;
+    padding: 10px 12px;
+  }
+  
+  /* Drawer内部详情页调整 */
+  .ant-drawer-body .customer-detail-container {
+    margin: 0;
   }
 }
 

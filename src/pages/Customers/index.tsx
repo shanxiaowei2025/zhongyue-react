@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Table,
   Button,
@@ -14,9 +13,6 @@ import {
   Select,
   DatePicker,
   Image,
-  Row,
-  Col,
-  Form,
 } from 'antd'
 import {
   PlusOutlined,
@@ -45,7 +41,6 @@ import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import useSWR from 'swr'
 import { getCustomerDetail, getCustomerById } from '../../api/customer'
 import { deleteFile } from '../../utils/upload'
-import usePageTitle from '@/hooks/usePageTitle'
 
 // 启用 dayjs 插件
 dayjs.extend(utc)
@@ -333,44 +328,49 @@ export default function Customers() {
       title: '企业名称',
       dataIndex: 'companyName',
       key: 'companyName',
-      width: 200,
+      width: isMobile ? 160 : 200,
       fixed: 'left',
     },
     {
       title: '税号',
       dataIndex: 'taxNumber',
       key: 'taxNumber',
-      width: 150,
+      width: isMobile ? 120 : 150,
+      responsive: ['md'],
     },
     {
       title: '企业类型',
       dataIndex: 'enterpriseType',
       key: 'enterpriseType',
       width: 120,
+      responsive: ['lg'],
     },
     {
       title: '所属分局',
       dataIndex: 'taxBureau',
       key: 'taxBureau',
       width: 150,
+      responsive: ['lg'],
     },
     {
       title: '实际负责人',
       dataIndex: 'actualResponsibleName',
       key: 'actualResponsibleName',
-      width: 120,
+      width: isMobile ? 100 : 120,
+      responsive: ['sm'],
     },
     {
       title: '联系电话',
       dataIndex: 'actualResponsiblePhone',
       key: 'actualResponsiblePhone',
-      width: 120,
+      width: isMobile ? 100 : 120,
+      responsive: ['md'],
     },
     {
       title: '企业状态',
       dataIndex: 'enterpriseStatus',
       key: 'enterpriseStatus',
-      width: 100,
+      width: isMobile ? 80 : 100,
       render: (status: string) => {
         if (!status) return <Tag color="default">未设置</Tag>
         
@@ -384,7 +384,7 @@ export default function Customers() {
       title: '业务状态',
       dataIndex: 'businessStatus',
       key: 'businessStatus',
-      width: 100,
+      width: isMobile ? 80 : 100,
       render: (status: string) => {
         if (!status) return <Tag color="default">未设置</Tag>
         
@@ -398,37 +398,41 @@ export default function Customers() {
       title: '创建时间',
       dataIndex: 'createTime',
       key: 'createTime',
-      width: 180,
-      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm:ss'),
+      width: isMobile ? 130 : 180,
+      responsive: ['lg'],
+      render: (date: string) => dayjs.utc(date).local().format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '操作',
       key: 'action',
       fixed: 'right',
-      width: 150,
+      width: isMobile ? 90 : 150,
       render: (_, record) => (
-        <Space size="middle">
+        <Space size={isMobile ? "small" : "middle"} className="flex flex-nowrap">
           <Button
             type="link"
             icon={<EyeOutlined />}
             onClick={() => handleView(record)}
+            className={isMobile ? "p-1 m-0 h-auto min-w-0" : ""}
           >
-            查看
+            {!isMobile && "查看"}
           </Button>
           <Button
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            className={isMobile ? "p-1 m-0 h-auto min-w-0" : ""}
           >
-            编辑
+            {!isMobile && "编辑"}
           </Button>
           <Button
             type="link"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record.id)}
+            className={isMobile ? "p-1 m-0 h-auto min-w-0" : ""}
           >
-            删除
+            {!isMobile && "删除"}
           </Button>
         </Space>
       ),
@@ -543,7 +547,7 @@ export default function Customers() {
           />
           <DatePicker
             placeholder="开始日期"
-            value={searchParams.startDate ? dayjs.utc(searchParams.startDate) : null}
+            value={searchParams.startDate ? dayjs.utc(searchParams.startDate).local() : null}
             onChange={date =>
               setSearchParams({ ...searchParams, startDate: date ? date.format('YYYY-MM-DD') : '' })
             }
@@ -551,7 +555,7 @@ export default function Customers() {
           />
           <DatePicker
             placeholder="结束日期"
-            value={searchParams.endDate ? dayjs.utc(searchParams.endDate) : null}
+            value={searchParams.endDate ? dayjs.utc(searchParams.endDate).local() : null}
             onChange={date =>
               setSearchParams({ ...searchParams, endDate: date ? date.format('YYYY-MM-DD') : '' })
             }
@@ -601,6 +605,8 @@ export default function Customers() {
               setPageSize(size)
             }
           },
+          size: isMobile ? 'small' : 'default',
+          simple: isMobile
         }}
         loading={isLoading}
         scroll={{ x: 'max-content' }}
@@ -616,7 +622,10 @@ export default function Customers() {
         onClose={handleCloseDrawer}
         open={drawerVisible}
         destroyOnClose
-        bodyStyle={{ padding: '16px' }}
+        bodyStyle={{ padding: isMobile ? '12px 8px' : '16px' }}
+        className="customer-drawer"
+        placement={isMobile ? "bottom" : "right"}
+        height={isMobile ? "90%" : undefined}
       >
         {detailType === 'view' ? (
           customerDetail ? (
@@ -643,7 +652,9 @@ export default function Customers() {
         open={modalVisible}
         onCancel={handleCloseModal}
         footer={null}
-        width={1000}
+        width={isMobile ? '100%' : 1000}
+        style={isMobile ? { top: 10, padding: 0 } : undefined}
+        bodyStyle={isMobile ? { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } : undefined}
         destroyOnClose
       >
         {detailType === 'view' ? (
@@ -725,9 +736,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     if (!dateString) return '-'
     try {
       if (includeTime) {
-        return dayjs.utc(dateString).format('YYYY/MM/DD HH:mm')
+        return dayjs.utc(dateString).local().format('YYYY/MM/DD HH:mm')
       }
-      return dayjs.utc(dateString).format('YYYY/MM/DD')
+      return dayjs.utc(dateString).local().format('YYYY/MM/DD')
     } catch (e) {
       return dateString || '-'
     }
@@ -778,7 +789,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     }
 
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'}`}>
         {Object.entries(images).map(([key, url]) => {
           if (!url) return null
 
@@ -839,7 +850,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'basic',
       label: '基本信息',
       children: (
-        <Descriptions bordered column={{ xxl: 3, xl: 3, lg: 3, md: 2, sm: 1, xs: 1 }}>
+        <Descriptions 
+          bordered 
+          column={{ xxl: 3, xl: 3, lg: 3, md: 2, sm: 1, xs: 1 }}
+          size={isMobile ? "small" : "default"}
+          className={isMobile ? "text-sm" : ""}
+        >
           <Descriptions.Item label="企业名称" span={3}>
             {customer.companyName || '-'}
           </Descriptions.Item>
@@ -865,10 +881,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             {customer.actualResponsiblePhone || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="企业状态">
-            {formatStatus(customer.enterpriseStatus, 'enterprise')}
+            {formatStatus(customer.enterpriseStatus || null, 'enterprise')}
           </Descriptions.Item>
           <Descriptions.Item label="业务状态">
-            {formatStatus(customer.businessStatus, 'business')}
+            {formatStatus(customer.businessStatus || null, 'business')}
           </Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>
             {customer.registeredAddress || '-'}
@@ -925,7 +941,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'bank',
       label: '银行信息',
       children: (
-        <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+        <Descriptions 
+          bordered 
+          column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+          size={isMobile ? "small" : "default"}
+          className={isMobile ? "text-sm" : ""}
+        >
           <Descriptions.Item label="对公开户行">
             {customer.publicBank || '-'}
           </Descriptions.Item>
@@ -948,7 +969,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'tax',
       label: '税务信息',
       children: (
-        <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+        <Descriptions 
+          bordered 
+          column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+          size={isMobile ? "small" : "default"}
+          className={isMobile ? "text-sm" : ""}
+        >
           <Descriptions.Item label="报税登录方式">
             {customer.taxReportLoginMethod || '-'}
           </Descriptions.Item>
@@ -988,7 +1014,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       children: (
         <>
           <h3 className="mt-4 mb-2 font-medium">法定代表人</h3>
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+          <Descriptions 
+            bordered 
+            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+            size={isMobile ? "small" : "default"}
+            className={isMobile ? "text-sm" : ""}
+          >
             <Descriptions.Item label="姓名">
               {customer.legalRepresentativeName || '-'}
             </Descriptions.Item>
@@ -1004,7 +1035,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+          <Descriptions 
+            bordered 
+            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+            size={isMobile ? "small" : "default"}
+            className={isMobile ? "text-sm" : ""}
+          >
             <Descriptions.Item label="姓名">
               {customer.financialContactName || '-'}
             </Descriptions.Item>
@@ -1020,7 +1056,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">办税员</h3>
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+          <Descriptions 
+            bordered 
+            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+            size={isMobile ? "small" : "default"}
+            className={isMobile ? "text-sm" : ""}
+          >
             <Descriptions.Item label="姓名">
               {customer.taxOfficerName || '-'}
             </Descriptions.Item>
@@ -1036,7 +1077,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">开票员</h3>
-          <Descriptions bordered column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}>
+          <Descriptions 
+            bordered 
+            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+            size={isMobile ? "small" : "default"}
+            className={isMobile ? "text-sm" : ""}
+          >
             <Descriptions.Item label="姓名">
               {customer.invoiceOfficerName || '-'}
             </Descriptions.Item>
@@ -1057,8 +1103,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'images',
       label: '图片资料',
       children: (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={isMobile ? "space-y-4" : "space-y-6"}>
+          <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
             <div>
               <h3 className="font-medium mb-2">法人身份证照片</h3>
               <div className="mb-4">
@@ -1080,7 +1126,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
           <div>
             <h3 className="font-medium mb-2">开户许可证照片</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
               <div>
                 <div className="mb-1">基本户开户许可证</div>
                 {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
@@ -1124,6 +1170,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           className="customer-detail-tabs"
           activeKey={activeTabKey}
           onChange={handleTabChange}
+          size={isMobile ? "small" : "middle"}
+          tabBarGutter={isMobile ? 12 : 24}
+          tabBarStyle={isMobile ? { margin: '0 -12px 16px -12px', paddingLeft: '12px' } : undefined}
         />
 
         {/* 图片预览组件 */}

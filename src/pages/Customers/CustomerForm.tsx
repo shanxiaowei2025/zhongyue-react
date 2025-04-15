@@ -84,11 +84,11 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   invoiceOfficerTaxPassword: 'personnel',
   
   // 图片资料标签页字段
-  legalPersonIdImages: '6',
-  businessLicenseImages: '6',
-  bankAccountLicenseImages: '6',
-  otherIdImages: '6',
-  supplementaryImages: '6',
+  legalPersonIdImages: 'images',
+  businessLicenseImages: 'images',
+  bankAccountLicenseImages: 'images',
+  otherIdImages: 'images',
+  supplementaryImages: 'images',
 };
 
 interface CustomerFormProps {
@@ -473,7 +473,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
-          <Form.Item name="enterpriseStatus" label="企业状态" rules={[{ required: true }]}>
+          <Form.Item name="enterpriseStatus" label="企业状态">
             <Select>
               <Select.Option value="active">正常经营</Select.Option>
               <Select.Option value="inactive">停业</Select.Option>
@@ -481,7 +481,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             </Select>
           </Form.Item>
 
-          <Form.Item name="businessStatus" label="业务状态" rules={[{ required: true }]}>
+          <Form.Item name="businessStatus" label="业务状态">
             <Select>
               {Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => (
                 <Select.Option key={value} value={value}>
@@ -744,7 +744,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       ),
     },
     {
-      key: '6',
+      key: 'images',
       label: '图片资料',
       children: (
         <div className="space-y-6">

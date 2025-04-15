@@ -182,8 +182,8 @@ export interface Customer {
   personalIncomeTaxStaff: string
   enterpriseInfoSheetNumber: string
   sealStorageNumber: string
-  enterpriseStatus: 'active' | 'inactive' | 'pending'
-  businessStatus: 'normal' | 'terminated' | 'suspended'
+  enterpriseStatus?: 'active' | 'inactive' | 'pending'
+  businessStatus?: 'normal' | 'terminated' | 'suspended'
   createTime: string
   updateTime: string
   submitter: string
