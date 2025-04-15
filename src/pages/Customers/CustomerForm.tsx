@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Space, message, Switch } from 'antd'
+import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Space, message, Switch, Checkbox } from 'antd'
 import type { Customer, ImageType } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
@@ -107,6 +107,7 @@ type FormCustomer = Omit<
   capitalContributionDeadline?: Dayjs | null
   administrativeLicenseExpiryDate?: Dayjs | null
   publicBankOpeningDate?: Dayjs | null
+  licenseNoFixedTerm?: boolean
   [key: string]: any // 添加索引签名
 }
 
@@ -125,35 +126,52 @@ type APICustomer = Omit<
 const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
   const result = { ...values };
   
+  console.log('转换日期前的值:', {
+    licenseExpiryDate: values.licenseExpiryDate,
+    administrativeLicenseExpiryDate: values.administrativeLicenseExpiryDate,
+    capitalContributionDeadline: values.capitalContributionDeadline,
+    publicBankOpeningDate: values.publicBankOpeningDate
+  });
+  
   // 只有当值存在且是Dayjs对象时才进行转换
   if (values.licenseExpiryDate && dayjs.isDayjs(values.licenseExpiryDate) && values.licenseExpiryDate.isValid()) {
     // @ts-ignore: 类型转换，应该是从Dayjs转为string
     result.licenseExpiryDate = values.licenseExpiryDate.format('YYYY-MM-DD');
+  } else if (values.licenseExpiryDate === null) {
+    // 如果licenseExpiryDate被明确设置为null，保持为null
+    result.licenseExpiryDate = null;
   } else {
-    // 如果不是有效的日期，则设为undefined
-    result.licenseExpiryDate = undefined;
+    // 如果不是有效的日期，设为null而不是undefined
+    result.licenseExpiryDate = null;
   }
   
   if (values.administrativeLicenseExpiryDate && dayjs.isDayjs(values.administrativeLicenseExpiryDate) && values.administrativeLicenseExpiryDate.isValid()) {
     // @ts-ignore: 类型转换，应该是从Dayjs转为string
     result.administrativeLicenseExpiryDate = values.administrativeLicenseExpiryDate.format('YYYY-MM-DD');
   } else {
-    result.administrativeLicenseExpiryDate = undefined;
+    result.administrativeLicenseExpiryDate = null;
   }
   
   if (values.capitalContributionDeadline && dayjs.isDayjs(values.capitalContributionDeadline) && values.capitalContributionDeadline.isValid()) {
     // @ts-ignore: 类型转换，应该是从Dayjs转为string
     result.capitalContributionDeadline = values.capitalContributionDeadline.format('YYYY-MM-DD');
   } else {
-    result.capitalContributionDeadline = undefined;
+    result.capitalContributionDeadline = null;
   }
   
   if (values.publicBankOpeningDate && dayjs.isDayjs(values.publicBankOpeningDate) && values.publicBankOpeningDate.isValid()) {
     // @ts-ignore: 类型转换，应该是从Dayjs转为string
     result.publicBankOpeningDate = values.publicBankOpeningDate.format('YYYY-MM-DD');
   } else {
-    result.publicBankOpeningDate = undefined;
+    result.publicBankOpeningDate = null;
   }
+  
+  console.log('转换日期后的值:', {
+    licenseExpiryDate: result.licenseExpiryDate,
+    administrativeLicenseExpiryDate: result.administrativeLicenseExpiryDate,
+    capitalContributionDeadline: result.capitalContributionDeadline,
+    publicBankOpeningDate: result.publicBankOpeningDate
+  });
   
   return result;
 };
@@ -199,6 +217,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]) // 跟踪已上传的图片文件名
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
+  
+  // 使用Form.useWatch监听licenseNoFixedTerm字段的值变化
+  const licenseNoFixedTerm = Form.useWatch('licenseNoFixedTerm', form);
+  // 使用Form.useWatch监听licenseExpiryDate字段的值变化
+  const licenseExpiryDate = Form.useWatch('licenseExpiryDate', form);
+
+  // 标记是否已经修复了表单项的状态
+  const [fixState, setFixState] = useState(false);
 
   useEffect(() => {
     if (customer && mode !== 'add') {
@@ -212,10 +238,24 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           dayjs(customer.capitalContributionDeadline) : null,
         publicBankOpeningDate: customer.publicBankOpeningDate ? 
           dayjs(customer.publicBankOpeningDate) : null,
+        // 如果营业执照到期日期为空，则设置licenseNoFixedTerm为true
+        licenseNoFixedTerm: !customer.licenseExpiryDate
       };
       form.setFieldsValue(formValues);
+      // 标记状态已修复
+      setFixState(true);
     }
   }, [customer, form, mode])
+
+  // 监听licenseNoFixedTerm变化，当用户选择无固定期限时自动清空日期
+  useEffect(() => {
+    if (!fixState) return;
+    
+    if (licenseNoFixedTerm) {
+      // 如果选择了无固定期限，清空日期
+      form.setFieldValue('licenseExpiryDate', null);
+    }
+  }, [licenseNoFixedTerm, form, fixState]);
 
   const handleSubmit = async (values: FormCustomer, isAutoSave = false) => {
     if (!customer && mode !== 'add') {
@@ -227,6 +267,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       // 不在这里调用 validateFields，让表单自己处理验证
       // Form 组件的 onFinish 只会在验证通过后才会被调用
       setIsSaving(true);
+      
+      // 打印提交的值，以便调试
+      console.log('提交的表单值:', values);
+      
+      // 只有当选择了无固定期限时，才清空licenseExpiryDate值
+      if (values.licenseNoFixedTerm) {
+        values.licenseExpiryDate = null;
+      }
       
       // 处理日期字段转换为字符串
       const valuesWithDatesConverted = convertDatesToString(values);
@@ -244,7 +292,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       }
       
       // 移除可能引起错误的createTime和updateTime字段
-      const { createTime, updateTime, ...cleanData } = dataWithImages;
+      const { createTime, updateTime, licenseNoFixedTerm, ...cleanData } = dataWithImages;
 
       if (mode === 'add') {
         const newCustomer = await createCustomer(cleanData as Partial<Customer>);
@@ -262,6 +310,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           onSuccess?.(isAutoSave, newCustomer?.id);
         }
       } else if (customer?.id) {
+        console.log('发送到API的数据:', cleanData);
+        
+        // 确保日期字段是正确的格式
+        if (cleanData.licenseExpiryDate && typeof cleanData.licenseExpiryDate !== 'string') {
+          // @ts-ignore
+          cleanData.licenseExpiryDate = dayjs(cleanData.licenseExpiryDate).format('YYYY-MM-DD');
+        }
+        
         await updateCustomer(customer.id, cleanData as Partial<Customer>);
         if (!isAutoSave) {
           message.success('保存成功');
@@ -351,6 +407,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       try {
         // 使用 validateFields 验证指定字段而不是全部字段，避免阻止自动保存
         await form.validateFields(['companyName', 'enterpriseStatus', 'businessStatus']) 
+        
         // 调用 handleSubmit 并传递 isAutoSave=true
         await handleSubmit(form.getFieldsValue(), true) 
         console.log('自动保存成功')
@@ -528,19 +585,46 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           </Form.Item>
 
           <Form.Item name="licenseExpiryDate" label="营业执照到期日期">
-            <DatePicker 
-              style={{ width: '100%' }} 
-              allowClear 
-              format="YYYY-MM-DD"
-              onChange={(date) => {
-                // 手动更新表单，确保日期值正确
-                form.setFieldValue('licenseExpiryDate', date);
-              }}
-            />
+            <>
+              <DatePicker 
+                style={{ width: '100%' }} 
+                allowClear 
+                format="YYYY-MM-DD"
+                value={form.getFieldValue('licenseExpiryDate')}
+                onChange={(date) => {
+                  // 手动设置字段值，确保正确更新
+                  form.setFieldValue('licenseExpiryDate', date);
+                  
+                  // 如果选择了日期，自动取消"无固定期限"选择
+                  if (date) {
+                    form.setFieldValue('licenseNoFixedTerm', false);
+                  }
+                }}
+                disabled={!!licenseNoFixedTerm}
+              />
+              <Form.Item name="licenseNoFixedTerm" valuePropName="checked" className="mt-2 mb-0">
+                <Checkbox onChange={(e) => {
+                  const checked = e.target.checked;
+                  
+                  // 如果勾选了"无固定期限"，则清空日期字段
+                  if (checked) {
+                    form.setFieldValue('licenseExpiryDate', null);
+                  }
+                  
+                  // 确保checkbox状态正确更新
+                  form.setFieldValue('licenseNoFixedTerm', checked);
+                }}>
+                  无固定期限
+                </Checkbox>
+              </Form.Item>
+            </>
           </Form.Item>
 
           <Form.Item name="registeredCapital" label="注册资本">
-            <InputNumber style={{ width: '100%' }} />
+            <InputNumber 
+              style={{ width: '100%' }} 
+              addonAfter="万元"
+            />
           </Form.Item>
 
           <Form.Item name="capitalContributionDeadline" label="认缴到期日期">
@@ -555,7 +639,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           </Form.Item>
 
           <Form.Item name="paidInCapital" label="实缴资本">
-            <InputNumber style={{ width: '100%' }} />
+            <InputNumber 
+              style={{ width: '100%' }}
+              addonAfter="万元" 
+            />
           </Form.Item>
 
           <Form.Item name="administrativeLicenseType" label="行政许可类型">
@@ -862,7 +949,26 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           publicBankOpeningDate: customer.publicBankOpeningDate ? 
             dayjs(customer.publicBankOpeningDate) : null,
         } as any : undefined}
-        onFinish={values => handleSubmit(values)}
+        onFinish={(values) => {
+          // 确保在提交之前再次验证日期字段，确保它们被包含在表单提交中
+          const formValues = form.getFieldsValue();
+          
+          // 检查日期字段
+          const licenseExpiryDateValue = formValues.licenseExpiryDate;
+          const licenseNoFixedTermValue = formValues.licenseNoFixedTerm;
+          
+          console.log('提交前的表单字段:', {
+            licenseExpiryDate: licenseExpiryDateValue,
+            licenseNoFixedTerm: licenseNoFixedTermValue
+          });
+          
+          if (licenseNoFixedTermValue) {
+            // 如果勾选了无固定期限，确保licenseExpiryDate为null
+            formValues.licenseExpiryDate = null;
+          }
+          
+          handleSubmit(formValues);
+        }}
         onFinishFailed={handleFormValidationError}
         className="customer-form"
       >

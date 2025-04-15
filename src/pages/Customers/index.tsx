@@ -732,8 +732,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const formatDate = (dateString: string | null, includeTime = true) => {
-    if (!dateString) return '-'
+  const formatDate = (dateString: string | null, includeTime = true, fieldType?: string) => {
+    if (!dateString) {
+      // 当日期为空时，如果是营业执照到期日期字段，返回"无固定期限"
+      if (fieldType === 'licenseExpiryDate') {
+        return '无固定期限'
+      }
+      return '-'
+    }
     try {
       if (includeTime) {
         return dayjs.utc(dateString).local().format('YYYY/MM/DD HH:mm')
@@ -914,16 +920,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             {customer.businessPublicationPassword || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="营业执照到期日期">
-            {formatDate(customer.licenseExpiryDate, false)}
+            {formatDate(customer.licenseExpiryDate, false, 'licenseExpiryDate')}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本">
-            {customer.registeredCapital ? `${customer.registeredCapital.toLocaleString()}元` : '-'}
+            {customer.registeredCapital ? `${customer.registeredCapital.toLocaleString()}万元` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="认缴到期日期">
             {formatDate(customer.capitalContributionDeadline, false)}
           </Descriptions.Item>
           <Descriptions.Item label="实缴资本">
-            {customer.paidInCapital ? `${customer.paidInCapital.toLocaleString()}元` : '-'}
+            {customer.paidInCapital ? `${customer.paidInCapital.toLocaleString()}万元` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="行政许可类型">
             {customer.administrativeLicenseType || '-'}
