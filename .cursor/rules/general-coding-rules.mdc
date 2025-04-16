@@ -19,5 +19,5 @@ Globs: src/**/*.ts, src/**/*.tsx
 - 处理图片上传时（涉及 src/assets），正确进行文件转换和 URL 提取。
 - 每次修改后自动使用 Prettier 格式化代码，自动修复 eslint、typescript 报错。
 - 每次修改后更新 README 文件。
-- 每次修改后执行 git add 和 git commit 提交修改。
+- 每次修改后执行 git add 和 git commit 命令提交修改。
 - 每次修改时仅修改我提及功能相关的部分，不要修改其他无关的可以正常运行的代码。

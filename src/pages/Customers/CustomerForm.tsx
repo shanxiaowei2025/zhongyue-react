@@ -587,7 +587,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           <Form.Item name="licenseExpiryDate" label="营业执照到期日期">
             <>
               <DatePicker 
-                style={{ width: '100%' }} 
+                className="w-full" 
                 allowClear 
                 format="YYYY-MM-DD"
                 value={form.getFieldValue('licenseExpiryDate')}
@@ -622,14 +622,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <Form.Item name="registeredCapital" label="注册资本">
             <InputNumber 
-              style={{ width: '100%' }} 
+              className="w-full" 
               addonAfter="万元"
             />
           </Form.Item>
 
           <Form.Item name="capitalContributionDeadline" label="认缴到期日期">
             <DatePicker 
-              style={{ width: '100%' }} 
+              className="w-full" 
               allowClear 
               format="YYYY-MM-DD"
               onChange={(date) => {
@@ -640,7 +640,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <Form.Item name="paidInCapital" label="实缴资本">
             <InputNumber 
-              style={{ width: '100%' }}
+              className="w-full"
               addonAfter="万元" 
             />
           </Form.Item>
@@ -651,7 +651,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <Form.Item name="administrativeLicenseExpiryDate" label="行政许可到期日期">
             <DatePicker 
-              style={{ width: '100%' }} 
+              className="w-full" 
               allowClear 
               format="YYYY-MM-DD"
               onChange={(date) => {
@@ -681,7 +681,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <Form.Item name="publicBankOpeningDate" label="对公开户时间">
             <DatePicker 
-              style={{ width: '100%' }} 
+              className="w-full" 
               allowClear 
               format="YYYY-MM-DD"
               onChange={(date) => {
@@ -935,7 +935,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   ]
 
   return (
-    <div className="customer-form-container">
+    <div className="w-full max-w-7xl mx-auto">
       <Form
         form={form}
         layout="vertical"
@@ -970,15 +970,15 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           handleSubmit(formValues);
         }}
         onFinishFailed={handleFormValidationError}
-        className="customer-form"
+        className="w-full"
       >
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabs}
-          className="customer-form-tabs"
+          className="mb-6"
         />
-        <div className="customer-form-footer">
+        <div className="flex justify-end mt-6">
           <Space>
             <Button onClick={() => handleCancel()}>取消</Button>
             {mode !== 'view' && (

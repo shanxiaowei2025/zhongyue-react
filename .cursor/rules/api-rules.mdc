@@ -6,10 +6,10 @@ alwaysApply: true
 Description: API 请求相关的规则
 Globs: src/api/*.ts
 
-本项目使用技术栈：Axios, TypeScript
+本项目使用技术栈：Axios, TypeScript, SWR
 
 - 使用 TypeScript 编写所有代码，利用类型安全。
-- 使用 Axios 安全地访问 API 端点。
+- 使用 Axios 或 SWR 安全地访问 API 端点。
 - 在 TypeScript 中启用严格模式以增强类型安全。
 - 保持命名规范一致：变量和函数使用 camelCase，接口使用 PascalCase。
 - 使用 async/await 处理异步请求，避免直接使用 Promise。
