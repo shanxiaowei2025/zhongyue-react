@@ -1,4 +1,9 @@
 import { message } from 'antd'
+import request from '../api/request'
+import axios from 'axios'
+
+// 获取与request相同的baseURL
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 
 interface UploadResponse {
   data: {
@@ -19,41 +24,48 @@ interface DeleteResponse {
   timestamp: number
 }
 
-// 上传文件
+/**
+ * 上传文件到服务器
+ * @param file 要上传的文件
+ * @returns 上传成功后的文件信息 { fileName, url }
+ */
 export const uploadFile = async (file: File): Promise<{ fileName: string; url: string } | null> => {
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
+  if (!file) return null
 
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
     // 从localStorage获取token
     const token = localStorage.getItem('token')
-
-    const response = await fetch('/api/storage/upload', {
+    
+    // 使用axios实例，但不通过request工具函数，因为需要设置特殊的Content-Type
+    const response = await axios({
       method: 'POST',
-      body: formData,
+      url: '/storage/upload',
+      data: formData,
       headers: {
+        'Content-Type': 'multipart/form-data',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      baseURL: apiBaseUrl
     })
 
-    if (!response.ok) {
-      throw new Error(`上传失败: ${response.statusText}`)
-    }
-
-    const result: UploadResponse = await response.json()
-
+    const result: UploadResponse = response.data
+      
     if (result.code === 0) {
+      const fileName = result.data.fileName || ''
       return {
-        fileName: result.data.fileName,
-        url: ensureRelativeUrl(result.data.url),
+        fileName,
+        url: buildImageUrl(fileName)
       }
     } else {
       message.error(result.message || '上传失败')
       return null
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('文件上传错误:', error)
-    message.error('文件上传失败')
+    message.error(error.response?.data?.message || '文件上传失败')
     return null
   }
 }
@@ -103,31 +115,36 @@ export const deleteFile = async (fileName: string): Promise<boolean> => {
       }
     }
 
-    // 从localStorage获取token
-    const token = localStorage.getItem('token')
+    // 使用request.delete方法
+    const result = await request.delete<DeleteResponse>(`/storage/files/${processedFileName}`)
 
-    const response = await fetch(`/api/storage/files/${processedFileName}`, {
-      method: 'DELETE',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`删除失败: ${response.statusText}`)
-    }
-
-    const result: DeleteResponse = await response.json()
-
-    if (result.code === 0) {
-      return true
-    } else {
-      message.error(result.message || '删除失败')
-      return false
-    }
-  } catch (error) {
+    return result.code === 0
+  } catch (error: any) {
     console.error('文件删除错误:', error)
-    message.error('文件删除失败')
+    message.error(error.response?.data?.message || '文件删除失败')
     return false
   }
+}
+
+/**
+ * 构建图片完整URL
+ * 将文件名与MinIO服务器地址和存储桶名称拼接
+ * @param fileName 图片文件名
+ * @returns 完整的图片URL
+ */
+export const buildImageUrl = (fileName: string): string => {
+  if (!fileName) return ''
+  
+  // 从环境变量获取MinIO配置
+  const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
+  const bucketName = import.meta.env.MINIO_BUCKET_NAME || 'zhongyue'
+  
+  // 确保endpoint末尾有斜杠
+  const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`
+  
+  // 确保fileName开头没有斜杠
+  const cleanFileName = fileName.startsWith('/') ? fileName.substring(1) : fileName
+  
+  // 拼接完整URL
+  return `${baseUrl}${bucketName}/${cleanFileName}`
 }

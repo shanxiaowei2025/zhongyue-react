@@ -40,7 +40,7 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import useSWR from 'swr'
 import { getCustomerDetail, getCustomerById } from '../../api/customer'
-import { deleteFile } from '../../utils/upload'
+import { deleteFile, buildImageUrl } from '../../utils/upload'
 
 // 启用 dayjs 插件
 dayjs.extend(utc)
@@ -223,33 +223,28 @@ export default function Customers() {
       const processStringImages = (imagesObj: Record<string, any> | undefined) => {
         if (!imagesObj) return
 
-        Object.values(imagesObj).forEach(url => {
-          if (typeof url === 'string' && url) {
+        Object.values(imagesObj).forEach(item => {
+          if (typeof item === 'string' && item) {
             // 从URL中提取文件名
-            const urlParts = url.split('/')
+            const urlParts = item.split('/')
             const fileNameWithParams = urlParts[urlParts.length - 1]
             const fileName = fileNameWithParams.split('?')[0] // 移除查询参数
 
             if (fileName) {
               imagesToDelete.push(fileName)
             }
+          } else if (item && typeof item === 'object' && item.fileName) {
+            // 处理ImageType格式
+            imagesToDelete.push(item.fileName)
           }
         })
       }
 
       processObjectImages(customer.legalPersonIdImages)
-
-      // 处理营业执照图片
       processObjectImages(customer.businessLicenseImages)
-
-      // 处理开户许可证图片
       processObjectImages(customer.bankAccountLicenseImages)
-
-      // 处理其他人员身份证照片
-      processStringImages(customer.otherIdImages)
-
-      // 处理补充资料照片
-      processStringImages(customer.supplementaryImages)
+      processObjectImages(customer.otherIdImages)
+      processObjectImages(customer.supplementaryImages)
 
       // 批量删除图片文件
       for (const fileName of imagesToDelete) {
@@ -693,11 +688,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
   // 使用 useSWR 获取客户详情数据
   const { data: customerDetail, isLoading } = useSWR(
-    customer.id ? `/api/customers/${customer.id}` : null,
+    customer.id ? `/customer/${customer.id}` : null,
     () => getCustomerDetail(customer.id),
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
       dedupingInterval: 0,
       revalidateIfStale: true,
       shouldRetryOnError: true,
@@ -750,14 +745,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     }
   }
 
-  // 渲染图片预览
+  // 渲染单张图片
   const renderImage = (image: ImageType | undefined, label: string) => {
-    if (!image?.url)
-      return (
-        <div className="no-image-placeholder border border-dashed border-gray-300 rounded-md h-24 flex items-center justify-center text-gray-400">
-          暂无图片
-        </div>
-      )
+    if (!image || !image.url) {
+      return <div className="no-image-placeholder">暂无图片</div>
+    }
 
     const handlePreviewClick = (e: React.MouseEvent) => {
       // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
@@ -767,13 +759,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       if (imgElement && imgElement.classList.contains('opacity-60')) {
         return
       }
-      setImagePreview({ visible: true, url: image.url! })
+      
+      // 使用fileName构建完整URL
+      const imageUrl = image.fileName ? buildImageUrl(image.fileName) : (image.url || '')
+      setImagePreview({ visible: true, url: imageUrl })
     }
+
+    // 使用fileName构建完整URL
+    const imageUrl = image.fileName ? buildImageUrl(image.fileName) : (image.url || '')
 
     return (
       <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
         <img
-          src={image.url}
+          src={imageUrl}
           alt={label}
           className="w-full h-24 object-cover rounded-md border border-gray-200"
           onError={e => {
@@ -789,49 +787,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   }
 
   // 渲染图片集合
-  const renderImages = (images: Record<string, string> | undefined) => {
+  const renderImages = (images: Record<string, ImageType> | undefined) => {
     if (!images || Object.keys(images).length === 0) {
       return <div className="no-image-placeholder">暂无图片</div>
     }
 
     return (
-      <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'}`}>
-        {Object.entries(images).map(([key, url]) => {
-          if (!url) return null
-
-          const handlePreviewClick = (e: React.MouseEvent) => {
-            // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
-            const targetElement = e.target as HTMLElement
-            const imgElement =
-              targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
-            if (imgElement && imgElement.classList.contains('opacity-60')) {
-              return
-            }
-            setImagePreview({ visible: true, url })
-          }
-
-          return (
-            <div
-              key={key}
-              className="customer-image-preview cursor-pointer"
-              onClick={handlePreviewClick}
-            >
-              <img
-                src={url}
-                alt={key}
-                className="w-full h-24 object-cover rounded-md"
-                onError={e => {
-                  ;(e.target as HTMLImageElement).onerror = null
-                  ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-                  ;(e.target as HTMLImageElement).className =
-                    'w-full h-24 object-contain rounded-md opacity-60'
-                  ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
-                }}
-              />
-              <div className="customer-image-tag">{key}</div>
-            </div>
-          )
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {Object.entries(images).map(([key, image]) => (
+          <div key={key} className="mb-2">
+            <div className="mb-1">{key}</div>
+            {renderImage(image, key)}
+          </div>
+        ))}
       </div>
     )
   }

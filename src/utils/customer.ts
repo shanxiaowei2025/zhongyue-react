@@ -1,4 +1,5 @@
-import type { Customer } from '../types'
+import type { Customer, ImageType } from '../types'
+import { buildImageUrl } from './upload'
 
 // 处理客户表单中的图片数据
 export const processCustomerImages = (formData: any): Partial<Customer> => {
@@ -31,10 +32,20 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
   if (formData.otherIdImages) {
     // 如果已经是对象格式则保留，否则进行转换
     if (typeof formData.otherIdImages === 'object' && !Array.isArray(formData.otherIdImages)) {
-      const processedOtherIdImages: Record<string, string> = {}
+      const processedOtherIdImages: Record<string, ImageType> = {}
 
       Object.entries(formData.otherIdImages).forEach(([key, value]) => {
-        processedOtherIdImages[key] = processImageValue(value)
+        // 处理不同的数据格式情况
+        if (value && typeof value === 'object' && 'url' in value) {
+          // 已经是ImageType格式
+          processedOtherIdImages[key] = value as ImageType
+        } else if (typeof value === 'string') {
+          // 字符串URL格式，转换为ImageType
+          processedOtherIdImages[key] = { 
+            fileName: extractFileNameFromUrl(value as string),
+            url: value as string 
+          }
+        }
       })
 
       processedData.otherIdImages = processedOtherIdImages
@@ -48,10 +59,20 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
       typeof formData.supplementaryImages === 'object' &&
       !Array.isArray(formData.supplementaryImages)
     ) {
-      const processedSupplementaryImages: Record<string, string> = {}
+      const processedSupplementaryImages: Record<string, ImageType> = {}
 
       Object.entries(formData.supplementaryImages).forEach(([key, value]) => {
-        processedSupplementaryImages[key] = processImageValue(value)
+        // 处理不同的数据格式情况
+        if (value && typeof value === 'object' && 'url' in value) {
+          // 已经是ImageType格式
+          processedSupplementaryImages[key] = value as ImageType
+        } else if (typeof value === 'string') {
+          // 字符串URL格式，转换为ImageType
+          processedSupplementaryImages[key] = { 
+            fileName: extractFileNameFromUrl(value as string),
+            url: value as string 
+          }
+        }
       })
 
       processedData.supplementaryImages = processedSupplementaryImages
@@ -61,24 +82,35 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
   return processedData
 }
 
-// 处理单个图片值，提取url
-function processImageValue(value: any): string {
-  if (!value) return ''
-
-  // 如果已经是字符串，直接返回
-  if (typeof value === 'string') return value
-
-  // 如果是包含url的对象，返回url
-  if (typeof value === 'object' && value !== null) {
-    if ('url' in value) {
-      // 返回完整URL
-      return value.url
+// 从URL中提取文件名
+function extractFileNameFromUrl(url: string): string {
+  if (!url) return ''
+  
+  try {
+    // 检查是否已经是使用MinIO拼接的URL，解析出文件名
+    const minioEndpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
+    if (url.startsWith(minioEndpoint)) {
+      // 从URL中提取路径的最后一部分作为文件名
+      const parts = url.split('/')
+      return parts[parts.length - 1].split('?')[0] // 移除查询参数
     }
-    if ('fileName' in value && 'url' in value) {
-      // 返回完整URL
-      return value.url
-    }
+    
+    // 从URL路径中提取文件名
+    const urlParts = url.split('/')
+    const fileNameWithParams = urlParts[urlParts.length - 1]
+    const fileName = fileNameWithParams.split('?')[0] // 移除查询参数
+    
+    return fileName
+  } catch (e) {
+    console.error('提取文件名错误:', e)
+    return ''
   }
+}
 
-  return ''
+// 处理图片值，确保返回适当的格式
+function processImageValue(value: any): string {
+  if (value && typeof value === 'object' && 'url' in value) {
+    return value.url
+  }
+  return value as string
 }

@@ -8,12 +8,13 @@ import {
   LoadingOutlined,
   FileImageOutlined,
 } from '@ant-design/icons'
-import { uploadFile, deleteFile } from '../utils/upload'
+import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
+import type { ImageType } from '../types'
 
 interface MultiImageUploadProps {
   title?: string
-  value?: Record<string, string>
-  onChange?: (value: Record<string, string>) => void
+  value?: Record<string, ImageType>
+  onChange?: (value: Record<string, ImageType>) => void
   maxCount?: number
   disabled?: boolean
   onSuccess?: (isAutoSave: boolean) => void
@@ -66,36 +67,11 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   }, [value])
 
   // 将值对象转换为图片项数组
-  const imageList: ImageItem[] = Object.entries(value || {}).map(([key, url]) => ({
+  const imageList: ImageItem[] = Object.entries(value || {}).map(([key, imageData]) => ({
     key,
-    fileName: key.split('/').pop() || key,
-    url: ensureRelativeUrl(url),
+    fileName: imageData.fileName || key,
+    url: imageData.fileName ? buildImageUrl(imageData.fileName) : (imageData.url || ''),
   }))
-
-  // 确保URL是相对路径
-  function ensureRelativeUrl(url: string): string {
-    if (!url) return ''
-
-    try {
-      // 检查是否为完整的URL（包含http或https协议）
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        // 尝试转换为相对路径
-        const urlObj = new URL(url)
-        // 如果是同域名下的URL，返回路径部分
-        if (urlObj.hostname === window.location.hostname) {
-          return urlObj.pathname
-        }
-        // 其他外部URL，保持完整URL
-        return url
-      }
-      // 如果已经是相对路径，直接返回
-      return url
-    } catch (e) {
-      // URL解析出错，原样返回
-      console.error('URL解析错误:', e, url)
-      return url
-    }
-  }
 
   const beforeUpload = (file: File) => {
     const isImage = file.type.startsWith('image/')
@@ -141,7 +117,13 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     try {
       const result = await uploadFile(selectedFile)
       if (result) {
-        const newValue = { ...value, [newImageLabel]: result.url }
+        const newValue = { 
+          ...value, 
+          [newImageLabel]: { 
+            fileName: result.fileName, 
+            url: result.url 
+          } 
+        }
         onChange?.(newValue)
         message.success('上传成功')
         setIsAddModalVisible(false)
@@ -176,7 +158,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         actualFileName = fileName.split('/').pop() || ''
       }
       // 使用URL中的最后一部分
-      else if (item.url.includes('/')) {
+      else if (item.url && item.url.includes('/')) {
         const parts = item.url.split('/')
         actualFileName = parts[parts.length - 1].split('?')[0] // 移除查询参数
       }
@@ -212,22 +194,27 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   }
 
   const handlePreview = (item: ImageItem) => {
-    // 添加时间戳避免缓存
-    const timestamp = new Date().getTime()
-    const url = ensureRelativeUrl(item.url)
-    const urlWithTimestamp = url.includes('?')
-      ? url.split('?')[0] + `?t=${timestamp}`
-      : url + `?t=${timestamp}`
+    if (item.url) {
+      // 添加时间戳避免缓存
+      const timestamp = new Date().getTime()
+      const urlWithTimestamp = item.url.includes('?')
+        ? `${item.url.split('?')[0]}?t=${timestamp}`
+        : `${item.url}?t=${timestamp}`
 
-    setPreviewImage(urlWithTimestamp)
-    setPreviewTitle(item.key)
-    setPreviewVisible(true)
+      setPreviewImage(urlWithTimestamp)
+      setPreviewTitle(item.key)
+      setPreviewVisible(true)
 
-    // 重置这个图片的重试次数
-    setRetryCount(prev => ({
-      ...prev,
-      [item.key]: 0,
-    }))
+      // 重置重试计数
+      const newRetryCount = { ...retryCount }
+      newRetryCount[item.key] = 0
+      setRetryCount(newRetryCount)
+
+      // 重置错误状态
+      const newImageErrors = { ...imageErrors }
+      newImageErrors[item.key] = false
+      setImageErrors(newImageErrors)
+    }
   }
 
   const handleImageError = (key: string) => {
@@ -258,7 +245,9 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         const imageIndex = updatedImageList.findIndex(item => item.key === key)
         if (imageIndex !== -1) {
           const timestamp = new Date().getTime()
-          const originalUrl = value[key]
+          const imageItem = value[key]
+          const fileName = imageItem.fileName || ''
+          const originalUrl = fileName ? buildImageUrl(fileName) : (imageItem.url || '')
           const updatedUrl = originalUrl.includes('?')
             ? originalUrl.split('?')[0] + `?t=${timestamp}`
             : originalUrl + `?t=${timestamp}`
@@ -308,7 +297,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             {imageList.map(item => {
               // 添加时间戳到URL以避免缓存
               const hasRetried = retryCount[item.key] > 0
-              const imgUrl = hasRetried
+              const imgUrl = hasRetried && item.url
                 ? `${item.url}${item.url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`
                 : item.url
 

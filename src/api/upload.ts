@@ -1,3 +1,5 @@
+import request from './request'
+
 interface UploadUrlResponse {
   success: boolean
   data: {
@@ -18,15 +20,8 @@ export const getUploadUrl = async (
   filename: string,
   directory: string = ''
 ): Promise<UploadUrlResponse> => {
-  const response = await fetch('/api/upload/url', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      filename,
-      directory,
-    }),
+  return request.post<UploadUrlResponse>('/upload/url', {
+    filename,
+    directory,
   })
-  return response.json()
 }

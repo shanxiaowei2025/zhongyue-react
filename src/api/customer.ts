@@ -75,6 +75,59 @@ export const deleteCustomer = (id: number) => {
   return request.delete<ApiResponse<Customer>>(`/customer/${id}`)
 }
 
+// 获取客户详情 - 别名，保持与getCustomerById一致
 export const getCustomerDetail = (id: number) => {
-  return request.get<Customer>(`/api/customers/${id}`)
+  console.log('获取客户详情(别名), ID:', id)
+  return request.get<ApiResponse<Customer>>(`/customer/${id}`)
+}
+
+// 提供异步版本的API函数，以兼容原先customers.ts中的实现
+/**
+ * 获取客户列表 - 异步版本
+ * @param params 查询参数
+ */
+export const getCustomers = async (params: Record<string, any>) => {
+  try {
+    // 确保有必要的分页参数
+    const paginationParams: PaginationParams = {
+      page: params.page || 1,
+      pageSize: params.pageSize || 10,
+      ...params
+    }
+    
+    const response = await getCustomerList(paginationParams)
+    return response.code === 0
+      ? {
+          items: response.data.items || [],
+          total: response.data.total || 0,
+        }
+      : { items: [], total: 0 }
+  } catch (error) {
+    console.error('获取客户列表出错:', error)
+    return { items: [], total: 0 }
+  }
+}
+
+/**
+ * 获取分页客户列表 - 异步版本
+ * @param params 查询参数
+ */
+export const getPaginatedCustomers = async (params: Record<string, any>) => {
+  try {
+    // 确保有必要的分页参数
+    const paginationParams: PaginationParams = {
+      page: params.page || 1,
+      pageSize: params.pageSize || 10,
+      ...params
+    }
+    
+    const response = await getCustomerList(paginationParams)
+    return {
+      items: response.data.items || [],
+      total: response.data.total || 0,
+    }
+  } catch (error) {
+    console.error('获取分页客户列表出错:', error)
+    return { items: [], total: 0 }
+  }
 }

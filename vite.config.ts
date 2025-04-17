@@ -19,8 +19,6 @@ export default defineConfig(({ mode }) => {
           target: apiServer,
           changeOrigin: true,
           secure: false,
-          // 不进行路径重写，保留/api前缀
-          // rewrite: (path) => path.replace(/^\/api/, ''),
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
               console.log('代理错误:', err)

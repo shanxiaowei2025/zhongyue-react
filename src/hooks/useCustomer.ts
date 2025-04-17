@@ -19,13 +19,13 @@ export const getCustomerListKey = (params: PaginationParams) => {
     .map(([k, v]) => `${k}=${v}`)
     .join('&')
 
-  return `/api/customers?page=${page}&pageSize=${pageSize}${searchStr ? `&${searchStr}` : ''}`
+  return `/customer?page=${page}&pageSize=${pageSize}${searchStr ? `&${searchStr}` : ''}`
 }
 
 /**
  * 客户详情请求的SWR键生成器
  */
-export const getCustomerDetailKey = (id?: number | null) => (id ? `/api/customers/${id}` : null)
+export const getCustomerDetailKey = (id?: number | null) => (id ? `/customer/${id}` : null)
 
 /**
  * 客户列表数据的fetcher函数
@@ -165,7 +165,7 @@ export const useCustomerDetail = (id?: number | null) => {
       if (response && response.code === 0) {
         // 刷新详情和列表
         await refreshCustomerDetail()
-        await mutate((key: string) => key.startsWith('/api/customers?'), undefined, {
+        await mutate((key: string) => key.startsWith('/customer?'), undefined, {
           revalidate: true,
         })
 
@@ -190,7 +190,7 @@ export const useCustomerDetail = (id?: number | null) => {
         message.success('客户创建成功')
 
         // 刷新列表
-        await mutate((key: string) => key.startsWith('/api/customers?'), undefined, {
+        await mutate((key: string) => key.startsWith('/customer?'), undefined, {
           revalidate: true,
         })
 

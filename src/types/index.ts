@@ -140,7 +140,7 @@ export interface Customer {
     front?: ImageType
     back?: ImageType
   }
-  otherIdImages: Record<string, string>
+  otherIdImages: Record<string, ImageType>
   businessLicenseImages: {
     main?: ImageType
   }
@@ -148,7 +148,7 @@ export interface Customer {
     basic?: ImageType
     general?: ImageType
   }
-  supplementaryImages: Record<string, string>
+  supplementaryImages: Record<string, ImageType>
   administrativeLicenseType: string
   administrativeLicenseExpiryDate: string
   publicBank: string

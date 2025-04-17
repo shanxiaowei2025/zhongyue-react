@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Button, message, Modal, Spin, Image } from 'antd'
 import { UploadOutlined, DeleteOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
-import { uploadFile, deleteFile } from '../utils/upload'
+import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
 
 interface ImageUploadProps {
   label: string
@@ -121,7 +121,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const handlePreview = () => {
     if (value?.url) {
       // 确保URL是完整的，并添加时间戳避免缓存
-      const url = ensureRelativeUrl(value.url)
+      const url = value.fileName ? buildImageUrl(value.fileName) : value.url
       const timestamp = new Date().getTime()
       const urlWithTimestamp = url.includes('?')
         ? `${url.split('?')[0]}?t=${timestamp}`
@@ -144,38 +144,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             uid: '-1',
             name: value.fileName || '图片',
             status: 'done',
-            url:
-              retryCount > 0
-                ? `${ensureRelativeUrl(value.url)}?t=${new Date().getTime()}`
-                : ensureRelativeUrl(value.url),
+            url: retryCount > 0
+              ? `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
+              : value.fileName ? buildImageUrl(value.fileName) : value.url,
           },
         ]
       : []
-
-  // 确保URL是相对路径
-  function ensureRelativeUrl(url: string): string {
-    if (!url) return ''
-
-    try {
-      // 检查是否为完整的URL（包含http或https协议）
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        // 尝试转换为相对路径
-        const urlObj = new URL(url)
-        // 如果是同域名下的URL，返回路径部分
-        if (urlObj.hostname === window.location.hostname) {
-          return urlObj.pathname
-        }
-        // 其他外部URL，保持完整URL
-        return url
-      }
-      // 如果已经是相对路径，直接返回
-      return url
-    } catch (e) {
-      // URL解析出错，原样返回
-      console.error('URL解析错误:', e, url)
-      return url
-    }
-  }
 
   // 处理图片加载错误
   const handleImageError = () => {
@@ -193,7 +167,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       retryTimeoutRef.current = setTimeout(() => {
         setRetryCount(prev => prev + 1)
         // 通过添加时间戳参数避免浏览器缓存
-        setPreviewImage(`${ensureRelativeUrl(value.url)}?t=${new Date().getTime()}`)
+        setPreviewImage(`${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`)
       }, retryDelay)
     } else {
       // 超过最大重试次数，显示错误状态
@@ -257,7 +231,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             alt={label}
             src={
               previewImage ||
-              (value?.url ? `${ensureRelativeUrl(value.url)}?t=${new Date().getTime()}` : '')
+              (value?.url ? value.fileName ? buildImageUrl(value.fileName) : value.url : '')
             }
             style={{ maxWidth: '100%' }}
             preview={false}
