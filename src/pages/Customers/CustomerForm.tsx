@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Form, Input, Button, Select, DatePicker, InputNumber, Tabs, Space, message, Switch, Checkbox } from 'antd'
 import type { Customer, ImageType } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
@@ -8,6 +8,8 @@ import MultiImageUpload from '../../components/MultiImageUpload'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
+import useSWR from 'swr'
+import { mutate } from 'swr'
 
 // 业务状态映射
 export const BUSINESS_STATUS_MAP = {
@@ -225,6 +227,19 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
   // 标记是否已经修复了表单项的状态
   const [fixState, setFixState] = useState(false);
+
+  // 记录重试次数
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
+  
+  // 重试逻辑
+  const handleRetry = useCallback(() => {
+    if (retryCount < maxRetries && customer?.id) {
+      setRetryCount(prev => prev + 1)
+      // 触发SWR重新验证，清除缓存并重新获取
+      mutate(`/customer/${customer.id}`, undefined, { revalidate: true })
+    }
+  }, [customer?.id, retryCount, maxRetries])
 
   useEffect(() => {
     if (customer && mode !== 'add') {
@@ -584,25 +599,27 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
-          <Form.Item name="licenseExpiryDate" label="营业执照到期日期">
-            <>
-              <DatePicker 
-                className="w-full" 
-                allowClear 
-                format="YYYY-MM-DD"
-                value={form.getFieldValue('licenseExpiryDate')}
-                onChange={(date) => {
-                  // 手动设置字段值，确保正确更新
-                  form.setFieldValue('licenseExpiryDate', date);
-                  
-                  // 如果选择了日期，自动取消"无固定期限"选择
-                  if (date) {
-                    form.setFieldValue('licenseNoFixedTerm', false);
-                  }
-                }}
-                disabled={!!licenseNoFixedTerm}
-              />
-              <Form.Item name="licenseNoFixedTerm" valuePropName="checked" className="mt-2 mb-0">
+          <Form.Item label="营业执照到期日期">
+            <div className="space-y-2">
+              <Form.Item name="licenseExpiryDate" noStyle>
+                <DatePicker 
+                  className="w-full" 
+                  allowClear 
+                  format="YYYY-MM-DD"
+                  value={form.getFieldValue('licenseExpiryDate')}
+                  onChange={(date) => {
+                    // 手动设置字段值，确保正确更新
+                    form.setFieldValue('licenseExpiryDate', date);
+                    
+                    // 如果选择了日期，自动取消"无固定期限"选择
+                    if (date) {
+                      form.setFieldValue('licenseNoFixedTerm', false);
+                    }
+                  }}
+                  disabled={!!licenseNoFixedTerm}
+                />
+              </Form.Item>
+              <Form.Item name="licenseNoFixedTerm" valuePropName="checked" noStyle>
                 <Checkbox onChange={(e) => {
                   const checked = e.target.checked;
                   
@@ -617,7 +634,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   无固定期限
                 </Checkbox>
               </Form.Item>
-            </>
+            </div>
           </Form.Item>
 
           <Form.Item name="registeredCapital" label="注册资本">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Table,
   Button,
@@ -38,7 +38,7 @@ import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 import { getCustomerDetail, getCustomerById } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 
@@ -164,18 +164,33 @@ export default function Customers() {
   }
 
   const handleView = (record: Customer) => {
-    // 先设置基本信息，保证界面快速响应
-    setCurrentCustomer(record)
-    setDetailType('view')
-
-    // 确保先设置选中的客户ID再打开对话框，避免重复触发请求
-    setSelectedCustomerId(record.id)
-
-    // 打开对话框
+    // 先清除可能存在的缓存，关键步骤!
+    mutate(`/customer/${record.id}`, undefined, { revalidate: false });
+    
+    // 只使用基本信息初始化
+    setCurrentCustomer({
+      ...record,
+      // 确保图片对象初始化为空对象而不是undefined
+      legalPersonIdImages: record.legalPersonIdImages || {},
+      businessLicenseImages: record.businessLicenseImages || {},
+      bankAccountLicenseImages: record.bankAccountLicenseImages || {},
+      otherIdImages: record.otherIdImages || {},
+      supplementaryImages: record.supplementaryImages || {}
+    });
+    
+    setDetailType('view');
+    
+    // 重置selectedCustomerId后再设置新值，确保状态完全刷新
+    setSelectedCustomerId(undefined);
     setTimeout(() => {
-      isMobile ? setDrawerVisible(true) : setModalVisible(true)
-    }, 0)
-  }
+      setSelectedCustomerId(record.id);
+    }, 0);
+    
+    // 延迟打开对话框，确保状态更新完成
+    setTimeout(() => {
+      isMobile ? setDrawerVisible(true) : setModalVisible(true);
+    }, 10);
+  };
 
   const handleEdit = (record: Customer) => {
     // 先使用列表中的记录，确保图片等信息在加载完整数据前可见
@@ -447,9 +462,12 @@ export default function Customers() {
           return // 点击取消按钮会触发handleCancel，会自动关闭抽屉
         }
       }
+      // 如果找不到取消按钮，也要关闭抽屉
+      setDrawerVisible(false)
+    } else {
+      // 如果不是表单模式，直接关闭
+      setDrawerVisible(false)
     }
-    // 如果不是表单模式或无法找到取消按钮，直接关闭
-    setDrawerVisible(false)
   }
 
   // 处理关闭模态框
@@ -465,9 +483,21 @@ export default function Customers() {
           return // 点击取消按钮会触发handleCancel，会自动关闭模态框
         }
       }
+      // 如果找不到取消按钮，也要关闭模态框
+      setModalVisible(false)
+    } else {
+      // 如果不是表单模式，直接关闭
+      setModalVisible(false)
+      // 延迟清理状态，避免视觉闪烁
+      setTimeout(() => {
+        setCurrentCustomer(null)
+        setSelectedCustomerId(undefined)
+        // 清除该客户的SWR缓存
+        if (customerDetail?.id) {
+          mutate(`/customer/${customerDetail.id}`, undefined, { revalidate: false })
+        }
+      }, 100)
     }
-    // 如果不是表单模式或无法找到取消按钮，直接关闭
-    setModalVisible(false)
   }
 
   return (
@@ -617,14 +647,14 @@ export default function Customers() {
         onClose={handleCloseDrawer}
         open={drawerVisible}
         destroyOnClose
-        bodyStyle={{ padding: isMobile ? '12px 8px' : '16px' }}
+        styles={{ body: { padding: isMobile ? '12px 8px' : '16px' } }}
         className="customer-drawer"
         placement={isMobile ? "bottom" : "right"}
         height={isMobile ? "90%" : undefined}
       >
         {detailType === 'view' ? (
-          customerDetail ? (
-            <CustomerDetail customer={customerDetail} onClose={() => setDrawerVisible(false)} />
+          customerDetail || currentCustomer ? (
+            <CustomerDetail customer={customerDetail || currentCustomer!} onClose={() => setDrawerVisible(false)} />
           ) : (
             <div style={{ textAlign: 'center', padding: '20px' }}>
               <LoadingOutlined style={{ fontSize: 24 }} spin />
@@ -649,12 +679,12 @@ export default function Customers() {
         footer={null}
         width={isMobile ? '100%' : 1000}
         style={isMobile ? { top: 10, padding: 0 } : undefined}
-        bodyStyle={isMobile ? { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } : undefined}
+        styles={isMobile ? { body: { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } } : undefined}
         destroyOnClose
       >
         {detailType === 'view' ? (
-          customerDetail ? (
-            <CustomerDetail customer={customerDetail} onClose={() => setModalVisible(false)} />
+          customerDetail || currentCustomer ? (
+            <CustomerDetail customer={customerDetail || currentCustomer!} onClose={() => setModalVisible(false)} />
           ) : (
             <div style={{ textAlign: 'center', padding: '20px' }}>
               <LoadingOutlined style={{ fontSize: 24 }} spin />
@@ -686,19 +716,100 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     usePageStates.getState().getState('customerDetailTab') || 'basic'
   )
 
-  // 使用 useSWR 获取客户详情数据
-  const { data: customerDetail, isLoading } = useSWR(
-    customer.id ? `/customer/${customer.id}` : null,
-    () => getCustomerDetail(customer.id),
+  // 使用深拷贝防止引用问题
+  const [currentCustomerDetail, setCurrentCustomerDetail] = useState<Customer>(() => {
+    // 确保创建一个包含所有必要字段的初始对象
+    return {
+      ...customer,
+      // 确保图片对象初始化为空对象而不是undefined
+      legalPersonIdImages: customer.legalPersonIdImages || {},
+      businessLicenseImages: customer.businessLicenseImages || {},
+      bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
+      otherIdImages: customer.otherIdImages || {},
+      supplementaryImages: customer.supplementaryImages || {}
+    };
+  });
+
+  // 记录重试次数
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
+  
+  // 重试逻辑
+  const handleRetry = useCallback(() => {
+    if (retryCount < maxRetries) {
+      setRetryCount(prev => prev + 1)
+      // 触发SWR重新验证
+      mutate(`/customer/${customer.id}`)
+    }
+  }, [customer.id, retryCount])
+
+  // 优化useSWR配置，防止过早或不必要的请求
+  const { data, isLoading, error } = useSWR(
+    customer?.id ? `/customer/${customer.id}` : null,
+    () => customer?.id ? getCustomerDetail(customer.id) : null,
     {
-      revalidateOnFocus: true,
+      revalidateOnFocus: false,  // 改为false，避免焦点变化触发刷新
       revalidateOnReconnect: true,
-      dedupingInterval: 0,
+      dedupingInterval: 2000,    // 增加去重间隔，防止频繁请求
       revalidateIfStale: true,
       shouldRetryOnError: true,
       refreshInterval: 0,
+      onSuccess: (response) => {
+        if (response && response.code === 0 && response.data) {
+          // 确保正确处理图片字段
+          const processedData = {
+            ...response.data,
+            legalPersonIdImages: response.data.legalPersonIdImages || {},
+            businessLicenseImages: response.data.businessLicenseImages || {},
+            bankAccountLicenseImages: response.data.bankAccountLicenseImages || {},
+            otherIdImages: response.data.otherIdImages || {},
+            supplementaryImages: response.data.supplementaryImages || {}
+          };
+          
+          console.log('SWR获取到客户详情数据，已处理:', processedData);
+          setCurrentCustomerDetail(processedData);
+          setRetryCount(0);
+        }
+      },
+      onError: (err) => {
+        console.error('获取客户详情失败:', err);
+        if (retryCount < maxRetries) {
+          const retryDelay = Math.pow(2, retryCount) * 1000;
+          setTimeout(handleRetry, retryDelay);
+        }
+      }
     }
-  )
+  );
+
+  // 修改fetchedCustomerDetail的处理，确保数据结构正确
+  const fetchedCustomerDetail = useMemo(() => {
+    if (!data || data.code !== 0 || !data.data) return null;
+    
+    // 确保返回的对象包含所有必要字段
+    return {
+      ...data.data,
+      // 确保图片对象始终为对象而不是undefined
+      legalPersonIdImages: data.data.legalPersonIdImages || {},
+      businessLicenseImages: data.data.businessLicenseImages || {},
+      bankAccountLicenseImages: data.data.bankAccountLicenseImages || {},
+      otherIdImages: data.data.otherIdImages || {},
+      supplementaryImages: data.data.supplementaryImages || {}
+    };
+  }, [data]);
+
+  // 如果获取到了新数据，更新当前显示的客户详情
+  useEffect(() => {
+    if (fetchedCustomerDetail && Object.keys(fetchedCustomerDetail).length > 0) {
+      setCurrentCustomerDetail(fetchedCustomerDetail);
+    }
+  }, [fetchedCustomerDetail]);
+
+  // 保证在组件挂载时至少有初始数据可用
+  useEffect(() => {
+    if (customer && Object.keys(customer).length > 0) {
+      setCurrentCustomerDetail(customer);
+    }
+  }, [customer]);
 
   const handleTabChange = (key: string) => {
     setActiveTabKey(key)
@@ -745,45 +856,68 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     }
   }
 
+  // 格式化状态显示
+  const formatStatus = (status: string | null, type: 'business' | 'enterprise') => {
+    if (!status) return <Tag color="default">未设置</Tag>
+
+    if (type === 'business') {
+      const color = BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default';
+      const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status;
+      return <Tag color={color}>{label}</Tag>;
+    } else {
+      const color = ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default';
+      const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status;
+      return <Tag color={color}>{label}</Tag>;
+    }
+  }
+
   // 渲染单张图片
   const renderImage = (image: ImageType | undefined, label: string) => {
     if (!image || !image.url) {
-      return <div className="no-image-placeholder">暂无图片</div>
+      return <div className="no-image-placeholder">暂无图片</div>;
     }
-
-    const handlePreviewClick = (e: React.MouseEvent) => {
-      // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
-      const targetElement = e.target as HTMLElement
-      const imgElement =
-        targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
-      if (imgElement && imgElement.classList.contains('opacity-60')) {
-        return
+    
+    try {
+      // 使用fileName构建完整URL
+      const imageUrl = image.fileName ? buildImageUrl(image.fileName) : (image.url || '');
+      
+      // 确保URL是有效的
+      if (!imageUrl || imageUrl === 'undefined' || imageUrl === 'null') {
+        return <div className="no-image-placeholder">图片链接无效</div>;
       }
       
-      // 使用fileName构建完整URL
-      const imageUrl = image.fileName ? buildImageUrl(image.fileName) : (image.url || '')
-      setImagePreview({ visible: true, url: imageUrl })
+      const handlePreviewClick = (e: React.MouseEvent) => {
+        // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
+        const targetElement = e.target as HTMLElement
+        const imgElement =
+          targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
+        if (imgElement && imgElement.classList.contains('opacity-60')) {
+          return
+        }
+        
+        setImagePreview({ visible: true, url: imageUrl })
+      }
+
+      return (
+        <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
+          <img
+            src={imageUrl}
+            alt={label}
+            className="w-full h-24 object-cover rounded-md border border-gray-200"
+            onError={e => {
+              ;(e.target as HTMLImageElement).onerror = null
+              ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+              ;(e.target as HTMLImageElement).className =
+                'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
+              ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
+            }}
+          />
+        </div>
+      )
+    } catch (err) {
+      console.error('渲染图片出错:', err);
+      return <div className="no-image-placeholder">图片处理异常</div>;
     }
-
-    // 使用fileName构建完整URL
-    const imageUrl = image.fileName ? buildImageUrl(image.fileName) : (image.url || '')
-
-    return (
-      <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
-        <img
-          src={imageUrl}
-          alt={label}
-          className="w-full h-24 object-cover rounded-md border border-gray-200"
-          onError={e => {
-            ;(e.target as HTMLImageElement).onerror = null
-            ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-            ;(e.target as HTMLImageElement).className =
-              'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
-            ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
-          }}
-        />
-      </div>
-    )
   }
 
   // 渲染图片集合
@@ -804,19 +938,54 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     )
   }
 
-  // 格式化状态显示
-  const formatStatus = (status: string | null, type: 'business' | 'enterprise') => {
-    if (!status) return <Tag color="default">未设置</Tag>
-
-    if (type === 'business') {
-      const color = BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default';
-      const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status;
-      return <Tag color={color}>{label}</Tag>;
-    } else {
-      const color = ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default';
-      const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status;
-      return <Tag color={color}>{label}</Tag>;
+  // 在验证displayCustomer之前，确保对象结构完整
+  const displayCustomer = useMemo(() => {
+    // 如果currentCustomerDetail是完整的客户对象
+    if (currentCustomerDetail && typeof currentCustomerDetail.companyName === 'string') {
+      return currentCustomerDetail as Customer;
     }
+    
+    // 如果是API响应对象，尝试提取data部分
+    if (currentCustomerDetail && 
+        typeof currentCustomerDetail === 'object' && 
+        'code' in currentCustomerDetail && 
+        'data' in currentCustomerDetail && 
+        currentCustomerDetail.data) {
+      
+      const data = currentCustomerDetail.data as Customer;
+      return {
+        ...data,
+        legalPersonIdImages: data.legalPersonIdImages || {},
+        businessLicenseImages: data.businessLicenseImages || {},
+        bankAccountLicenseImages: data.bankAccountLicenseImages || {},
+        otherIdImages: data.otherIdImages || {},
+        supplementaryImages: data.supplementaryImages || {}
+      } as Customer;
+    }
+    
+    // 如果客户对象不完整，使用原始customer
+    return {
+      ...customer,
+      legalPersonIdImages: customer.legalPersonIdImages || {},
+      businessLicenseImages: customer.businessLicenseImages || {},
+      bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
+      otherIdImages: customer.otherIdImages || {},
+      supplementaryImages: customer.supplementaryImages || {}
+    } as Customer;
+  }, [currentCustomerDetail, customer]);
+
+  // 改进验证逻辑，多检查一些关键字段
+  if (!displayCustomer || 
+      typeof displayCustomer !== 'object' || 
+      typeof displayCustomer.companyName !== 'string' ||
+      ((displayCustomer as any).code !== undefined && (displayCustomer as any).data === undefined)) {
+    console.error('CustomerDetail: 客户数据无效', displayCustomer);
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="mb-4 text-red-500 text-lg">数据加载异常</div>
+        <Button type="primary" onClick={() => window.location.reload()}>刷新页面</Button>
+      </div>
+    );
   }
 
   const tabs: TabsProps['items'] = [
@@ -831,83 +1000,83 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           className={isMobile ? "text-sm" : ""}
         >
           <Descriptions.Item label="企业名称" span={3}>
-            {customer.companyName || '-'}
+            {displayCustomer.companyName || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="税号">
-            {customer.taxNumber || '-'}
+            {displayCustomer.taxNumber || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="企业类型">
-            {customer.enterpriseType || '-'}
+            {displayCustomer.enterpriseType || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="所属分局">
-            {customer.taxBureau || '-'}
+            {displayCustomer.taxBureau || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="顾问会计">
-            {customer.consultantAccountant || '-'}
+            {displayCustomer.consultantAccountant || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="记账会计">
-            {customer.bookkeepingAccountant || '-'}
+            {displayCustomer.bookkeepingAccountant || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="实际负责人">
-            {customer.actualResponsibleName || '-'}
+            {displayCustomer.actualResponsibleName || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="联系电话">
-            {customer.actualResponsiblePhone || '-'}
+            {displayCustomer.actualResponsiblePhone || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="企业状态">
-            {formatStatus(customer.enterpriseStatus || null, 'enterprise')}
+            {formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}
           </Descriptions.Item>
           <Descriptions.Item label="业务状态">
-            {formatStatus(customer.businessStatus || null, 'business')}
+            {formatStatus(displayCustomer.businessStatus || null, 'business')}
           </Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>
-            {customer.registeredAddress || '-'}
+            {displayCustomer.registeredAddress || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="经营地址" span={3}>
-            {customer.businessAddress || '-'}
+            {displayCustomer.businessAddress || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="老板画像" span={3}>
-            {customer.bossProfile || '-'}
+            {displayCustomer.bossProfile || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="企业画像" span={3}>
-            {customer.enterpriseProfile || '-'}
+            {displayCustomer.enterpriseProfile || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="同宗企业" span={3}>
-            {customer.affiliatedEnterprises || '-'}
+            {displayCustomer.affiliatedEnterprises || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="行业大类">
-            {customer.industryCategory || '-'}
+            {displayCustomer.industryCategory || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="行业细分">
-            {customer.industrySubcategory || '-'}
+            {displayCustomer.industrySubcategory || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="是否有税收优惠">
-            {customer.hasTaxBenefits ? '是' : '否'}
+            {displayCustomer.hasTaxBenefits ? '是' : '否'}
           </Descriptions.Item>
           <Descriptions.Item label="工商公示密码">
-            {customer.businessPublicationPassword || '-'}
+            {displayCustomer.businessPublicationPassword || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="营业执照到期日期">
-            {formatDate(customer.licenseExpiryDate, false, 'licenseExpiryDate')}
+            {formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本">
-            {customer.registeredCapital ? `${customer.registeredCapital.toLocaleString()}万元` : '-'}
+            {displayCustomer.registeredCapital ? `${displayCustomer.registeredCapital.toLocaleString()}万元` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="认缴到期日期">
-            {formatDate(customer.capitalContributionDeadline, false)}
+            {formatDate(displayCustomer.capitalContributionDeadline, false)}
           </Descriptions.Item>
           <Descriptions.Item label="实缴资本">
-            {customer.paidInCapital ? `${customer.paidInCapital.toLocaleString()}万元` : '-'}
+            {displayCustomer.paidInCapital ? `${displayCustomer.paidInCapital.toLocaleString()}万元` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="行政许可类型">
-            {customer.administrativeLicenseType || '-'}
+            {displayCustomer.administrativeLicenseType || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="行政许可到期日期">
-            {formatDate(customer.administrativeLicenseExpiryDate, false)}
+            {formatDate(displayCustomer.administrativeLicenseExpiryDate, false)}
           </Descriptions.Item>
-          <Descriptions.Item label="提交人">{customer.submitter || '-'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">{formatDate(customer.createTime)}</Descriptions.Item>
-          <Descriptions.Item label="更新时间">{formatDate(customer.updateTime)}</Descriptions.Item>
+          <Descriptions.Item label="提交人">{displayCustomer.submitter || '-'}</Descriptions.Item>
+          <Descriptions.Item label="创建时间">{formatDate(displayCustomer.createTime)}</Descriptions.Item>
+          <Descriptions.Item label="更新时间">{formatDate(displayCustomer.updateTime)}</Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -922,19 +1091,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           className={isMobile ? "text-sm" : ""}
         >
           <Descriptions.Item label="对公开户行">
-            {customer.publicBank || '-'}
+            {displayCustomer.publicBank || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="开户行账号">
-            {customer.bankAccountNumber || '-'}
+            {displayCustomer.bankAccountNumber || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="对公开户时间">
-            {formatDate(customer.publicBankOpeningDate, false)}
+            {formatDate(displayCustomer.publicBankOpeningDate, false)}
           </Descriptions.Item>
           <Descriptions.Item label="网银托管档案号">
-            {customer.onlineBankingArchiveNumber || '-'}
+            {displayCustomer.onlineBankingArchiveNumber || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="三方协议扣款账户">
-            {customer.tripartiteAgreementAccount || '-'}
+            {displayCustomer.tripartiteAgreementAccount || '-'}
           </Descriptions.Item>
         </Descriptions>
       ),
@@ -950,34 +1119,34 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           className={isMobile ? "text-sm" : ""}
         >
           <Descriptions.Item label="报税登录方式">
-            {customer.taxReportLoginMethod || '-'}
+            {displayCustomer.taxReportLoginMethod || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="税种">
-            {customer.taxCategories || '-'}
+            {displayCustomer.taxCategories || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="社保险种">
-            {customer.socialInsuranceTypes || '-'}
+            {displayCustomer.socialInsuranceTypes || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="参保人员">
-            {customer.insuredPersonnel || '-'}
+            {displayCustomer.insuredPersonnel || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="个税密码">
-            {customer.personalIncomeTaxPassword || '-'}
+            {displayCustomer.personalIncomeTaxPassword || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="个税申报人员">
-            {customer.personalIncomeTaxStaff || '-'}
+            {displayCustomer.personalIncomeTaxStaff || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="企业信息表编号">
-            {customer.enterpriseInfoSheetNumber || '-'}
+            {displayCustomer.enterpriseInfoSheetNumber || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="章存放编号">
-            {customer.sealStorageNumber || '-'}
+            {displayCustomer.sealStorageNumber || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="开票软件">
-            {customer.invoicingSoftware || '-'}
+            {displayCustomer.invoicingSoftware || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="开票注意事项" span={2}>
-            {customer.invoicingNotes || '-'}
+            {displayCustomer.invoicingNotes || '-'}
           </Descriptions.Item>
         </Descriptions>
       ),
@@ -995,16 +1164,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             className={isMobile ? "text-sm" : ""}
           >
             <Descriptions.Item label="姓名">
-              {customer.legalRepresentativeName || '-'}
+              {displayCustomer.legalRepresentativeName || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="联系电话">
-              {customer.legalRepresentativePhone || '-'}
+              {displayCustomer.legalRepresentativePhone || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="身份证号">
-              {customer.legalRepresentativeId || '-'}
+              {displayCustomer.legalRepresentativeId || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="税务密码">
-              {customer.legalRepresentativeTaxPassword || '-'}
+              {displayCustomer.legalRepresentativeTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
 
@@ -1016,16 +1185,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             className={isMobile ? "text-sm" : ""}
           >
             <Descriptions.Item label="姓名">
-              {customer.financialContactName || '-'}
+              {displayCustomer.financialContactName || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="联系电话">
-              {customer.financialContactPhone || '-'}
+              {displayCustomer.financialContactPhone || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="身份证号">
-              {customer.financialContactId || '-'}
+              {displayCustomer.financialContactId || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="税务密码">
-              {customer.financialContactTaxPassword || '-'}
+              {displayCustomer.financialContactTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
 
@@ -1037,16 +1206,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             className={isMobile ? "text-sm" : ""}
           >
             <Descriptions.Item label="姓名">
-              {customer.taxOfficerName || '-'}
+              {displayCustomer.taxOfficerName || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="联系电话">
-              {customer.taxOfficerPhone || '-'}
+              {displayCustomer.taxOfficerPhone || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="身份证号">
-              {customer.taxOfficerId || '-'}
+              {displayCustomer.taxOfficerId || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="税务密码">
-              {customer.taxOfficerTaxPassword || '-'}
+              {displayCustomer.taxOfficerTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
 
@@ -1058,16 +1227,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             className={isMobile ? "text-sm" : ""}
           >
             <Descriptions.Item label="姓名">
-              {customer.invoiceOfficerName || '-'}
+              {displayCustomer.invoiceOfficerName || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="联系电话">
-              {customer.invoiceOfficerPhone || '-'}
+              {displayCustomer.invoiceOfficerPhone || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="身份证号">
-              {customer.invoiceOfficerId || '-'}
+              {displayCustomer.invoiceOfficerId || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="税务密码">
-              {customer.invoiceOfficerTaxPassword || '-'}
+              {displayCustomer.invoiceOfficerTaxPassword || '-'}
             </Descriptions.Item>
           </Descriptions>
         </>
@@ -1083,18 +1252,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               <h3 className="font-medium mb-2">法人身份证照片</h3>
               <div className="mb-4">
                 <div className="mb-1">身份证正面</div>
-                {renderImage(customer.legalPersonIdImages?.front, '身份证正面')}
+                {renderImage(displayCustomer.legalPersonIdImages?.front, '身份证正面')}
               </div>
               <div>
                 <div className="mb-1">身份证反面</div>
-                {renderImage(customer.legalPersonIdImages?.back, '身份证反面')}
+                {renderImage(displayCustomer.legalPersonIdImages?.back, '身份证反面')}
               </div>
             </div>
 
             <div>
               <h3 className="font-medium mb-2">营业执照照片</h3>
               <div className="mb-1">营业执照</div>
-              {renderImage(customer.businessLicenseImages?.main, '营业执照')}
+              {renderImage(displayCustomer.businessLicenseImages?.main, '营业执照')}
             </div>
           </div>
 
@@ -1103,23 +1272,23 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
               <div>
                 <div className="mb-1">基本户开户许可证</div>
-                {renderImage(customer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
+                {renderImage(displayCustomer.bankAccountLicenseImages?.basic, '基本户开户许可证')}
               </div>
               <div>
                 <div className="mb-1">一般户开户许可证</div>
-                {renderImage(customer.bankAccountLicenseImages?.general, '一般户开户许可证')}
+                {renderImage(displayCustomer.bankAccountLicenseImages?.general, '一般户开户许可证')}
               </div>
             </div>
           </div>
 
           <div>
             <h3 className="font-medium mb-2">其他人员身份证照片</h3>
-            {renderImages(customer.otherIdImages)}
+            {renderImages(displayCustomer.otherIdImages)}
           </div>
 
           <div>
             <h3 className="font-medium mb-2">补充资料照片</h3>
-            {renderImages(customer.supplementaryImages)}
+            {renderImages(displayCustomer.supplementaryImages)}
           </div>
         </div>
       ),
