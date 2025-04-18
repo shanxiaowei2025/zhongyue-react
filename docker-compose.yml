@@ -22,7 +22,7 @@ services:
     container_name: zhongyue-nodejs-api-prod
     build:
       context: ../zhongyue-nodejs
-      dockerfile: Dockerfile
+      dockerfile: ../zhongyue-nodejs/Dockerfile
       target: production
     restart: always
     ports:
