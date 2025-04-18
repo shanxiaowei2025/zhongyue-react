@@ -69,6 +69,8 @@ export default function Customers() {
     industryCategory: '',
     enterpriseStatus: '',
     businessStatus: '',
+    location: '',
+    remarks: '',
     startDate: '',
     endDate: '',
     ...(savedSearchParams || {}), // 恢复之前保存的搜索条件
@@ -150,6 +152,8 @@ export default function Customers() {
       industryCategory: '',
       enterpriseStatus: '',
       businessStatus: '',
+      location: '',
+      remarks: '',
       startDate: '',
       endDate: '',
     })
@@ -363,6 +367,13 @@ export default function Customers() {
       responsive: ['lg'],
     },
     {
+      title: '归属地',
+      dataIndex: 'location',
+      key: 'location',
+      width: 150,
+      responsive: ['lg'],
+    },
+    {
       title: '实际负责人',
       dataIndex: 'actualResponsibleName',
       key: 'actualResponsibleName',
@@ -539,6 +550,12 @@ export default function Customers() {
             placeholder="所属分局"
             value={searchParams.taxBureau}
             onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
+            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
+          />
+          <Input
+            placeholder="归属地"
+            value={searchParams.location}
+            onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
@@ -1011,6 +1028,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="所属分局">
             {displayCustomer.taxBureau || '-'}
           </Descriptions.Item>
+          <Descriptions.Item label="归属地">
+            {displayCustomer.location || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="顾问会计">
             {displayCustomer.consultantAccountant || '-'}
           </Descriptions.Item>
@@ -1075,6 +1095,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             {formatDate(displayCustomer.administrativeLicenseExpiryDate, false)}
           </Descriptions.Item>
           <Descriptions.Item label="提交人">{displayCustomer.submitter || '-'}</Descriptions.Item>
+          <Descriptions.Item label="备注信息" span={3}>
+            {displayCustomer.remarks || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="创建时间">{formatDate(displayCustomer.createTime)}</Descriptions.Item>
           <Descriptions.Item label="更新时间">{formatDate(displayCustomer.updateTime)}</Descriptions.Item>
         </Descriptions>

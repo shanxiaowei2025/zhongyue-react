@@ -32,6 +32,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   enterpriseStatus: 'basic',
   businessStatus: 'basic',
   registeredAddress: 'basic',
+  location: 'basic',
   businessAddress: 'basic',
   bossProfile: 'basic',
   enterpriseProfile: 'basic',
@@ -47,6 +48,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   administrativeLicenseType: 'basic',
   administrativeLicenseExpiryDate: 'basic',
   submitter: 'basic',
+  remarks: 'basic',
   
   // 银行信息标签页字段
   publicBank: 'bank',
@@ -529,6 +531,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
+          <Form.Item name="location" label="归属地">
+            <Input/>
+          </Form.Item>
+
           <Form.Item name="consultantAccountant" label="顾问会计">
             <Input />
           </Form.Item>
@@ -679,6 +685,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <Form.Item name="submitter" label="提交人">
             <Input />
+          </Form.Item>
+
+          <Form.Item name="remarks" label="备注信息" className="col-span-1 md:col-span-2">
+            <Input.TextArea rows={3} />
           </Form.Item>
         </div>
       ),

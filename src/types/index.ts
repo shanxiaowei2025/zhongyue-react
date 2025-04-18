@@ -121,6 +121,7 @@ export interface Customer {
   enterpriseType: string
   taxNumber: string
   registeredAddress: string
+  location: string
   businessAddress: string
   taxBureau: string
   actualResponsibleName: string
@@ -187,6 +188,7 @@ export interface Customer {
   createTime: string
   updateTime: string
   submitter: string
+  remarks: string
 }
 
 export interface ImageType {
