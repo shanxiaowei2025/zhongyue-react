@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Input, Space, Modal, Form, Select, message, Tag, Tree, Card, Row, Col, Popover, Tooltip, Typography } from 'antd'
+import { Table, Button, Input, Space, Modal, Form, Select, message, Tag, Tree, Card, Row, Col, Popover, Tooltip, Typography, Cascader } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, TeamOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Department, DepartmentTreeNode } from '../../types'
@@ -14,6 +14,14 @@ const DepartmentTypes = {
   1: '公司',
   2: '分公司',
   3: '部门'
+}
+
+// 定义级联选择器选项类型
+interface CascaderOption {
+  value: number | null;
+  label: string;
+  disabled?: boolean;
+  children?: CascaderOption[];
 }
 
 const Departments = () => {
@@ -99,10 +107,54 @@ const Departments = () => {
   const handleEdit = (record: Department) => {
     setCurrentId(record.id)
     form.resetFields()
+    
+    // 修改这里，处理级联选择器的初始值
+    let parentPath: (number | null)[] = [];
+    
+    // 检查是否有parent_id（接口直接返回的父ID）
+    if (record.parent_id) {
+      // 递归查找从根部门到父部门的完整路径
+      const findParentPath = (departments: DepartmentTreeNode[], targetId: number, path: number[] = []): number[] | null => {
+        for (const dept of departments) {
+          // 如果当前部门就是目标部门，返回路径
+          if (dept.id === targetId) {
+            return [...path, dept.id];
+          }
+          
+          // 如果有子部门，在子部门中继续查找
+          if (dept.children && dept.children.length > 0) {
+            const foundPath = findParentPath(dept.children, targetId, [...path, dept.id]);
+            if (foundPath) {
+              return foundPath;
+            }
+          }
+        }
+        
+        return null;
+      };
+      
+      // 查找父部门的完整路径
+      const foundPath = findParentPath(treeData, record.parent_id);
+      if (foundPath) {
+        // 找到完整路径
+        parentPath = foundPath;
+        console.log('找到父部门路径:', parentPath);
+      } else {
+        // 如果未找到完整路径，至少设置直接父级ID
+        parentPath = [record.parent_id];
+        console.log('未找到完整路径，使用直接父ID:', parentPath);
+      }
+    } else {
+      // 明确设置为 [null] 表示"无上级部门"选项
+      parentPath = [null];
+      console.log('无父部门，设置为:', parentPath);
+    }
+    
     form.setFieldsValue({
       ...record,
-      parent_id: record.parent?.id || null,
+      parent_id: parentPath,
     })
+    
     setModalVisible(true)
   }
 
@@ -160,11 +212,37 @@ const Departments = () => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields()
+      
+      // 处理级联选择器的值，取数组的最后一项作为父部门ID
+      let parentId = null;
+      if (values.parent_id) {
+        if (Array.isArray(values.parent_id)) {
+          // 数组的第一项如果是null，表示选择了"无上级部门"
+          if (values.parent_id[0] === null) {
+            parentId = null;
+          } else {
+            // 取数组的最后一项作为最终选择的部门ID
+            parentId = values.parent_id[values.parent_id.length - 1];
+          }
+        } else {
+          // 如果不是数组（可能是直接设置的值），则直接使用
+          parentId = values.parent_id === null ? null : values.parent_id;
+        }
+      }
+      
+      console.log('提交的父部门ID:', parentId);
+      
+      // 更新提交的数据
+      const submitData = {
+        ...values,
+        parent_id: parentId
+      };
+      
       if (currentId) {
-        await updateDepartment(currentId, values)
+        await updateDepartment(currentId, submitData)
         message.success('更新成功')
       } else {
-        await createDepartment(values)
+        await createDepartment(submitData)
         message.success('创建成功')
       }
       setModalVisible(false)
@@ -364,6 +442,18 @@ const Departments = () => {
     },
   ]
 
+  // 转换部门树结构为级联选择器选项
+  const transformToCascaderOptions = (departments: DepartmentTreeNode[]): CascaderOption[] => {
+    return departments.map(dept => ({
+      value: dept.id,
+      label: dept.name,
+      disabled: dept.id === currentId, // 禁止选择自己作为上级部门
+      children: dept.children && dept.children.length > 0 
+        ? transformToCascaderOptions(dept.children) 
+        : undefined
+    }));
+  };
+
   const columns: ColumnsType<Department> = [
     {
       title: 'ID',
@@ -375,19 +465,10 @@ const Departments = () => {
       title: '部门名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text, record, index) => {
+      width: 200,
+      render: (text, record) => {
         // 获取当前行的层级
-        const getLevel = (record: Department): number => {
-          // 根据type判断层级：1=公司(一级)，2=分公司(二级)，3=部门(三级)
-          return record.type || 3;
-        };
-        
-        const level = getLevel(record);
-        const levelColors = {
-          1: '#1890ff', // 一级部门(公司) - 蓝色
-          2: '#52c41a', // 二级部门(分公司) - 绿色
-          3: '#722ed1'  // 三级部门(部门) - 紫色
-        };
+        const level = record.type || 3;
         
         return (
           <div style={{ 
@@ -395,20 +476,35 @@ const Departments = () => {
             alignItems: 'center',
             fontWeight: level === 1 ? 'bold' : 'normal'
           }}>
-            <Tag 
-              color={levelColors[level as keyof typeof levelColors]} 
-              style={{ marginRight: 8 }}
-            >
-              {DepartmentTypes[level as keyof typeof DepartmentTypes]}
-            </Tag>
             <span>{text}</span>
           </div>
         );
       }
     },
     {
+      title: '部门类型',
+      dataIndex: 'type',
+      key: 'type',
+      width: 100,
+      render: (type) => {
+        const level = type || 3;
+        const levelColors = {
+          1: '#1890ff', // 一级部门(公司) - 蓝色
+          2: '#52c41a', // 二级部门(分公司) - 绿色
+          3: '#722ed1'  // 三级部门(部门) - 紫色
+        };
+        
+        return (
+          <Tag color={levelColors[level as keyof typeof levelColors]}>
+            {DepartmentTypes[level as keyof typeof DepartmentTypes]}
+          </Tag>
+        );
+      }
+    },
+    {
       title: '联系方式',
       key: 'contact',
+      width: 220,
       render: (_, record) => (
         <Space direction="vertical" size="small">
           {record.principal && <Text ellipsis>负责人: {record.principal}</Text>}
@@ -421,7 +517,7 @@ const Departments = () => {
       title: '排序',
       dataIndex: 'sort',
       key: 'sort',
-      width: 80,
+      width: 70,
     },
     {
       title: '状态',
@@ -450,7 +546,8 @@ const Departments = () => {
     {
       title: '操作',
       key: 'action',
-      width: 220,
+      width: 120,
+      fixed: 'right',
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="编辑部门">
@@ -479,7 +576,7 @@ const Departments = () => {
         </Space>
       ),
     },
-  ]
+  ];
 
   return (
     <div>
@@ -570,6 +667,7 @@ const Departments = () => {
             dataSource={departments}
             loading={loading}
             pagination={false}
+            scroll={{ x: 1300 }}
             expandable={{
               defaultExpandAllRows: true,
               childrenColumnName: 'children',
@@ -630,12 +728,30 @@ const Departments = () => {
                     name="parent_id"
                     label="上级部门"
                   >
-                    <Select placeholder="请选择上级部门" allowClear>
-                      <Option value={null}>无上级部门</Option>
-                      {departments.filter(dept => dept.id !== currentId).map(dept => (
-                        <Option key={dept.id} value={dept.id}>{dept.name}</Option>
-                      ))}
-                    </Select>
+                    <Cascader
+                      placeholder="请选择上级部门"
+                      options={[
+                        { value: null, label: '无上级部门' },
+                        ...transformToCascaderOptions(treeData)
+                      ]}
+                      changeOnSelect
+                      expandTrigger="hover"
+                      showSearch={{
+                        filter: (inputValue, path) => {
+                          return path.some(option => {
+                            const label = String(option.label || '');
+                            return label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1;
+                          });
+                        }
+                      }}
+                      displayRender={(labels) => {
+                        if (labels.length === 0) return '';
+                        // 如果第一个选项是"无上级部门"
+                        if (labels[0] === '无上级部门') return '无上级部门';
+                        // 否则返回最后一个标签（即最终选择的部门）
+                        return labels[labels.length - 1];
+                      }}
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={12}>

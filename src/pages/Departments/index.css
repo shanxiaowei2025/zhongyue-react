@@ -44,10 +44,11 @@
   margin-right: 8px;
 }
 
-/* 部门名称列增强样式 */
-.department-table .ant-table-row .ant-tag {
-  margin-right: 8px;
-  font-weight: normal;
+/* 部门类型标签样式 */
+.department-table .ant-tag {
+  margin-right: 0;
+  min-width: 70px;
+  text-align: center;
 }
 
 /* 展开状态样式 */
