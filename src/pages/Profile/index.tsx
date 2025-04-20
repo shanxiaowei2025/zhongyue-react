@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Card, Button, Form, Input, Upload, message, Tabs, Spin, Tag, Descriptions } from 'antd'
-import { UserOutlined, LockOutlined, UploadOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons'
+import {
+  UserOutlined,
+  LockOutlined,
+  UploadOutlined,
+  MailOutlined,
+  PhoneOutlined,
+} from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useAuthStore } from '../../store/auth'
-import { getUserProfile } from '../../api/auth'
+import { getUserProfile, updateUserProfile, changePassword } from '../../api/auth'
 import type { User } from '../../types'
+import { getRoleName } from '../../constants/roles'
 
 const { TabPane } = Tabs
 
@@ -31,7 +38,7 @@ const Profile = () => {
 
       if (response && response.code === 0 && response.data) {
         setUserProfile(response.data)
-        
+
         // 设置表单初始值
         profileForm.setFieldsValue({
           username: response.data.username,
@@ -52,20 +59,33 @@ const Profile = () => {
   const handleUpdateProfile = async (values: Partial<User>) => {
     setLoading(true)
     try {
-      // 实际项目中这里应该使用 API 请求
-      // const updatedUser = await updateUser(values)
-      // setUser(updatedUser)
+      const response = await updateUserProfile(0, {
+        email: values.email,
+        phone: values.phone,
+      })
 
-      // 更新 store 中的用户信息
-      setUser({
-        ...user!,
-        ...values,
-        update_time: new Date().toISOString(),
-      } as User)
-      message.success('个人资料更新成功')
-    } catch (error) {
+      if (response && response.code === 0) {
+        message.success('个人资料更新成功')
+        // 重新获取用户信息
+        fetchUserInfo()
+        // 更新全局状态
+        if (user) {
+          setUser({
+            ...user,
+            email: values.email || user.email,
+            phone: values.phone || user.phone,
+          })
+        }
+      } else {
+        // 显示具体的错误信息
+        message.error(response?.message || '更新个人资料失败，请稍后重试')
+      }
+    } catch (error: any) {
       console.error('更新个人资料失败', error)
-      message.error('更新个人资料失败')
+      // 显示更详细的错误信息
+      message.error(
+        error?.response?.data?.message || error?.message || '更新个人资料失败，请检查网络连接'
+      )
     } finally {
       setLoading(false)
     }
@@ -83,17 +103,22 @@ const Profile = () => {
 
     setLoading(true)
     try {
-      // 实际项目中这里应该使用 API 请求
-      // await changePassword({
-      //   oldPassword: values.oldPassword,
-      //   newPassword: values.newPassword,
-      // })
+      const response = await changePassword({
+        oldPassword: values.oldPassword,
+        newPassword: values.newPassword,
+      })
 
-      message.success('密码修改成功')
-      passwordForm.resetFields()
-    } catch (error) {
+      if (response && response.code === 0) {
+        message.success('密码修改成功')
+        passwordForm.resetFields()
+      } else {
+        message.error(response?.message || '密码修改失败，请稍后重试')
+      }
+    } catch (error: any) {
       console.error('修改密码失败', error)
-      message.error('修改密码失败，请检查原密码是否正确')
+      message.error(
+        error?.response?.data?.message || error?.message || '修改密码失败，请检查原密码是否正确'
+      )
     } finally {
       setLoading(false)
     }
@@ -165,11 +190,12 @@ const Profile = () => {
                   <h2 className="text-lg font-medium">{userProfile?.username || user?.username}</h2>
                   <p className="text-gray-500">{userProfile?.email || user?.email}</p>
                   <div className="mt-1">
-                    {userProfile?.roles && userProfile.roles.map((role: string) => (
-                      <Tag color={role === 'admin' ? 'red' : 'blue'} key={role}>
-                        {role === 'admin' ? '管理员' : '普通用户'}
-                      </Tag>
-                    ))}
+                    {userProfile?.roles &&
+                      userProfile.roles.map((role: string) => (
+                        <Tag color={role === 'admin' ? 'red' : 'blue'} key={role}>
+                          {getRoleName(role)}
+                        </Tag>
+                      ))}
                   </div>
                   <Upload {...uploadProps}>
                     <Button icon={<UploadOutlined />} loading={uploading} className="mt-2">
@@ -181,8 +207,12 @@ const Profile = () => {
 
               {userProfile && (
                 <Descriptions title="用户详情" bordered className="mb-6">
-                  <Descriptions.Item label="用户ID" span={3}>{userProfile.id}</Descriptions.Item>
-                  <Descriptions.Item label="用户名" span={3}>{userProfile.username}</Descriptions.Item>
+                  <Descriptions.Item label="用户ID" span={3}>
+                    {userProfile.id}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="用户名" span={3}>
+                    {userProfile.username}
+                  </Descriptions.Item>
                   <Descriptions.Item label="电子邮箱" span={3}>
                     <div className="flex items-center">
                       <MailOutlined className="mr-2" />
@@ -196,11 +226,12 @@ const Profile = () => {
                     </div>
                   </Descriptions.Item>
                   <Descriptions.Item label="角色" span={3}>
-                    {userProfile.roles && userProfile.roles.map((role: string) => (
-                      <Tag color={role === 'admin' ? 'red' : 'blue'} key={role} className="mr-1">
-                        {role === 'admin' ? '管理员' : '普通用户'}
-                      </Tag>
-                    ))}
+                    {userProfile.roles &&
+                      userProfile.roles.map((role: string) => (
+                        <Tag color={role === 'admin' ? 'red' : 'blue'} key={role} className="mr-1">
+                          {getRoleName(role)}
+                        </Tag>
+                      ))}
                   </Descriptions.Item>
                 </Descriptions>
               )}
@@ -227,7 +258,11 @@ const Profile = () => {
                   name="phone"
                   label="手机号码"
                   rules={[
-                    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号码', validateTrigger: 'onBlur' },
+                    {
+                      pattern: /^1[3-9]\d{9}$/,
+                      message: '请输入有效的手机号码',
+                      validateTrigger: 'onBlur',
+                    },
                   ]}
                 >
                   <Input prefix={<PhoneOutlined />} placeholder="手机号码" />

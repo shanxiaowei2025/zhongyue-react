@@ -102,19 +102,40 @@ instance.interceptors.response.use(
       config: error.config,
     })
 
+    // 获取请求URL和方法
+    const requestUrl = error.config?.url || ''
+    const requestMethod = error.config?.method || ''
+
+    // 判断是否是登录请求
+    const isLoginRequest =
+      requestUrl.includes('/auth/login') && requestMethod.toLowerCase() === 'post'
+
+    // 判断是否是修改密码请求
+    const isChangePasswordRequest = requestUrl.includes('change-password')
+
     // 处理401未授权错误
     if (error.response?.status === 401) {
-      // 未授权，清除token并跳转到登录页
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      // 根据不同请求类型处理401错误
+      if (isLoginRequest) {
+        // 登录失败，不需要清除token或跳转
+        // 错误信息已由后端提供，不需额外处理
+      } else if (isChangePasswordRequest) {
+        // 修改密码错误，不需要清除token或跳转
+        // 错误信息已由后端提供，不需额外处理
+      } else {
+        // 其他API的401错误，表示登录已过期
+        // 清除token并跳转到登录页
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
 
-      // 显示错误信息
-      message.error('登录已过期，请重新登录')
+        // 显示错误信息
+        message.error('登录已过期，请重新登录')
 
-      // 延迟跳转，以便用户看到提示
-      setTimeout(() => {
-        window.location.href = '/login'
-      }, 1500)
+        // 延迟跳转，以便用户看到提示
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 1500)
+      }
     }
 
     return Promise.reject(error)

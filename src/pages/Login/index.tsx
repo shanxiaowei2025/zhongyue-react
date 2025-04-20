@@ -79,11 +79,23 @@ const Login = () => {
         navigate('/')
       } else {
         console.error('登录响应格式不符合预期:', response)
-        throw new Error('登录失败，响应数据格式不正确')
+        throw new Error(response?.message || '登录失败，响应数据格式不正确')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('登录失败:', error)
-      message.error('登录失败，请检查用户名和密码')
+
+      // 显示更详细的错误信息
+      let errorMessage = '登录失败，请检查用户名和密码'
+
+      if (error.response?.data?.message) {
+        // 使用后端返回的错误信息
+        errorMessage = error.response.data.message
+      } else if (error.message) {
+        // 使用错误对象的消息
+        errorMessage = error.message
+      }
+
+      message.error(errorMessage)
     }
   }
 

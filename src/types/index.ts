@@ -30,19 +30,11 @@ export interface User {
 export interface Department {
   id: number
   name: string
-  code?: string
-  parent_id: number | null
-  parent?: Department
-  sort: number
-  phone?: string
-  principal?: string
-  email?: string
-  status: 0 | 1
-  type?: 1 | 2 | 3
-  remark: string | null
-  create_time: string
-  update_time?: string
-  children?: Department[]
+  type: number // 1: 部门, 2: 分公司
+  parentId: number | null
+  description?: string
+  createTime?: string
+  updateTime?: string
 }
 
 export interface DepartmentTreeNode extends Department {

@@ -3,10 +3,9 @@ import type { ApiResponse, Department, DepartmentQueryParams, DepartmentTreeNode
 
 /**
  * 获取部门列表
- * @param params 查询参数
  */
-export const getDepartmentList = (params?: DepartmentQueryParams) => {
-  return request.get<ApiResponse<Department[]>>('/departments', { params })
+export const getDepartmentList = () => {
+  return request.get<ApiResponse<Department[]>>('/departments')
 }
 
 /**
@@ -62,5 +61,8 @@ export const deleteDepartment = (id: number) => {
  * @param ids 部门ID数组
  */
 export const bulkDeleteDepartments = (ids: number[]) => {
-  return request.post<ApiResponse<{success: number, failed: number}>>('/departments/bulk-delete', { ids })
-} 
+  return request.post<ApiResponse<{ success: number; failed: number }>>(
+    '/departments/bulk-delete',
+    { ids }
+  )
+}
