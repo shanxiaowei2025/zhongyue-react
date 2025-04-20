@@ -1,5 +1,5 @@
 import request from './request'
-import type { User, LoginForm, RegisterForm, PaginationParams, PaginatedResponse } from '../types'
+import type { User, LoginForm, RegisterForm, PaginationParams, PaginatedResponse, ApiResponse } from '../types'
 
 // 登录
 export const login = (data: LoginForm) => {
@@ -27,21 +27,30 @@ export const changePassword = (data: { oldPassword: string; newPassword: string 
 }
 
 // 获取用户列表
-export const getUserList = (params: PaginationParams & { keyword?: string }) => {
-  return request.get<PaginatedResponse<User>>('/users', params)
+export const getUserList = (page = 1, limit = 10, keyword?: string) => {
+  const params: any = { page, limit }
+  if (keyword) {
+    params.keyword = keyword
+  }
+  return request.get<ApiResponse<PaginatedResponse<User>>>('/users', params)
+}
+
+// 获取用户详情
+export const getUser = (id: number) => {
+  return request.get<ApiResponse<User>>(`/users/${id}`)
 }
 
 // 创建用户
-export const createUser = (data: Partial<User> & { password: string }) => {
-  return request.post<User>('/users', data)
+export const createUser = (data: Partial<User>) => {
+  return request.post<ApiResponse<User>>('/users', data)
 }
 
-// 更新指定用户
-export const updateUserById = (id: string, data: Partial<User>) => {
-  return request.put<User>(`/users/${id}`, data)
+// 更新用户
+export const updateUserById = (id: number, data: Partial<User>) => {
+  return request.patch<ApiResponse<User>>(`/users/${id}`, data)
 }
 
 // 删除用户
-export const deleteUser = (id: string) => {
-  return request.delete<void>(`/users/${id}`)
+export const deleteUser = (id: number) => {
+  return request.delete<ApiResponse<any>>(`/users/${id}`)
 }

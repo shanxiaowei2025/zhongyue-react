@@ -14,6 +14,7 @@ import {
   BellOutlined,
   SettingOutlined,
   QuestionCircleOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import type { MenuProps } from 'antd'
@@ -109,19 +110,31 @@ const MainLayout = () => {
       label: '仪表盘',
     },
     {
-      key: '/users',
-      icon: <UserOutlined />,
-      label: '用户管理',
-    },
-    {
-      key: '/roles',
-      icon: <TeamOutlined />,
-      label: '角色管理',
-    },
-    {
-      key: '/permissions',
-      icon: <LockOutlined />,
-      label: '权限管理',
+      key: 'system',
+      icon: <SettingOutlined />,
+      label: '系统管理',
+      children: [
+        {
+          key: '/users',
+          icon: <UserOutlined />,
+          label: '用户管理',
+        },
+        {
+          key: '/roles',
+          icon: <TeamOutlined />,
+          label: '角色管理',
+        },
+        {
+          key: '/permissions',
+          icon: <LockOutlined />,
+          label: '权限管理',
+        },
+        {
+          key: '/departments',
+          icon: <ApartmentOutlined />,
+          label: '部门管理',
+        },
+      ],
     },
     {
       key: '/customers',
@@ -132,10 +145,28 @@ const MainLayout = () => {
 
   // 获取菜单项图标和标签
   const getMenuItemByKey = (key: string) => {
-    const flatMenuItems = menuItems?.flatMap(item => item) || []
-    // 使用类型守卫确保找到的菜单项具有所需属性
-    const menuItem = flatMenuItems.find(item => item && 'key' in item && item.key === key)
-    return menuItem
+    // 递归查找所有菜单项，包括子菜单
+    const findMenuItemRecursive = (items: MenuProps['items']): any => {
+      if (!items) return null;
+      
+      for (const item of items) {
+        if (!item) continue;
+        
+        if ('key' in item && item.key === key) {
+          return item;
+        }
+        
+        // 检查子菜单
+        if ('children' in item && item.children) {
+          const found = findMenuItemRecursive(item.children);
+          if (found) return found;
+        }
+      }
+      
+      return null;
+    };
+    
+    return findMenuItemRecursive(menuItems);
   }
 
   useEffect(() => {
@@ -245,6 +276,9 @@ const MainLayout = () => {
     } else if (key.startsWith('notification')) {
       // 处理通知点击事件
       setNotifications(notifications.filter(n => n.id !== parseInt(key)))
+    } else if (key === 'system') {
+      // 系统管理主菜单，默认跳转到用户管理
+      navigate('/users')
     } else {
       navigate(key)
       if (isMobile) {

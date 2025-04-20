@@ -26,6 +26,29 @@ export interface User {
   update_time: string
 }
 
+// 部门相关类型
+export interface Department {
+  id: number
+  name: string
+  code: string
+  parent_id: number | null
+  sort: number
+  status: 0 | 1
+  remark: string | null
+  create_time: string
+  update_time: string
+}
+
+export interface DepartmentTreeNode extends Department {
+  children?: DepartmentTreeNode[]
+}
+
+export interface DepartmentQueryParams {
+  keyword?: string
+  status?: 0 | 1
+  parent_id?: number | null
+}
+
 // 权限相关类型
 export interface Permission {
   id: number
@@ -37,6 +60,23 @@ export interface Permission {
   role_id: number
 }
 
+// 模块化权限相关类型
+export interface PermissionModule {
+  module_name: string; // 模块名称
+  permissions: PermissionItem[]; // 该模块下的权限项
+}
+
+export interface PermissionItem {
+  name: string; // 权限名称
+  code: string; // 权限代码
+  description: string; // 权限描述
+}
+
+export interface RolePermissionMatrix {
+  role: Role; // 角色信息
+  permissions: Record<string, boolean>; // 该角色拥有的权限，key为权限代码
+}
+
 // 角色相关类型
 export interface Role {
   id: number
@@ -46,6 +86,7 @@ export interface Role {
   remark: string
   create_time: string
   update_time: string
+  permissions?: Permission[] // 角色拥有的权限列表
 }
 
 // API 响应类型

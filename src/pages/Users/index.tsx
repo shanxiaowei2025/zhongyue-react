@@ -1,168 +1,106 @@
-import { useState, useEffect } from 'react'
-import { Table, Button, Input, Space, Modal, Form, Select, message, Tag, Switch } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import React, { useState, useEffect, useMemo } from 'react'
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Switch,
+  Space,
+  message,
+  Tag,
+  Popconfirm,
+} from 'antd'
+import type { TablePaginationConfig } from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
-import type { User, Role } from '../../types'
-import { usePageStates, PageStatesStore } from '../../store/pageStates'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { User, Department, ApiResponse, PaginatedResponse } from '../../types'
+import { getUserList, createUser, updateUserById, deleteUser } from '../../api/user'
+import { getDepartmentList } from '../../api/department'
+import { getRoleList } from '../../api/roles'
+import dayjs from 'dayjs'
+
+// 适配后端API返回的用户数据结构
+interface ApiUser {
+  id: number
+  username: string
+  password: string
+  isActive: boolean
+  phone: string
+  email: string
+  roles: string[]
+  dept_id?: number
+  createdAt: string
+  updatedAt: string
+}
+
+interface UserResponse {
+  items: ApiUser[]
+  meta: {
+    total: number
+    page: number
+    limit: number
+  }
+}
+
+interface ApiData<T> {
+  code: number
+  message: string
+  data: T
+  timestamp?: number
+}
 
 const Users = () => {
-  // 使用 pageStates 存储来保持状态
-  const getState = usePageStates((state: PageStatesStore) => state.getState);
-  const setState = usePageStates((state: PageStatesStore) => state.setState);
-  
-  // 从 pageStates 恢复搜索参数
-  const savedSearchText = getState('usersSearchText');
-  const savedPagination = getState('usersPagination');
-  
-  const [form] = Form.useForm()
-  const [users, setUsers] = useState<User[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
-  const [loading, setLoading] = useState(false)
-  const [_total] = useState(0)
-  const [_current] = useState(savedPagination?.current || 1)
-  const [pageSize] = useState(savedPagination?.pageSize || 10)
-  const [_searchText] = useState(savedSearchText || '')
-  const [modalVisible, setModalVisible] = useState(false)
+  const [users, setUsers] = useState<ApiUser[]>([])
+  const [roles, setRoles] = useState<{id: number, name: string, code: string}[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
+  const [form] = Form.useForm()
+  const [keyword, setKeyword] = useState<string>('')
+  const [pagination, setPagination] = useState<TablePaginationConfig>({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  })
 
-  // 当搜索文本变化时，保存到 pageStates
-  useEffect(() => {
-    setState('usersSearchText', _searchText);
-  }, [_searchText, setState]);
-
-  // 当分页参数变化时，保存到 pageStates
-  useEffect(() => {
-    setState('usersPagination', { _current, pageSize });
-  }, [_current, pageSize, setState]);
-
-  // 模拟数据
-  const mockUserData: User[] = [
-    {
-      id: 1,
-      username: 'admin',
-      password: 'admin',
-      nickname: '管理员',
-      email: 'admin@example.com',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg',
-      phone: '13800138000',
-      sex: 0,
-      status: 1,
-      remark: '系统管理员',
-      roles: ['admin'],
-      user_groups: ['admin'],
-      user_permissions: ['all'],
-      is_superuser: true,
-      is_staff: true,
-      is_active: true,
-      is_expense_auditor: true,
-      date_joined: new Date().toISOString(),
-      first_name: 'Admin',
-      last_name: 'User',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      username: 'editor',
-      password: 'editor',
-      nickname: '编辑',
-      email: 'editor@example.com',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg',
-      phone: '13800138001',
-      sex: 0,
-      status: 1,
-      remark: '内容编辑',
-      roles: ['editor'],
-      user_groups: ['editor'],
-      user_permissions: ['content:view', 'content:edit'],
-      is_superuser: false,
-      is_staff: true,
-      is_active: true,
-      is_expense_auditor: false,
-      date_joined: new Date().toISOString(),
-      first_name: 'Editor',
-      last_name: 'User',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      username: 'user',
-      password: 'user',
-      nickname: '普通用户',
-      email: 'user@example.com',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg',
-      phone: '13800138002',
-      sex: 0,
-      status: 1,
-      remark: '普通用户',
-      roles: ['user'],
-      user_groups: ['user'],
-      user_permissions: ['content:view'],
-      is_superuser: false,
-      is_staff: false,
-      is_active: true,
-      is_expense_auditor: false,
-      date_joined: new Date().toISOString(),
-      first_name: 'Normal',
-      last_name: 'User',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-  ]
-
-  // 模拟角色数据
-  const mockRoleData: Role[] = [
-    {
-      id: 1,
-      name: '管理员',
-      code: 'admin',
-      status: 1,
-      remark: '系统管理员',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      name: '编辑',
-      code: 'editor',
-      status: 1,
-      remark: '内容编辑',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      name: '用户',
-      code: 'user',
-      status: 1,
-      remark: '普通用户',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-  ]
+  // 创建角色代码到名称的映射
+  const roleCodeToName = useMemo(() => {
+    const map: Record<string, string> = {};
+    roles.forEach(role => {
+      map[role.code] = role.name;
+    });
+    return map;
+  }, [roles]);
 
   useEffect(() => {
-    fetchRoles()
     fetchUsers()
-  }, [_current, pageSize, _searchText])
+    fetchRoles()
+    fetchDepartments()
+  }, [pagination.current, pagination.pageSize, keyword])
 
   const fetchUsers = async () => {
-    setLoading(true)
     try {
-      // 实际项目中这里应该使用 API 请求
-      // const res = await getUserList({
-      //   page: _current,
-      //   pageSize,
-      //   keyword: _searchText,
-      // })
-      // setUsers(res.items)
-      // setTotal(res.total)
-
-      // 使用模拟数据
-      setUsers(mockUserData)
+      setLoading(true)
+      const response = await getUserList(
+        pagination.current as number, 
+        pagination.pageSize as number,
+        keyword
+      )
+      if (response) {
+        const apiResponse = response as unknown as ApiData<UserResponse>
+        if (apiResponse.code === 0 && apiResponse.data) {
+          setUsers(apiResponse.data.items)
+          setPagination({
+            ...pagination,
+            total: apiResponse.data.meta.total,
+          })
+        }
+      }
     } catch (error) {
-      console.error('获取用户列表失败', error)
+      console.error('获取用户列表失败:', error)
       message.error('获取用户列表失败')
     } finally {
       setLoading(false)
@@ -171,15 +109,27 @@ const Users = () => {
 
   const fetchRoles = async () => {
     try {
-      // 实际项目中这里应该使用 API 请求
-      // const res = await getAllRoles()
-      // setRoles(res)
-
-      // 使用模拟数据
-      setRoles(mockRoleData)
+      const response = await getRoleList()
+      const apiResponse = response as unknown as ApiData<{id: number, name: string, code: string}[]>
+      if (apiResponse.code === 0) {
+        setRoles(apiResponse.data)
+      }
     } catch (error) {
-      console.error('获取角色列表失败', error)
+      console.error('获取角色列表失败:', error)
       message.error('获取角色列表失败')
+    }
+  }
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await getDepartmentList()
+      const apiResponse = response as unknown as ApiData<Department[]>
+      if (apiResponse.code === 0) {
+        setDepartments(apiResponse.data)
+      }
+    } catch (error) {
+      console.error('获取部门列表失败:', error)
+      message.error('获取部门列表失败')
     }
   }
 
@@ -189,26 +139,32 @@ const Users = () => {
     setModalVisible(true)
   }
 
-  const handleEdit = (record: User) => {
+  const handleEdit = (record: ApiUser) => {
     setCurrentId(record.id)
     form.setFieldsValue({
-      ...record,
-      roles: record.roles,
-      user_groups: record.user_groups,
-      user_permissions: record.user_permissions,
+      username: record.username,
+      email: record.email,
+      phone: record.phone,
+      isActive: record.isActive,
+      dept_id: record.dept_id,
+      roles: record.roles
     })
     setModalVisible(true)
   }
 
-  const handleDelete = async (_id: number) => {
+  const handleDelete = async (id: number) => {
     try {
-      // 实际项目中这里应该使用 API 请求
-      // await deleteUser(id)
-      message.success('删除成功')
-      fetchUsers()
+      const response = await deleteUser(id)
+      const apiResponse = response as unknown as ApiData<any>
+      if (apiResponse.code === 0) {
+        message.success('删除用户成功')
+        fetchUsers()
+      } else {
+        message.error(apiResponse.message || '删除用户失败')
+      }
     } catch (error) {
-      console.error('删除失败:', error)
-      message.error('删除失败')
+      console.error('删除用户失败:', error)
+      message.error('删除用户失败')
     }
   }
 
@@ -219,34 +175,58 @@ const Users = () => {
 
   const handleOk = async () => {
     try {
-      await form.validateFields()
-      if (currentId) {
-        // 模拟更新用户
-        // await updateUser(currentId, values)
-        message.success('更新成功')
-      } else {
-        // 模拟创建用户
-        // await createUser(values)
-        message.success('创建成功')
+      const values = await form.validateFields()
+      
+      // 如果是编辑模式并且没有输入新密码，则不传递密码字段
+      if (currentId && !values.password) {
+        delete values.password
       }
+      
+      if (currentId) {
+        const response = await updateUserById(currentId, values)
+        const apiResponse = response as unknown as ApiData<any>
+        if (apiResponse.code === 0) {
+          message.success('更新用户成功')
+        } else {
+          message.error(apiResponse.message || '更新用户失败')
+        }
+      } else {
+        const response = await createUser(values)
+        const apiResponse = response as unknown as ApiData<any>
+        if (apiResponse.code === 0) {
+          message.success('添加用户成功')
+        } else {
+          message.error(apiResponse.message || '添加用户失败')
+        }
+      }
+
       setModalVisible(false)
+      form.resetFields()
       fetchUsers()
     } catch (error) {
-      console.error('操作失败:', error)
-      message.error('操作失败')
+      console.error('保存用户失败:', error)
+      message.error('保存用户失败')
     }
   }
 
-  const columns: ColumnsType<User> = [
+  const handleTableChange = (newPagination: TablePaginationConfig) => {
+    setPagination({
+      ...pagination,
+      current: newPagination.current,
+      pageSize: newPagination.pageSize,
+    })
+  }
+
+  const columns: ColumnsType<ApiUser> = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+    },
     {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
-    },
-    {
-      title: '昵称',
-      dataIndex: 'nickname',
-      key: 'nickname',
     },
     {
       title: '邮箱',
@@ -254,11 +234,16 @@ const Users = () => {
       key: 'email',
     },
     {
+      title: '手机号',
+      dataIndex: 'phone',
+      key: 'phone',
+    },
+    {
       title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: number) => (
-        <Tag color={status === 1 ? 'success' : 'error'}>{status === 1 ? '启用' : '禁用'}</Tag>
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive: boolean) => (
+        <Tag color={isActive ? 'success' : 'error'}>{isActive ? '启用' : '禁用'}</Tag>
       ),
     },
     {
@@ -267,28 +252,46 @@ const Users = () => {
       key: 'roles',
       render: (roles: string[]) => (
         <Space>
-          {roles.map(role => (
-            <Tag key={role}>{role}</Tag>
+          {roles && roles.map(roleCode => (
+            <Tag key={roleCode} color="blue">
+              {roleCodeToName[roleCode] || roleCode}
+            </Tag>
           ))}
         </Space>
       ),
     },
     {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (createdAt: string) => dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss')
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (updatedAt: string) => dayjs(updatedAt).format('YYYY-MM-DD HH:mm:ss')
+    },
+    {
       title: '操作',
       key: 'action',
-      render: (_, record) => (
+      fixed: 'right' as const,
+      width: 150,
+      render: (_: unknown, record: ApiUser) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
+          <Popconfirm
+            title="确定要删除此用户吗?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定"
+            cancelText="取消"
           >
-            删除
-          </Button>
+            <Button type="link" danger icon={<DeleteOutlined />}>
+              删除
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -298,8 +301,11 @@ const Users = () => {
     <div>
       <div className="flex justify-between mb-4">
         <Input.Search
-          placeholder="搜索用户"
-          onSearch={value => console.log(value)}
+          placeholder="搜索用户名或邮箱"
+          onSearch={value => {
+            setKeyword(value)
+            setPagination({ ...pagination, current: 1 })
+          }}
           className="w-64"
         />
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
@@ -307,7 +313,21 @@ const Users = () => {
         </Button>
       </div>
 
-      <Table columns={columns} dataSource={users} rowKey="id" loading={loading} />
+      <Table 
+        columns={columns} 
+        dataSource={users} 
+        rowKey="id" 
+        loading={loading} 
+        scroll={{ x: 1300 }}
+        pagination={{
+          ...pagination,
+          position: ['bottomCenter'],
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条数据`
+        }}
+        onChange={handleTableChange}
+      />
 
       <Modal
         title={currentId ? '编辑用户' : '添加用户'}
@@ -320,12 +340,7 @@ const Users = () => {
           form={form}
           layout="vertical"
           initialValues={{
-            status: 1,
-            sex: 0,
-            is_superuser: false,
-            is_staff: false,
-            is_active: true,
-            is_expense_auditor: false,
+            isActive: true,
           }}
         >
           <Form.Item
@@ -336,13 +351,24 @@ const Users = () => {
             <Input />
           </Form.Item>
 
-          <Form.Item
-            name="nickname"
-            label="昵称"
-            rules={[{ required: true, message: '请输入昵称' }]}
-          >
-            <Input />
-          </Form.Item>
+          {!currentId ? (
+            <Form.Item
+              name="password"
+              label="密码"
+              rules={[{ required: true, message: '请输入密码' }, { min: 6, message: '密码长度不能小于6位' }]}
+            >
+              <Input.Password />
+            </Form.Item>
+          ) : (
+            <Form.Item
+              name="password"
+              label="新密码"
+              extra="如不修改密码，请留空"
+              rules={[{ min: 6, message: '密码长度不能小于6位' }]}
+            >
+              <Input.Password placeholder="如不修改密码，请留空" />
+            </Form.Item>
+          )}
 
           <Form.Item
             name="email"
@@ -363,15 +389,8 @@ const Users = () => {
             <Input />
           </Form.Item>
 
-          <Form.Item name="sex" label="性别">
-            <Select>
-              <Select.Option value={0}>男</Select.Option>
-              <Select.Option value={1}>女</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="status" label="状态">
-            <Switch checkedChildren="启用" unCheckedChildren="禁用" defaultChecked />
+          <Form.Item name="isActive" label="状态" valuePropName="checked">
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
 
           <Form.Item name="roles" label="角色">
@@ -384,8 +403,17 @@ const Users = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea rows={4} />
+          <Form.Item
+            name="dept_id"
+            label="部门"
+          >
+            <Select placeholder="请选择部门">
+              {departments.map(dept => (
+                <Select.Option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>
@@ -394,3 +422,4 @@ const Users = () => {
 }
 
 export default Users
+

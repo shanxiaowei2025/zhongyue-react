@@ -12,6 +12,7 @@ const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Users = lazy(() => import('../pages/Users'))
 const Roles = lazy(() => import('../pages/Roles'))
 const Permissions = lazy(() => import('../pages/Permissions'))
+const Departments = lazy(() => import('../pages/Departments'))
 const Profile = lazy(() => import('../pages/Profile'))
 const Customers = lazy(() => import('../pages/Customers'))
 const NotFound = lazy(() => import('../pages/NotFound'))
@@ -51,6 +52,10 @@ const routes: RouteObject[] = [
       {
         path: 'permissions',
         element: <Permissions />,
+      },
+      {
+        path: 'departments',
+        element: <Departments />,
       },
       {
         path: 'customers',

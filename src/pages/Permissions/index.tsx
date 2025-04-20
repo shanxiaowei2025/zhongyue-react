@@ -1,265 +1,239 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Input, Space, Modal, Form, message, Tag, Switch, Select } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Table, Button, message, Switch, Card, Tabs, Tooltip, Spin } from 'antd'
+import { ReloadOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { Permission, Role } from '../../types'
-import { usePageStates, PageStatesStore } from '../../store/pageStates'
+import type { RolePermissionMatrix, Permission } from '../../types'
+import { getPermissionList, updatePermission } from '../../api/permissions'
 
+// 权限管理页面
 const Permissions = () => {
-  // 使用 pageStates 存储来保持状态
-  const getState = usePageStates((state: PageStatesStore) => state.getState);
-  const setState = usePageStates((state: PageStatesStore) => state.setState);
-  
-  // 从 pageStates 恢复搜索参数
-  const savedSearchText = getState('permissionsSearchText');
-  
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
-  const [loading, setLoading] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [currentId, setCurrentId] = useState<number | null>(null)
-  const [searchText, setSearchText] = useState(savedSearchText || '')
-  const [form] = Form.useForm()
-  
-  // 当搜索文本变化时，保存到 pageStates
-  useEffect(() => {
-    setState('permissionsSearchText', searchText);
-  }, [searchText, setState]);
+  const [activeTab, setActiveTab] = useState<string>('');
+  const [pageNames, setPageNames] = useState<string[]>([]);
+  const [rolePermissions, setRolePermissions] = useState<RolePermissionMatrix[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [permissionsMap, setPermissionsMap] = useState<Record<string, Permission>>({});
+  const [permissionsByPage, setPermissionsByPage] = useState<Record<string, Permission[]>>({});
 
+  // 初始化获取数据
   useEffect(() => {
-    fetchPermissions()
-    fetchRoles()
-  }, [])
+    fetchPermissionData();
+  }, []);
 
-  const fetchPermissions = async () => {
-    setLoading(true)
+  // 设置默认活动的Tab
+  useEffect(() => {
+    if (pageNames.length > 0 && !activeTab) {
+      setActiveTab(pageNames[0]);
+    }
+  }, [pageNames, activeTab]);
+
+  // 获取权限数据
+  const fetchPermissionData = async () => {
+    setLoading(true);
     try {
-      // 模拟API调用
-      const mockPermissions: Permission[] = [
-        {
-          id: 1,
-          role_name: '管理员',
-          page_name: '用户管理',
-          permission_name: 'user:view',
-          permission_value: true,
-          description: '查看用户列表和详情',
-          role_id: 1,
-        },
-        {
-          id: 2,
-          role_name: '管理员',
-          page_name: '用户管理',
-          permission_name: 'user:edit',
-          permission_value: true,
-          description: '编辑用户信息',
-          role_id: 1,
-        },
-      ]
-      setPermissions(mockPermissions)
+      // 获取所有权限列表
+      const permRes = await getPermissionList();
+      const permissionsList = permRes.data || [];
+      setPermissions(permissionsList);
+      
+      // 创建权限ID映射表，用于快速查找
+      const permMap: Record<string, Permission> = {};
+      permissionsList.forEach(perm => {
+        const key = `${perm.role_name}:${perm.permission_name}`;
+        permMap[key] = perm;
+      });
+      setPermissionsMap(permMap);
+      
+      // 按页面名称分组权限
+      const permsByPage: Record<string, Permission[]> = {};
+      permissionsList.forEach(perm => {
+        if (!permsByPage[perm.page_name]) {
+          permsByPage[perm.page_name] = [];
+        }
+        permsByPage[perm.page_name].push(perm);
+      });
+      setPermissionsByPage(permsByPage);
+      
+      // 提取页面名称列表，用于标签页
+      const uniquePageNames = Array.from(new Set(permissionsList.map(p => p.page_name)));
+      setPageNames(uniquePageNames);
+      
+      // 提取角色并构建角色权限矩阵
+      const roles = Array.from(new Set(permissionsList.map(p => p.role_name)))
+        .map(roleName => {
+          const rolePerms = permissionsList.filter(p => p.role_name === roleName);
+          const roleId = rolePerms.length > 0 ? rolePerms[0].role_id : 0;
+          
+          const permObj: Record<string, boolean> = {};
+          
+          // 设置每个权限的值
+          rolePerms.forEach(p => {
+            permObj[p.permission_name] = p.permission_value;
+          });
+          
+          return {
+            role: {
+              id: roleId,
+              name: roleName,
+              code: roleName.toLowerCase().replace(/\s+/g, '_'),
+              status: 1 as 0 | 1,
+              remark: '',
+              create_time: '',
+              update_time: ''
+            },
+            permissions: permObj
+          };
+        });
+      
+      setRolePermissions(roles);
     } catch (error) {
-      console.error('获取权限列表失败:', error)
-      message.error('获取权限列表失败')
+      console.error('获取权限数据失败:', error);
+      message.error('获取权限数据失败');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const fetchRoles = async () => {
+  // 切换权限状态
+  const handleTogglePermission = async (roleName: string, permissionName: string, checked: boolean) => {
+    const key = `${roleName}:${permissionName}`;
+    const permission = permissionsMap[key];
+    
+    if (!permission) {
+      message.error('未找到对应权限数据');
+      return;
+    }
+    
     try {
-      // 模拟API调用
-      const mockRoles: Role[] = [
-        {
-          id: 1,
-          name: '管理员',
-          code: 'admin',
-          status: 1,
-          remark: '系统管理员',
-          create_time: new Date().toISOString(),
-          update_time: new Date().toISOString(),
-        },
-      ]
-      setRoles(mockRoles)
+      await updatePermission(permission.id, { permission_value: checked });
+      message.success('权限更新成功');
+      
+      // 更新本地数据
+      setPermissionsMap(prev => ({
+        ...prev,
+        [key]: { ...permission, permission_value: checked }
+      }));
+      
+      setRolePermissions(prev => 
+        prev.map(rp => 
+          rp.role.name === roleName 
+            ? { ...rp, permissions: { ...rp.permissions, [permissionName]: checked } } 
+            : rp
+        )
+      );
     } catch (error) {
-      console.error('获取角色列表失败:', error)
-      message.error('获取角色列表失败')
+      console.error('更新权限失败:', error);
+      message.error('更新权限失败');
     }
-  }
+  };
 
-  const handleAdd = () => {
-    setCurrentId(null)
-    form.resetFields()
-    setModalVisible(true)
-  }
-
-  const handleEdit = (record: Permission) => {
-    setCurrentId(record.id)
-    form.setFieldsValue(record)
-    setModalVisible(true)
-  }
-
-  const handleDelete = async (_id: number) => {
-    try {
-      // 模拟API调用
-      // await deletePermission(id)
-      message.success('删除成功')
-      fetchPermissions()
-    } catch (error) {
-      console.error('删除失败:', error)
-      message.error('删除失败')
-    }
-  }
-
-  const handleCancel = () => {
-    setModalVisible(false)
-    form.resetFields()
-  }
-
-  const handleOk = async () => {
-    try {
-      await form.validateFields()
-      if (currentId) {
-        // 模拟更新权限
-        // await updatePermission(currentId, values)
-        message.success('更新成功')
-      } else {
-        // 模拟创建权限
-        // await createPermission(values)
-        message.success('创建成功')
+  // 获取页面下的唯一权限列表
+  const getUniquePermissionsForPage = (pageName: string) => {
+    const pagePerms = permissionsByPage[pageName] || [];
+    const uniquePermNameMap = new Map<string, {name: string, description: string}>();
+    
+    pagePerms.forEach(perm => {
+      if (!uniquePermNameMap.has(perm.permission_name)) {
+        uniquePermNameMap.set(perm.permission_name, {
+          name: perm.permission_name,
+          description: perm.description
+        });
       }
-      setModalVisible(false)
-      fetchPermissions()
-    } catch (error) {
-      console.error('操作失败:', error)
-      message.error('操作失败')
-    }
-  }
+    });
+    
+    return Array.from(uniquePermNameMap.values());
+  };
 
-  const columns: ColumnsType<Permission> = [
-    {
-      title: '角色名称',
-      dataIndex: 'role_name',
-      key: 'role_name',
-    },
-    {
-      title: '页面名称',
-      dataIndex: 'page_name',
-      key: 'page_name',
-    },
-    {
-      title: '权限名称',
-      dataIndex: 'permission_name',
-      key: 'permission_name',
-    },
-    {
-      title: '权限值',
-      dataIndex: 'permission_value',
-      key: 'permission_value',
-      render: (value: boolean) => (
-        <Tag color={value ? 'success' : 'error'}>{value ? '是' : '否'}</Tag>
-      ),
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-          >
-            删除
-          </Button>
-        </Space>
-      ),
-    },
-  ]
+  // 渲染特定页面的权限表格
+  const renderPermissionTable = (pageName: string) => {
+    // 如果没有角色数据，显示提示信息
+    if (rolePermissions.length === 0) {
+      return <div style={{ textAlign: 'center', padding: '20px' }}>暂无角色数据</div>;
+    }
+
+    // 获取该页面下所有唯一的权限
+    const uniquePermissions = getUniquePermissionsForPage(pageName);
+
+    // 构建表格列，每列对应一个权限
+    const columns: ColumnsType<RolePermissionMatrix> = [
+      {
+        title: '角色',
+        dataIndex: ['role', 'name'],
+        key: 'roleName',
+        fixed: 'left',
+        width: 150,
+      },
+      ...uniquePermissions.map(permission => ({
+        title: (
+          <div style={{ textAlign: 'center' }}>
+            {permission.description}
+            <Tooltip title={permission.name}>
+              <QuestionCircleOutlined style={{ marginLeft: 4 }} />
+            </Tooltip>
+          </div>
+        ),
+        dataIndex: ['permissions', permission.name],
+        key: permission.name,
+        width: 140,
+        align: 'center' as 'center',
+        render: (value: boolean, record: RolePermissionMatrix) => (
+          <Switch
+            checked={!!record.permissions?.[permission.name]}
+            onChange={(checked) => handleTogglePermission(record.role.name, permission.name, checked)}
+            checkedChildren="启用"
+            unCheckedChildren="禁用"
+            size="small"
+          />
+        ),
+      })),
+    ];
+
+    return (
+      <Table
+        rowKey={(record) => (record.role.id ?? 0).toString()}
+        columns={columns}
+        dataSource={rolePermissions}
+        pagination={false}
+        size="middle"
+        bordered
+        scroll={{ x: 'max-content' }}
+      />
+    );
+  };
+
+  // 构建标签页项目
+  const tabItems = pageNames.map(pageName => ({
+    label: pageName,
+    key: pageName,
+    children: renderPermissionTable(pageName),
+  }));
 
   return (
-    <div>
-      <div className="flex justify-between mb-4">
-        <Input.Search
-          placeholder="搜索权限"
-          value={searchText}
-          onChange={e => setSearchText(e.target.value)}
-          onSearch={value => console.log(value)}
-          className="w-64"
-        />
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          添加权限
-        </Button>
-      </div>
-
-      <Table columns={columns} dataSource={permissions} rowKey="id" loading={loading} />
-
-      <Modal
-        title={currentId ? '编辑权限' : '添加权限'}
-        open={modalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        width={600}
+    <Spin spinning={loading}>
+      <Card
+        title="权限管理"
+        extra={
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={fetchPermissionData}
+          >
+            刷新
+          </Button>
+        }
       >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{
-            permission_value: true,
-          }}
-        >
-          <Form.Item
-            name="role_id"
-            label="角色"
-            rules={[{ required: true, message: '请选择角色' }]}
-          >
-            <Select>
-              {roles.map(role => (
-                <Select.Option key={role.id} value={role.id}>
-                  {role.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+        {pageNames.length > 0 ? (
+          <Tabs 
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            type="card"
+            items={tabItems}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px' }}>暂无权限数据</div>
+        )}
+      </Card>
+    </Spin>
+  );
+};
 
-          <Form.Item
-            name="page_name"
-            label="页面名称"
-            rules={[{ required: true, message: '请输入页面名称' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="permission_name"
-            label="权限名称"
-            rules={[{ required: true, message: '请输入权限名称' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="permission_value" label="权限值">
-            <Switch checkedChildren="是" unCheckedChildren="否" defaultChecked />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="描述"
-            rules={[{ required: true, message: '请输入描述' }]}
-          >
-            <Input.TextArea rows={4} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
-  )
-}
-
-export default Permissions
+export default Permissions;

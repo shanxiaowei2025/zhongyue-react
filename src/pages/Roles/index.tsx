@@ -1,118 +1,32 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Space, Modal, Form, Input, message, Tree, Tag, Switch } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Table, Button, Input, Space, Modal, Form, Select, message, Tag, Card, Tooltip } from 'antd'
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { Role, Permission } from '../../types'
-import { usePageStates, PageStatesStore } from '../../store/pageStates'
+import type { Role } from '../../types'
+import { getRoleList, createRole, updateRole, deleteRole } from '../../api/roles'
+import dayjs from 'dayjs'
+
+const { Option } = Select
+const { Search } = Input
 
 const Roles = () => {
-  // 使用 pageStates 存储来保持状态
-  const getState = usePageStates((state: PageStatesStore) => state.getState);
-  const setState = usePageStates((state: PageStatesStore) => state.setState);
-  
-  // 从 pageStates 恢复表单状态
-  const savedPermissions = getState('rolesPermissions');
-  
   const [form] = Form.useForm()
   const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false)
-  const [currentRole, setCurrentRole] = useState<Role | null>(null)
-  const [selectedPermissions, setSelectedPermissions] = useState<number[]>(savedPermissions || [])
+  const [modalVisible, setModalVisible] = useState(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
-
-  // 当权限选择变化时，保存到 pageStates
-  useEffect(() => {
-    setState('rolesPermissions', selectedPermissions);
-  }, [selectedPermissions, setState]);
-
-  // 模拟角色数据
-  const mockRoleData: Role[] = [
-    {
-      id: 1,
-      name: '管理员',
-      code: 'admin',
-      status: 1,
-      remark: '系统管理员',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      name: '编辑',
-      code: 'editor',
-      status: 1,
-      remark: '内容编辑',
-      create_time: new Date().toISOString(),
-      update_time: new Date().toISOString(),
-    },
-  ]
-
-  // 模拟权限数据
-  const mockPermissionData: Permission[] = [
-    {
-      id: 1,
-      role_name: '管理员',
-      page_name: '用户管理',
-      permission_name: 'user:view',
-      permission_value: true,
-      description: '查看用户列表和详情',
-      role_id: 1,
-    },
-    {
-      id: 2,
-      role_name: '管理员',
-      page_name: '用户管理',
-      permission_name: 'user:edit',
-      permission_value: true,
-      description: '编辑用户信息',
-      role_id: 1,
-    },
-    {
-      id: 3,
-      role_name: '编辑',
-      page_name: '内容管理',
-      permission_name: 'content:view',
-      permission_value: true,
-      description: '查看内容列表和详情',
-      role_id: 2,
-    },
-    {
-      id: 4,
-      role_name: '编辑',
-      page_name: '内容管理',
-      permission_name: 'content:edit',
-      permission_value: true,
-      description: '编辑内容信息',
-      role_id: 2,
-    },
-    {
-      id: 5,
-      role_name: '用户',
-      page_name: '内容管理',
-      permission_name: 'content:view',
-      permission_value: true,
-      description: '查看内容列表和详情',
-      role_id: 3,
-    },
-  ]
+  const [searchText, setSearchText] = useState('')
 
   useEffect(() => {
     fetchRoles()
-    fetchPermissions()
   }, [])
 
+  // 获取角色列表
   const fetchRoles = async () => {
     setLoading(true)
     try {
-      // 实际项目中这里应该使用 API 请求
-      // const res = await getAllRoles()
-      // setRoles(res)
-
-      // 使用模拟数据
-      setRoles(mockRoleData)
+      const res = await getRoleList()
+      setRoles(res.data || [])
     } catch (error) {
       console.error('获取角色列表失败', error)
       message.error('获取角色列表失败')
@@ -121,74 +35,58 @@ const Roles = () => {
     }
   }
 
-  const fetchPermissions = async () => {
-    try {
-      // 实际项目中这里应该使用 API 请求
-      // const res = await getAllPermissions()
-      // setPermissions(res)
-
-      // 使用模拟数据
-      setPermissions(mockPermissionData)
-    } catch (error) {
-      console.error('获取权限列表失败', error)
-      message.error('获取权限列表失败')
-    }
-  }
-
+  // 添加角色
   const handleAdd = () => {
     setCurrentId(null)
     form.resetFields()
-    setIsModalOpen(true)
+    setModalVisible(true)
   }
 
+  // 编辑角色
   const handleEdit = (record: Role) => {
     setCurrentId(record.id)
-    form.setFieldsValue(record)
-    setIsModalOpen(true)
+    form.setFieldsValue({
+      ...record,
+    })
+    setModalVisible(true)
   }
 
-  const handleDelete = async (_id: number) => {
-    try {
-      // 实际项目中这里应该使用 API 请求
-      // await deleteRole(id)
-      message.success('删除成功')
-      fetchRoles()
-    } catch (error) {
-      console.error('删除失败:', error)
-      message.error('删除失败')
-    }
+  // 删除角色
+  const handleDelete = async (id: number) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: '确定要删除这个角色吗？这可能会影响关联的用户。',
+      onOk: async () => {
+        try {
+          await deleteRole(id)
+          message.success('删除成功')
+          fetchRoles()
+        } catch (error) {
+          console.error('删除失败:', error)
+          message.error('删除失败')
+        }
+      }
+    })
   }
 
+  // 关闭角色表单弹窗
   const handleCancel = () => {
-    setIsModalOpen(false)
+    setModalVisible(false)
     form.resetFields()
   }
 
+  // 保存角色表单
   const handleOk = async () => {
     try {
       const values = await form.validateFields()
       if (currentId) {
-        // 更新角色
-        // 实际项目中这里应该使用 API 请求
-        // await updateRole(currentId, values)
-        setRoles(roles.map(role => (role.id === currentId ? { ...role, ...values } : role)))
+        await updateRole(currentId, values)
         message.success('更新成功')
       } else {
-        // 创建角色
-        // 实际项目中这里应该使用 API 请求
-        // const res = await createRole(values)
-        const newRole: Role = {
-          id: Date.now(),
-          ...values,
-          status: 1,
-          remark: '',
-          create_time: new Date().toISOString(),
-          update_time: new Date().toISOString(),
-        }
-        setRoles([...roles, newRole])
+        await createRole(values)
         message.success('创建成功')
       }
-      setIsModalOpen(false)
+      setModalVisible(false)
       fetchRoles()
     } catch (error) {
       console.error('操作失败:', error)
@@ -196,94 +94,108 @@ const Roles = () => {
     }
   }
 
-  const handlePermissionCancel = () => {
-    setIsPermissionModalOpen(false)
-    setSelectedPermissions([])
-    setCurrentRole(null)
+  // 重置搜索
+  const handleReset = () => {
+    setSearchText('')
+    fetchRoles()
   }
 
-  const handlePermissionOk = async () => {
-    if (!currentRole) return
-
-    try {
-      // 实际项目中这里应该使用 API 请求
-      // await assignRolePermissions(currentRole.id, selectedPermissions)
-
-      // 更新角色权限
-      const updatedRoles = roles.map(role => {
-        if (role.id === currentRole.id) {
-          const updatedPermissions = permissions.filter(p => selectedPermissions.includes(p.id))
-          return { ...role, permissions: updatedPermissions }
-        }
-        return role
-      })
-
-      setRoles(updatedRoles)
-      message.success('权限分配成功')
-      setIsPermissionModalOpen(false)
-      setSelectedPermissions([])
-      setCurrentRole(null)
-    } catch (error) {
-      console.error('分配权限失败', error)
-      message.error('分配权限失败')
-    }
+  // 格式化时间显示
+  const formatTime = (timeString: string) => {
+    return dayjs(timeString).format('YYYY-MM-DD HH:mm:ss')
   }
 
-  // 转换权限数据为 Tree 组件所需格式
-  const permissionTreeData = [
-    {
-      title: '所有权限',
-      key: 'all',
-      children: permissions.map(p => ({
-        title: p.permission_name,
-        key: p.id.toString(),
-        isLeaf: true,
-      })),
-    },
-  ]
+  // 统计权限数量
+  const countPermissions = (role: Role) => {
+    if (!role.permissions) return 0
+    return role.permissions.length
+  }
 
+  // 表格列定义
   const columns: ColumnsType<Role> = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 60,
+    },
     {
       title: '角色名称',
       dataIndex: 'name',
       key: 'name',
+      width: 150,
     },
     {
-      title: '角色代码',
+      title: '角色编码',
       dataIndex: 'code',
       key: 'code',
+      width: 180,
+    },
+    {
+      title: '权限数量',
+      key: 'permissionCount',
+      width: 100,
+      render: (_, record) => {
+        const count = countPermissions(record)
+        return (
+          <Tooltip title={`该角色拥有 ${count} 个权限`}>
+            <Tag color={count > 0 ? 'blue' : 'gray'}>{count}</Tag>
+          </Tooltip>
+        )
+      }
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: number) => (
-        <Tag color={status === 1 ? 'success' : 'error'}>{status === 1 ? '启用' : '禁用'}</Tag>
+      width: 80,
+      render: (status) => (
+        <Tag color={status === 1 ? 'green' : 'red'}>
+          {status === 1 ? '启用' : '禁用'}
+        </Tag>
       ),
+    },
+    {
+      title: '备注',
+      dataIndex: 'remark',
+      key: 'remark',
+      ellipsis: true,
     },
     {
       title: '创建时间',
       dataIndex: 'create_time',
       key: 'create_time',
+      width: 180,
+      render: (time) => formatTime(time),
     },
     {
       title: '更新时间',
       dataIndex: 'update_time',
       key: 'update_time',
+      width: 180,
+      render: (time) => formatTime(time),
     },
     {
       title: '操作',
       key: 'action',
+      width: 180,
+      fixed: 'right',
       render: (_, record) => (
-        <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+        <Space size="middle">
+          <Button 
+            type="primary" 
+            size="small" 
+            icon={<EditOutlined />} 
+            onClick={() => handleEdit(record)}
+          >
             编辑
           </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
+          <Button 
+            danger 
+            size="small" 
+            icon={<DeleteOutlined />} 
             onClick={() => handleDelete(record.id)}
+            disabled={record.code === 'super_admin'} // 禁止删除超级管理员
           >
             删除
           </Button>
@@ -292,80 +204,115 @@ const Roles = () => {
     },
   ]
 
+  // 排序和过滤查询结果
+  const filteredRoles = roles
+    .filter(role => 
+      searchText ? 
+        role.name.toLowerCase().includes(searchText.toLowerCase()) || 
+        role.code.toLowerCase().includes(searchText.toLowerCase()) || 
+        (role.remark && role.remark.toLowerCase().includes(searchText.toLowerCase())) : 
+        true
+    )
+    .sort((a, b) => a.id - b.id)  // 按ID升序排序
+
   return (
     <div>
-      <div className="flex justify-between mb-4">
-        <Input.Search
-          placeholder="搜索角色"
-          onSearch={value => console.log(value)}
-          className="w-64"
-        />
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          添加角色
-        </Button>
-      </div>
+      <Card title="角色管理" bordered={false}>
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />} 
+              onClick={handleAdd}
+            >
+              新增角色
+            </Button>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={fetchRoles}
+            >
+              刷新
+            </Button>
+            <Search
+              placeholder="输入角色名称、编码或备注搜索"
+              allowClear
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              style={{ width: 300 }}
+            />
+            {searchText && (
+              <Button icon={<ReloadOutlined />} onClick={handleReset}>
+                重置
+              </Button>
+            )}
+          </Space>
+        </div>
 
-      <Table columns={columns} dataSource={roles} rowKey="id" loading={loading} />
-
-      <Modal
-        title={currentId ? '编辑角色' : '添加角色'}
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        width={600}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{
-            status: 1,
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={filteredRoles}
+          loading={loading}
+          scroll={{ x: 1300 }}
+          pagination={{
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `共 ${total} 条`,
+            position: ['bottomCenter']
           }}
+        />
+
+        {/* 角色表单弹窗 */}
+        <Modal
+          title={currentId ? '编辑角色' : '新增角色'}
+          open={modalVisible}
+          onOk={handleOk}
+          onCancel={handleCancel}
+          width={600}
         >
-          <Form.Item
-            name="name"
-            label="角色名称"
-            rules={[{ required: true, message: '请输入角色名称' }]}
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{
+              status: 1,
+            }}
           >
-            <Input />
-          </Form.Item>
+            <Form.Item
+              name="name"
+              label="角色名称"
+              rules={[{ required: true, message: '请输入角色名称' }]}
+            >
+              <Input placeholder="请输入角色名称" />
+            </Form.Item>
 
-          <Form.Item
-            name="code"
-            label="角色代码"
-            rules={[{ required: true, message: '请输入角色代码' }]}
-          >
-            <Input />
-          </Form.Item>
+            <Form.Item
+              name="code"
+              label="角色编码"
+              rules={[{ required: true, message: '请输入角色编码' }]}
+            >
+              <Input placeholder="请输入角色编码" />
+            </Form.Item>
 
-          <Form.Item name="status" label="状态">
-            <Switch checkedChildren="启用" unCheckedChildren="禁用" defaultChecked />
-          </Form.Item>
+            <Form.Item
+              name="status"
+              label="状态"
+              rules={[{ required: true, message: '请选择状态' }]}
+            >
+              <Select placeholder="请选择状态">
+                <Option value={1}>启用</Option>
+                <Option value={0}>禁用</Option>
+              </Select>
+            </Form.Item>
 
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea rows={4} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 权限分配弹窗 */}
-      <Modal
-        title="分配权限"
-        open={isPermissionModalOpen}
-        onOk={handlePermissionOk}
-        onCancel={handlePermissionCancel}
-        width={600}
-      >
-        <p className="mb-4">当前角色：{currentRole?.name}</p>
-        <Tree
-          checkable
-          defaultExpandAll
-          treeData={permissionTreeData}
-          checkedKeys={selectedPermissions}
-          onCheck={checked => {
-            setSelectedPermissions(checked as number[])
-          }}
-        />
-      </Modal>
+            <Form.Item
+              name="remark"
+              label="备注"
+            >
+              <Input.TextArea rows={4} placeholder="请输入备注" />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
     </div>
   )
 }
