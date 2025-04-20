@@ -102,13 +102,22 @@ const MainLayout = () => {
     { id: 3, title: '任务提醒', content: '您有3个待处理的任务' },
   ])
 
-  // 菜单项配置
-  const menuItems: MenuProps['items'] = [
+  // 基础菜单项
+  const baseMenuItems: MenuProps['items'] = [
     {
       key: '/',
       icon: <DashboardOutlined />,
       label: '仪表盘',
     },
+    {
+      key: '/customers',
+      icon: <ShopOutlined />,
+      label: '客户管理',
+    },
+  ]
+
+  // 系统管理菜单项
+  const systemMenuItems: MenuProps['items'] = [
     {
       key: 'system',
       icon: <SettingOutlined />,
@@ -136,37 +145,39 @@ const MainLayout = () => {
         },
       ],
     },
-    {
-      key: '/customers',
-      icon: <ShopOutlined />,
-      label: '客户管理',
-    },
   ]
+
+  // 根据用户角色过滤菜单项
+  const menuItems: MenuProps['items'] = user?.roles.some(role =>
+    ['super_admin', 'admin'].includes(role)
+  )
+    ? [...baseMenuItems, ...systemMenuItems]
+    : baseMenuItems
 
   // 获取菜单项图标和标签
   const getMenuItemByKey = (key: string) => {
     // 递归查找所有菜单项，包括子菜单
     const findMenuItemRecursive = (items: MenuProps['items']): any => {
-      if (!items) return null;
-      
+      if (!items) return null
+
       for (const item of items) {
-        if (!item) continue;
-        
+        if (!item) continue
+
         if ('key' in item && item.key === key) {
-          return item;
+          return item
         }
-        
+
         // 检查子菜单
         if ('children' in item && item.children) {
-          const found = findMenuItemRecursive(item.children);
-          if (found) return found;
+          const found = findMenuItemRecursive(item.children)
+          if (found) return found
         }
       }
-      
-      return null;
-    };
-    
-    return findMenuItemRecursive(menuItems);
+
+      return null
+    }
+
+    return findMenuItemRecursive(menuItems)
   }
 
   useEffect(() => {

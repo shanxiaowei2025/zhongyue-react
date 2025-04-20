@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import type { RouteObject } from 'react-router-dom'
 import { lazy } from 'react'
+import { AuthorizedRoute } from '../components/AuthorizedRoute'
 
 // 布局
 const MainLayout = lazy(() => import('../layouts/MainLayout'))
@@ -32,9 +33,9 @@ const routes: RouteObject[] = [
   {
     path: '/',
     element: (
-      <PrivateRoute>
+      <AuthorizedRoute>
         <MainLayout />
-      </PrivateRoute>
+      </AuthorizedRoute>
     ),
     children: [
       {
@@ -43,19 +44,35 @@ const routes: RouteObject[] = [
       },
       {
         path: 'users',
-        element: <Users />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin']}>
+            <Users />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'roles',
-        element: <Roles />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin']}>
+            <Roles />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'permissions',
-        element: <Permissions />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin']}>
+            <Permissions />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'departments',
-        element: <Departments />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin']}>
+            <Departments />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'customers',

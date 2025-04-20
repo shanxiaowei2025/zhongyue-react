@@ -69,19 +69,19 @@ export interface Permission {
 
 // 模块化权限相关类型
 export interface PermissionModule {
-  module_name: string; // 模块名称
-  permissions: PermissionItem[]; // 该模块下的权限项
+  module_name: string // 模块名称
+  permissions: PermissionItem[] // 该模块下的权限项
 }
 
 export interface PermissionItem {
-  name: string; // 权限名称
-  code: string; // 权限代码
-  description: string; // 权限描述
+  name: string // 权限名称
+  code: string // 权限代码
+  description: string // 权限描述
 }
 
 export interface RolePermissionMatrix {
-  role: Role; // 角色信息
-  permissions: Record<string, boolean>; // 该角色拥有的权限，key为权限代码
+  role: Role // 角色信息
+  permissions: Record<string, boolean> // 该角色拥有的权限，key为权限代码
 }
 
 // 角色相关类型
@@ -243,3 +243,5 @@ export interface ImageType {
   fileName?: string
   url?: string
 }
+
+export type Role = 'super_admin' | 'admin' | 'register_specialist' | string
