@@ -6,7 +6,7 @@ import type { ApiResponse, Department, DepartmentQueryParams, DepartmentTreeNode
  * @param params 查询参数
  */
 export const getDepartmentList = (params?: DepartmentQueryParams) => {
-  return request.get<ApiResponse<Department[]>>('/departments', params)
+  return request.get<ApiResponse<Department[]>>('/departments', { params })
 }
 
 /**

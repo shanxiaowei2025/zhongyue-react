@@ -3,7 +3,7 @@ import { message } from 'antd'
 import type { ApiResponse } from '../types'
 
 // 从环境变量获取API基础URL，如果未定义则默认为/api
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 console.log('API服务器地址:', import.meta.env.VITE_API_SERVER)
 console.log('API配置 - 基础URL:', apiBaseUrl)
 
