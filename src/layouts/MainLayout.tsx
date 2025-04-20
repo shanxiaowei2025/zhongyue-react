@@ -270,12 +270,10 @@ const MainLayout = () => {
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'logout') {
-      // 先进行导航，确保不在需要验证的路由
+      // 先清除用户状态
+      logout()
+      // 然后进行导航
       navigate('/login', { replace: true })
-      // 然后清除用户状态
-      setTimeout(() => {
-        logout()
-      }, 0)
     } else if (key === 'profile') {
       navigate('/profile')
     } else if (key === 'settings') {

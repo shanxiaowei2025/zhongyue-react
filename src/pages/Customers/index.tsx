@@ -27,17 +27,18 @@ import type { ColumnsType } from 'antd/es/table'
 import type { Customer, ImageType } from '../../types'
 import type { TabsProps } from 'antd'
 import CustomerForm from './CustomerForm'
-import { 
-  BUSINESS_STATUS_MAP, 
+import {
+  BUSINESS_STATUS_MAP,
   ENTERPRISE_STATUS_MAP,
   BUSINESS_STATUS_COLOR_MAP,
-  ENTERPRISE_STATUS_COLOR_MAP
+  ENTERPRISE_STATUS_COLOR_MAP,
 } from '../../constants'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
+import { usePermission } from '../../hooks/usePermission'
 import useSWR, { mutate } from 'swr'
 import { getCustomerDetail, getCustomerById } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
@@ -52,6 +53,12 @@ export default function Customers() {
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
+
+  // 获取权限相关信息
+  const { customerPermissions, loading: permissionLoading, refreshPermissions } = usePermission()
+
+  // 添加权限调试日志
+  console.log('客户管理页面权限状态:', customerPermissions)
 
   // 从 pageStates 恢复搜索参数
   const savedSearchParams = getState('customersSearchParams')
@@ -81,6 +88,17 @@ export default function Customers() {
   const [detailType, setDetailType] = useState<'view' | 'edit' | 'add'>('view')
   const [isMobile, setIsMobile] = useState(false)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number>()
+
+  // 临时降级方案 - 确保按钮正常显示
+  // 如果权限加载失败或尚未完成，允许所有操作
+  const canCreateCustomer = permissionLoading ? true : customerPermissions.canCreate
+  const canEditCustomer = permissionLoading ? true : customerPermissions.canEdit
+  const canDeleteCustomer = permissionLoading ? true : customerPermissions.canDelete
+
+  // 刷新权限信息
+  useEffect(() => {
+    refreshPermissions()
+  }, [refreshPermissions])
 
   // 构建请求参数
   const requestParams = {
@@ -161,6 +179,12 @@ export default function Customers() {
   }
 
   const handleAdd = () => {
+    // 再次检查创建权限
+    if (!canCreateCustomer) {
+      message.error('您没有创建客户的权限')
+      return
+    }
+
     setCurrentCustomer(null)
     setSelectedCustomerId(undefined)
     setDetailType('add')
@@ -169,8 +193,8 @@ export default function Customers() {
 
   const handleView = (record: Customer) => {
     // 先清除可能存在的缓存，关键步骤!
-    mutate(`/customer/${record.id}`, undefined, { revalidate: false });
-    
+    mutate(`/customer/${record.id}`, undefined, { revalidate: false })
+
     // 只使用基本信息初始化
     setCurrentCustomer({
       ...record,
@@ -179,24 +203,31 @@ export default function Customers() {
       businessLicenseImages: record.businessLicenseImages || {},
       bankAccountLicenseImages: record.bankAccountLicenseImages || {},
       otherIdImages: record.otherIdImages || {},
-      supplementaryImages: record.supplementaryImages || {}
-    });
-    
-    setDetailType('view');
-    
+      supplementaryImages: record.supplementaryImages || {},
+    })
+
+    setDetailType('view')
+
     // 重置selectedCustomerId后再设置新值，确保状态完全刷新
-    setSelectedCustomerId(undefined);
-    setTimeout(() => {
-      setSelectedCustomerId(record.id);
-    }, 0);
-    
-    // 延迟打开对话框，确保状态更新完成
-    setTimeout(() => {
-      isMobile ? setDrawerVisible(true) : setModalVisible(true);
-    }, 10);
-  };
+    setSelectedCustomerId(undefined)
+    // 使用 queueMicrotask 代替 setTimeout 0
+    queueMicrotask(() => {
+      setSelectedCustomerId(record.id)
+    })
+
+    // 延迟打开对话框，使用 requestAnimationFrame 代替 setTimeout
+    requestAnimationFrame(() => {
+      isMobile ? setDrawerVisible(true) : setModalVisible(true)
+    })
+  }
 
   const handleEdit = (record: Customer) => {
+    // 再次检查编辑权限
+    if (!canEditCustomer) {
+      message.error('您没有编辑客户的权限')
+      return
+    }
+
     // 先使用列表中的记录，确保图片等信息在加载完整数据前可见
     setCurrentCustomer(record)
     setDetailType('edit')
@@ -282,6 +313,13 @@ export default function Customers() {
   }
 
   const handleDelete = (id: number) => {
+    console.log('delete click!')
+    // 再次检查删除权限
+    if (!canDeleteCustomer) {
+      message.error('您没有删除客户的权限')
+      return
+    }
+
     confirm({
       title: '确认删除',
       content: '确定要删除这个客户吗？此操作不可恢复，相关的图片文件也会被删除。',
@@ -394,11 +432,13 @@ export default function Customers() {
       width: isMobile ? 80 : 100,
       render: (status: string) => {
         if (!status) return <Tag color="default">未设置</Tag>
-        
-        const color = ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default';
-        const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status;
-        
-        return <Tag color={color}>{label}</Tag>;
+
+        const color =
+          ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] ||
+          'default'
+        const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status
+
+        return <Tag color={color}>{label}</Tag>
       },
     },
     {
@@ -408,11 +448,12 @@ export default function Customers() {
       width: isMobile ? 80 : 100,
       render: (status: string) => {
         if (!status) return <Tag color="default">未设置</Tag>
-        
-        const color = BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default';
-        const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status;
-        
-        return <Tag color={color}>{label}</Tag>;
+
+        const color =
+          BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default'
+        const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status
+
+        return <Tag color={color}>{label}</Tag>
       },
     },
     {
@@ -429,32 +470,36 @@ export default function Customers() {
       fixed: 'right',
       width: isMobile ? 90 : 150,
       render: (_, record) => (
-        <Space size={isMobile ? "small" : "middle"} className="flex flex-nowrap">
+        <Space size={isMobile ? 'small' : 'middle'} className="flex flex-nowrap">
           <Button
             type="link"
             icon={<EyeOutlined />}
             onClick={() => handleView(record)}
-            className={isMobile ? "p-1 m-0 h-auto min-w-0" : ""}
+            className={isMobile ? 'p-1 m-0 h-auto min-w-0' : ''}
           >
-            {!isMobile && "查看"}
+            {!isMobile && '查看'}
           </Button>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            className={isMobile ? "p-1 m-0 h-auto min-w-0" : ""}
-          >
-            {!isMobile && "编辑"}
-          </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-            className={isMobile ? "p-1 m-0 h-auto min-w-0" : ""}
-          >
-            {!isMobile && "删除"}
-          </Button>
+          {canEditCustomer && (
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              className={isMobile ? 'p-1 m-0 h-auto min-w-0' : ''}
+            >
+              {!isMobile && '编辑'}
+            </Button>
+          )}
+          {canDeleteCustomer && (
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record.id)}
+              className={isMobile ? 'p-1 m-0 h-auto min-w-0' : ''}
+            >
+              {!isMobile && '删除'}
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -500,14 +545,14 @@ export default function Customers() {
       // 如果不是表单模式，直接关闭
       setModalVisible(false)
       // 延迟清理状态，避免视觉闪烁
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         setCurrentCustomer(null)
         setSelectedCustomerId(undefined)
         // 清除该客户的SWR缓存
         if (customerDetail?.id) {
           mutate(`/customer/${customerDetail.id}`, undefined, { revalidate: false })
         }
-      }, 100)
+      })
     }
   }
 
@@ -531,13 +576,17 @@ export default function Customers() {
           <Input
             placeholder="顾问会计"
             value={searchParams.consultantAccountant}
-            onChange={e => setSearchParams({ ...searchParams, consultantAccountant: e.target.value })}
+            onChange={e =>
+              setSearchParams({ ...searchParams, consultantAccountant: e.target.value })
+            }
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
             placeholder="记账会计"
             value={searchParams.bookkeepingAccountant}
-            onChange={e => setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })}
+            onChange={e =>
+              setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })
+            }
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Input
@@ -619,14 +668,16 @@ export default function Customers() {
             刷新
           </Button>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleAdd}
-          className="w-full sm:w-auto mt-2 sm:mt-0"
-        >
-          添加客户
-        </Button>
+        {canCreateCustomer && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+            className="w-full sm:w-auto mt-2 sm:mt-0"
+          >
+            添加客户
+          </Button>
+        )}
       </div>
 
       {/* 数据表格 */}
@@ -648,7 +699,7 @@ export default function Customers() {
             }
           },
           size: isMobile ? 'small' : 'default',
-          simple: isMobile
+          simple: isMobile,
         }}
         loading={isLoading}
         scroll={{ x: 'max-content' }}
@@ -666,12 +717,15 @@ export default function Customers() {
         destroyOnClose
         styles={{ body: { padding: isMobile ? '12px 8px' : '16px' } }}
         className="customer-drawer"
-        placement={isMobile ? "bottom" : "right"}
-        height={isMobile ? "90%" : undefined}
+        placement={isMobile ? 'bottom' : 'right'}
+        height={isMobile ? '90%' : undefined}
       >
         {detailType === 'view' ? (
           customerDetail || currentCustomer ? (
-            <CustomerDetail customer={customerDetail || currentCustomer!} onClose={() => setDrawerVisible(false)} />
+            <CustomerDetail
+              customer={customerDetail || currentCustomer!}
+              onClose={() => setDrawerVisible(false)}
+            />
           ) : (
             <div style={{ textAlign: 'center', padding: '20px' }}>
               <LoadingOutlined style={{ fontSize: 24 }} spin />
@@ -696,12 +750,19 @@ export default function Customers() {
         footer={null}
         width={isMobile ? '100%' : 1000}
         style={isMobile ? { top: 10, padding: 0 } : undefined}
-        styles={isMobile ? { body: { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } } : undefined}
+        styles={
+          isMobile
+            ? { body: { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } }
+            : undefined
+        }
         destroyOnClose
       >
         {detailType === 'view' ? (
           customerDetail || currentCustomer ? (
-            <CustomerDetail customer={customerDetail || currentCustomer!} onClose={() => setModalVisible(false)} />
+            <CustomerDetail
+              customer={customerDetail || currentCustomer!}
+              onClose={() => setModalVisible(false)}
+            />
           ) : (
             <div style={{ textAlign: 'center', padding: '20px' }}>
               <LoadingOutlined style={{ fontSize: 24 }} spin />
@@ -743,14 +804,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       businessLicenseImages: customer.businessLicenseImages || {},
       bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
       otherIdImages: customer.otherIdImages || {},
-      supplementaryImages: customer.supplementaryImages || {}
-    };
-  });
+      supplementaryImages: customer.supplementaryImages || {},
+    }
+  })
 
   // 记录重试次数
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
-  
+
   // 重试逻辑
   const handleRetry = useCallback(() => {
     if (retryCount < maxRetries) {
@@ -763,15 +824,15 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   // 优化useSWR配置，防止过早或不必要的请求
   const { data, isLoading, error } = useSWR(
     customer?.id ? `/customer/${customer.id}` : null,
-    () => customer?.id ? getCustomerDetail(customer.id) : null,
+    () => (customer?.id ? getCustomerDetail(customer.id) : null),
     {
-      revalidateOnFocus: false,  // 改为false，避免焦点变化触发刷新
+      revalidateOnFocus: false, // 改为false，避免焦点变化触发刷新
       revalidateOnReconnect: true,
-      dedupingInterval: 2000,    // 增加去重间隔，防止频繁请求
+      dedupingInterval: 2000, // 增加去重间隔，防止频繁请求
       revalidateIfStale: true,
       shouldRetryOnError: true,
       refreshInterval: 0,
-      onSuccess: (response) => {
+      onSuccess: response => {
         if (response && response.code === 0 && response.data) {
           // 确保正确处理图片字段
           const processedData = {
@@ -780,28 +841,43 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             businessLicenseImages: response.data.businessLicenseImages || {},
             bankAccountLicenseImages: response.data.bankAccountLicenseImages || {},
             otherIdImages: response.data.otherIdImages || {},
-            supplementaryImages: response.data.supplementaryImages || {}
-          };
-          
-          console.log('SWR获取到客户详情数据，已处理:', processedData);
-          setCurrentCustomerDetail(processedData);
-          setRetryCount(0);
+            supplementaryImages: response.data.supplementaryImages || {},
+          }
+
+          console.log('SWR获取到客户详情数据，已处理:', processedData)
+          setCurrentCustomerDetail(processedData)
+          setRetryCount(0)
         }
       },
-      onError: (err) => {
-        console.error('获取客户详情失败:', err);
+      onError: err => {
+        console.error('获取客户详情失败:', err)
         if (retryCount < maxRetries) {
-          const retryDelay = Math.pow(2, retryCount) * 1000;
-          setTimeout(handleRetry, retryDelay);
+          const retryDelay = Math.pow(2, retryCount) * 1000
+          // 使用 promise 和 requestAnimationFrame 代替 setTimeout
+          const delay = (ms: number) =>
+            new Promise(resolve => {
+              let startTime = performance.now()
+              const checkTime = () => {
+                const elapsed = performance.now() - startTime
+                if (elapsed >= ms) {
+                  resolve(undefined)
+                } else {
+                  requestAnimationFrame(checkTime)
+                }
+              }
+              requestAnimationFrame(checkTime)
+            })
+
+          delay(retryDelay).then(handleRetry)
         }
-      }
+      },
     }
-  );
+  )
 
   // 修改fetchedCustomerDetail的处理，确保数据结构正确
   const fetchedCustomerDetail = useMemo(() => {
-    if (!data || data.code !== 0 || !data.data) return null;
-    
+    if (!data || data.code !== 0 || !data.data) return null
+
     // 确保返回的对象包含所有必要字段
     return {
       ...data.data,
@@ -810,23 +886,23 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       businessLicenseImages: data.data.businessLicenseImages || {},
       bankAccountLicenseImages: data.data.bankAccountLicenseImages || {},
       otherIdImages: data.data.otherIdImages || {},
-      supplementaryImages: data.data.supplementaryImages || {}
-    };
-  }, [data]);
+      supplementaryImages: data.data.supplementaryImages || {},
+    }
+  }, [data])
 
   // 如果获取到了新数据，更新当前显示的客户详情
   useEffect(() => {
     if (fetchedCustomerDetail && Object.keys(fetchedCustomerDetail).length > 0) {
-      setCurrentCustomerDetail(fetchedCustomerDetail);
+      setCurrentCustomerDetail(fetchedCustomerDetail)
     }
-  }, [fetchedCustomerDetail]);
+  }, [fetchedCustomerDetail])
 
   // 保证在组件挂载时至少有初始数据可用
   useEffect(() => {
     if (customer && Object.keys(customer).length > 0) {
-      setCurrentCustomerDetail(customer);
+      setCurrentCustomerDetail(customer)
     }
-  }, [customer]);
+  }, [customer])
 
   const handleTabChange = (key: string) => {
     setActiveTabKey(key)
@@ -878,31 +954,33 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     if (!status) return <Tag color="default">未设置</Tag>
 
     if (type === 'business') {
-      const color = BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default';
-      const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status;
-      return <Tag color={color}>{label}</Tag>;
+      const color =
+        BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default'
+      const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status
+      return <Tag color={color}>{label}</Tag>
     } else {
-      const color = ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default';
-      const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status;
-      return <Tag color={color}>{label}</Tag>;
+      const color =
+        ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] || 'default'
+      const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status
+      return <Tag color={color}>{label}</Tag>
     }
   }
 
   // 渲染单张图片
   const renderImage = (image: ImageType | undefined, label: string) => {
     if (!image || !image.url) {
-      return <div className="no-image-placeholder">暂无图片</div>;
+      return <div className="no-image-placeholder">暂无图片</div>
     }
-    
+
     try {
       // 使用fileName构建完整URL
-      const imageUrl = image.fileName ? buildImageUrl(image.fileName) : (image.url || '');
-      
+      const imageUrl = image.fileName ? buildImageUrl(image.fileName) : image.url || ''
+
       // 确保URL是有效的
       if (!imageUrl || imageUrl === 'undefined' || imageUrl === 'null') {
-        return <div className="no-image-placeholder">图片链接无效</div>;
+        return <div className="no-image-placeholder">图片链接无效</div>
       }
-      
+
       const handlePreviewClick = (e: React.MouseEvent) => {
         // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
         const targetElement = e.target as HTMLElement
@@ -911,7 +989,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         if (imgElement && imgElement.classList.contains('opacity-60')) {
           return
         }
-        
+
         setImagePreview({ visible: true, url: imageUrl })
       }
 
@@ -932,8 +1010,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         </div>
       )
     } catch (err) {
-      console.error('渲染图片出错:', err);
-      return <div className="no-image-placeholder">图片处理异常</div>;
+      console.error('渲染图片出错:', err)
+      return <div className="no-image-placeholder">图片处理异常</div>
     }
   }
 
@@ -959,27 +1037,28 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   const displayCustomer = useMemo(() => {
     // 如果currentCustomerDetail是完整的客户对象
     if (currentCustomerDetail && typeof currentCustomerDetail.companyName === 'string') {
-      return currentCustomerDetail as Customer;
+      return currentCustomerDetail as Customer
     }
-    
+
     // 如果是API响应对象，尝试提取data部分
-    if (currentCustomerDetail && 
-        typeof currentCustomerDetail === 'object' && 
-        'code' in currentCustomerDetail && 
-        'data' in currentCustomerDetail && 
-        currentCustomerDetail.data) {
-      
-      const data = currentCustomerDetail.data as Customer;
+    if (
+      currentCustomerDetail &&
+      typeof currentCustomerDetail === 'object' &&
+      'code' in currentCustomerDetail &&
+      'data' in currentCustomerDetail &&
+      currentCustomerDetail.data
+    ) {
+      const data = currentCustomerDetail.data as Customer
       return {
         ...data,
         legalPersonIdImages: data.legalPersonIdImages || {},
         businessLicenseImages: data.businessLicenseImages || {},
         bankAccountLicenseImages: data.bankAccountLicenseImages || {},
         otherIdImages: data.otherIdImages || {},
-        supplementaryImages: data.supplementaryImages || {}
-      } as Customer;
+        supplementaryImages: data.supplementaryImages || {},
+      } as Customer
     }
-    
+
     // 如果客户对象不完整，使用原始customer
     return {
       ...customer,
@@ -987,22 +1066,26 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       businessLicenseImages: customer.businessLicenseImages || {},
       bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
       otherIdImages: customer.otherIdImages || {},
-      supplementaryImages: customer.supplementaryImages || {}
-    } as Customer;
-  }, [currentCustomerDetail, customer]);
+      supplementaryImages: customer.supplementaryImages || {},
+    } as Customer
+  }, [currentCustomerDetail, customer])
 
   // 改进验证逻辑，多检查一些关键字段
-  if (!displayCustomer || 
-      typeof displayCustomer !== 'object' || 
-      typeof displayCustomer.companyName !== 'string' ||
-      ((displayCustomer as any).code !== undefined && (displayCustomer as any).data === undefined)) {
-    console.error('CustomerDetail: 客户数据无效', displayCustomer);
+  if (
+    !displayCustomer ||
+    typeof displayCustomer !== 'object' ||
+    typeof displayCustomer.companyName !== 'string' ||
+    ((displayCustomer as any).code !== undefined && (displayCustomer as any).data === undefined)
+  ) {
+    console.error('CustomerDetail: 客户数据无效', displayCustomer)
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div className="mb-4 text-red-500 text-lg">数据加载异常</div>
-        <Button type="primary" onClick={() => window.location.reload()}>刷新页面</Button>
+        <Button type="primary" onClick={() => window.location.reload()}>
+          刷新页面
+        </Button>
       </div>
-    );
+    )
   }
 
   const tabs: TabsProps['items'] = [
@@ -1010,27 +1093,21 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'basic',
       label: '基本信息',
       children: (
-        <Descriptions 
-          bordered 
+        <Descriptions
+          bordered
           column={{ xxl: 3, xl: 3, lg: 3, md: 2, sm: 1, xs: 1 }}
-          size={isMobile ? "small" : "default"}
-          className={isMobile ? "text-sm" : ""}
+          size={isMobile ? 'small' : 'default'}
+          className={isMobile ? 'text-sm' : ''}
         >
           <Descriptions.Item label="企业名称" span={3}>
             {displayCustomer.companyName || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="税号">
-            {displayCustomer.taxNumber || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="税号">{displayCustomer.taxNumber || '-'}</Descriptions.Item>
           <Descriptions.Item label="企业类型">
             {displayCustomer.enterpriseType || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="所属分局">
-            {displayCustomer.taxBureau || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="归属地">
-            {displayCustomer.location || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="所属分局">{displayCustomer.taxBureau || '-'}</Descriptions.Item>
+          <Descriptions.Item label="归属地">{displayCustomer.location || '-'}</Descriptions.Item>
           <Descriptions.Item label="顾问会计">
             {displayCustomer.consultantAccountant || '-'}
           </Descriptions.Item>
@@ -1080,13 +1157,17 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             {formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}
           </Descriptions.Item>
           <Descriptions.Item label="注册资本">
-            {displayCustomer.registeredCapital ? `${displayCustomer.registeredCapital.toLocaleString()}万元` : '-'}
+            {displayCustomer.registeredCapital
+              ? `${displayCustomer.registeredCapital.toLocaleString()}万元`
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="认缴到期日期">
             {formatDate(displayCustomer.capitalContributionDeadline, false)}
           </Descriptions.Item>
           <Descriptions.Item label="实缴资本">
-            {displayCustomer.paidInCapital ? `${displayCustomer.paidInCapital.toLocaleString()}万元` : '-'}
+            {displayCustomer.paidInCapital
+              ? `${displayCustomer.paidInCapital.toLocaleString()}万元`
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="行政许可类型">
             {displayCustomer.administrativeLicenseType || '-'}
@@ -1098,8 +1179,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="备注信息" span={3}>
             {displayCustomer.remarks || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="创建时间">{formatDate(displayCustomer.createTime)}</Descriptions.Item>
-          <Descriptions.Item label="更新时间">{formatDate(displayCustomer.updateTime)}</Descriptions.Item>
+          <Descriptions.Item label="创建时间">
+            {formatDate(displayCustomer.createTime)}
+          </Descriptions.Item>
+          <Descriptions.Item label="更新时间">
+            {formatDate(displayCustomer.updateTime)}
+          </Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1107,11 +1192,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'bank',
       label: '银行信息',
       children: (
-        <Descriptions 
-          bordered 
+        <Descriptions
+          bordered
           column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-          size={isMobile ? "small" : "default"}
-          className={isMobile ? "text-sm" : ""}
+          size={isMobile ? 'small' : 'default'}
+          className={isMobile ? 'text-sm' : ''}
         >
           <Descriptions.Item label="对公开户行">
             {displayCustomer.publicBank || '-'}
@@ -1135,18 +1220,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'tax',
       label: '税务信息',
       children: (
-        <Descriptions 
-          bordered 
+        <Descriptions
+          bordered
           column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-          size={isMobile ? "small" : "default"}
-          className={isMobile ? "text-sm" : ""}
+          size={isMobile ? 'small' : 'default'}
+          className={isMobile ? 'text-sm' : ''}
         >
           <Descriptions.Item label="报税登录方式">
             {displayCustomer.taxReportLoginMethod || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="税种">
-            {displayCustomer.taxCategories || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="税种">{displayCustomer.taxCategories || '-'}</Descriptions.Item>
           <Descriptions.Item label="社保险种">
             {displayCustomer.socialInsuranceTypes || '-'}
           </Descriptions.Item>
@@ -1180,11 +1263,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       children: (
         <>
           <h3 className="mt-4 mb-2 font-medium">法定代表人</h3>
-          <Descriptions 
-            bordered 
+          <Descriptions
+            bordered
             column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            size={isMobile ? "small" : "default"}
-            className={isMobile ? "text-sm" : ""}
+            size={isMobile ? 'small' : 'default'}
+            className={isMobile ? 'text-sm' : ''}
           >
             <Descriptions.Item label="姓名">
               {displayCustomer.legalRepresentativeName || '-'}
@@ -1201,11 +1284,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
-          <Descriptions 
-            bordered 
+          <Descriptions
+            bordered
             column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            size={isMobile ? "small" : "default"}
-            className={isMobile ? "text-sm" : ""}
+            size={isMobile ? 'small' : 'default'}
+            className={isMobile ? 'text-sm' : ''}
           >
             <Descriptions.Item label="姓名">
               {displayCustomer.financialContactName || '-'}
@@ -1222,11 +1305,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">办税员</h3>
-          <Descriptions 
-            bordered 
+          <Descriptions
+            bordered
             column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            size={isMobile ? "small" : "default"}
-            className={isMobile ? "text-sm" : ""}
+            size={isMobile ? 'small' : 'default'}
+            className={isMobile ? 'text-sm' : ''}
           >
             <Descriptions.Item label="姓名">
               {displayCustomer.taxOfficerName || '-'}
@@ -1243,11 +1326,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">开票员</h3>
-          <Descriptions 
-            bordered 
+          <Descriptions
+            bordered
             column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-            size={isMobile ? "small" : "default"}
-            className={isMobile ? "text-sm" : ""}
+            size={isMobile ? 'small' : 'default'}
+            className={isMobile ? 'text-sm' : ''}
           >
             <Descriptions.Item label="姓名">
               {displayCustomer.invoiceOfficerName || '-'}
@@ -1269,7 +1352,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'images',
       label: '图片资料',
       children: (
-        <div className={isMobile ? "space-y-4" : "space-y-6"}>
+        <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
           <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
             <div>
               <h3 className="font-medium mb-2">法人身份证照片</h3>
@@ -1336,7 +1419,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           className="customer-detail-tabs"
           activeKey={activeTabKey}
           onChange={handleTabChange}
-          size={isMobile ? "small" : "middle"}
+          size={isMobile ? 'small' : 'middle'}
           tabBarGutter={isMobile ? 12 : 24}
           tabBarStyle={isMobile ? { margin: '0 -12px 16px -12px', paddingLeft: '12px' } : undefined}
         />

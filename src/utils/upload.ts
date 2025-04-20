@@ -38,7 +38,7 @@ export const uploadFile = async (file: File): Promise<{ fileName: string; url: s
   try {
     // 从localStorage获取token
     const token = localStorage.getItem('token')
-    
+
     // 使用axios实例，但不通过request工具函数，因为需要设置特殊的Content-Type
     const response = await axios({
       method: 'POST',
@@ -48,16 +48,16 @@ export const uploadFile = async (file: File): Promise<{ fileName: string; url: s
         'Content-Type': 'multipart/form-data',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      baseURL: apiBaseUrl
+      baseURL: apiBaseUrl,
     })
 
     const result: UploadResponse = response.data
-      
+
     if (result.code === 0) {
       const fileName = result.data.fileName || ''
       return {
         fileName,
-        url: buildImageUrl(fileName)
+        url: buildImageUrl(fileName),
       }
     } else {
       message.error(result.message || '上传失败')
@@ -134,17 +134,17 @@ export const deleteFile = async (fileName: string): Promise<boolean> => {
  */
 export const buildImageUrl = (fileName: string): string => {
   if (!fileName) return ''
-  
+
   // 从环境变量获取MinIO配置
   const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
   const bucketName = import.meta.env.MINIO_BUCKET_NAME || 'zhongyue'
-  
+
   // 确保endpoint末尾有斜杠
   const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`
-  
+
   // 确保fileName开头没有斜杠
   const cleanFileName = fileName.startsWith('/') ? fileName.substring(1) : fileName
-  
+
   // 拼接完整URL
   return `${baseUrl}${bucketName}/${cleanFileName}`
 }

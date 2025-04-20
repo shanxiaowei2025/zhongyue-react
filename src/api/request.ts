@@ -131,10 +131,14 @@ instance.interceptors.response.use(
         // 显示错误信息
         message.error('登录已过期，请重新登录')
 
-        // 延迟跳转，以便用户看到提示
-        setTimeout(() => {
-          window.location.href = '/login'
-        }, 1500)
+        // 避免在登录页面上重复跳转，造成无限循环
+        const currentPath = window.location.pathname
+        if (currentPath !== '/login') {
+          // 延迟跳转，以便用户看到提示
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 1500)
+        }
       }
     }
 

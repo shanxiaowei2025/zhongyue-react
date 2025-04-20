@@ -57,6 +57,15 @@ export interface Permission {
   permission_value: boolean
   description: string
   role_id: number
+  role?: {
+    id: number
+    name: string
+    code: string
+    status: number
+    remark: string
+    create_time: string
+    update_time: string
+  }
 }
 
 // 模块化权限相关类型

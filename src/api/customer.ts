@@ -54,7 +54,7 @@ export const updateCustomer = (id: number, data: Partial<Customer>) => {
   if (typeof cleanData.registeredCapital === 'string') {
     cleanData.registeredCapital = parseFloat(cleanData.registeredCapital)
   }
-  
+
   if (typeof cleanData.paidInCapital === 'string') {
     cleanData.paidInCapital = parseFloat(cleanData.paidInCapital)
   }
@@ -92,9 +92,9 @@ export const getCustomers = async (params: Record<string, any>) => {
     const paginationParams: PaginationParams = {
       page: params.page || 1,
       pageSize: params.pageSize || 10,
-      ...params
+      ...params,
     }
-    
+
     const response = await getCustomerList(paginationParams)
     return response.code === 0
       ? {
@@ -118,9 +118,9 @@ export const getPaginatedCustomers = async (params: Record<string, any>) => {
     const paginationParams: PaginationParams = {
       page: params.page || 1,
       pageSize: params.pageSize || 10,
-      ...params
+      ...params,
     }
-    
+
     const response = await getCustomerList(paginationParams)
     return {
       items: response.data.items || [],

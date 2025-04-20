@@ -11,7 +11,7 @@ import type { UploadProps } from 'antd'
 import { useAuthStore } from '../../store/auth'
 import { getUserProfile, updateUserProfile, changePassword } from '../../api/auth'
 import type { User } from '../../types'
-import { getRoleName } from '../../constants/roles'
+import { useRoleNames } from '../../constants/roles'
 
 const { TabPane } = Tabs
 
@@ -22,6 +22,7 @@ const Profile = () => {
   const [uploading, setUploading] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
   const { user, setUser } = useAuthStore()
+  const { getRoleNameFromMap, loading: rolesLoading } = useRoleNames()
 
   useEffect(() => {
     fetchUserInfo()
@@ -171,7 +172,7 @@ const Profile = () => {
       <Tabs defaultActiveKey="1">
         <TabPane tab="基本信息" key="1">
           <Card>
-            <Spin spinning={loading}>
+            <Spin spinning={loading || rolesLoading}>
               <div className="mb-6 flex items-center">
                 <div className="mr-4">
                   <Upload {...uploadProps}>
@@ -193,7 +194,7 @@ const Profile = () => {
                     {userProfile?.roles &&
                       userProfile.roles.map((role: string) => (
                         <Tag color={role === 'admin' ? 'red' : 'blue'} key={role}>
-                          {getRoleName(role)}
+                          {getRoleNameFromMap(role)}
                         </Tag>
                       ))}
                   </div>
@@ -229,7 +230,7 @@ const Profile = () => {
                     {userProfile.roles &&
                       userProfile.roles.map((role: string) => (
                         <Tag color={role === 'admin' ? 'red' : 'blue'} key={role} className="mr-1">
-                          {getRoleName(role)}
+                          {getRoleNameFromMap(role)}
                         </Tag>
                       ))}
                   </Descriptions.Item>

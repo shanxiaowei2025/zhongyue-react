@@ -111,7 +111,7 @@ const Login = () => {
         </div>
 
         <Formik
-          initialValues={{ username: '管理员', password: '', remember: false }}
+          initialValues={{ username: '', password: '', remember: false }}
           validationSchema={loginSchema}
           onSubmit={handleSubmit}
         >
