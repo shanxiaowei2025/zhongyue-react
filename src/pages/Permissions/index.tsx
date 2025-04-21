@@ -213,14 +213,7 @@ const Permissions = () => {
 
   return (
     <Spin spinning={loading}>
-      <Card
-        title="权限管理"
-        extra={
-          <Button icon={<ReloadOutlined />} onClick={fetchPermissionData}>
-            刷新
-          </Button>
-        }
-      >
+      <Card>
         {pageNames.length > 0 ? (
           <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" items={tabItems} />
         ) : (
