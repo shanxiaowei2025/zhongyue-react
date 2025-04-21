@@ -335,26 +335,31 @@ const Users = () => {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
+      width: 70,
     },
     {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
+      width: 120,
     },
     {
       title: '邮箱',
       dataIndex: 'email',
       key: 'email',
+      width: 180,
     },
     {
       title: '手机号',
       dataIndex: 'phone',
       key: 'phone',
+      width: 120,
     },
     {
       title: '状态',
       dataIndex: 'isActive',
       key: 'isActive',
+      width: 80,
       render: (isActive: boolean) => (
         <Tag color={isActive ? 'success' : 'error'}>{isActive ? '启用' : '禁用'}</Tag>
       ),
@@ -363,6 +368,7 @@ const Users = () => {
       title: '角色',
       dataIndex: 'roles',
       key: 'roles',
+      width: 160,
       render: (roles: string[]) => (
         <Space>
           {roles &&
@@ -378,25 +384,28 @@ const Users = () => {
       title: '部门',
       dataIndex: 'dept_name',
       key: 'dept_name',
+      width: 180,
       render: (dept_name: string) => dept_name || '无部门',
     },
     {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 180,
       render: (createdAt: string) => dayjs(createdAt).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '更新时间',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
+      width: 180,
       render: (updatedAt: string) => dayjs(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
       title: '操作',
       key: 'action',
       fixed: 'right' as const,
-      width: 150,
+      width: 180,
       render: (_: unknown, record: ApiUser) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
@@ -438,7 +447,7 @@ const Users = () => {
         dataSource={users}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 1300 }}
+        scroll={{ x: 'max-content' }}
         pagination={{
           ...pagination,
           position: ['bottomCenter'],
@@ -447,6 +456,7 @@ const Users = () => {
           showTotal: total => `共 ${total} 条数据`,
         }}
         onChange={handleTableChange}
+        bordered
       />
 
       <Modal
