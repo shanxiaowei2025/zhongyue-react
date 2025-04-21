@@ -479,9 +479,12 @@ const Users = () => {
             <Form.Item
               name="password"
               label="密码"
-              rules={[{ required: true, message: '请输入密码' }]}
+              rules={[
+                { required: true, message: '请输入密码' },
+                { min: 6, message: '密码长度不能少于6位' }
+              ]}
             >
-              <Input.Password />
+              <Input.Password placeholder="请输入至少6位密码" />
             </Form.Item>
           )}
 
@@ -489,10 +492,12 @@ const Users = () => {
             <Form.Item
               name="password"
               label="密码"
-              rules={[{ required: false }]}
+              rules={[
+                { min: 6, message: '密码长度不能少于6位' }
+              ]}
               help="如不修改密码请留空"
             >
-              <Input.Password />
+              <Input.Password placeholder="如需修改密码，请输入至少6位新密码" />
             </Form.Item>
           )}
 
