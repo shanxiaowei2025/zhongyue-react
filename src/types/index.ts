@@ -31,14 +31,24 @@ export interface Department {
   id: number
   name: string
   type: number // 1: 部门, 2: 分公司
-  parentId: number | null
+  parent_id: number | null
   description?: string
   createTime?: string
   updateTime?: string
+  principal?: string
+  phone?: string
+  email?: string
+  remark?: string
+  status?: number
+  sort?: number
+  create_time?: string
+  update_time?: string
+  children?: Department[]
 }
 
 export interface DepartmentTreeNode extends Department {
   children?: DepartmentTreeNode[]
+  remark?: string
 }
 
 export interface DepartmentQueryParams {
@@ -245,4 +255,4 @@ export interface ImageType {
   url?: string
 }
 
-export type Role = 'super_admin' | 'admin' | 'register_specialist' | string
+export type RoleType = 'super_admin' | 'admin' | 'register_specialist' | string
