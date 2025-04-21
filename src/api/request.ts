@@ -113,7 +113,7 @@ instance.interceptors.response.use(
     // 判断是否是修改密码请求
     const isChangePasswordRequest = requestUrl.includes('change-password')
 
-    // 处理401未授权错误
+    // 处理不同HTTP状态码错误
     if (error.response?.status === 401) {
       // 根据不同请求类型处理401错误
       if (isLoginRequest) {
@@ -140,6 +140,16 @@ instance.interceptors.response.use(
           }, 1500)
         }
       }
+    } else if (error.response?.status === 403) {
+      // 处理403错误，显示后端返回的错误消息
+      const errorMessage = error.response?.data?.message || '权限不足，无法执行此操作'
+      message.error(errorMessage)
+      
+      // 可以根据需要跳转到403页面，但不要阻止显示错误消息
+      // 已经注释掉以下代码，因为我们希望用户看到确切的错误消息
+      // setTimeout(() => {
+      //   window.location.href = '/403'
+      // }, 1500)
     }
 
     return Promise.reject(error)

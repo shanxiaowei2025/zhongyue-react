@@ -307,14 +307,19 @@ const Users = () => {
           message.error(apiResponse.message || '更新用户失败')
         }
       } else {
-        const response = await createUser(values)
-        const apiResponse = response as unknown as ApiData<any>
-        if (apiResponse.code === 0) {
-          message.success('添加用户成功')
-          setModalVisible(false)
-          fetchUsers()
-        } else {
-          message.error(apiResponse.message || '添加用户失败')
+        try {
+          const response = await createUser(values)
+          const apiResponse = response as unknown as ApiData<any>
+          if (apiResponse.code === 0) {
+            message.success('添加用户成功')
+            setModalVisible(false)
+            fetchUsers()
+          } else {
+            message.error(apiResponse.message || '添加用户失败')
+          }
+        } catch (error: any) {
+          // 错误已经在全局拦截器中处理，这里只是为了捕获错误
+          console.error('添加用户失败:', error)
         }
       }
     } catch (error) {
