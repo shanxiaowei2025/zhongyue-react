@@ -106,10 +106,6 @@ const Login = () => {
           <img src="/images/logo.png" alt="中岳会计" className="w-48 h-auto" />
         </div>
 
-        <div className="mb-4 p-3 bg-blue-50 rounded text-blue-700 text-sm">
-          <p>请输入您的账号和密码</p>
-        </div>
-
         <Formik
           initialValues={{ username: '', password: '', remember: false }}
           validationSchema={loginSchema}
@@ -144,7 +140,7 @@ const Login = () => {
                 )}
               </div>
 
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <Field name="remember" type="checkbox">
                   {({ field }: { field: FieldInputProps<boolean> }) => (
                     <label className="flex items-center">
@@ -160,7 +156,7 @@ const Login = () => {
                     </label>
                   )}
                 </Field>
-              </div>
+              </div> */}
 
               <Button type="primary" htmlType="submit" block size="large">
                 登录
