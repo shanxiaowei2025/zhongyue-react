@@ -1141,8 +1141,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="营业执照到期日期">{formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}</Descriptions.Item>
           <Descriptions.Item label="注册资本">{displayCustomer.registeredCapital ? `${displayCustomer.registeredCapital.toLocaleString()}万元` : '-'}</Descriptions.Item>
           <Descriptions.Item label="认缴到期日期">{formatDate(displayCustomer.capitalContributionDeadline, false)}</Descriptions.Item>
-          <Descriptions.Item label="行政许可类型">{displayCustomer.administrativeLicenseType || '-'}</Descriptions.Item>
-          <Descriptions.Item label="行政许可到期日期">{formatDate(displayCustomer.administrativeLicenseExpiryDate, false)}</Descriptions.Item>
           <Descriptions.Item label="提交人">{displayCustomer.submitter || '-'}</Descriptions.Item>
           <Descriptions.Item label="备注信息" span={3}>
             {displayCustomer.remarks || '-'}
@@ -1209,6 +1207,67 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                   </div>
                 )
               }
+            ]}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'administrative-license',
+      label: '行政许可',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">行政许可</h3>
+          </div>
+          
+          <Table 
+            dataSource={Array.isArray(displayCustomer.administrativeLicense) 
+              ? displayCustomer.administrativeLicense.map((item, index) => ({ ...item, key: index })) 
+              : []}
+            pagination={false}
+            size={isMobile ? 'small' : 'middle'}
+            className="mb-4"
+            columns={[
+              {
+                title: '行政许可类型',
+                dataIndex: 'licenseType',
+                key: 'licenseType',
+              },
+              {
+                title: '行政许可开始日期',
+                dataIndex: 'startDate',
+                key: 'startDate',
+                render: (text) => formatDate(text, false)
+              },
+              {
+                title: '行政许可到期日期',
+                dataIndex: 'expiryDate',
+                key: 'expiryDate',
+                render: (text) => formatDate(text, false)
+              },
+              {
+                title: '附件',
+                dataIndex: 'images',
+                key: 'images',
+                render: (images) => (
+                  images && images.length > 0 ? (
+                    <div className="flex flex-wrap">
+                      {images.map((url: string, i: number) => (
+                        <a 
+                          key={i} 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="mr-2 mb-2 text-blue-500 hover:underline"
+                        >
+                          附件{i + 1}
+                        </a>
+                      ))}
+                    </div>
+                  ) : '-'
+                )
+              },
             ]}
           />
         </div>

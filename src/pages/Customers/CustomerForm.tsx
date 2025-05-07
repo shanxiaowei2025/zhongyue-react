@@ -15,7 +15,7 @@ import {
   Upload,
   Popconfirm,
 } from 'antd'
-import type { Customer, ImageType, PaidInCapitalItem } from '../../types'
+import type { Customer, ImageType, PaidInCapitalItem, AdministrativeLicenseItem } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
@@ -64,13 +64,14 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   licenseExpiryDate: 'basic',
   registeredCapital: 'basic',
   capitalContributionDeadline: 'basic',
-  administrativeLicenseType: 'basic',
-  administrativeLicenseExpiryDate: 'basic',
   submitter: 'basic',
   remarks: 'basic',
 
   // 实缴资本标签页字段
   paidInCapital: 'paid-capital',
+  
+  // 行政许可标签页字段
+  administrativeLicense: 'administrative-license',
 
   // 银行信息标签页字段
   publicBank: 'bank',
@@ -129,12 +130,10 @@ type FormCustomer = Omit<
   Customer,
   | 'licenseExpiryDate'
   | 'capitalContributionDeadline'
-  | 'administrativeLicenseExpiryDate'
   | 'publicBankOpeningDate'
 > & {
   licenseExpiryDate?: Dayjs | null
   capitalContributionDeadline?: Dayjs | null
-  administrativeLicenseExpiryDate?: Dayjs | null
   publicBankOpeningDate?: Dayjs | null
   licenseNoFixedTerm?: boolean
   [key: string]: any // 添加索引签名
@@ -144,12 +143,10 @@ type FormCustomer = Omit<
 type APICustomer = Omit<
   FormCustomer,
   | 'licenseExpiryDate'
-  | 'administrativeLicenseExpiryDate'
   | 'capitalContributionDeadline'
   | 'publicBankOpeningDate'
 > & {
   licenseExpiryDate?: string
-  administrativeLicenseExpiryDate?: string
   capitalContributionDeadline?: string
   publicBankOpeningDate?: string
 }
@@ -160,7 +157,6 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
 
   console.log('转换日期前的值:', {
     licenseExpiryDate: values.licenseExpiryDate,
-    administrativeLicenseExpiryDate: values.administrativeLicenseExpiryDate,
     capitalContributionDeadline: values.capitalContributionDeadline,
     publicBankOpeningDate: values.publicBankOpeningDate,
   })
@@ -179,18 +175,6 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
   } else {
     // 如果不是有效的日期，设为null而不是undefined
     result.licenseExpiryDate = null
-  }
-
-  if (
-    values.administrativeLicenseExpiryDate &&
-    dayjs.isDayjs(values.administrativeLicenseExpiryDate) &&
-    values.administrativeLicenseExpiryDate.isValid()
-  ) {
-    // @ts-ignore: 类型转换，应该是从Dayjs转为string
-    result.administrativeLicenseExpiryDate =
-      values.administrativeLicenseExpiryDate.format('YYYY-MM-DD')
-  } else {
-    result.administrativeLicenseExpiryDate = null
   }
 
   if (
@@ -217,7 +201,6 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
 
   console.log('转换日期后的值:', {
     licenseExpiryDate: result.licenseExpiryDate,
-    administrativeLicenseExpiryDate: result.administrativeLicenseExpiryDate,
     capitalContributionDeadline: result.capitalContributionDeadline,
     publicBankOpeningDate: result.publicBankOpeningDate,
   })
@@ -265,6 +248,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
   const [uploadedImages, setUploadedImages] = useState<string[]>([]) // 跟踪已上传的图片文件名
   const [paidInCapitalItems, setPaidInCapitalItems] = useState<PaidInCapitalItem[]>([])
+  const [administrativeLicenseItems, setAdministrativeLicenseItems] = useState<AdministrativeLicenseItem[]>([])
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
   const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
@@ -296,9 +280,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       const formValues: Partial<FormCustomer> = {
         ...customer,
         licenseExpiryDate: customer.licenseExpiryDate ? dayjs(customer.licenseExpiryDate) : null,
-        administrativeLicenseExpiryDate: customer.administrativeLicenseExpiryDate
-          ? dayjs(customer.administrativeLicenseExpiryDate)
-          : null,
         capitalContributionDeadline: customer.capitalContributionDeadline
           ? dayjs(customer.capitalContributionDeadline)
           : null,
@@ -323,6 +304,24 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         })));
       } else {
         setPaidInCapitalItems([]);
+      }
+      
+      // 初始化行政许可数据
+      if (customer.administrativeLicense && Array.isArray(customer.administrativeLicense)) {
+        setAdministrativeLicenseItems(customer.administrativeLicense.map(item => ({
+          ...item,
+          // 确保日期是字符串类型
+          startDate: typeof item.startDate === 'string' 
+            ? item.startDate 
+            : dayjs(item.startDate).format('YYYY-MM-DD'),
+          expiryDate: typeof item.expiryDate === 'string' 
+            ? item.expiryDate 
+            : dayjs(item.expiryDate).format('YYYY-MM-DD'),
+          // 确保images是数组
+          images: Array.isArray(item.images) ? item.images : []
+        })));
+      } else {
+        setAdministrativeLicenseItems([]);
       }
       
       // 标记状态已修复
@@ -379,6 +378,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
       // 添加实缴资本数据
       dataWithImages.paidInCapital = paidInCapitalItems;
+
+      // 添加行政许可数据
+      dataWithImages.administrativeLicense = administrativeLicenseItems;
 
       // 移除可能引起错误的createTime和updateTime字段
       const { createTime, updateTime, licenseNoFixedTerm, ...cleanData } = dataWithImages
@@ -605,6 +607,44 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     }
   };
 
+  // 添加行政许可项
+  const handleAddAdministrativeLicenseItem = () => {
+    setAdministrativeLicenseItems([
+      ...administrativeLicenseItems, 
+      { 
+        licenseType: '', 
+        startDate: dayjs().format('YYYY-MM-DD'), 
+        expiryDate: dayjs().format('YYYY-MM-DD'), 
+        images: [] 
+      }
+    ]);
+  };
+
+  // 删除行政许可项
+  const handleDeleteAdministrativeLicenseItem = (index: number) => {
+    const newItems = [...administrativeLicenseItems];
+    newItems.splice(index, 1);
+    setAdministrativeLicenseItems(newItems);
+  };
+
+  // 更新行政许可项
+  const handleUpdateAdministrativeLicenseItem = (index: number, field: keyof AdministrativeLicenseItem, value: any) => {
+    const newItems = [...administrativeLicenseItems];
+    
+    // Type assertion to ensure proper types for date fields
+    if (field === 'startDate' || field === 'expiryDate') {
+      // Ensure dates are always strings
+      newItems[index] = { 
+        ...newItems[index], 
+        [field]: value || '' 
+      };
+    } else {
+      newItems[index] = { ...newItems[index], [field]: value };
+    }
+    
+    setAdministrativeLicenseItems(newItems);
+  };
+
   const tabs: TabsProps['items'] = [
     {
       key: 'basic',
@@ -629,10 +669,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <Form.Item name="enterpriseType" label="企业类型">
             <Select>
-              <Select.Option value="有限责任公司">有限责任公司</Select.Option>
-              <Select.Option value="股份有限公司">股份有限公司</Select.Option>
-              <Select.Option value="个人独资企业">个人独资企业</Select.Option>
-              <Select.Option value="合伙企业">合伙企业</Select.Option>
+              <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
+              <Select.Option value="小规模（个体）">小规模（个体）</Select.Option>
+              <Select.Option value="一般纳税人">一般纳税人</Select.Option>
+              <Select.Option value="小规模（个人独资）">小规模（个人独资）</Select.Option>
+              <Select.Option value="合作社">合作社</Select.Option>
+              <Select.Option value="民办非企业单位">民办非企业单位</Select.Option>
+              <Select.Option value="其他">其他</Select.Option>
             </Select>
           </Form.Item>
 
@@ -787,21 +830,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             />
           </Form.Item>
 
-          <Form.Item name="administrativeLicenseType" label="行政许可类型">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="administrativeLicenseExpiryDate" label="行政许可到期日期">
-            <DatePicker
-              className="w-full"
-              allowClear
-              format="YYYY-MM-DD"
-              onChange={date => {
-                form.setFieldValue('administrativeLicenseExpiryDate', date)
-              }}
-            />
-          </Form.Item>
-
           <Form.Item name="submitter" label="提交人">
             <Input />
           </Form.Item>
@@ -937,6 +965,141 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   )
                 }
               ] : [])
+            ]}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'administrative-license',
+      label: '行政许可',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">行政许可</h3>
+            {mode !== 'view' && (
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={handleAddAdministrativeLicenseItem}
+              >
+                新增
+              </Button>
+            )}
+          </div>
+          
+          <Table 
+            dataSource={administrativeLicenseItems.map((item, index) => ({ ...item, key: index }))}
+            pagination={false}
+            size="middle"
+            className="mb-4"
+            columns={[
+              {
+                title: '行政许可类型',
+                dataIndex: 'licenseType',
+                key: 'licenseType',
+                render: (text, record, index) => {
+                  if (mode === 'view') return text;
+                  return (
+                    <Input 
+                      value={text} 
+                      onChange={(e) => handleUpdateAdministrativeLicenseItem(index, 'licenseType', e.target.value)}
+                      placeholder="请输入行政许可类型"
+                    />
+                  );
+                }
+              },
+              {
+                title: '行政许可开始日期',
+                dataIndex: 'startDate',
+                key: 'startDate',
+                render: (text, record, index) => {
+                  if (mode === 'view') return text;
+                  return (
+                    <DatePicker 
+                      value={text ? dayjs(text) : null} 
+                      onChange={(date) => {
+                        // Ensure we always have a string value
+                        const dateString = date ? date.format('YYYY-MM-DD') : '';
+                        handleUpdateAdministrativeLicenseItem(index, 'startDate', dateString);
+                      }} 
+                      format="YYYY-MM-DD"
+                    />
+                  );
+                }
+              },
+              {
+                title: '行政许可到期日期',
+                dataIndex: 'expiryDate',
+                key: 'expiryDate',
+                render: (text, record, index) => {
+                  if (mode === 'view') return text;
+                  return (
+                    <DatePicker 
+                      value={text ? dayjs(text) : null} 
+                      onChange={(date) => {
+                        // Ensure we always have a string value
+                        const dateString = date ? date.format('YYYY-MM-DD') : '';
+                        handleUpdateAdministrativeLicenseItem(index, 'expiryDate', dateString);
+                      }} 
+                      format="YYYY-MM-DD"
+                    />
+                  );
+                }
+              },
+              {
+                title: '附件',
+                dataIndex: 'images',
+                key: 'images',
+                render: (images, record, index) => {
+                  if (mode === 'view') {
+                    return images && images.length > 0 ? (
+                      <div className="flex flex-wrap">
+                        {images.map((url: string, i: number) => (
+                          <a 
+                            key={i} 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="mr-2 mb-2 text-blue-500 hover:underline"
+                          >
+                            附件{i + 1}
+                          </a>
+                        ))}
+                      </div>
+                    ) : '-';
+                  }
+                  return (
+                    <MultiImageUpload 
+                      disabled={false}
+                      value={images || []}
+                      onChange={value => handleUpdateAdministrativeLicenseItem(index, 'images', value)}
+                      onSuccess={(url) => {
+                        setUploadedImages([...uploadedImages, url])
+                      }}
+                    />
+                  );
+                }
+              },
+              {
+                title: '操作',
+                key: 'action',
+                render: (text, record, index) => {
+                  if (mode === 'view') return null;
+                  return (
+                    <Popconfirm
+                      title="确定要删除此记录吗？"
+                      onConfirm={() => handleDeleteAdministrativeLicenseItem(index)}
+                      okText="是"
+                      cancelText="否"
+                    >
+                      <Button type="link" danger icon={<DeleteOutlined />}>
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  );
+                }
+              },
             ]}
           />
         </div>
@@ -1221,9 +1384,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 ...customer,
                 licenseExpiryDate: customer.licenseExpiryDate
                   ? dayjs(customer.licenseExpiryDate)
-                  : null,
-                administrativeLicenseExpiryDate: customer.administrativeLicenseExpiryDate
-                  ? dayjs(customer.administrativeLicenseExpiryDate)
                   : null,
                 capitalContributionDeadline: customer.capitalContributionDeadline
                   ? dayjs(customer.capitalContributionDeadline)

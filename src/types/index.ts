@@ -211,8 +211,7 @@ export interface Customer {
     general?: ImageType
   }
   supplementaryImages: Record<string, ImageType>
-  administrativeLicenseType: string
-  administrativeLicenseExpiryDate: string
+  administrativeLicense: AdministrativeLicenseItem[]
   publicBank: string
   bankAccountNumber: string
   publicBankOpeningDate: string
@@ -261,6 +260,13 @@ export interface PaidInCapitalItem {
   name: string;
   contributionDate: string; // 后端是Date类型，前端用string存储
   amount: number;
+  images: string[];
+}
+
+export interface AdministrativeLicenseItem {
+  licenseType: string;
+  startDate: string; // 后端是Date类型，前端用string存储
+  expiryDate: string; // 后端是Date类型，前端用string存储
   images: string[];
 }
 
