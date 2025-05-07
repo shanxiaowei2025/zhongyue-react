@@ -1141,7 +1141,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="营业执照到期日期">{formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}</Descriptions.Item>
           <Descriptions.Item label="注册资本">{displayCustomer.registeredCapital ? `${displayCustomer.registeredCapital.toLocaleString()}万元` : '-'}</Descriptions.Item>
           <Descriptions.Item label="认缴到期日期">{formatDate(displayCustomer.capitalContributionDeadline, false)}</Descriptions.Item>
-          <Descriptions.Item label="实缴资本">{displayCustomer.paidInCapital ? `${displayCustomer.paidInCapital.toLocaleString()}万元` : '-'}</Descriptions.Item>
           <Descriptions.Item label="行政许可类型">{displayCustomer.administrativeLicenseType || '-'}</Descriptions.Item>
           <Descriptions.Item label="行政许可到期日期">{formatDate(displayCustomer.administrativeLicenseExpiryDate, false)}</Descriptions.Item>
           <Descriptions.Item label="提交人">{displayCustomer.submitter || '-'}</Descriptions.Item>
@@ -1151,6 +1150,68 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="创建时间">{formatDate(displayCustomer.createTime)}</Descriptions.Item>
           <Descriptions.Item label="更新时间">{formatDate(displayCustomer.updateTime)}</Descriptions.Item>
         </Descriptions>
+      ),
+    },
+    {
+      key: 'paid-capital',
+      label: '实缴资本',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">实缴资本</h3>
+            <span className="text-lg font-bold">
+              {Array.isArray(displayCustomer.paidInCapital) 
+                ? displayCustomer.paidInCapital.reduce((sum, item) => sum + (item.amount || 0), 0) 
+                : 0}万
+            </span>
+          </div>
+          
+          <Table 
+            dataSource={Array.isArray(displayCustomer.paidInCapital) 
+              ? displayCustomer.paidInCapital.map((item, index) => ({ ...item, key: index })) 
+              : []}
+            pagination={false}
+            size={isMobile ? 'small' : 'middle'}
+            className="mb-4"
+            columns={[
+              {
+                title: '姓名',
+                dataIndex: 'name',
+                key: 'name',
+              },
+              {
+                title: '出资日期',
+                dataIndex: 'contributionDate',
+                key: 'contributionDate',
+                render: (text) => text ? formatDate(text, false) : '-'
+              },
+              {
+                title: '出资金额',
+                dataIndex: 'amount',
+                key: 'amount',
+                render: (amount) => `${amount || 0}万`
+              },
+              {
+                title: '附件',
+                dataIndex: 'images',
+                key: 'images',
+                render: (images) => (
+                  <div>
+                    {Array.isArray(images) && images.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {images.map((img, imgIndex) => (
+                          <a key={imgIndex} href={img} target="_blank" rel="noopener noreferrer">
+                            附件{imgIndex + 1}
+                          </a>
+                        ))}
+                      </div>
+                    ) : '无附件'}
+                  </div>
+                )
+              }
+            ]}
+          />
+        </div>
       ),
     },
     {

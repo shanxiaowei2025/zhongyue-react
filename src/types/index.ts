@@ -197,7 +197,7 @@ export interface Customer {
   licenseExpiryDate: string
   registeredCapital: number
   capitalContributionDeadline: string
-  paidInCapital: number
+  paidInCapital: PaidInCapitalItem[]
   legalPersonIdImages: {
     front?: ImageType
     back?: ImageType
@@ -255,6 +255,13 @@ export interface Customer {
 export interface ImageType {
   fileName?: string
   url?: string
+}
+
+export interface PaidInCapitalItem {
+  name: string;
+  contributionDate: string; // 后端是Date类型，前端用string存储
+  amount: number;
+  images: string[];
 }
 
 export type RoleType = 'super_admin' | 'admin' | 'register_specialist' | string

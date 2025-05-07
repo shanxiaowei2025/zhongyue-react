@@ -11,10 +11,15 @@ import {
   message,
   Switch,
   Checkbox,
+  Table,
+  Upload,
+  Popconfirm,
 } from 'antd'
-import type { Customer, ImageType } from '../../types'
+import type { Customer, ImageType, PaidInCapitalItem } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
+import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons'
 import ImageUpload from '../../components/ImageUpload'
 import MultiImageUpload from '../../components/MultiImageUpload'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
@@ -59,11 +64,13 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   licenseExpiryDate: 'basic',
   registeredCapital: 'basic',
   capitalContributionDeadline: 'basic',
-  paidInCapital: 'basic',
   administrativeLicenseType: 'basic',
   administrativeLicenseExpiryDate: 'basic',
   submitter: 'basic',
   remarks: 'basic',
+
+  // 实缴资本标签页字段
+  paidInCapital: 'paid-capital',
 
   // 银行信息标签页字段
   publicBank: 'bank',
@@ -257,6 +264,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [isSaving, setIsSaving] = useState(false)
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
   const [uploadedImages, setUploadedImages] = useState<string[]>([]) // 跟踪已上传的图片文件名
+  const [paidInCapitalItems, setPaidInCapitalItems] = useState<PaidInCapitalItem[]>([])
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
   const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
@@ -301,6 +309,22 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         licenseNoFixedTerm: !customer.licenseExpiryDate,
       }
       form.setFieldsValue(formValues)
+      
+      // 初始化实缴资本数据
+      if (customer.paidInCapital && Array.isArray(customer.paidInCapital)) {
+        setPaidInCapitalItems(customer.paidInCapital.map(item => ({
+          ...item,
+          // 确保contributionDate是字符串类型
+          contributionDate: typeof item.contributionDate === 'string' 
+            ? item.contributionDate 
+            : dayjs(item.contributionDate).format('YYYY-MM-DD'),
+          // 确保images是数组
+          images: Array.isArray(item.images) ? item.images : []
+        })));
+      } else {
+        setPaidInCapitalItems([]);
+      }
+      
       // 标记状态已修复
       setFixState(true)
     }
@@ -352,6 +376,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       ) {
         dataWithImages.supplementaryImages = {}
       }
+
+      // 添加实缴资本数据
+      dataWithImages.paidInCapital = paidInCapitalItems;
 
       // 移除可能引起错误的createTime和updateTime字段
       const { createTime, updateTime, licenseNoFixedTerm, ...cleanData } = dataWithImages
@@ -545,6 +572,39 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     }
   }
 
+  // 添加实缴资本项
+  const handleAddPaidInCapitalItem = () => {
+    setPaidInCapitalItems([
+      ...paidInCapitalItems, 
+      { name: '', contributionDate: dayjs().format('YYYY-MM-DD'), amount: 0, images: [] }
+    ]);
+  };
+
+  // 删除实缴资本项
+  const handleDeletePaidInCapitalItem = (index: number) => {
+    const newItems = [...paidInCapitalItems];
+    newItems.splice(index, 1);
+    setPaidInCapitalItems(newItems);
+  };
+
+  // 更新实缴资本项
+  const handleUpdatePaidInCapitalItem = (index: number, field: keyof PaidInCapitalItem, value: any) => {
+    const newItems = [...paidInCapitalItems];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setPaidInCapitalItems(newItems);
+  };
+
+  // 处理文件上传
+  const handleFileUpload = (info: any, index: number) => {
+    if (info.file.status === 'done') {
+      // 假设上传成功后文件名或URL在response里
+      const fileName = info.file.response.fileName || info.file.name;
+      const newItems = [...paidInCapitalItems];
+      newItems[index].images = [...(newItems[index].images || []), fileName];
+      setPaidInCapitalItems(newItems);
+    }
+  };
+
   const tabs: TabsProps['items'] = [
     {
       key: 'basic',
@@ -727,10 +787,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             />
           </Form.Item>
 
-          <Form.Item name="paidInCapital" label="实缴资本">
-            <InputNumber className="w-full" addonAfter="万元" />
-          </Form.Item>
-
           <Form.Item name="administrativeLicenseType" label="行政许可类型">
             <Input />
           </Form.Item>
@@ -753,6 +809,136 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           <Form.Item name="remarks" label="备注信息" className="col-span-1 md:col-span-2">
             <Input.TextArea rows={3} />
           </Form.Item>
+        </div>
+      ),
+    },
+    {
+      key: 'paid-capital',
+      label: '实缴资本',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">实缴资本</h3>
+            <div className="flex items-center">
+              <span className="mr-2 text-lg font-bold">
+                {paidInCapitalItems.reduce((sum, item) => sum + (item.amount || 0), 0)}万
+              </span>
+              {mode !== 'view' && (
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />} 
+                  onClick={handleAddPaidInCapitalItem}
+                >
+                  新增
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          <Table 
+            dataSource={paidInCapitalItems.map((item, index) => ({ ...item, key: index }))}
+            pagination={false}
+            size="middle"
+            className="mb-4"
+            columns={[
+              {
+                title: '姓名',
+                dataIndex: 'name',
+                key: 'name',
+                render: (text, record, index) => (
+                  mode === 'view' ? text : (
+                    <Input 
+                      value={text} 
+                      onChange={e => handleUpdatePaidInCapitalItem(index, 'name', e.target.value)} 
+                    />
+                  )
+                )
+              },
+              {
+                title: '出资日期',
+                dataIndex: 'contributionDate',
+                key: 'contributionDate',
+                render: (text, record, index) => (
+                  mode === 'view' ? text : (
+                    <DatePicker 
+                      value={text ? dayjs(text) : null} 
+                      onChange={date => handleUpdatePaidInCapitalItem(
+                        index, 
+                        'contributionDate', 
+                        date ? date.format('YYYY-MM-DD') : ''
+                      )} 
+                      format="YYYY-MM-DD"
+                    />
+                  )
+                )
+              },
+              {
+                title: '出资金额',
+                dataIndex: 'amount',
+                key: 'amount',
+                render: (amount, record, index) => (
+                  mode === 'view' ? `${amount}万` : (
+                    <InputNumber 
+                      value={amount} 
+                      onChange={value => handleUpdatePaidInCapitalItem(index, 'amount', value || 0)}
+                      addonAfter="万"
+                      min={0}
+                      className="w-full"
+                    />
+                  )
+                )
+              },
+              {
+                title: '附件',
+                dataIndex: 'images',
+                key: 'images',
+                render: (images, record, index) => (
+                  <div>
+                    {Array.isArray(images) && images.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {images.map((img, imgIndex) => (
+                          <a key={imgIndex} href={img} target="_blank" rel="noopener noreferrer">
+                            附件{imgIndex + 1}
+                          </a>
+                        ))}
+                      </div>
+                    ) : '无附件'}
+                    
+                    {mode !== 'view' && (
+                      <Upload
+                        name="file"
+                        action="/api/upload" // 替换为实际的上传接口
+                        onChange={info => handleFileUpload(info, index)}
+                        showUploadList={false}
+                      >
+                        <Button icon={<UploadOutlined />} size="small" className="mt-1">
+                          上传附件
+                        </Button>
+                      </Upload>
+                    )}
+                  </div>
+                )
+              },
+              ...(mode !== 'view' ? [
+                {
+                  title: '操作',
+                  key: 'action',
+                  render: (_: any, record: any, index: number) => (
+                    <Popconfirm
+                      title="确定删除此条记录吗?"
+                      onConfirm={() => handleDeletePaidInCapitalItem(index)}
+                      okText="是"
+                      cancelText="否"
+                    >
+                      <Button type="link" danger icon={<DeleteOutlined />}>
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  )
+                }
+              ] : [])
+            ]}
+          />
         </div>
       ),
     },
