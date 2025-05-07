@@ -175,8 +175,10 @@ export interface AuthGroupPermission {
 export interface Customer {
   id: number
   companyName: string
+  unifiedSocialCreditCode: string
   consultantAccountant: string
   bookkeepingAccountant: string
+  invoiceOfficer: string
   enterpriseType: string
   taxNumber: string
   registeredAddress: string

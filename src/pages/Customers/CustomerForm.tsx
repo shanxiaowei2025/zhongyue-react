@@ -35,11 +35,13 @@ export const BUSINESS_STATUS_MAP = {
 const FIELD_TO_TAB_MAP: Record<string, string> = {
   // 基本信息标签页字段
   companyName: 'basic',
+  unifiedSocialCreditCode: 'basic',
   taxNumber: 'basic',
   enterpriseType: 'basic',
   taxBureau: 'basic',
   consultantAccountant: 'basic',
   bookkeepingAccountant: 'basic',
+  invoiceOfficer: 'basic',
   actualResponsibleName: 'basic',
   actualResponsiblePhone: 'basic',
   enterpriseStatus: 'basic',
@@ -553,6 +555,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
+          <Form.Item 
+            name="unifiedSocialCreditCode" 
+            label="统一社会信用代码" 
+            rules={[{ required: mode === 'add', message: '请输入统一社会信用代码' }]}
+          >
+            <Input disabled={mode === 'edit' || mode === 'view'} />
+          </Form.Item>
+
           <Form.Item name="taxNumber" label="税号">
             <Input />
           </Form.Item>
@@ -589,6 +599,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           </Form.Item>
 
           <Form.Item name="bookkeepingAccountant" label="记账会计">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="invoiceOfficer" label="开票员">
             <Input />
           </Form.Item>
 

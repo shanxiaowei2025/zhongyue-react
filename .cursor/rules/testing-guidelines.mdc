@@ -1,0 +1,63 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Description: 测试指南和最佳实践
+Globs: src/**/*.test.ts, src/**/*.test.tsx
+
+# 测试指南
+
+本项目使用Jest和React Testing Library进行测试，遵循以下规范：
+
+## 测试文件组织
+
+- 测试文件应与被测试文件放在同一目录下
+- 测试文件命名为`*.test.ts`或`*.test.tsx`
+- 使用描述性的测试套件和测试用例名称
+
+## 单元测试
+
+- 为工具函数和hooks编写单元测试
+- 测试应关注函数输入和输出，而非内部实现
+- 使用mock函数测试依赖和回调
+
+## 组件测试
+
+- 使用React Testing Library测试组件行为
+- 优先使用用户交互方式测试（如点击、输入等）
+- 避免测试组件的内部实现细节
+
+## 集成测试
+
+- 测试多个组件协同工作的场景
+- 模拟API请求和外部依赖
+- 验证UI状态变化和用户流程
+
+## 测试示例
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import ExampleComponent from './ExampleComponent';
+
+describe('ExampleComponent', () => {
+  it('renders with initial count', () => {
+    render(<ExampleComponent initialCount={5} />);
+    expect(screen.getByText('Count: 5')).toBeInTheDocument();
+  });
+
+  it('increments count when button is clicked', async () => {
+    const handleCountChange = jest.fn();
+    render(
+      <ExampleComponent initialCount={0} onCountChange={handleCountChange} />
+    );
+    
+    const button = screen.getByRole('button', { name: /increment/i });
+    await userEvent.click(button);
+    
+    expect(screen.getByText('Count: 1')).toBeInTheDocument();
+    expect(handleCountChange).toHaveBeenCalledWith(1);
+  });
+});
+```

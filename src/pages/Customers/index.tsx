@@ -1094,6 +1094,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       label: '基本信息',
       children: (
         <Descriptions
+          title="基本信息"
           bordered
           column={{ xxl: 3, xl: 3, lg: 3, md: 2, sm: 1, xs: 1 }}
           size={isMobile ? 'small' : 'default'}
@@ -1102,30 +1103,22 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="企业名称" span={3}>
             {displayCustomer.companyName || '-'}
           </Descriptions.Item>
+          <Descriptions.Item label="统一社会信用代码">
+            {displayCustomer.unifiedSocialCreditCode || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="税号">{displayCustomer.taxNumber || '-'}</Descriptions.Item>
           <Descriptions.Item label="企业类型">
             {displayCustomer.enterpriseType || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="所属分局">{displayCustomer.taxBureau || '-'}</Descriptions.Item>
           <Descriptions.Item label="归属地">{displayCustomer.location || '-'}</Descriptions.Item>
-          <Descriptions.Item label="顾问会计">
-            {displayCustomer.consultantAccountant || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="记账会计">
-            {displayCustomer.bookkeepingAccountant || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="实际负责人">
-            {displayCustomer.actualResponsibleName || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="联系电话">
-            {displayCustomer.actualResponsiblePhone || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="企业状态">
-            {formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}
-          </Descriptions.Item>
-          <Descriptions.Item label="业务状态">
-            {formatStatus(displayCustomer.businessStatus || null, 'business')}
-          </Descriptions.Item>
+          <Descriptions.Item label="顾问会计">{displayCustomer.consultantAccountant || '-'}</Descriptions.Item>
+          <Descriptions.Item label="记账会计">{displayCustomer.bookkeepingAccountant || '-'}</Descriptions.Item>
+          <Descriptions.Item label="开票员">{displayCustomer.invoiceOfficer || '-'}</Descriptions.Item>
+          <Descriptions.Item label="实际负责人">{displayCustomer.actualResponsibleName || '-'}</Descriptions.Item>
+          <Descriptions.Item label="联系电话">{displayCustomer.actualResponsiblePhone || '-'}</Descriptions.Item>
+          <Descriptions.Item label="企业状态">{formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}</Descriptions.Item>
+          <Descriptions.Item label="业务状态">{formatStatus(displayCustomer.businessStatus || null, 'business')}</Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>
             {displayCustomer.registeredAddress || '-'}
           </Descriptions.Item>
@@ -1141,50 +1134,22 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="同宗企业" span={3}>
             {displayCustomer.affiliatedEnterprises || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="行业大类">
-            {displayCustomer.industryCategory || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="行业细分">
-            {displayCustomer.industrySubcategory || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="是否有税收优惠">
-            {displayCustomer.hasTaxBenefits ? '是' : '否'}
-          </Descriptions.Item>
-          <Descriptions.Item label="工商公示密码">
-            {displayCustomer.businessPublicationPassword || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="营业执照到期日期">
-            {formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}
-          </Descriptions.Item>
-          <Descriptions.Item label="注册资本">
-            {displayCustomer.registeredCapital
-              ? `${displayCustomer.registeredCapital.toLocaleString()}万元`
-              : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="认缴到期日期">
-            {formatDate(displayCustomer.capitalContributionDeadline, false)}
-          </Descriptions.Item>
-          <Descriptions.Item label="实缴资本">
-            {displayCustomer.paidInCapital
-              ? `${displayCustomer.paidInCapital.toLocaleString()}万元`
-              : '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="行政许可类型">
-            {displayCustomer.administrativeLicenseType || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="行政许可到期日期">
-            {formatDate(displayCustomer.administrativeLicenseExpiryDate, false)}
-          </Descriptions.Item>
+          <Descriptions.Item label="行业大类">{displayCustomer.industryCategory || '-'}</Descriptions.Item>
+          <Descriptions.Item label="行业细分">{displayCustomer.industrySubcategory || '-'}</Descriptions.Item>
+          <Descriptions.Item label="是否有税收优惠">{displayCustomer.hasTaxBenefits ? '是' : '否'}</Descriptions.Item>
+          <Descriptions.Item label="工商公示密码">{displayCustomer.businessPublicationPassword || '-'}</Descriptions.Item>
+          <Descriptions.Item label="营业执照到期日期">{formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}</Descriptions.Item>
+          <Descriptions.Item label="注册资本">{displayCustomer.registeredCapital ? `${displayCustomer.registeredCapital.toLocaleString()}万元` : '-'}</Descriptions.Item>
+          <Descriptions.Item label="认缴到期日期">{formatDate(displayCustomer.capitalContributionDeadline, false)}</Descriptions.Item>
+          <Descriptions.Item label="实缴资本">{displayCustomer.paidInCapital ? `${displayCustomer.paidInCapital.toLocaleString()}万元` : '-'}</Descriptions.Item>
+          <Descriptions.Item label="行政许可类型">{displayCustomer.administrativeLicenseType || '-'}</Descriptions.Item>
+          <Descriptions.Item label="行政许可到期日期">{formatDate(displayCustomer.administrativeLicenseExpiryDate, false)}</Descriptions.Item>
           <Descriptions.Item label="提交人">{displayCustomer.submitter || '-'}</Descriptions.Item>
           <Descriptions.Item label="备注信息" span={3}>
             {displayCustomer.remarks || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="创建时间">
-            {formatDate(displayCustomer.createTime)}
-          </Descriptions.Item>
-          <Descriptions.Item label="更新时间">
-            {formatDate(displayCustomer.updateTime)}
-          </Descriptions.Item>
+          <Descriptions.Item label="创建时间">{formatDate(displayCustomer.createTime)}</Descriptions.Item>
+          <Descriptions.Item label="更新时间">{formatDate(displayCustomer.updateTime)}</Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1198,21 +1163,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           size={isMobile ? 'small' : 'default'}
           className={isMobile ? 'text-sm' : ''}
         >
-          <Descriptions.Item label="对公开户行">
-            {displayCustomer.publicBank || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="开户行账号">
-            {displayCustomer.bankAccountNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="对公开户时间">
-            {formatDate(displayCustomer.publicBankOpeningDate, false)}
-          </Descriptions.Item>
-          <Descriptions.Item label="网银托管档案号">
-            {displayCustomer.onlineBankingArchiveNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="三方协议扣款账户">
-            {displayCustomer.tripartiteAgreementAccount || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="对公开户行">{displayCustomer.publicBank || '-'}</Descriptions.Item>
+          <Descriptions.Item label="开户行账号">{displayCustomer.bankAccountNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="对公开户时间">{formatDate(displayCustomer.publicBankOpeningDate, false)}</Descriptions.Item>
+          <Descriptions.Item label="网银托管档案号">{displayCustomer.onlineBankingArchiveNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="三方协议扣款账户">{displayCustomer.tripartiteAgreementAccount || '-'}</Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1226,34 +1181,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           size={isMobile ? 'small' : 'default'}
           className={isMobile ? 'text-sm' : ''}
         >
-          <Descriptions.Item label="报税登录方式">
-            {displayCustomer.taxReportLoginMethod || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="报税登录方式">{displayCustomer.taxReportLoginMethod || '-'}</Descriptions.Item>
           <Descriptions.Item label="税种">{displayCustomer.taxCategories || '-'}</Descriptions.Item>
-          <Descriptions.Item label="社保险种">
-            {displayCustomer.socialInsuranceTypes || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="参保人员">
-            {displayCustomer.insuredPersonnel || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="个税密码">
-            {displayCustomer.personalIncomeTaxPassword || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="个税申报人员">
-            {displayCustomer.personalIncomeTaxStaff || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="企业信息表编号">
-            {displayCustomer.enterpriseInfoSheetNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="章存放编号">
-            {displayCustomer.sealStorageNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="开票软件">
-            {displayCustomer.invoicingSoftware || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="开票注意事项" span={2}>
-            {displayCustomer.invoicingNotes || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="社保险种">{displayCustomer.socialInsuranceTypes || '-'}</Descriptions.Item>
+          <Descriptions.Item label="参保人员">{displayCustomer.insuredPersonnel || '-'}</Descriptions.Item>
+          <Descriptions.Item label="个税密码">{displayCustomer.personalIncomeTaxPassword || '-'}</Descriptions.Item>
+          <Descriptions.Item label="个税申报人员">{displayCustomer.personalIncomeTaxStaff || '-'}</Descriptions.Item>
+          <Descriptions.Item label="企业信息表编号">{displayCustomer.enterpriseInfoSheetNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="章存放编号">{displayCustomer.sealStorageNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="开票软件">{displayCustomer.invoicingSoftware || '-'}</Descriptions.Item>
+          <Descriptions.Item label="开票注意事项" span={2}>{displayCustomer.invoicingNotes || '-'}</Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1269,18 +1206,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">
-              {displayCustomer.legalRepresentativeName || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="联系电话">
-              {displayCustomer.legalRepresentativePhone || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="身份证号">
-              {displayCustomer.legalRepresentativeId || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="税务密码">
-              {displayCustomer.legalRepresentativeTaxPassword || '-'}
-            </Descriptions.Item>
+            <Descriptions.Item label="姓名">{displayCustomer.legalRepresentativeName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">{displayCustomer.legalRepresentativePhone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="身份证号">{displayCustomer.legalRepresentativeId || '-'}</Descriptions.Item>
+            <Descriptions.Item label="税务密码">{displayCustomer.legalRepresentativeTaxPassword || '-'}</Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
@@ -1290,18 +1219,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">
-              {displayCustomer.financialContactName || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="联系电话">
-              {displayCustomer.financialContactPhone || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="身份证号">
-              {displayCustomer.financialContactId || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="税务密码">
-              {displayCustomer.financialContactTaxPassword || '-'}
-            </Descriptions.Item>
+            <Descriptions.Item label="姓名">{displayCustomer.financialContactName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">{displayCustomer.financialContactPhone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="身份证号">{displayCustomer.financialContactId || '-'}</Descriptions.Item>
+            <Descriptions.Item label="税务密码">{displayCustomer.financialContactTaxPassword || '-'}</Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">办税员</h3>
@@ -1311,18 +1232,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">
-              {displayCustomer.taxOfficerName || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="联系电话">
-              {displayCustomer.taxOfficerPhone || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="身份证号">
-              {displayCustomer.taxOfficerId || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="税务密码">
-              {displayCustomer.taxOfficerTaxPassword || '-'}
-            </Descriptions.Item>
+            <Descriptions.Item label="姓名">{displayCustomer.taxOfficerName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">{displayCustomer.taxOfficerPhone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="身份证号">{displayCustomer.taxOfficerId || '-'}</Descriptions.Item>
+            <Descriptions.Item label="税务密码">{displayCustomer.taxOfficerTaxPassword || '-'}</Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">开票员</h3>
@@ -1332,18 +1245,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">
-              {displayCustomer.invoiceOfficerName || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="联系电话">
-              {displayCustomer.invoiceOfficerPhone || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="身份证号">
-              {displayCustomer.invoiceOfficerId || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="税务密码">
-              {displayCustomer.invoiceOfficerTaxPassword || '-'}
-            </Descriptions.Item>
+            <Descriptions.Item label="姓名">{displayCustomer.invoiceOfficerName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="联系电话">{displayCustomer.invoiceOfficerPhone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="身份证号">{displayCustomer.invoiceOfficerId || '-'}</Descriptions.Item>
+            <Descriptions.Item label="税务密码">{displayCustomer.invoiceOfficerTaxPassword || '-'}</Descriptions.Item>
           </Descriptions>
         </>
       ),
