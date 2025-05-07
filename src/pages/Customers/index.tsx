@@ -1115,8 +1115,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="顾问会计">{displayCustomer.consultantAccountant || '-'}</Descriptions.Item>
           <Descriptions.Item label="记账会计">{displayCustomer.bookkeepingAccountant || '-'}</Descriptions.Item>
           <Descriptions.Item label="开票员">{displayCustomer.invoiceOfficer || '-'}</Descriptions.Item>
-          <Descriptions.Item label="实际负责人">{displayCustomer.actualResponsibleName || '-'}</Descriptions.Item>
-          <Descriptions.Item label="联系电话">{displayCustomer.actualResponsiblePhone || '-'}</Descriptions.Item>
           <Descriptions.Item label="企业状态">{formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}</Descriptions.Item>
           <Descriptions.Item label="业务状态">{formatStatus(displayCustomer.businessStatus || null, 'business')}</Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>
@@ -1270,6 +1268,45 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               },
             ]}
           />
+        </div>
+      ),
+    },
+    {
+      key: 'actual-responsibles',
+      label: '实际负责人',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">实际负责人</h3>
+          </div>
+          
+          <Table 
+            dataSource={Array.isArray(displayCustomer.actualResponsibles) 
+              ? displayCustomer.actualResponsibles.map((item, index) => ({ ...item, key: index })) 
+              : []}
+            pagination={false}
+            size={isMobile ? 'small' : 'middle'}
+            className="mb-4"
+            columns={[
+              {
+                title: '实际负责人姓名',
+                dataIndex: 'name',
+                key: 'name',
+              },
+              {
+                title: '实际负责人电话',
+                dataIndex: 'phone',
+                key: 'phone',
+              }
+            ]}
+          />
+          
+          <div className="mt-6">
+            <h3 className="text-base font-medium mb-2">备注</h3>
+            <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[80px]">
+              {displayCustomer.actualResponsibleRemark || '-'}
+            </div>
+          </div>
         </div>
       ),
     },

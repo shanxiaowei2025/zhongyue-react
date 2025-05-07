@@ -15,7 +15,7 @@ import {
   Upload,
   Popconfirm,
 } from 'antd'
-import type { Customer, ImageType, PaidInCapitalItem, AdministrativeLicenseItem } from '../../types'
+import type { Customer, ImageType, PaidInCapitalItem, AdministrativeLicenseItem, ActualResponsibleItem } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
@@ -47,8 +47,6 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   consultantAccountant: 'basic',
   bookkeepingAccountant: 'basic',
   invoiceOfficer: 'basic',
-  actualResponsibleName: 'basic',
-  actualResponsiblePhone: 'basic',
   enterpriseStatus: 'basic',
   businessStatus: 'basic',
   registeredAddress: 'basic',
@@ -72,6 +70,9 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   
   // 行政许可标签页字段
   administrativeLicense: 'administrative-license',
+  
+  // 实际负责人标签页字段
+  actualResponsibles: 'actual-responsibles',
 
   // 银行信息标签页字段
   publicBank: 'bank',
@@ -106,8 +107,6 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   taxOfficerId: 'personnel',
   taxOfficerTaxPassword: 'personnel',
   invoiceOfficerName: 'personnel',
-  invoiceOfficerPhone: 'personnel',
-  invoiceOfficerId: 'personnel',
   invoiceOfficerTaxPassword: 'personnel',
 
   // 图片资料标签页字段
@@ -249,6 +248,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]) // 跟踪已上传的图片文件名
   const [paidInCapitalItems, setPaidInCapitalItems] = useState<PaidInCapitalItem[]>([])
   const [administrativeLicenseItems, setAdministrativeLicenseItems] = useState<AdministrativeLicenseItem[]>([])
+  const [actualResponsibleItems, setActualResponsibleItems] = useState<ActualResponsibleItem[]>([])
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
   const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
@@ -324,6 +324,23 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         setAdministrativeLicenseItems([]);
       }
       
+      // 初始化实际负责人数据
+      if (customer.actualResponsibles && Array.isArray(customer.actualResponsibles)) {
+        setActualResponsibleItems(customer.actualResponsibles);
+      } else {
+        // 如果没有actualResponsibles数组，但有旧字段，尝试向下兼容
+        // 使用类型断言处理可能不存在的字段
+        const oldCustomer = customer as any;
+        if (oldCustomer && (oldCustomer.actualResponsibleName || oldCustomer.actualResponsiblePhone)) {
+          setActualResponsibleItems([{
+            name: oldCustomer.actualResponsibleName || '',
+            phone: oldCustomer.actualResponsiblePhone || ''
+          }]);
+        } else {
+          setActualResponsibleItems([]);
+        }
+      }
+      
       // 标记状态已修复
       setFixState(true)
     }
@@ -382,8 +399,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       // 添加行政许可数据
       dataWithImages.administrativeLicense = administrativeLicenseItems;
 
-      // 移除可能引起错误的createTime和updateTime字段
-      const { createTime, updateTime, licenseNoFixedTerm, ...cleanData } = dataWithImages
+      // 添加实际负责人数据
+      dataWithImages.actualResponsibles = actualResponsibleItems;
+
+      // 移除可能引起错误的字段
+      const { createTime, updateTime, licenseNoFixedTerm, actualResponsibleName, actualResponsiblePhone, ...cleanData } = dataWithImages;
 
       if (mode === 'add') {
         const newCustomer = await createCustomer(cleanData as Partial<Customer>)
@@ -645,6 +665,28 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     setAdministrativeLicenseItems(newItems);
   };
 
+  // 添加实际负责人项
+  const handleAddActualResponsibleItem = () => {
+    setActualResponsibleItems([
+      ...actualResponsibleItems, 
+      { name: '', phone: '' }
+    ]);
+  };
+
+  // 删除实际负责人项
+  const handleDeleteActualResponsibleItem = (index: number) => {
+    const newItems = [...actualResponsibleItems];
+    newItems.splice(index, 1);
+    setActualResponsibleItems(newItems);
+  };
+
+  // 更新实际负责人项
+  const handleUpdateActualResponsibleItem = (index: number, field: keyof ActualResponsibleItem, value: string) => {
+    const newItems = [...actualResponsibleItems];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setActualResponsibleItems(newItems);
+  };
+
   const tabs: TabsProps['items'] = [
     {
       key: 'basic',
@@ -706,14 +748,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           </Form.Item>
 
           <Form.Item name="invoiceOfficer" label="开票员">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="actualResponsibleName" label="实际负责人">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="actualResponsiblePhone" label="联系电话">
             <Input />
           </Form.Item>
 
@@ -1102,6 +1136,104 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               },
             ]}
           />
+        </div>
+      ),
+    },
+    {
+      key: 'actual-responsibles',
+      label: '实际负责人',
+      children: (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">实际负责人</h3>
+            {mode !== 'view' && (
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={handleAddActualResponsibleItem}
+              >
+                新增
+              </Button>
+            )}
+          </div>
+          
+          <Table 
+            dataSource={actualResponsibleItems.map((item, index) => ({ ...item, key: index }))}
+            pagination={false}
+            size="middle"
+            className="mb-4"
+            columns={[
+              {
+                title: '实际负责人姓名',
+                dataIndex: 'name',
+                key: 'name',
+                render: (text, record, index) => {
+                  if (mode === 'view') return text;
+                  return (
+                    <Input 
+                      value={text} 
+                      onChange={(e) => handleUpdateActualResponsibleItem(index, 'name', e.target.value)}
+                      placeholder="请输入实际负责人姓名"
+                    />
+                  );
+                }
+              },
+              {
+                title: '实际负责人电话',
+                dataIndex: 'phone',
+                key: 'phone',
+                render: (text, record, index) => {
+                  if (mode === 'view') return text;
+                  return (
+                    <Input 
+                      value={text} 
+                      onChange={(e) => handleUpdateActualResponsibleItem(index, 'phone', e.target.value)}
+                      placeholder="请输入实际负责人电话"
+                    />
+                  );
+                }
+              },
+              {
+                title: '操作',
+                key: 'action',
+                render: (text, record, index) => {
+                  if (mode === 'view') return null;
+                  return (
+                    <Popconfirm
+                      title="确定要删除此记录吗？"
+                      onConfirm={() => handleDeleteActualResponsibleItem(index)}
+                      okText="是"
+                      cancelText="否"
+                    >
+                      <Button type="link" danger icon={<DeleteOutlined />}>
+                        删除
+                      </Button>
+                    </Popconfirm>
+                  );
+                }
+              },
+            ]}
+          />
+          
+          <div className="mt-6">
+            <Form.Item 
+              name="actualResponsibleRemark" 
+              label="备注" 
+              labelCol={{ span: 24 }}
+              wrapperCol={{ span: 24 }}
+            >
+              {mode === 'view' ? (
+                <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[80px]">
+                  {form.getFieldValue('actualResponsibleRemark') || '-'}
+                </div>
+              ) : (
+                <Input.TextArea 
+                  rows={4} 
+                  placeholder="请输入实际负责人相关备注信息" 
+                />
+              )}
+            </Form.Item>
+          </div>
         </div>
       ),
     },

@@ -185,8 +185,6 @@ export interface Customer {
   location: string
   businessAddress: string
   taxBureau: string
-  actualResponsibleName: string
-  actualResponsiblePhone: string
   affiliatedEnterprises: string
   bossProfile: string
   enterpriseProfile: string
@@ -212,6 +210,8 @@ export interface Customer {
   }
   supplementaryImages: Record<string, ImageType>
   administrativeLicense: AdministrativeLicenseItem[]
+  actualResponsibles: ActualResponsibleItem[]
+  actualResponsibleRemark: string
   publicBank: string
   bankAccountNumber: string
   publicBankOpeningDate: string
@@ -268,6 +268,11 @@ export interface AdministrativeLicenseItem {
   startDate: string; // 后端是Date类型，前端用string存储
   expiryDate: string; // 后端是Date类型，前端用string存储
   images: string[];
+}
+
+export interface ActualResponsibleItem {
+  name: string;
+  phone: string;
 }
 
 export type RoleType = 'super_admin' | 'admin' | 'register_specialist' | string
