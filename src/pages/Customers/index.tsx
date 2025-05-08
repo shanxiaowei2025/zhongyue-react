@@ -1088,6 +1088,50 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     )
   }
 
+  // 渲染附件中的图片
+  const renderAttachmentImages = (images: Record<string, ImageType>, isMobile: boolean) => {
+    if (!images || typeof images !== 'object' || Object.keys(images).length === 0) {
+      return <div className="text-gray-500">无附件</div>;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(images).map(([key, img], index) => {
+          const imageData = img as ImageType;
+          const imageUrl = imageData.url || '#';
+          
+          return (
+            <div key={index} className="mb-2 flex flex-col items-center">
+              <div className="relative group">
+                <Image
+                  src={imageUrl}
+                  alt={key}
+                  width={isMobile ? 80 : 100}
+                  height={isMobile ? 80 : 100}
+                  className="object-cover rounded border border-gray-200"
+                  style={{ objectFit: 'cover' }}
+                  fallback="/images/image-placeholder.svg"
+                  preview={{ 
+                    src: imageUrl,
+                    mask: <div className="text-white">预览</div>
+                  }}
+                />
+              </div>
+              <a 
+                href={imageUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
+              >
+                {key}
+              </a>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const tabs: TabsProps['items'] = [
     {
       key: 'basic',
@@ -1191,19 +1235,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
-                render: (images) => (
-                  <div>
-                    {Array.isArray(images) && images.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {images.map((img, imgIndex) => (
-                          <a key={imgIndex} href={img} target="_blank" rel="noopener noreferrer">
-                            附件{imgIndex + 1}
-                          </a>
-                        ))}
-                      </div>
-                    ) : '无附件'}
-                  </div>
-                )
+                render: (images) => renderAttachmentImages(images, isMobile)
               }
             ]}
           />
@@ -1248,24 +1280,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
-                render: (images) => (
-                  images && images.length > 0 ? (
-                    <div className="flex flex-wrap">
-                      {images.map((url: string, i: number) => (
-                        <a 
-                          key={i} 
-                          href={url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="mr-2 mb-2 text-blue-500 hover:underline"
-                        >
-                          附件{i + 1}
-                        </a>
-                      ))}
-                    </div>
-                  ) : '-'
-                )
-              },
+                render: (images) => renderAttachmentImages(images, isMobile)
+              }
             ]}
           />
         </div>

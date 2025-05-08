@@ -260,14 +260,14 @@ export interface PaidInCapitalItem {
   name: string;
   contributionDate: string; // 后端是Date类型，前端用string存储
   amount: number;
-  images: string[];
+  images: Record<string, ImageType>;
 }
 
 export interface AdministrativeLicenseItem {
   licenseType: string;
   startDate: string; // 后端是Date类型，前端用string存储
   expiryDate: string; // 后端是Date类型，前端用string存储
-  images: string[];
+  images: Record<string, ImageType>;
 }
 
 export interface ActualResponsibleItem {

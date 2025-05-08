@@ -299,8 +299,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           contributionDate: typeof item.contributionDate === 'string' 
             ? item.contributionDate 
             : dayjs(item.contributionDate).format('YYYY-MM-DD'),
-          // 确保images是数组
-          images: Array.isArray(item.images) ? item.images : []
+          // 确保images是对象
+          images: typeof item.images === 'object' ? item.images : {}
         })));
       } else {
         setPaidInCapitalItems([]);
@@ -317,8 +317,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           expiryDate: typeof item.expiryDate === 'string' 
             ? item.expiryDate 
             : dayjs(item.expiryDate).format('YYYY-MM-DD'),
-          // 确保images是数组
-          images: Array.isArray(item.images) ? item.images : []
+          // 确保images是对象
+          images: typeof item.images === 'object' ? item.images : {}
         })));
       } else {
         setAdministrativeLicenseItems([]);
@@ -598,7 +598,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const handleAddPaidInCapitalItem = () => {
     setPaidInCapitalItems([
       ...paidInCapitalItems, 
-      { name: '', contributionDate: dayjs().format('YYYY-MM-DD'), amount: 0, images: [] }
+      { name: '', contributionDate: dayjs().format('YYYY-MM-DD'), amount: 0, images: {} }
     ]);
   };
 
@@ -621,8 +621,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     if (info.file.status === 'done') {
       // 假设上传成功后文件名或URL在response里
       const fileName = info.file.response.fileName || info.file.name;
+      const fileUrl = info.file.response.url || '';
       const newItems = [...paidInCapitalItems];
-      newItems[index].images = [...(newItems[index].images || []), fileName];
+      // 更新为对象格式存储，使用一个随机键名
+      const randomKey = `img_${Date.now()}`;
+      newItems[index].images = { 
+        ...newItems[index].images, 
+        [randomKey]: { fileName, url: fileUrl } 
+      };
       setPaidInCapitalItems(newItems);
     }
   };
@@ -635,7 +641,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         licenseType: '', 
         startDate: dayjs().format('YYYY-MM-DD'), 
         expiryDate: dayjs().format('YYYY-MM-DD'), 
-        images: [] 
+        images: {} 
       }
     ]);
   };
@@ -955,30 +961,32 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 dataIndex: 'images',
                 key: 'images',
                 render: (images, record, index) => (
-                  <div>
-                    {Array.isArray(images) && images.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {images.map((img, imgIndex) => (
-                          <a key={imgIndex} href={img} target="_blank" rel="noopener noreferrer">
-                            附件{imgIndex + 1}
+                  mode === 'view' ? (
+                    images && images.length > 0 ? (
+                      <div className="flex flex-wrap">
+                        {images.map((url: string, i: number) => (
+                          <a 
+                            key={i} 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="mr-2 mb-2 text-blue-500 hover:underline"
+                          >
+                            附件{i + 1}
                           </a>
                         ))}
                       </div>
-                    ) : '无附件'}
-                    
-                    {mode !== 'view' && (
-                      <Upload
-                        name="file"
-                        action="/api/upload" // 替换为实际的上传接口
-                        onChange={info => handleFileUpload(info, index)}
-                        showUploadList={false}
-                      >
-                        <Button icon={<UploadOutlined />} size="small" className="mt-1">
-                          上传附件
-                        </Button>
-                      </Upload>
-                    )}
-                  </div>
+                    ) : '-'
+                  ) : (
+                    <MultiImageUpload 
+                      disabled={false}
+                      value={images || {}}
+                      onChange={value => handleUpdatePaidInCapitalItem(index, 'images', value)}
+                      onSuccess={(url) => {
+                        setUploadedImages([...uploadedImages, url])
+                      }}
+                    />
+                  )
                 )
               },
               ...(mode !== 'view' ? [
@@ -1106,7 +1114,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   return (
                     <MultiImageUpload 
                       disabled={false}
-                      value={images || []}
+                      value={images || {}}
                       onChange={value => handleUpdateAdministrativeLicenseItem(index, 'images', value)}
                       onSuccess={(url) => {
                         setUploadedImages([...uploadedImages, url])
