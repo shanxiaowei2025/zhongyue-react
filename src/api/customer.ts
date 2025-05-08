@@ -55,9 +55,8 @@ export const updateCustomer = (id: number, data: Partial<Customer>) => {
     cleanData.registeredCapital = parseFloat(cleanData.registeredCapital)
   }
 
-  if (typeof cleanData.paidInCapital === 'string') {
-    cleanData.paidInCapital = parseFloat(cleanData.paidInCapital)
-  }
+  // paidInCapital 不应该被转换为 number，它是一个数组
+  // 移除错误的转换代码
 
   // 处理布尔值字段
   if (cleanData.hasTaxBenefits !== undefined) {

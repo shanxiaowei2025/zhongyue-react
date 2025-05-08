@@ -536,8 +536,18 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         // 使用 validateFields 验证指定字段而不是全部字段，避免阻止自动保存
         await form.validateFields(['companyName', 'enterpriseStatus', 'businessStatus'])
 
+        // 获取表单值，但保留状态中的数组数据
+        const formValues = form.getFieldsValue()
+        
+        // 手动添加状态中的paidInCapital数据，确保它不被覆盖
+        formValues.paidInCapital = paidInCapitalItems;
+        formValues.administrativeLicense = administrativeLicenseItems;
+        formValues.actualResponsibles = actualResponsibleItems;
+        
+        console.log('自动保存前的formValues:', formValues);
+        
         // 调用 handleSubmit 并传递 isAutoSave=true
-        await handleSubmit(form.getFieldsValue(), true)
+        await handleSubmit(formValues, true)
         console.log('自动保存成功')
       } catch (validationError: any) {
         // 处理验证错误但不显示消息，避免干扰用户
@@ -983,28 +993,40 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 key: 'images',
                 render: (images, record, index) => (
                   mode === 'view' ? (
-                    images && images.length > 0 ? (
+                    images && Object.keys(images).length > 0 ? (
                       <div className="flex flex-wrap">
-                        {images.map((url: string, i: number) => (
-                          <a 
-                            key={i} 
-                            href={url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="mr-2 mb-2 text-blue-500 hover:underline"
-                          >
-                            附件{i + 1}
-                          </a>
-                        ))}
+                        {Object.entries(images).map(([key, imageData], i) => {
+                          // 确保 imageData 是正确的 ImageType 类型
+                          const url = typeof imageData === 'object' && imageData && 'url' in imageData ? 
+                            (imageData as ImageType).url : 
+                            '#';
+                          
+                          return (
+                            <a 
+                              key={i} 
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="mr-2 mb-2 text-blue-500 hover:underline"
+                            >
+                              {key}
+                            </a>
+                          );
+                        })}
                       </div>
                     ) : '-'
                   ) : (
                     <MultiImageUpload 
                       disabled={false}
                       value={images || {}}
-                      onChange={value => handleUpdatePaidInCapitalItem(index, 'images', value)}
-                      onSuccess={(url) => {
-                        setUploadedImages([...uploadedImages, url])
+                      onChange={value => {
+                        console.log('MultiImageUpload onChange 被调用, value:', value);
+                        // 更新实缴资本项中的图片
+                        handleUpdatePaidInCapitalItem(index, 'images', value);
+                      }}
+                      onSuccess={() => {
+                        // 调用回调但不做其他操作，避免自动保存导致图片丢失
+                        console.log('MultiImageUpload onSuccess 被调用');
                       }}
                     />
                   )
@@ -1114,35 +1136,46 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
-                render: (images, record, index) => {
-                  if (mode === 'view') {
-                    return images && images.length > 0 ? (
+                render: (images, record, index) => (
+                  mode === 'view' ? (
+                    images && Object.keys(images).length > 0 ? (
                       <div className="flex flex-wrap">
-                        {images.map((url: string, i: number) => (
-                          <a 
-                            key={i} 
-                            href={url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="mr-2 mb-2 text-blue-500 hover:underline"
-                          >
-                            附件{i + 1}
-                          </a>
-                        ))}
+                        {Object.entries(images).map(([key, imageData], i) => {
+                          // 确保 imageData 是正确的 ImageType 类型
+                          const url = typeof imageData === 'object' && imageData && 'url' in imageData ? 
+                            (imageData as ImageType).url : 
+                            '#';
+                          
+                          return (
+                            <a 
+                              key={i} 
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="mr-2 mb-2 text-blue-500 hover:underline"
+                            >
+                              {key}
+                            </a>
+                          );
+                        })}
                       </div>
-                    ) : '-';
-                  }
-                  return (
+                    ) : '-'
+                  ) : (
                     <MultiImageUpload 
                       disabled={false}
                       value={images || {}}
-                      onChange={value => handleUpdateAdministrativeLicenseItem(index, 'images', value)}
-                      onSuccess={(url) => {
-                        setUploadedImages([...uploadedImages, url])
+                      onChange={value => {
+                        console.log('行政许可 MultiImageUpload onChange 被调用, value:', value);
+                        // 更新行政许可项中的图片
+                        handleUpdateAdministrativeLicenseItem(index, 'images', value);
+                      }}
+                      onSuccess={() => {
+                        // 调用回调但不做其他操作，避免自动保存导致图片丢失
+                        console.log('行政许可 MultiImageUpload onSuccess 被调用');
                       }}
                     />
-                  );
-                }
+                  )
+                )
               },
               {
                 title: '操作',
