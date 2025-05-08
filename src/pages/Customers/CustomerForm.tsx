@@ -96,6 +96,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   // 人员信息标签页字段
   legalRepresentativeName: 'personnel',
   legalRepresentativePhone: 'personnel',
+  legalRepresentativePhone2: 'personnel',
   legalRepresentativeId: 'personnel',
   legalRepresentativeTaxPassword: 'personnel',
   financialContactName: 'personnel',
@@ -130,10 +131,12 @@ type FormCustomer = Omit<
   | 'licenseExpiryDate'
   | 'capitalContributionDeadline'
   | 'publicBankOpeningDate'
+  | 'generalAccountOpeningDate'
 > & {
   licenseExpiryDate?: Dayjs | null
   capitalContributionDeadline?: Dayjs | null
   publicBankOpeningDate?: Dayjs | null
+  generalAccountOpeningDate?: Dayjs | null
   licenseNoFixedTerm?: boolean
   [key: string]: any // 添加索引签名
 }
@@ -144,10 +147,12 @@ type APICustomer = Omit<
   | 'licenseExpiryDate'
   | 'capitalContributionDeadline'
   | 'publicBankOpeningDate'
+  | 'generalAccountOpeningDate'
 > & {
   licenseExpiryDate?: string
   capitalContributionDeadline?: string
   publicBankOpeningDate?: string
+  generalAccountOpeningDate?: string
 }
 
 // 处理日期转换: Dayjs => string
@@ -158,6 +163,7 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     licenseExpiryDate: values.licenseExpiryDate,
     capitalContributionDeadline: values.capitalContributionDeadline,
     publicBankOpeningDate: values.publicBankOpeningDate,
+    generalAccountOpeningDate: values.generalAccountOpeningDate,
   })
 
   // 只有当值存在且是Dayjs对象时才进行转换
@@ -198,10 +204,22 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     result.publicBankOpeningDate = null
   }
 
+  if (
+    values.generalAccountOpeningDate &&
+    dayjs.isDayjs(values.generalAccountOpeningDate) &&
+    values.generalAccountOpeningDate.isValid()
+  ) {
+    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    result.generalAccountOpeningDate = values.generalAccountOpeningDate.format('YYYY-MM-DD')
+  } else {
+    result.generalAccountOpeningDate = null
+  }
+
   console.log('转换日期后的值:', {
     licenseExpiryDate: result.licenseExpiryDate,
     capitalContributionDeadline: result.capitalContributionDeadline,
     publicBankOpeningDate: result.publicBankOpeningDate,
+    generalAccountOpeningDate: result.generalAccountOpeningDate,
   })
 
   return result
@@ -285,6 +303,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           : null,
         publicBankOpeningDate: customer.publicBankOpeningDate
           ? dayjs(customer.publicBankOpeningDate)
+          : null,
+        generalAccountOpeningDate: customer.generalAccountOpeningDate
+          ? dayjs(customer.generalAccountOpeningDate)
           : null,
         // 如果营业执照到期日期为空，则设置licenseNoFixedTerm为true
         licenseNoFixedTerm: !customer.licenseExpiryDate,
@@ -1273,6 +1294,29 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
+          <Form.Item name="basicDepositAccountNumber" label="基本存款账户编号">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="generalAccountBank" label="一般户开户行">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="generalAccountNumber" label="一般户账号">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="generalAccountOpeningDate" label="一般户开户时间">
+            <DatePicker
+              className="w-full"
+              allowClear
+              format="YYYY-MM-DD"
+              onChange={date => {
+                form.setFieldValue('generalAccountOpeningDate', date)
+              }}
+            />
+          </Form.Item>
+
           <Form.Item name="tripartiteAgreementAccount" label="三方协议扣款账户">
             <Input />
           </Form.Item>
@@ -1338,6 +1382,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             </Form.Item>
 
             <Form.Item name="legalRepresentativePhone" label="联系电话">
+              <Input />
+            </Form.Item>
+
+            <Form.Item name="legalRepresentativePhone2" label="联系电话2">
               <Input />
             </Form.Item>
 

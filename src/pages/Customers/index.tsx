@@ -931,7 +931,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const formatDate = (dateString: string | null, includeTime = true, fieldType?: string) => {
+  const formatDate = (dateString: string | null | undefined, includeTime = true, fieldType?: string) => {
     if (!dateString) {
       // 当日期为空时，如果是营业执照到期日期字段，返回"无固定期限"
       if (fieldType === 'licenseExpiryDate') {
@@ -1340,6 +1340,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="开户行账号">{displayCustomer.bankAccountNumber || '-'}</Descriptions.Item>
           <Descriptions.Item label="对公开户时间">{formatDate(displayCustomer.publicBankOpeningDate, false)}</Descriptions.Item>
           <Descriptions.Item label="网银托管档案号">{displayCustomer.onlineBankingArchiveNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="基本存款账户编号">{displayCustomer.basicDepositAccountNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="一般户开户行">{displayCustomer.generalAccountBank || '-'}</Descriptions.Item>
+          <Descriptions.Item label="一般户账号">{displayCustomer.generalAccountNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="一般户开户时间">{formatDate(displayCustomer.generalAccountOpeningDate, false)}</Descriptions.Item>
           <Descriptions.Item label="三方协议扣款账户">{displayCustomer.tripartiteAgreementAccount || '-'}</Descriptions.Item>
         </Descriptions>
       ),
@@ -1381,6 +1385,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           >
             <Descriptions.Item label="姓名">{displayCustomer.legalRepresentativeName || '-'}</Descriptions.Item>
             <Descriptions.Item label="联系电话">{displayCustomer.legalRepresentativePhone || '-'}</Descriptions.Item>
+            <Descriptions.Item label="联系电话2">{displayCustomer.legalRepresentativePhone2 || '-'}</Descriptions.Item>
             <Descriptions.Item label="身份证号">{displayCustomer.legalRepresentativeId || '-'}</Descriptions.Item>
             <Descriptions.Item label="税务密码">{displayCustomer.legalRepresentativeTaxPassword || '-'}</Descriptions.Item>
           </Descriptions>

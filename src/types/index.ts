@@ -216,9 +216,14 @@ export interface Customer {
   bankAccountNumber: string
   publicBankOpeningDate: string
   onlineBankingArchiveNumber: string
+  basicDepositAccountNumber?: string
+  generalAccountBank?: string
+  generalAccountNumber?: string
+  generalAccountOpeningDate?: string
   taxReportLoginMethod: string
   legalRepresentativeName: string
   legalRepresentativePhone: string
+  legalRepresentativePhone2?: string
   legalRepresentativeId: string
   legalRepresentativeTaxPassword: string
   taxOfficerName: string
