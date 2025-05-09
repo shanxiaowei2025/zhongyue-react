@@ -939,6 +939,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       }
       return '-'
     }
+    
+    // 如果是营业执照到期日期且值为 9999-12-31，则显示为"无固定期限"
+    if (fieldType === 'licenseExpiryDate' && dateString === '9999-12-31') {
+      return '无固定期限'
+    }
+    
     try {
       if (includeTime) {
         return dayjs.utc(dateString).local().format('YYYY/MM/DD HH:mm')

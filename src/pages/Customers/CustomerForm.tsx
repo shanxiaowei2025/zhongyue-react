@@ -307,8 +307,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         generalAccountOpeningDate: customer.generalAccountOpeningDate
           ? dayjs(customer.generalAccountOpeningDate)
           : null,
-        // 如果营业执照到期日期为空，则设置licenseNoFixedTerm为true
-        licenseNoFixedTerm: !customer.licenseExpiryDate,
+        // 使用 9999-12-31 作为无固定期限的标志
+        licenseNoFixedTerm: customer.licenseExpiryDate === '9999-12-31',
       }
       form.setFieldsValue(formValues)
       
@@ -411,7 +411,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     if (!fixState) return
 
     if (licenseNoFixedTerm) {
-      // 如果选择了无固定期限，清空日期
+      // 如果选择了无固定期限，清空日期显示（实际保存时会设置为9999-12-31）
       form.setFieldValue('licenseExpiryDate', null)
     }
   }, [licenseNoFixedTerm, form, fixState])
@@ -430,8 +430,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       // 打印提交的值，以便调试
       console.log('提交的表单值:', values)
 
-      // 只有当选择了无固定期限时，才清空licenseExpiryDate值
+      // 处理营业执照到期日期
       if (values.licenseNoFixedTerm) {
+        // 如果选择了无固定期限，设置为特定日期 9999-12-31
+        values.licenseExpiryDate = dayjs('9999-12-31')
+      } else if (!values.licenseExpiryDate) {
+        // 如果未选择无固定期限但日期为空，则设置为 null
         values.licenseExpiryDate = null
       }
 
@@ -1740,8 +1744,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           })
 
           if (licenseNoFixedTermValue) {
-            // 如果勾选了无固定期限，确保licenseExpiryDate为null
-            formValues.licenseExpiryDate = null
+            // 如果勾选了无固定期限，设置为特定日期 9999-12-31
+            formValues.licenseExpiryDate = dayjs('9999-12-31')
           }
 
           handleSubmit(formValues)
