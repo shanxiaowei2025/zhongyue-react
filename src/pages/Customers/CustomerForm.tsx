@@ -28,13 +28,7 @@ import { useCustomerDetail } from '../../hooks/useCustomer'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { useBranchOffices } from '../../hooks/useDepartments'
-
-// 业务状态映射
-export const BUSINESS_STATUS_MAP = {
-  normal: '正常',
-  terminated: '终止',
-  suspended: '暂停',
-} as const
+import { BUSINESS_STATUS_MAP } from '../../constants'
 
 // 字段名到标签页的映射
 const FIELD_TO_TAB_MAP: Record<string, string> = {

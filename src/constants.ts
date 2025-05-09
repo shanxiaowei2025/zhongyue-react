@@ -1,8 +1,10 @@
 // 业务状态映射
 export const BUSINESS_STATUS_MAP = {
   normal: '正常',
-  terminated: '终止',
-  suspended: '暂停',
+  logged_out: '已注销',
+  logging_out: '注销中',
+  lost: '已流失',
+  waiting_transfer: '等待转出',
 } as const
 
 // 企业状态映射
@@ -15,8 +17,10 @@ export const ENTERPRISE_STATUS_MAP = {
 // 业务状态颜色映射
 export const BUSINESS_STATUS_COLOR_MAP = {
   normal: 'success',
-  terminated: 'error',
-  suspended: 'warning',
+  logged_out: 'error',
+  logging_out: 'warning',
+  lost: 'error',
+  waiting_transfer: 'processing',
 } as const
 
 // 企业状态颜色映射

@@ -249,7 +249,7 @@ export interface Customer {
   enterpriseInfoSheetNumber: string
   sealStorageNumber: string
   enterpriseStatus?: 'active' | 'inactive' | 'pending'
-  businessStatus?: 'normal' | 'terminated' | 'suspended'
+  businessStatus?: 'normal' | 'logged_out' | 'logging_out' | 'lost' | 'waiting_transfer'
   createTime: string
   updateTime: string
   submitter: string
