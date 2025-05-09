@@ -314,33 +314,72 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       
       // 初始化实缴资本数据
       if (customer.paidInCapital && Array.isArray(customer.paidInCapital)) {
-        setPaidInCapitalItems(customer.paidInCapital.map(item => ({
-          ...item,
-          // 确保contributionDate是字符串类型
-          contributionDate: typeof item.contributionDate === 'string' 
-            ? item.contributionDate 
-            : dayjs(item.contributionDate).format('YYYY-MM-DD'),
-          // 确保images是对象
-          images: typeof item.images === 'object' ? item.images : {}
-        })));
+        setPaidInCapitalItems(customer.paidInCapital.map(item => {
+          // 处理日期字段
+          let contributionDate = null;
+          
+          // 处理出资日期
+          if (item.contributionDate) {
+            try {
+              const dayjsDate = dayjs(item.contributionDate);
+              if (dayjsDate.isValid()) {
+                contributionDate = dayjsDate.format('YYYY-MM-DD');
+              }
+            } catch (e) {
+              console.warn('初始化实缴资本日期出错:', e);
+            }
+          }
+          
+          return {
+            ...item,
+            contributionDate,
+            // 确保images是对象
+            images: typeof item.images === 'object' ? item.images : {}
+          };
+        }));
       } else {
         setPaidInCapitalItems([]);
       }
       
       // 初始化行政许可数据
       if (customer.administrativeLicense && Array.isArray(customer.administrativeLicense)) {
-        setAdministrativeLicenseItems(customer.administrativeLicense.map(item => ({
-          ...item,
-          // 确保日期是字符串类型
-          startDate: typeof item.startDate === 'string' 
-            ? item.startDate 
-            : dayjs(item.startDate).format('YYYY-MM-DD'),
-          expiryDate: typeof item.expiryDate === 'string' 
-            ? item.expiryDate 
-            : dayjs(item.expiryDate).format('YYYY-MM-DD'),
-          // 确保images是对象
-          images: typeof item.images === 'object' ? item.images : {}
-        })));
+        setAdministrativeLicenseItems(customer.administrativeLicense.map(item => {
+          // 处理日期字段
+          let startDate = null;
+          let expiryDate = null;
+          
+          // 处理开始日期
+          if (item.startDate) {
+            try {
+              const dayjsStartDate = dayjs(item.startDate);
+              if (dayjsStartDate.isValid()) {
+                startDate = dayjsStartDate.format('YYYY-MM-DD');
+              }
+            } catch (e) {
+              console.warn('初始化行政许可开始日期出错:', e);
+            }
+          }
+          
+          // 处理到期日期
+          if (item.expiryDate) {
+            try {
+              const dayjsExpiryDate = dayjs(item.expiryDate);
+              if (dayjsExpiryDate.isValid()) {
+                expiryDate = dayjsExpiryDate.format('YYYY-MM-DD');
+              }
+            } catch (e) {
+              console.warn('初始化行政许可到期日期出错:', e);
+            }
+          }
+          
+          return {
+            ...item,
+            startDate,
+            expiryDate,
+            // 确保images是对象
+            images: typeof item.images === 'object' ? item.images : {}
+          };
+        }));
       } else {
         setAdministrativeLicenseItems([]);
       }
@@ -643,7 +682,18 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   // 更新实缴资本项
   const handleUpdatePaidInCapitalItem = (index: number, field: keyof PaidInCapitalItem, value: any) => {
     const newItems = [...paidInCapitalItems];
-    newItems[index] = { ...newItems[index], [field]: value };
+    
+    // 处理日期字段
+    if (field === 'contributionDate') {
+      // 确保日期字段为空时存储为 null 而不是空字符串
+      newItems[index] = { 
+        ...newItems[index], 
+        [field]: value || null 
+      };
+    } else {
+      newItems[index] = { ...newItems[index], [field]: value };
+    }
+    
     setPaidInCapitalItems(newItems);
   };
 
@@ -690,10 +740,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     
     // Type assertion to ensure proper types for date fields
     if (field === 'startDate' || field === 'expiryDate') {
-      // Ensure dates are always strings
+      // 确保日期字段为空时存储为 null 而不是空字符串
       newItems[index] = { 
         ...newItems[index], 
-        [field]: value || '' 
+        [field]: value || null 
       };
     } else {
       newItems[index] = { ...newItems[index], [field]: value };
@@ -957,19 +1007,40 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 title: '出资日期',
                 dataIndex: 'contributionDate',
                 key: 'contributionDate',
-                render: (text, record, index) => (
-                  mode === 'view' ? text : (
+                render: (text, record, index) => {
+                  if (mode === 'view') {
+                    // 查看模式下，直接显示日期文本或默认值
+                    return text || '-';
+                  }
+                  
+                  // 处理日期值，确保有效日期才会被转换为dayjs对象
+                  let dayjsValue = null;
+                  if (text) {
+                    try {
+                      dayjsValue = dayjs(text);
+                      // 检查转换后的dayjs对象是否有效
+                      if (!dayjsValue.isValid()) {
+                        dayjsValue = null;
+                      }
+                    } catch (e) {
+                      console.warn('无效的日期格式:', text);
+                      dayjsValue = null;
+                    }
+                  }
+                  
+                  return (
                     <DatePicker 
-                      value={text ? dayjs(text) : null} 
-                      onChange={date => handleUpdatePaidInCapitalItem(
-                        index, 
-                        'contributionDate', 
-                        date ? date.format('YYYY-MM-DD') : ''
-                      )} 
+                      value={dayjsValue} 
+                      onChange={date => {
+                        // 当日期为空时，设置为null
+                        const dateValue = date ? date.format('YYYY-MM-DD') : null;
+                        handleUpdatePaidInCapitalItem(index, 'contributionDate', dateValue);
+                      }} 
                       format="YYYY-MM-DD"
+                      style={{ width: '100%' }}
                     />
-                  )
-                )
+                  );
+                }
               },
               {
                 title: '出资金额',
@@ -1099,16 +1170,36 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 dataIndex: 'startDate',
                 key: 'startDate',
                 render: (text, record, index) => {
-                  if (mode === 'view') return text;
+                  if (mode === 'view') {
+                    // 查看模式下，直接显示日期文本或默认值
+                    return text || '-';
+                  }
+                  
+                  // 处理日期值，确保有效日期才会被转换为dayjs对象
+                  let dayjsValue = null;
+                  if (text) {
+                    try {
+                      dayjsValue = dayjs(text);
+                      // 检查转换后的dayjs对象是否有效
+                      if (!dayjsValue.isValid()) {
+                        dayjsValue = null;
+                      }
+                    } catch (e) {
+                      console.warn('无效的日期格式:', text);
+                      dayjsValue = null;
+                    }
+                  }
+                  
                   return (
                     <DatePicker 
-                      value={text ? dayjs(text) : null} 
+                      value={dayjsValue} 
                       onChange={(date) => {
-                        // Ensure we always have a string value
-                        const dateString = date ? date.format('YYYY-MM-DD') : '';
-                        handleUpdateAdministrativeLicenseItem(index, 'startDate', dateString);
+                        // 当日期为空时，设置为null
+                        const dateValue = date ? date.format('YYYY-MM-DD') : null;
+                        handleUpdateAdministrativeLicenseItem(index, 'startDate', dateValue);
                       }} 
                       format="YYYY-MM-DD"
+                      style={{ width: '100%' }}
                     />
                   );
                 }
@@ -1118,16 +1209,36 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 dataIndex: 'expiryDate',
                 key: 'expiryDate',
                 render: (text, record, index) => {
-                  if (mode === 'view') return text;
+                  if (mode === 'view') {
+                    // 查看模式下，直接显示日期文本或默认值
+                    return text || '-';
+                  }
+                  
+                  // 处理日期值，确保有效日期才会被转换为dayjs对象
+                  let dayjsValue = null;
+                  if (text) {
+                    try {
+                      dayjsValue = dayjs(text);
+                      // 检查转换后的dayjs对象是否有效
+                      if (!dayjsValue.isValid()) {
+                        dayjsValue = null;
+                      }
+                    } catch (e) {
+                      console.warn('无效的日期格式:', text);
+                      dayjsValue = null;
+                    }
+                  }
+                  
                   return (
                     <DatePicker 
-                      value={text ? dayjs(text) : null} 
+                      value={dayjsValue} 
                       onChange={(date) => {
-                        // Ensure we always have a string value
-                        const dateString = date ? date.format('YYYY-MM-DD') : '';
-                        handleUpdateAdministrativeLicenseItem(index, 'expiryDate', dateString);
+                        // 当日期为空时，设置为null
+                        const dateValue = date ? date.format('YYYY-MM-DD') : null;
+                        handleUpdateAdministrativeLicenseItem(index, 'expiryDate', dateValue);
                       }} 
                       format="YYYY-MM-DD"
+                      style={{ width: '100%' }}
                     />
                   );
                 }

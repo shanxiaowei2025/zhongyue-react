@@ -263,15 +263,15 @@ export interface ImageType {
 
 export interface PaidInCapitalItem {
   name: string;
-  contributionDate: string; // 后端是Date类型，前端用string存储
+  contributionDate: string | null; // 后端是Date类型或null，前端用string或null存储
   amount: number;
   images: Record<string, ImageType>;
 }
 
 export interface AdministrativeLicenseItem {
   licenseType: string;
-  startDate: string; // 后端是Date类型，前端用string存储
-  expiryDate: string; // 后端是Date类型，前端用string存储
+  startDate: string | null; // 后端是Date类型或null，前端用string或null存储
+  expiryDate: string | null; // 后端是Date类型或null，前端用string或null存储
   images: Record<string, ImageType>;
 }
 

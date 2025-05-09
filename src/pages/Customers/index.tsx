@@ -1223,7 +1223,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '出资日期',
                 dataIndex: 'contributionDate',
                 key: 'contributionDate',
-                render: (text) => text ? formatDate(text, false) : '-'
+                render: (text) => formatDate(text, false)
               },
               {
                 title: '出资金额',
@@ -1252,12 +1252,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </div>
           
           <Table 
-            dataSource={Array.isArray(displayCustomer.administrativeLicense) 
-              ? displayCustomer.administrativeLicense.map((item, index) => ({ ...item, key: index })) 
-              : []}
+            dataSource={displayCustomer.administrativeLicense?.map((item, index) => ({ ...item, key: index })) || []}
             pagination={false}
-            size={isMobile ? 'small' : 'middle'}
-            className="mb-4"
+            size="small"
+            className="mt-4"
             columns={[
               {
                 title: '行政许可类型',
@@ -1268,20 +1266,20 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '行政许可开始日期',
                 dataIndex: 'startDate',
                 key: 'startDate',
-                render: (text) => formatDate(text, false)
+                render: (date) => formatDate(date, false)
               },
               {
                 title: '行政许可到期日期',
                 dataIndex: 'expiryDate',
                 key: 'expiryDate',
-                render: (text) => formatDate(text, false)
+                render: (date) => formatDate(date, false)
               },
               {
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
                 render: (images) => renderAttachmentImages(images, isMobile)
-              }
+              },
             ]}
           />
         </div>
