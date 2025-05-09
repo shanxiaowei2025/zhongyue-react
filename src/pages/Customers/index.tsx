@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   Table,
   Button,
@@ -13,6 +13,7 @@ import {
   Select,
   DatePicker,
   Image,
+  ConfigProvider,
 } from 'antd'
 import {
   PlusOutlined,
@@ -34,18 +35,12 @@ import {
   ENTERPRISE_STATUS_COLOR_MAP,
 } from '../../constants'
 import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
-import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
 import useSWR, { mutate } from 'swr'
 import { getCustomerDetail, getCustomerById } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
-
-// 启用 dayjs 插件
-dayjs.extend(utc)
-dayjs.extend(timezone)
 
 const { confirm } = Modal
 
@@ -462,7 +457,7 @@ export default function Customers() {
       key: 'createTime',
       width: isMobile ? 130 : 180,
       responsive: ['lg'],
-      render: (date: string) => dayjs.utc(date).local().format('YYYY-MM-DD HH:mm:ss'),
+      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
       title: '操作',
@@ -638,7 +633,7 @@ export default function Customers() {
           />
           <DatePicker
             placeholder="开始日期"
-            value={searchParams.startDate ? dayjs.utc(searchParams.startDate).local() : null}
+            value={searchParams.startDate ? dayjs(searchParams.startDate) : null}
             onChange={date =>
               setSearchParams({ ...searchParams, startDate: date ? date.format('YYYY-MM-DD') : '' })
             }
@@ -646,7 +641,7 @@ export default function Customers() {
           />
           <DatePicker
             placeholder="结束日期"
-            value={searchParams.endDate ? dayjs.utc(searchParams.endDate).local() : null}
+            value={searchParams.endDate ? dayjs(searchParams.endDate) : null}
             onChange={date =>
               setSearchParams({ ...searchParams, endDate: date ? date.format('YYYY-MM-DD') : '' })
             }
@@ -947,9 +942,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     
     try {
       if (includeTime) {
-        return dayjs.utc(dateString).local().format('YYYY/MM/DD HH:mm')
+        return dayjs(dateString).format('YYYY/MM/DD HH:mm')
       }
-      return dayjs.utc(dateString).local().format('YYYY/MM/DD')
+      return dayjs(dateString).format('YYYY/MM/DD')
     } catch (e) {
       return dateString || '-'
     }
