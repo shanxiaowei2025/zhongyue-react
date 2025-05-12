@@ -31,5 +31,5 @@ export const ENTERPRISE_STATUS_COLOR_MAP = {
 } as const
 
 // 其他常量
-export const MAX_UPLOAD_SIZE = 5 * 1024 * 1024 // 5MB
+export const MAX_UPLOAD_SIZE = Number.MAX_SAFE_INTEGER // 不限制上传大小
 export const UPLOAD_ACCEPT_TYPES = 'image/jpeg,image/png,image/gif'

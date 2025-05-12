@@ -49,11 +49,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!isImage) {
       message.error('只能上传图片文件！')
     }
-    const isLt5M = file.size / 1024 / 1024 < 5
-    if (!isLt5M) {
-      message.error('图片必须小于5MB！')
-    }
-    return isImage && isLt5M
+    return isImage
   }
 
   const handleCustomUpload = async (options: any) => {

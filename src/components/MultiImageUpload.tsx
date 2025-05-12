@@ -80,12 +80,6 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       return false
     }
 
-    const isLt5M = file.size / 1024 / 1024 < 5
-    if (!isLt5M) {
-      message.error('图片必须小于5MB！')
-      return false
-    }
-
     // 显示文件预览
     const reader = new FileReader()
     reader.onload = e => {
