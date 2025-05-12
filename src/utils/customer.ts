@@ -17,6 +17,7 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
   if (formData.businessLicenseImages) {
     processedData.businessLicenseImages = {
       main: formData.businessLicenseImages.main,
+      copy: formData.businessLicenseImages.copy,
     }
   }
 

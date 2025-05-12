@@ -203,6 +203,7 @@ export interface Customer {
   otherIdImages: Record<string, ImageType>
   businessLicenseImages: {
     main?: ImageType
+    copy?: ImageType
   }
   bankAccountLicenseImages: {
     basic?: ImageType

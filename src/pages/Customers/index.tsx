@@ -1457,6 +1457,8 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               <h3 className="font-medium mb-2">营业执照照片</h3>
               <div className="mb-1">营业执照</div>
               {renderImage(displayCustomer.businessLicenseImages?.main, '营业执照')}
+              <div className="mb-1 mt-4">营业执照副本</div>
+              {renderImage(displayCustomer.businessLicenseImages?.copy, '营业执照副本')}
             </div>
           </div>
 

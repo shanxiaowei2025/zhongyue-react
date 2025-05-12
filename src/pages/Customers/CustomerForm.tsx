@@ -1644,6 +1644,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   onSuccess={handleImageUploadSuccess}
                 />
               </Form.Item>
+              <Form.Item name={['businessLicenseImages', 'copy']} label="营业执照副本">
+                <ImageUpload
+                  label="营业执照副本"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['businessLicenseImages', 'copy'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['businessLicenseImages', 'copy'], value)
+                  }
+                  onSuccess={handleImageUploadSuccess}
+                />
+              </Form.Item>
             </div>
           </div>
 
