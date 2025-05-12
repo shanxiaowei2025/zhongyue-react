@@ -28,6 +28,7 @@ RUN echo 'server { \
     server_name localhost; \
     root /usr/share/nginx/html; \
     index index.html; \
+    client_max_body_size 0; \
     location ^~ /api/ { \
         proxy_pass http://api:3000/api/; \
         proxy_set_header Host $host; \

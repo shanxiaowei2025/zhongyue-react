@@ -302,3 +302,8 @@ docker run -d -p 80:80 -v /path/to/custom/nginx.conf:/etc/nginx/conf.d/default.c
 2. 为API服务配置适当的CORS策略
 3. 使用环境变量管理敏感信息
 4. 配置适当的日志记录和监控
+
+- 移除了图片上传大小限制，现在支持上传任意大小的图片
+- 修复了Nginx配置中的client_max_body_size限制，解决了413 Request Entity Too Large错误
+- 优化多图片上传标签显示，在图片底部清晰显示用户设置的标签
+- 图片上传或删除后自动保存客户信息但不关闭编辑窗口，提升用户体验
