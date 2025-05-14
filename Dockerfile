@@ -29,6 +29,26 @@ RUN echo 'server { \
     root /usr/share/nginx/html; \
     index index.html; \
     client_max_body_size 0; \
+    # 启用gzip压缩 \
+    gzip on; \
+    gzip_comp_level 6; \
+    gzip_min_length 256; \
+    gzip_proxied any; \
+    gzip_vary on; \
+    gzip_types \
+        text/plain \
+        text/css \
+        text/xml \
+        text/javascript \
+        application/javascript \
+        application/x-javascript \
+        application/json \
+        application/xml \
+        application/xml+rss \
+        application/vnd.ms-fontobject \
+        application/x-font-ttf \
+        font/opentype \
+        image/svg+xml; \
     location ^~ /api/ { \
         proxy_pass http://api:3000/api/; \
         proxy_set_header Host $host; \
@@ -36,14 +56,31 @@ RUN echo 'server { \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ { \
-        expires 1y; \
-        add_header Cache-Control "public, max-age=31536000, immutable"; \
+    # HTML文件 - 确保每次都重新获取 \
+    location ~ \.html$ { \
+        add_header Cache-Control "no-cache, no-store, must-revalidate"; \
+        add_header Pragma "no-cache"; \
+        add_header Expires "0"; \
+        try_files $uri $uri/ /index.html; \
+    } \
+    # JavaScript和CSS文件 - 确保每次都重新验证 \
+    location ~* \.(js|css)$ { \
+        add_header Cache-Control "no-cache"; \
+        add_header Pragma "no-cache"; \
+        add_header Expires "0"; \
+        access_log off; \
+    } \
+    # 其他静态资源 (使用长缓存) \
+    location ~* \.(png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ { \
+        expires 7d; \
+        add_header Cache-Control "public, max-age=604800"; \
         access_log off; \
     } \
     location / { \
         try_files $uri $uri/ /index.html; \
         add_header Cache-Control "no-cache, no-store, must-revalidate"; \
+        add_header Pragma "no-cache"; \
+        add_header Expires "0"; \
     } \
     add_header X-Frame-Options "SAMEORIGIN"; \
     add_header X-Content-Type-Options "nosniff"; \
