@@ -931,7 +931,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const formatDate = (dateString: string | null | undefined, includeTime = true, fieldType?: string) => {
+  const formatDate = (
+    dateString: string | null | undefined,
+    includeTime = true,
+    fieldType?: string
+  ) => {
     if (!dateString) {
       // 当日期为空时，如果是营业执照到期日期字段，返回"无固定期限"
       if (fieldType === 'licenseExpiryDate') {
@@ -939,12 +943,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       }
       return '-'
     }
-    
+
     // 如果是营业执照到期日期且值为 9999-12-31，则显示为"无固定期限"
     if (fieldType === 'licenseExpiryDate' && dateString === '9999-12-31') {
       return '无固定期限'
     }
-    
+
     try {
       if (includeTime) {
         return dayjs.utc(dateString).local().format('YYYY/MM/DD HH:mm')
@@ -1097,15 +1101,15 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   // 渲染附件中的图片
   const renderAttachmentImages = (images: Record<string, ImageType>, isMobile: boolean) => {
     if (!images || typeof images !== 'object' || Object.keys(images).length === 0) {
-      return <div className="text-gray-500">无附件</div>;
+      return <div className="text-gray-500">无附件</div>
     }
 
     return (
       <div className="flex flex-wrap gap-2">
         {Object.entries(images).map(([key, img], index) => {
-          const imageData = img as ImageType;
-          const imageUrl = imageData.url || '#';
-          
+          const imageData = img as ImageType
+          const imageUrl = imageData.url || '#'
+
           return (
             <div key={index} className="mb-2 flex flex-col items-center">
               <div className="relative group">
@@ -1117,26 +1121,26 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                   className="object-cover rounded border border-gray-200"
                   style={{ objectFit: 'cover' }}
                   fallback="/images/image-placeholder.svg"
-                  preview={{ 
+                  preview={{
                     src: imageUrl,
-                    mask: <div className="text-white">预览</div>
+                    mask: <div className="text-white">预览</div>,
                   }}
                 />
               </div>
-              <a 
-                href={imageUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={imageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
               >
                 {key}
               </a>
             </div>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   const tabs: TabsProps['items'] = [
     {
@@ -1162,11 +1166,21 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions.Item>
           <Descriptions.Item label="所属分局">{displayCustomer.taxBureau || '-'}</Descriptions.Item>
           <Descriptions.Item label="归属地">{displayCustomer.location || '-'}</Descriptions.Item>
-          <Descriptions.Item label="顾问会计">{displayCustomer.consultantAccountant || '-'}</Descriptions.Item>
-          <Descriptions.Item label="记账会计">{displayCustomer.bookkeepingAccountant || '-'}</Descriptions.Item>
-          <Descriptions.Item label="开票员">{displayCustomer.invoiceOfficer || '-'}</Descriptions.Item>
-          <Descriptions.Item label="企业状态">{formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}</Descriptions.Item>
-          <Descriptions.Item label="业务状态">{formatStatus(displayCustomer.businessStatus || null, 'business')}</Descriptions.Item>
+          <Descriptions.Item label="顾问会计">
+            {displayCustomer.consultantAccountant || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="记账会计">
+            {displayCustomer.bookkeepingAccountant || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="开票员">
+            {displayCustomer.invoiceOfficer || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业状态">
+            {formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}
+          </Descriptions.Item>
+          <Descriptions.Item label="业务状态">
+            {formatStatus(displayCustomer.businessStatus || null, 'business')}
+          </Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>
             {displayCustomer.registeredAddress || '-'}
           </Descriptions.Item>
@@ -1182,19 +1196,39 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="同宗企业" span={3}>
             {displayCustomer.affiliatedEnterprises || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="行业大类">{displayCustomer.industryCategory || '-'}</Descriptions.Item>
-          <Descriptions.Item label="行业细分">{displayCustomer.industrySubcategory || '-'}</Descriptions.Item>
-          <Descriptions.Item label="是否有税收优惠">{displayCustomer.hasTaxBenefits ? '是' : '否'}</Descriptions.Item>
-          <Descriptions.Item label="工商公示密码">{displayCustomer.businessPublicationPassword || '-'}</Descriptions.Item>
-          <Descriptions.Item label="营业执照到期日期">{formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}</Descriptions.Item>
-          <Descriptions.Item label="注册资本">{displayCustomer.registeredCapital ? `${displayCustomer.registeredCapital.toLocaleString()}万元` : '-'}</Descriptions.Item>
-          <Descriptions.Item label="认缴到期日期">{formatDate(displayCustomer.capitalContributionDeadline, false)}</Descriptions.Item>
+          <Descriptions.Item label="行业大类">
+            {displayCustomer.industryCategory || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="行业细分">
+            {displayCustomer.industrySubcategory || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="是否有税收优惠">
+            {displayCustomer.hasTaxBenefits ? '是' : '否'}
+          </Descriptions.Item>
+          <Descriptions.Item label="工商公示密码">
+            {displayCustomer.businessPublicationPassword || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="营业执照到期日期">
+            {formatDate(displayCustomer.licenseExpiryDate, false, 'licenseExpiryDate')}
+          </Descriptions.Item>
+          <Descriptions.Item label="注册资本">
+            {displayCustomer.registeredCapital
+              ? `${displayCustomer.registeredCapital.toLocaleString()}万元`
+              : '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="认缴到期日期">
+            {formatDate(displayCustomer.capitalContributionDeadline, false)}
+          </Descriptions.Item>
           <Descriptions.Item label="提交人">{displayCustomer.submitter || '-'}</Descriptions.Item>
           <Descriptions.Item label="备注信息" span={3}>
             {displayCustomer.remarks || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="创建时间">{formatDate(displayCustomer.createTime)}</Descriptions.Item>
-          <Descriptions.Item label="更新时间">{formatDate(displayCustomer.updateTime)}</Descriptions.Item>
+          <Descriptions.Item label="创建时间">
+            {formatDate(displayCustomer.createTime)}
+          </Descriptions.Item>
+          <Descriptions.Item label="更新时间">
+            {formatDate(displayCustomer.updateTime)}
+          </Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1206,16 +1240,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">实缴资本</h3>
             <span className="text-lg font-bold">
-              {Array.isArray(displayCustomer.paidInCapital) 
-                ? displayCustomer.paidInCapital.reduce((sum, item) => sum + (item.amount || 0), 0) 
-                : 0}万
+              {Array.isArray(displayCustomer.paidInCapital)
+                ? displayCustomer.paidInCapital.reduce((sum, item) => sum + (item.amount || 0), 0)
+                : 0}
+              万
             </span>
           </div>
-          
-          <Table 
-            dataSource={Array.isArray(displayCustomer.paidInCapital) 
-              ? displayCustomer.paidInCapital.map((item, index) => ({ ...item, key: index })) 
-              : []}
+
+          <Table
+            dataSource={
+              Array.isArray(displayCustomer.paidInCapital)
+                ? displayCustomer.paidInCapital.map((item, index) => ({ ...item, key: index }))
+                : []
+            }
             pagination={false}
             size={isMobile ? 'small' : 'middle'}
             className="mb-4"
@@ -1229,20 +1266,20 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '出资日期',
                 dataIndex: 'contributionDate',
                 key: 'contributionDate',
-                render: (text) => formatDate(text, false)
+                render: text => formatDate(text, false),
               },
               {
                 title: '出资金额',
                 dataIndex: 'amount',
                 key: 'amount',
-                render: (amount) => `${amount || 0}万`
+                render: amount => `${amount || 0}万`,
               },
               {
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
-                render: (images) => renderAttachmentImages(images, isMobile)
-              }
+                render: images => renderAttachmentImages(images, isMobile),
+              },
             ]}
           />
         </div>
@@ -1256,9 +1293,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">行政许可</h3>
           </div>
-          
-          <Table 
-            dataSource={displayCustomer.administrativeLicense?.map((item, index) => ({ ...item, key: index })) || []}
+
+          <Table
+            dataSource={
+              displayCustomer.administrativeLicense?.map((item, index) => ({
+                ...item,
+                key: index,
+              })) || []
+            }
             pagination={false}
             size="small"
             className="mt-4"
@@ -1272,19 +1314,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '行政许可开始日期',
                 dataIndex: 'startDate',
                 key: 'startDate',
-                render: (date) => formatDate(date, false)
+                render: date => formatDate(date, false),
               },
               {
                 title: '行政许可到期日期',
                 dataIndex: 'expiryDate',
                 key: 'expiryDate',
-                render: (date) => formatDate(date, false)
+                render: date => formatDate(date, false),
               },
               {
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
-                render: (images) => renderAttachmentImages(images, isMobile)
+                render: images => renderAttachmentImages(images, isMobile),
               },
             ]}
           />
@@ -1299,11 +1341,13 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">实际负责人</h3>
           </div>
-          
-          <Table 
-            dataSource={Array.isArray(displayCustomer.actualResponsibles) 
-              ? displayCustomer.actualResponsibles.map((item, index) => ({ ...item, key: index })) 
-              : []}
+
+          <Table
+            dataSource={
+              Array.isArray(displayCustomer.actualResponsibles)
+                ? displayCustomer.actualResponsibles.map((item, index) => ({ ...item, key: index }))
+                : []
+            }
             pagination={false}
             size={isMobile ? 'small' : 'middle'}
             className="mb-4"
@@ -1317,10 +1361,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 title: '实际负责人电话',
                 dataIndex: 'phone',
                 key: 'phone',
-              }
+              },
             ]}
           />
-          
+
           <div className="mt-6">
             <h3 className="text-base font-medium mb-2">备注</h3>
             <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[80px]">
@@ -1340,15 +1384,33 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           size={isMobile ? 'small' : 'default'}
           className={isMobile ? 'text-sm' : ''}
         >
-          <Descriptions.Item label="对公开户行">{displayCustomer.publicBank || '-'}</Descriptions.Item>
-          <Descriptions.Item label="开户行账号">{displayCustomer.bankAccountNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="对公开户时间">{formatDate(displayCustomer.publicBankOpeningDate, false)}</Descriptions.Item>
-          <Descriptions.Item label="网银托管档案号">{displayCustomer.onlineBankingArchiveNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="基本存款账户编号">{displayCustomer.basicDepositAccountNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="一般户开户行">{displayCustomer.generalAccountBank || '-'}</Descriptions.Item>
-          <Descriptions.Item label="一般户账号">{displayCustomer.generalAccountNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="一般户开户时间">{formatDate(displayCustomer.generalAccountOpeningDate, false)}</Descriptions.Item>
-          <Descriptions.Item label="三方协议扣款账户">{displayCustomer.tripartiteAgreementAccount || '-'}</Descriptions.Item>
+          <Descriptions.Item label="对公开户行">
+            {displayCustomer.publicBank || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="开户行账号">
+            {displayCustomer.bankAccountNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="对公开户时间">
+            {formatDate(displayCustomer.publicBankOpeningDate, false)}
+          </Descriptions.Item>
+          <Descriptions.Item label="网银托管档案号">
+            {displayCustomer.onlineBankingArchiveNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="基本存款账户编号">
+            {displayCustomer.basicDepositAccountNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="一般户开户行">
+            {displayCustomer.generalAccountBank || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="一般户账号">
+            {displayCustomer.generalAccountNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="一般户开户时间">
+            {formatDate(displayCustomer.generalAccountOpeningDate, false)}
+          </Descriptions.Item>
+          <Descriptions.Item label="三方协议扣款账户">
+            {displayCustomer.tripartiteAgreementAccount || '-'}
+          </Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1362,16 +1424,34 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           size={isMobile ? 'small' : 'default'}
           className={isMobile ? 'text-sm' : ''}
         >
-          <Descriptions.Item label="报税登录方式">{displayCustomer.taxReportLoginMethod || '-'}</Descriptions.Item>
+          <Descriptions.Item label="报税登录方式">
+            {displayCustomer.taxReportLoginMethod || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="税种">{displayCustomer.taxCategories || '-'}</Descriptions.Item>
-          <Descriptions.Item label="社保险种">{displayCustomer.socialInsuranceTypes || '-'}</Descriptions.Item>
-          <Descriptions.Item label="参保人员">{displayCustomer.insuredPersonnel || '-'}</Descriptions.Item>
-          <Descriptions.Item label="个税密码">{displayCustomer.personalIncomeTaxPassword || '-'}</Descriptions.Item>
-          <Descriptions.Item label="个税申报人员">{displayCustomer.personalIncomeTaxStaff || '-'}</Descriptions.Item>
-          <Descriptions.Item label="企业信息表编号">{displayCustomer.enterpriseInfoSheetNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="章存放编号">{displayCustomer.sealStorageNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="开票软件">{displayCustomer.invoicingSoftware || '-'}</Descriptions.Item>
-          <Descriptions.Item label="开票注意事项" span={2}>{displayCustomer.invoicingNotes || '-'}</Descriptions.Item>
+          <Descriptions.Item label="社保险种">
+            {displayCustomer.socialInsuranceTypes || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="参保人员">
+            {displayCustomer.insuredPersonnel || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="个税密码">
+            {displayCustomer.personalIncomeTaxPassword || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="个税申报人员">
+            {displayCustomer.personalIncomeTaxStaff || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="企业信息表编号">
+            {displayCustomer.enterpriseInfoSheetNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="章存放编号">
+            {displayCustomer.sealStorageNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="开票软件">
+            {displayCustomer.invoicingSoftware || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="开票注意事项" span={2}>
+            {displayCustomer.invoicingNotes || '-'}
+          </Descriptions.Item>
         </Descriptions>
       ),
     },
@@ -1387,11 +1467,21 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">{displayCustomer.legalRepresentativeName || '-'}</Descriptions.Item>
-            <Descriptions.Item label="联系电话">{displayCustomer.legalRepresentativePhone || '-'}</Descriptions.Item>
-            <Descriptions.Item label="联系电话2">{displayCustomer.legalRepresentativePhone2 || '-'}</Descriptions.Item>
-            <Descriptions.Item label="身份证号">{displayCustomer.legalRepresentativeId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="税务密码">{displayCustomer.legalRepresentativeTaxPassword || '-'}</Descriptions.Item>
+            <Descriptions.Item label="姓名">
+              {displayCustomer.legalRepresentativeName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {displayCustomer.legalRepresentativePhone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话2">
+              {displayCustomer.legalRepresentativePhone2 || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {displayCustomer.legalRepresentativeId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="税务密码">
+              {displayCustomer.legalRepresentativeTaxPassword || '-'}
+            </Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">财务负责人</h3>
@@ -1401,10 +1491,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">{displayCustomer.financialContactName || '-'}</Descriptions.Item>
-            <Descriptions.Item label="联系电话">{displayCustomer.financialContactPhone || '-'}</Descriptions.Item>
-            <Descriptions.Item label="身份证号">{displayCustomer.financialContactId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="税务密码">{displayCustomer.financialContactTaxPassword || '-'}</Descriptions.Item>
+            <Descriptions.Item label="姓名">
+              {displayCustomer.financialContactName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {displayCustomer.financialContactPhone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {displayCustomer.financialContactId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="税务密码">
+              {displayCustomer.financialContactTaxPassword || '-'}
+            </Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">办税员</h3>
@@ -1414,10 +1512,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">{displayCustomer.taxOfficerName || '-'}</Descriptions.Item>
-            <Descriptions.Item label="联系电话">{displayCustomer.taxOfficerPhone || '-'}</Descriptions.Item>
-            <Descriptions.Item label="身份证号">{displayCustomer.taxOfficerId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="税务密码">{displayCustomer.taxOfficerTaxPassword || '-'}</Descriptions.Item>
+            <Descriptions.Item label="姓名">
+              {displayCustomer.taxOfficerName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {displayCustomer.taxOfficerPhone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {displayCustomer.taxOfficerId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="税务密码">
+              {displayCustomer.taxOfficerTaxPassword || '-'}
+            </Descriptions.Item>
           </Descriptions>
 
           <h3 className="mt-4 mb-2 font-medium">开票员</h3>
@@ -1427,10 +1533,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             size={isMobile ? 'small' : 'default'}
             className={isMobile ? 'text-sm' : ''}
           >
-            <Descriptions.Item label="姓名">{displayCustomer.invoiceOfficerName || '-'}</Descriptions.Item>
-            <Descriptions.Item label="联系电话">{displayCustomer.invoiceOfficerPhone || '-'}</Descriptions.Item>
-            <Descriptions.Item label="身份证号">{displayCustomer.invoiceOfficerId || '-'}</Descriptions.Item>
-            <Descriptions.Item label="税务密码">{displayCustomer.invoiceOfficerTaxPassword || '-'}</Descriptions.Item>
+            <Descriptions.Item label="姓名">
+              {displayCustomer.invoiceOfficerName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="联系电话">
+              {displayCustomer.invoiceOfficerPhone || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身份证号">
+              {displayCustomer.invoiceOfficerId || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="税务密码">
+              {displayCustomer.invoiceOfficerTaxPassword || '-'}
+            </Descriptions.Item>
           </Descriptions>
         </>
       ),
@@ -1440,10 +1554,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       label: '图片资料',
       children: (
         <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
-          <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
-            <div>
-              <h3 className="font-medium mb-2">法人身份证照片</h3>
-              <div className="mb-4">
+          <div>
+            <h3 className="font-medium mb-2">法人身份证照片</h3>
+            <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
+              <div>
                 <div className="mb-1">身份证正面</div>
                 {renderImage(displayCustomer.legalPersonIdImages?.front, '身份证正面')}
               </div>
@@ -1452,13 +1566,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 {renderImage(displayCustomer.legalPersonIdImages?.back, '身份证反面')}
               </div>
             </div>
-
-            <div>
-              <h3 className="font-medium mb-2">营业执照照片</h3>
-              <div className="mb-1">营业执照</div>
-              {renderImage(displayCustomer.businessLicenseImages?.main, '营业执照')}
-              <div className="mb-1 mt-4">营业执照副本</div>
-              {renderImage(displayCustomer.businessLicenseImages?.copy, '营业执照副本')}
+          </div>
+          
+          <div>
+            <h3 className="font-medium mb-2">营业执照照片</h3>
+            <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
+              <div>
+                <div className="mb-1">营业执照</div>
+                {renderImage(displayCustomer.businessLicenseImages?.main, '营业执照')}
+              </div>
+              <div>
+                <div className="mb-1">营业执照副本</div>
+                {renderImage(displayCustomer.businessLicenseImages?.copy, '营业执照副本')}
+              </div>
             </div>
           </div>
 

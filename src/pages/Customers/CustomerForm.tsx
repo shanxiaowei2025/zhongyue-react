@@ -1659,9 +1659,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       label: '图片资料',
       children: (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-medium mb-2">法人身份证照片</h3>
+          <div>
+            <h3 className="font-medium mb-2">法人身份证照片</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item name={['legalPersonIdImages', 'front']} label="身份证正面">
                 <ImageUpload
                   label="身份证正面"
@@ -1685,9 +1685,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 />
               </Form.Item>
             </div>
+          </div>
 
-            <div>
-              <h3 className="font-medium mb-2">营业执照照片</h3>
+          <div>
+            <h3 className="font-medium mb-2">营业执照照片</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item name={['businessLicenseImages', 'main']} label="营业执照">
                 <ImageUpload
                   label="营业执照"
