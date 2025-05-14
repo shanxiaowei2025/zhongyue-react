@@ -236,8 +236,11 @@ const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCu
       })
 
       result[fieldKey] = processedField
+    } else if (fieldKey in values) {
+      // 如果字段存在但不是预期的对象格式，保留原值
+      result[fieldKey] = values[fieldKey]
     } else {
-      // 如果字段不存在或不是对象，设置为空对象
+      // 只有当字段完全不存在时才设置为空对象
       result[fieldKey] = {}
     }
   }
@@ -451,11 +454,25 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         dataWithImages.supplementaryImages = {}
       }
 
-      // 添加实缴资本数据
-      dataWithImages.paidInCapital = paidInCapitalItems;
+      // 添加实缴资本数据 - 确保保留已有的图片
+      const updatedPaidInCapitalItems = paidInCapitalItems.map(item => {
+        // 确保每个item的images属性存在且是对象
+        if (!item.images || typeof item.images !== 'object') {
+          return { ...item, images: {} };
+        }
+        return item;
+      });
+      dataWithImages.paidInCapital = updatedPaidInCapitalItems;
 
-      // 添加行政许可数据
-      dataWithImages.administrativeLicense = administrativeLicenseItems;
+      // 添加行政许可数据 - 确保保留已有的图片
+      const updatedAdministrativeLicenseItems = administrativeLicenseItems.map(item => {
+        // 确保每个item的images属性存在且是对象
+        if (!item.images || typeof item.images !== 'object') {
+          return { ...item, images: {} };
+        }
+        return item;
+      });
+      dataWithImages.administrativeLicense = updatedAdministrativeLicenseItems;
 
       // 添加实际负责人数据
       dataWithImages.actualResponsibles = actualResponsibleItems;
@@ -573,12 +590,31 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         // 使用 validateFields 验证指定字段而不是全部字段，避免阻止自动保存
         await form.validateFields(['companyName', 'enterpriseStatus', 'businessStatus'])
 
-        // 获取表单值，但保留状态中的数组数据
+        // 获取表单值
         const formValues = form.getFieldsValue()
         
-        // 手动添加状态中的paidInCapital数据，确保它不被覆盖
-        formValues.paidInCapital = paidInCapitalItems;
-        formValues.administrativeLicense = administrativeLicenseItems;
+        // 手动保留图片相关的状态数据
+        // 实缴资本和行政许可使用状态中的数据，这样能确保图片数据不丢失
+        const updatedPaidInCapitalItems = paidInCapitalItems.map(item => {
+          // 确保每个item的images属性存在且是对象
+          if (!item.images || typeof item.images !== 'object') {
+            return { ...item, images: {} };
+          }
+          return item;
+        });
+        formValues.paidInCapital = updatedPaidInCapitalItems;
+        
+        // 同样处理行政许可数据
+        const updatedAdministrativeLicenseItems = administrativeLicenseItems.map(item => {
+          // 确保每个item的images属性存在且是对象
+          if (!item.images || typeof item.images !== 'object') {
+            return { ...item, images: {} };
+          }
+          return item;
+        });
+        formValues.administrativeLicense = updatedAdministrativeLicenseItems;
+        
+        // 保留实际负责人数据
         formValues.actualResponsibles = actualResponsibleItems;
         
         console.log('自动保存前的formValues:', formValues);
@@ -621,11 +657,30 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         })
       }
 
+      // 处理主要图片字段
       collectFileName(legalPersonIdImages)
       collectFileName(businessLicenseImages)
       collectFileName(bankAccountLicenseImages)
       collectFileName(otherIdImages)
       collectFileName(supplementaryImages)
+
+      // 处理行政许可图片
+      if (administrativeLicenseItems && administrativeLicenseItems.length > 0) {
+        administrativeLicenseItems.forEach(item => {
+          if (item.images && typeof item.images === 'object') {
+            collectFileName(item.images);
+          }
+        });
+      }
+
+      // 处理实缴资本图片
+      if (paidInCapitalItems && paidInCapitalItems.length > 0) {
+        paidInCapitalItems.forEach(item => {
+          if (item.images && typeof item.images === 'object') {
+            collectFileName(item.images);
+          }
+        });
+      }
     } else if (autoSaveEnabled) {
       // 编辑模式下，调用自动保存
       handleAutoSave()
