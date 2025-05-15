@@ -226,22 +226,38 @@ const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCu
   // 处理单个图片字段
   const processImageField = (fieldKey: string) => {
     const field = values[fieldKey]
-    if (field && typeof field === 'object') {
+    
+    // 防止未定义字段导致的问题
+    if (!field) {
+      // 字段不存在时，保留为空对象而不是undefined
+      result[fieldKey] = {}
+      return
+    }
+    
+    if (typeof field === 'object') {
       const processedField: Record<string, ImageType> = {}
 
+      // 遍历对象的每个key-value对
       Object.entries(field).forEach(([key, value]) => {
-        if (value && typeof value === 'object' && 'url' in value) {
+        // 检查value是否为有效的ImageType对象
+        if (value && typeof value === 'object' && ('url' in value || 'fileName' in value)) {
           processedField[key] = value as ImageType
+        } else if (value && typeof value === 'string') {
+          // 处理可能出现的字符串URL情况
+          processedField[key] = { url: value } as ImageType
         }
       })
 
-      result[fieldKey] = processedField
-    } else if (fieldKey in values) {
-      // 如果字段存在但不是预期的对象格式，保留原值
-      result[fieldKey] = values[fieldKey]
+      // 如果处理后的字段有内容，或者原字段本来就没内容
+      if (Object.keys(processedField).length > 0 || Object.keys(field).length === 0) {
+        result[fieldKey] = processedField
+      } else {
+        // 保留原始值，防止数据丢失
+        result[fieldKey] = field
+      }
     } else {
-      // 只有当字段完全不存在时才设置为空对象
-      result[fieldKey] = {}
+      // 如果字段不是预期的对象格式，保留原值
+      result[fieldKey] = field
     }
   }
 
@@ -251,6 +267,46 @@ const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCu
   processImageField('bankAccountLicenseImages')
   processImageField('otherIdImages')
   processImageField('supplementaryImages')
+
+  // 确保paidInCapital中的图片也被正确处理
+  if (result.paidInCapital && Array.isArray(result.paidInCapital)) {
+    result.paidInCapital = result.paidInCapital.map(item => {
+      if (item.images && typeof item.images === 'object') {
+        const processedImages: Record<string, ImageType> = {}
+        
+        Object.entries(item.images).forEach(([key, value]) => {
+          if (value && typeof value === 'object' && ('url' in value || 'fileName' in value)) {
+            processedImages[key] = value as ImageType
+          } else if (value && typeof value === 'string') {
+            processedImages[key] = { url: value } as ImageType
+          }
+        })
+        
+        return { ...item, images: processedImages }
+      }
+      return item
+    })
+  }
+  
+  // 确保administrativeLicense中的图片也被正确处理
+  if (result.administrativeLicense && Array.isArray(result.administrativeLicense)) {
+    result.administrativeLicense = result.administrativeLicense.map(item => {
+      if (item.images && typeof item.images === 'object') {
+        const processedImages: Record<string, ImageType> = {}
+        
+        Object.entries(item.images).forEach(([key, value]) => {
+          if (value && typeof value === 'object' && ('url' in value || 'fileName' in value)) {
+            processedImages[key] = value as ImageType
+          } else if (value && typeof value === 'string') {
+            processedImages[key] = { url: value } as ImageType
+          }
+        })
+        
+        return { ...item, images: processedImages }
+      }
+      return item
+    })
+  }
 
   return result
 }
@@ -436,6 +492,27 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         values.licenseExpiryDate = null
       }
 
+      // 如果是编辑模式，确保保留已有的图片数据
+      if (mode === 'edit' && customer) {
+        // 确保图片字段存在且是正确的对象格式
+        // 检查并保留已有图片字段
+        if (!values.legalPersonIdImages || typeof values.legalPersonIdImages !== 'object') {
+          values.legalPersonIdImages = customer.legalPersonIdImages || {};
+        }
+        if (!values.businessLicenseImages || typeof values.businessLicenseImages !== 'object') {
+          values.businessLicenseImages = customer.businessLicenseImages || {};
+        }
+        if (!values.bankAccountLicenseImages || typeof values.bankAccountLicenseImages !== 'object') {
+          values.bankAccountLicenseImages = customer.bankAccountLicenseImages || {};
+        }
+        if (!values.otherIdImages || typeof values.otherIdImages !== 'object') {
+          values.otherIdImages = customer.otherIdImages || {};
+        }
+        if (!values.supplementaryImages || typeof values.supplementaryImages !== 'object') {
+          values.supplementaryImages = customer.supplementaryImages || {};
+        }
+      }
+
       // 处理日期字段转换为字符串
       const valuesWithDatesConverted = convertDatesToString(values)
 
@@ -443,15 +520,24 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       const dataWithImages = convertImageFieldsToUrls(valuesWithDatesConverted)
 
       // 确保所有必需的图片字段都存在且为对象类型
-      if (!dataWithImages.otherIdImages || typeof dataWithImages.otherIdImages !== 'object') {
-        dataWithImages.otherIdImages = {}
+      if (!dataWithImages.legalPersonIdImages || typeof dataWithImages.legalPersonIdImages !== 'object') {
+        dataWithImages.legalPersonIdImages = customer?.legalPersonIdImages || {};
+      }
+      
+      if (!dataWithImages.businessLicenseImages || typeof dataWithImages.businessLicenseImages !== 'object') {
+        dataWithImages.businessLicenseImages = customer?.businessLicenseImages || {};
+      }
+      
+      if (!dataWithImages.bankAccountLicenseImages || typeof dataWithImages.bankAccountLicenseImages !== 'object') {
+        dataWithImages.bankAccountLicenseImages = customer?.bankAccountLicenseImages || {};
       }
 
-      if (
-        !dataWithImages.supplementaryImages ||
-        typeof dataWithImages.supplementaryImages !== 'object'
-      ) {
-        dataWithImages.supplementaryImages = {}
+      if (!dataWithImages.otherIdImages || typeof dataWithImages.otherIdImages !== 'object') {
+        dataWithImages.otherIdImages = customer?.otherIdImages || {};
+      }
+
+      if (!dataWithImages.supplementaryImages || typeof dataWithImages.supplementaryImages !== 'object') {
+        dataWithImages.supplementaryImages = customer?.supplementaryImages || {};
       }
 
       // 添加实缴资本数据 - 确保保留已有的图片
@@ -592,6 +678,26 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
         // 获取表单值
         const formValues = form.getFieldsValue()
+        
+        // 如果是编辑模式，确保保留已有的图片数据
+        if (customer) {
+          // 检查并保留已有图片字段
+          if (!formValues.legalPersonIdImages || typeof formValues.legalPersonIdImages !== 'object') {
+            formValues.legalPersonIdImages = customer.legalPersonIdImages || {};
+          }
+          if (!formValues.businessLicenseImages || typeof formValues.businessLicenseImages !== 'object') {
+            formValues.businessLicenseImages = customer.businessLicenseImages || {};
+          }
+          if (!formValues.bankAccountLicenseImages || typeof formValues.bankAccountLicenseImages !== 'object') {
+            formValues.bankAccountLicenseImages = customer.bankAccountLicenseImages || {};
+          }
+          if (!formValues.otherIdImages || typeof formValues.otherIdImages !== 'object') {
+            formValues.otherIdImages = customer.otherIdImages || {};
+          }
+          if (!formValues.supplementaryImages || typeof formValues.supplementaryImages !== 'object') {
+            formValues.supplementaryImages = customer.supplementaryImages || {};
+          }
+        }
         
         // 手动保留图片相关的状态数据
         // 实缴资本和行政许可使用状态中的数据，这样能确保图片数据不丢失
