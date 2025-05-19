@@ -15,6 +15,7 @@ import {
   SettingOutlined,
   QuestionCircleOutlined,
   ApartmentOutlined,
+  DollarOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import type { MenuProps } from 'antd'
@@ -113,6 +114,11 @@ const MainLayout = () => {
       key: '/customers',
       icon: <ShopOutlined />,
       label: '客户管理',
+    },
+    {
+      key: '/expenses',
+      icon: <DollarOutlined />,
+      label: '费用管理',
     },
   ]
 

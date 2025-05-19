@@ -22,9 +22,19 @@ const instance = axios.create({
     Object.entries(params).forEach(([key, value]) => {
       // 过滤掉空值
       if (value !== undefined && value !== null && value !== '') {
-        // 如果是对象或数组，转为JSON字符串
-        if (typeof value === 'object' && value !== null) {
-          searchParams.append(key, JSON.stringify(value))
+        // 对象类型处理 - 数组我们需要特殊处理
+        if (Array.isArray(value)) {
+          // 数组值按照标准RESTful API约定处理
+          value.forEach(item => {
+            searchParams.append(`${key}[]`, String(item))
+          })
+        } else if (typeof value === 'object' && value !== null) {
+          // 避免将对象序列化为JSON字符串，而是展平对象的属性
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            if (subValue !== undefined && subValue !== null && subValue !== '') {
+              searchParams.append(subKey, String(subValue))
+            }
+          })
         } else {
           searchParams.append(key, String(value))
         }
@@ -159,6 +169,7 @@ instance.interceptors.response.use(
 // 封装 HTTP 请求方法
 const request = {
   get<T>(url: string, params?: object): Promise<T> {
+    // 直接使用params作为请求参数，不额外包装
     return instance.get(url, { params }).then(res => res.data)
   },
   post<T>(url: string, data?: object): Promise<T> {
