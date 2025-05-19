@@ -145,10 +145,30 @@ export interface CancelAuditDto {
 
 // 收据视图DTO
 export interface ReceiptViewDto {
-  id: number;
-  companyName: string;
-  chargeDate: string;
-  totalFee: number;
-  chargeMethod: string;
-  remarks: string;
+  id?: number;
+  companyName?: string;
+  chargeDate?: string;
+  totalFee?: number;
+  chargeMethod?: string;
+  remarks?: string;
+  salesperson?: string;
+  auditor?: string;
+  auditDate?: string;
+  companyType?: string;
+  companyLocation?: string;
+  status?: ExpenseStatus;
+  licenseFee?: number;
+  brandFee?: number;
+  recordSealFee?: number;
+  generalSealFee?: number;
+  agencyFee?: number;
+  accountingSoftwareFee?: number;
+  addressFee?: number;
+  invoiceSoftwareFee?: number;
+  socialInsuranceAgencyFee?: number;
+  statisticalReportFee?: number;
+  changeFee?: number;
+  administrativeLicenseFee?: number;
+  otherBusinessFee?: number;
+  receiptRemarks?: string;
 } 

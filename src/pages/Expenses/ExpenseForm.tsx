@@ -38,8 +38,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const [searchingCompanyType, setSearchingCompanyType] = useState(false)
   const [calculatingTotal, setCalculatingTotal] = useState(false)
   
-  // 使用useRef跟踪表单是否已挂载
+  // 使用useRef跟踪表单是否已挂载和初始化
   const formMountedRef = useRef(false)
+  const formInitializedRef = useRef(false)
   const [prevFormValues, setPrevFormValues] = useState({})
 
   const { createExpense, updateExpense } = useExpenseDetail(mode === 'edit' ? expense?.id : null)
@@ -58,19 +59,24 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     
     setCalculatingTotal(true)
     try {
-      const formValues = form.getFieldsValue()
-      
-      let total = 0
-      feeFields.forEach(field => {
-        if (formValues[field]) {
-          total += Number(formValues[field])
+      // 确保表单已挂载后再获取值
+      setTimeout(() => {
+        if (formMountedRef.current) {
+          const formValues = form.getFieldsValue()
+          
+          let total = 0
+          feeFields.forEach(field => {
+            if (formValues[field]) {
+              total += Number(formValues[field])
+            }
+          })
+          
+          form.setFieldsValue({ totalFee: total })
         }
-      })
-      
-      form.setFieldsValue({ totalFee: total })
+        setCalculatingTotal(false)
+      }, 100)
     } catch (error) {
       console.error('计算总费用失败:', error)
-    } finally {
       setCalculatingTotal(false)
     }
   }, [form, visible, feeFields])
@@ -81,14 +87,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 延迟标记表单为已挂载，确保Form组件已完全渲染
       const timer = setTimeout(() => {
         formMountedRef.current = true
-      }, 500)
+      }, 300)
       
       return () => {
         clearTimeout(timer)
         formMountedRef.current = false
+        formInitializedRef.current = false
       }
     } else {
       formMountedRef.current = false
+      formInitializedRef.current = false
     }
   }, [visible])
 
@@ -99,6 +107,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     // 延迟执行表单初始化，确保Form组件已经渲染
     const initFormTimeout = setTimeout(() => {
       try {
+        if (!formMountedRef.current) return
+        
         if (mode === 'edit' && expense) {
           const formData = {
             ...expense,
@@ -125,10 +135,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           })
         }
         
-        // 表单初始化后执行一次总费用计算
-        if (formMountedRef.current) {
-          calculateTotalFee()
-        }
+        formInitializedRef.current = true
+        
+        // 表单初始化后执行一次总费用计算，但延迟执行确保数据已设置
+        setTimeout(() => {
+          if (formMountedRef.current && formInitializedRef.current) {
+            calculateTotalFee()
+          }
+        }, 500)
       } catch (error) {
         console.error('初始化表单数据失败:', error)
       }
@@ -139,12 +153,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 监听字段变化计算总费用
   useEffect(() => {
-    if (!visible || !formMountedRef.current) return
+    if (!visible || !formMountedRef.current || !formInitializedRef.current) return
     
     const updateTimeout = setTimeout(() => {
       try {
         // 确保表单已挂载且可见
-        if (formMountedRef.current && visible) {
+        if (formMountedRef.current && visible && formInitializedRef.current) {
           const currentValues = form.getFieldsValue(feeFields)
           const hasChanged = JSON.stringify(currentValues) !== JSON.stringify(prevFormValues)
           
@@ -248,7 +262,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 处理提交
   const handleSubmit = async () => {
-    if (!formMountedRef.current) {
+    if (!formMountedRef.current || !formInitializedRef.current) {
       message.error('表单正在加载，请稍后重试');
       return;
     }
@@ -298,307 +312,309 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       destroyOnClose
       className="full-height-modal"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
-      >
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="基本信息" key="1">
-            <Form.Item
-              name="companyName"
-              label="企业名称"
-              rules={[{ required: true, message: '请输入企业名称' }]}
-            >
-              <Select
-                showSearch
-                placeholder="请输入企业名称"
-                filterOption={false}
-                onSearch={fetchCompanyNameOptions}
-                loading={searchingCompanyName}
-                options={companyNameOptions.map(name => ({ value: name, label: name }))}
-              />
-            </Form.Item>
-
-            <Form.Item name="companyType" label="企业类型">
-              <Select
-                showSearch
-                placeholder="请选择企业类型"
-                filterOption={false}
-                onSearch={fetchCompanyTypeOptions}
-                loading={searchingCompanyType}
-                options={companyTypeOptions.map(type => ({ value: type, label: type }))}
-              />
-            </Form.Item>
-
-            <Form.Item name="companyLocation" label="企业归属地">
-              <Select
-                showSearch
-                placeholder="请选择企业归属地"
-                filterOption={false}
-                onSearch={fetchLocationOptions}
-                loading={searchingLocation}
-                options={locationOptions.map(location => ({ value: location, label: location }))}
-              />
-            </Form.Item>
-
-            <Form.Item name="chargeDate" label="收费日期">
-              <DatePicker style={{ width: '100%' }} />
-            </Form.Item>
-
-            <Form.Item name="chargeMethod" label="收费方式">
-              <Select placeholder="请选择收费方式">
-                <Select.Option value="雄安中岳对公户">雄安中岳对公户</Select.Option>
-                <Select.Option value="高碑店对公户">高碑店对公户</Select.Option>
-                <Select.Option value="微信">微信</Select.Option>
-                <Select.Option value="支付宝">支付宝</Select.Option>
-                <Select.Option value="现金">现金</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="salesperson" label="提交人">
-              <Input placeholder="请输入提交人" />
-            </Form.Item>
-
-            <Form.Item name="proofOfCharge" label="收费凭证">
-              <Upload
-                name="file"
-                action="/api/upload" // 替换为实际上传地址
-                listType="picture-card"
-                onChange={handleProofUpload}
+      {visible && ( // 只有在modal可见时才渲染表单，避免React警告
+        <Form
+          form={form}
+          layout="vertical"
+          style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+        >
+          <Tabs activeKey={activeTab} onChange={setActiveTab}>
+            <TabPane tab="基本信息" key="1">
+              <Form.Item
+                name="companyName"
+                label="企业名称"
+                rules={[{ required: true, message: '请输入企业名称' }]}
               >
-                <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>上传</div>
-                </div>
-              </Upload>
-            </Form.Item>
-          </TabPane>
+                <Select
+                  showSearch
+                  placeholder="请输入企业名称"
+                  filterOption={false}
+                  onSearch={fetchCompanyNameOptions}
+                  loading={searchingCompanyName}
+                  options={companyNameOptions.map(name => ({ value: name, label: name }))}
+                />
+              </Form.Item>
 
-          <TabPane tab="办照费用 (¥0)" key="2">
-            <Form.Item name="licenseType" label="办照类型">
-              <Select placeholder="请选择办照类型">
-                <Select.Option value="新办执照">新办执照</Select.Option>
-                <Select.Option value="变更业务">变更业务</Select.Option>
-                <Select.Option value="行政许可">行政许可</Select.Option>
-              </Select>
-            </Form.Item>
+              <Form.Item name="companyType" label="企业类型">
+                <Select
+                  showSearch
+                  placeholder="请选择企业类型"
+                  filterOption={false}
+                  onSearch={fetchCompanyTypeOptions}
+                  loading={searchingCompanyType}
+                  options={companyTypeOptions.map(type => ({ value: type, label: type }))}
+                />
+              </Form.Item>
 
-            <Form.Item name="licenseFee" label="办照费用">
+              <Form.Item name="companyLocation" label="企业归属地">
+                <Select
+                  showSearch
+                  placeholder="请选择企业归属地"
+                  filterOption={false}
+                  onSearch={fetchLocationOptions}
+                  loading={searchingLocation}
+                  options={locationOptions.map(location => ({ value: location, label: location }))}
+                />
+              </Form.Item>
+
+              <Form.Item name="chargeDate" label="收费日期">
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+
+              <Form.Item name="chargeMethod" label="收费方式">
+                <Select placeholder="请选择收费方式">
+                  <Select.Option value="雄安中岳对公户">雄安中岳对公户</Select.Option>
+                  <Select.Option value="高碑店对公户">高碑店对公户</Select.Option>
+                  <Select.Option value="微信">微信</Select.Option>
+                  <Select.Option value="支付宝">支付宝</Select.Option>
+                  <Select.Option value="现金">现金</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item name="salesperson" label="提交人">
+                <Input placeholder="请输入提交人" />
+              </Form.Item>
+
+              <Form.Item name="proofOfCharge" label="收费凭证">
+                <Upload
+                  name="file"
+                  action="/api/upload" // 替换为实际上传地址
+                  listType="picture-card"
+                  onChange={handleProofUpload}
+                >
+                  <div>
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>上传</div>
+                  </div>
+                </Upload>
+              </Form.Item>
+            </TabPane>
+
+            <TabPane tab="办照费用 (¥0)" key="2">
+              <Form.Item name="licenseType" label="办照类型">
+                <Select placeholder="请选择办照类型">
+                  <Select.Option value="新办执照">新办执照</Select.Option>
+                  <Select.Option value="变更业务">变更业务</Select.Option>
+                  <Select.Option value="行政许可">行政许可</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item name="licenseFee" label="办照费用">
+                <InputNumber
+                  placeholder="请输入办照费用"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+
+              <Form.Item name="brandFee" label="牌子费">
+                <InputNumber
+                  placeholder="请输入牌子费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+
+              <Form.Item name="recordSealFee" label="备案章费用">
+                <InputNumber
+                  placeholder="请输入备案章费用"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+
+              <Form.Item name="generalSealFee" label="一般刻章费用">
+                <InputNumber
+                  placeholder="请输入一般刻章费用"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+            </TabPane>
+
+            <TabPane tab="代理记账 (¥0)" key="3">
+              <Form.Item name="agencyType" label="代理类型">
+                <Select placeholder="请选择代理类型">
+                  <Select.Option value="小规模纳税人">小规模纳税人</Select.Option>
+                  <Select.Option value="一般纳税人">一般纳税人</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item name="agencyFee" label="代理费">
+                <InputNumber
+                  placeholder="请输入代理费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+
+              <Form.Item label="代理日期">
+                <Space style={{ width: '100%' }}>
+                  <Form.Item name="agencyStartDate" noStyle>
+                    <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                  </Form.Item>
+                  <span>至</span>
+                  <Form.Item name="agencyEndDate" noStyle>
+                    <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Space>
+              </Form.Item>
+
+              <Form.Item name="accountingSoftwareFee" label="记账软件费">
+                <InputNumber
+                  placeholder="请输入记账软件费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+
+              <Form.Item label="记账软件日期">
+                <Space style={{ width: '100%' }}>
+                  <Form.Item name="accountingSoftwareStartDate" noStyle>
+                    <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                  </Form.Item>
+                  <span>至</span>
+                  <Form.Item name="accountingSoftwareEndDate" noStyle>
+                    <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Space>
+              </Form.Item>
+
+              <Form.Item name="addressFee" label="地址费">
+                <InputNumber
+                  placeholder="请输入地址费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+
+              <Form.Item label="地址费日期">
+                <Space style={{ width: '100%' }}>
+                  <Form.Item name="addressStartDate" noStyle>
+                    <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                  </Form.Item>
+                  <span>至</span>
+                  <Form.Item name="addressEndDate" noStyle>
+                    <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
+                  </Form.Item>
+                </Space>
+              </Form.Item>
+            </TabPane>
+
+            <TabPane tab="变更业务 (¥0)" key="4">
+              <Form.Item name="changeBusiness" label="变更业务">
+                <Input placeholder="请输入变更业务" />
+              </Form.Item>
+
+              <Form.Item name="changeFee" label="变更收费">
+                <InputNumber
+                  placeholder="请输入变更收费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+            </TabPane>
+
+            <TabPane tab="行政许可 (¥0)" key="5">
+              <Form.Item name="administrativeLicense" label="行政许可">
+                <Input placeholder="请输入行政许可" />
+              </Form.Item>
+
+              <Form.Item name="administrativeLicenseFee" label="行政许可收费">
+                <InputNumber
+                  placeholder="请输入行政许可收费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+            </TabPane>
+
+            <TabPane tab="其他业务 (¥0)" key="6">
+              <Form.Item name="otherBusiness" label="其他业务">
+                <Input placeholder="请输入其他业务" />
+              </Form.Item>
+
+              <Form.Item name="otherBusinessFee" label="其他业务收费">
+                <InputNumber
+                  placeholder="请输入其他业务收费"
+                  style={{ width: '100%' }}
+                  min={0}
+                  precision={2}
+                  addonBefore="¥"
+                />
+              </Form.Item>
+            </TabPane>
+
+            <TabPane tab="合同与备注" key="7">
+              <Form.Item name="contractType" label="合同类型">
+                <Select placeholder="请选择合同类型">
+                  <Select.Option value="代理记账">代理记账</Select.Option>
+                  <Select.Option value="地址托管">地址托管</Select.Option>
+                  <Select.Option value="工商代办">工商代办</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item name="contractImage" label="合同图片">
+                <Upload
+                  name="file"
+                  action="/api/upload" // 替换为实际上传地址
+                  onChange={handleContractUpload}
+                >
+                  <Button icon={<UploadOutlined />}>上传合同</Button>
+                </Upload>
+              </Form.Item>
+
+              <Form.Item name="receiptRemarks" label="收据备注">
+                <Input.TextArea placeholder="请输入收据备注" rows={3} />
+              </Form.Item>
+
+              <Form.Item name="internalRemarks" label="内部备注">
+                <Input.TextArea placeholder="请输入内部备注（客户不可见）" rows={3} />
+              </Form.Item>
+            </TabPane>
+          </Tabs>
+
+          <div className="border-t pt-4 mt-4">
+            <Form.Item name="totalFee" label="总费用">
               <InputNumber
-                placeholder="请输入办照费用"
+                placeholder="总费用"
                 style={{ width: '100%' }}
                 min={0}
                 precision={2}
                 addonBefore="¥"
+                disabled
               />
             </Form.Item>
+          </div>
 
-            <Form.Item name="brandFee" label="牌子费">
-              <InputNumber
-                placeholder="请输入牌子费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-
-            <Form.Item name="recordSealFee" label="备案章费用">
-              <InputNumber
-                placeholder="请输入备案章费用"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-
-            <Form.Item name="generalSealFee" label="一般刻章费用">
-              <InputNumber
-                placeholder="请输入一般刻章费用"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-          </TabPane>
-
-          <TabPane tab="代理记账 (¥0)" key="3">
-            <Form.Item name="agencyType" label="代理类型">
-              <Select placeholder="请选择代理类型">
-                <Select.Option value="小规模纳税人">小规模纳税人</Select.Option>
-                <Select.Option value="一般纳税人">一般纳税人</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="agencyFee" label="代理费">
-              <InputNumber
-                placeholder="请输入代理费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-
-            <Form.Item label="代理日期">
-              <Space style={{ width: '100%' }}>
-                <Form.Item name="agencyStartDate" noStyle>
-                  <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
-                </Form.Item>
-                <span>至</span>
-                <Form.Item name="agencyEndDate" noStyle>
-                  <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
-                </Form.Item>
-              </Space>
-            </Form.Item>
-
-            <Form.Item name="accountingSoftwareFee" label="记账软件费">
-              <InputNumber
-                placeholder="请输入记账软件费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-
-            <Form.Item label="记账软件日期">
-              <Space style={{ width: '100%' }}>
-                <Form.Item name="accountingSoftwareStartDate" noStyle>
-                  <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
-                </Form.Item>
-                <span>至</span>
-                <Form.Item name="accountingSoftwareEndDate" noStyle>
-                  <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
-                </Form.Item>
-              </Space>
-            </Form.Item>
-
-            <Form.Item name="addressFee" label="地址费">
-              <InputNumber
-                placeholder="请输入地址费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-
-            <Form.Item label="地址费日期">
-              <Space style={{ width: '100%' }}>
-                <Form.Item name="addressStartDate" noStyle>
-                  <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
-                </Form.Item>
-                <span>至</span>
-                <Form.Item name="addressEndDate" noStyle>
-                  <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
-                </Form.Item>
-              </Space>
-            </Form.Item>
-          </TabPane>
-
-          <TabPane tab="变更业务 (¥0)" key="4">
-            <Form.Item name="changeBusiness" label="变更业务">
-              <Input placeholder="请输入变更业务" />
-            </Form.Item>
-
-            <Form.Item name="changeFee" label="变更收费">
-              <InputNumber
-                placeholder="请输入变更收费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-          </TabPane>
-
-          <TabPane tab="行政许可 (¥0)" key="5">
-            <Form.Item name="administrativeLicense" label="行政许可">
-              <Input placeholder="请输入行政许可" />
-            </Form.Item>
-
-            <Form.Item name="administrativeLicenseFee" label="行政许可收费">
-              <InputNumber
-                placeholder="请输入行政许可收费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-          </TabPane>
-
-          <TabPane tab="其他业务 (¥0)" key="6">
-            <Form.Item name="otherBusiness" label="其他业务">
-              <Input placeholder="请输入其他业务" />
-            </Form.Item>
-
-            <Form.Item name="otherBusinessFee" label="其他业务收费">
-              <InputNumber
-                placeholder="请输入其他业务收费"
-                style={{ width: '100%' }}
-                min={0}
-                precision={2}
-                addonBefore="¥"
-              />
-            </Form.Item>
-          </TabPane>
-
-          <TabPane tab="合同与备注" key="7">
-            <Form.Item name="contractType" label="合同类型">
-              <Select placeholder="请选择合同类型">
-                <Select.Option value="代理记账">代理记账</Select.Option>
-                <Select.Option value="地址托管">地址托管</Select.Option>
-                <Select.Option value="工商代办">工商代办</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="contractImage" label="合同图片">
-              <Upload
-                name="file"
-                action="/api/upload" // 替换为实际上传地址
-                onChange={handleContractUpload}
-              >
-                <Button icon={<UploadOutlined />}>上传合同</Button>
-              </Upload>
-            </Form.Item>
-
-            <Form.Item name="receiptRemarks" label="收据备注">
-              <Input.TextArea placeholder="请输入收据备注" rows={3} />
-            </Form.Item>
-
-            <Form.Item name="internalRemarks" label="内部备注">
-              <Input.TextArea placeholder="请输入内部备注（客户不可见）" rows={3} />
-            </Form.Item>
-          </TabPane>
-        </Tabs>
-
-        <div className="border-t pt-4 mt-4">
-          <Form.Item name="totalFee" label="总费用">
-            <InputNumber
-              placeholder="总费用"
-              style={{ width: '100%' }}
-              min={0}
-              precision={2}
-              addonBefore="¥"
-              disabled
-            />
-          </Form.Item>
-        </div>
-
-        <div className="text-right mt-4">
-          <Button onClick={onCancel} className="mr-2">
-            取消
-          </Button>
-          <Button type="primary" onClick={handleSubmit}>
-            确定
-          </Button>
-        </div>
-      </Form>
+          <div className="text-right mt-4">
+            <Button onClick={onCancel} className="mr-2">
+              取消
+            </Button>
+            <Button type="primary" onClick={handleSubmit}>
+              确定
+            </Button>
+          </div>
+        </Form>
+      )}
     </Modal>
   )
 }

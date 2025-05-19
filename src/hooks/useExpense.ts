@@ -99,12 +99,43 @@ export const expenseDetailFetcher = async (url: string) => {
 // 费用收据数据获取函数
 export const expenseReceiptFetcher = async (url: string) => {
   try {
-    const id = Number(url.split('/')[2])
-    const res = await getExpenseReceipt(id)
-    return res
+    if (!url) return null;
+    
+    // 提取ID
+    const parts = url.split('/');
+    if (parts.length < 3) {
+      console.error('无效的收据URL:', url);
+      return null;
+    }
+    
+    const id = Number(parts[2]);
+    if (isNaN(id) || id <= 0) {
+      console.error('无效的费用ID:', id);
+      return null;
+    }
+    
+    const res = await getExpenseReceipt(id);
+    
+    // 确保返回有效的对象，即使API返回不完整数据
+    return res || { 
+      id,
+      companyName: '未知企业',
+      totalFee: 0,
+      chargeDate: new Date().toISOString(),
+      chargeMethod: '未知',
+      remarks: ''
+    };
   } catch (error) {
-    console.error('获取费用收据失败:', error)
-    throw error
+    console.error('获取费用收据失败:', error);
+    // 返回空数据而不是null，避免使用时出现undefined错误
+    return { 
+      id: 0,
+      companyName: '数据加载失败',
+      totalFee: 0,
+      chargeDate: new Date().toISOString(),
+      chargeMethod: '',
+      remarks: ''
+    }; 
   }
 }
 
@@ -254,12 +285,31 @@ export const useExpenseDetail = (id?: number | null) => {
 export const useExpenseReceipt = (id?: number | null) => {
   const { data, error, isLoading } = useSWR(
     getExpenseReceiptKey(id),
-    id ? expenseReceiptFetcher : null
-  )
+    id ? expenseReceiptFetcher : null,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: true, // 允许错误重试
+      errorRetryCount: 2, // 增加重试次数
+      errorRetryInterval: 1500, // 设置重试间隔
+      fallbackData: { // 提供兜底数据
+        id: id || 0,
+        companyName: '加载中...',
+        totalFee: 0,
+        chargeDate: new Date().toISOString(),
+        chargeMethod: '',
+        remarks: ''
+      },
+      onError: (err) => {
+        console.error("获取收据数据错误:", err);
+        message.error("获取收据数据失败，请稍后再试");
+      }
+    }
+  );
 
   return {
     receipt: data as ReceiptViewDto | undefined,
     isLoading,
-    error
+    error,
+    hasError: !!error
   }
 } 
