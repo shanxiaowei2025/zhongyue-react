@@ -432,42 +432,76 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   <Input placeholder="请输入提交人" />
                 </Form.Item>
               </div>
-              
-              <Form.Item 
-                name="proofOfCharge" 
-                label="收费凭证"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => {
-                  if (Array.isArray(e)) {
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <Form.Item 
+                  name="proofOfCharge" 
+                  label="收费凭证"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => {
+                    if (Array.isArray(e)) {
+                      return e;
+                    }
+                    // 正常上传时
+                    if (e && e.fileList) {
+                      return e.fileList;
+                    }
                     return e;
-                  }
-                  // 正常上传时
-                  if (e && e.fileList) {
-                    return e.fileList;
-                  }
-                  return e;
-                }}
-              >
-                <Upload
-                  name="file"
-                  action="/api/upload"
-                  listType="picture-card"
-                  onChange={handleProofUpload}
+                  }}
+                  style={{ gridColumn: 'span 1' }}
                 >
-                  <div>
-                    <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>上传</div>
-                  </div>
-                </Upload>
-              </Form.Item>
+                  <Upload
+                    name="file"
+                    action="/api/upload"
+                    listType="picture-card"
+                    onChange={handleProofUpload}
+                  >
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>上传</div>
+                    </div>
+                  </Upload>
+                </Form.Item>
 
-              <Form.Item name="receiptRemarks" label="备注">
-                <Input.TextArea placeholder="请输入备注" rows={3} />
-              </Form.Item>
+                <Form.Item 
+                  name="contractImage" 
+                  label="电子合同"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => {
+                    if (Array.isArray(e)) {
+                      return e;
+                    }
+                    // 正常上传时
+                    if (e && e.fileList) {
+                      return e.fileList;
+                    }
+                    return e;
+                  }}
+                  style={{ gridColumn: 'span 1' }}
+                >
+                  <Upload
+                    name="file"
+                    action="/api/upload"
+                    listType="picture-card"
+                    onChange={handleContractUpload}
+                  >
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>上传</div>
+                    </div>
+                  </Upload>
+                </Form.Item>
+              </div>
 
-              <Form.Item name="internalRemarks" label="内部备注">
-                <Input.TextArea placeholder="请输入内部备注（客户不可见）" rows={3} />
-              </Form.Item>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <Form.Item name="receiptRemarks" label="备注" style={{ gridColumn: 'span 3' }}>
+                  <Input.TextArea placeholder="请输入备注" rows={3} />
+                </Form.Item>
+
+                <Form.Item name="internalRemarks" label="内部备注" style={{ gridColumn: 'span 3' }}>
+                  <Input.TextArea placeholder="请输入内部备注（客户不可见）" rows={3} />
+                </Form.Item>
+              </div>
             </div>
 
             {/* 费用标签页部分 */}
@@ -493,6 +527,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <Select placeholder="请选择代理类型">
                             <Select.Option value="代理记账">代理记账</Select.Option>
                             <Select.Option value="代理申报">代理申报</Select.Option>
+                            <Select.Option value="经营账代理">经营账代理</Select.Option>
                           </Select>
                         </Form.Item>
                         
@@ -568,10 +603,41 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                           </Space>
                         </Form.Item>
+                      </div>
+                    )
+                  },
+                  {
+                    key: '2',
+                    label: '社保代理 (¥0)',
+                    children: (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                        <Form.Item name="insuranceTypes" label="参保险种">
+                          <Select
+                            placeholder="请选择或输入参保险种"
+                            mode="tags"
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '养老保险', label: '养老保险' },
+                              { value: '医疗保险', label: '医疗保险' },
+                              { value: '失业保险', label: '失业保险' },
+                              { value: '工伤保险', label: '工伤保险' },
+                              { value: '生育保险', label: '生育保险' }
+                            ]}
+                          />
+                        </Form.Item>
 
-                        <Form.Item name="addressFee" label="地址费">
+                        <Form.Item name="insuredCount" label="参保人数">
                           <InputNumber
-                            placeholder="请输入地址费"
+                            placeholder="请输入参保人数"
+                            style={{ width: '100%' }}
+                            min={0}
+                            precision={0}
+                          />
+                        </Form.Item>
+
+                        <Form.Item name="socialInsuranceAgencyFee" label="社保代理费">
+                          <InputNumber
+                            placeholder="请输入社保代理费"
                             style={{ width: '100%' }}
                             min={0}
                             precision={2}
@@ -579,13 +645,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           />
                         </Form.Item>
 
-                        <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
+                        <Form.Item label="社保日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
-                            <Form.Item name="addressStartDate" noStyle>
+                            <Form.Item name="socialInsuranceStartDate" noStyle>
                               <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
                             </Form.Item>
                             <span>至</span>
-                            <Form.Item name="addressEndDate" noStyle>
+                            <Form.Item name="socialInsuranceEndDate" noStyle>
                               <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
                             </Form.Item>
                           </Space>
@@ -594,15 +660,46 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     )
                   },
                   {
-                    key: '2',
-                    label: '办照费用 (¥0)',
+                    key: '3',
+                    label: '统计报表 (¥0)',
+                    children: (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                        <Form.Item name="statisticalReportFee" label="统计局报表费">
+                          <InputNumber
+                            placeholder="请输入统计局报表费"
+                            style={{ width: '100%' }}
+                            min={0}
+                            precision={2}
+                            addonBefore="¥"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="统计日期" style={{ gridColumn: 'span 2' }}>
+                          <Space style={{ width: '100%' }}>
+                            <Form.Item name="statisticalStartDate" noStyle>
+                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                            </Form.Item>
+                            <span>至</span>
+                            <Form.Item name="statisticalEndDate" noStyle>
+                              <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
+                            </Form.Item>
+                          </Space>
+                        </Form.Item>
+                      </div>
+                    )
+                  },
+                  {
+                    key: '4',
+                    label: '新办执照 (¥0)',
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="licenseType" label="办照类型">
                           <Select placeholder="请选择办照类型">
-                            <Select.Option value="新办执照">新办执照</Select.Option>
-                            <Select.Option value="变更业务">变更业务</Select.Option>
-                            <Select.Option value="行政许可">行政许可</Select.Option>
+                            <Select.Option value="个体">个体</Select.Option>
+                            <Select.Option value="公司">公司</Select.Option>
+                            <Select.Option value="合作社">合作社</Select.Option>
+                            <Select.Option value="个人独资企业">个人独资企业</Select.Option>
+                            <Select.Option value="补领执照">补领执照</Select.Option>
                           </Select>
                         </Form.Item>
 
@@ -645,16 +742,51 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             addonBefore="¥"
                           />
                         </Form.Item>
+                        
+                        <Form.Item name="addressFee" label="地址费">
+                          <InputNumber
+                            placeholder="请输入地址费"
+                            style={{ width: '100%' }}
+                            min={0}
+                            precision={2}
+                            addonBefore="¥"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
+                          <Space style={{ width: '100%' }}>
+                            <Form.Item name="addressStartDate" noStyle>
+                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                            </Form.Item>
+                            <span>至</span>
+                            <Form.Item name="addressEndDate" noStyle>
+                              <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
+                            </Form.Item>
+                          </Space>
+                        </Form.Item>
                       </div>
                     )
                   },
                   {
-                    key: '3',
+                    key: '5',
                     label: '变更业务 (¥0)',
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="changeBusiness" label="变更业务">
-                          <Input placeholder="请输入变更业务" />
+                          <Select
+                            placeholder="请选择或输入变更业务"
+                            mode="tags"
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '地址变更', label: '地址变更' },
+                              { value: '名称变更', label: '名称变更' },
+                              { value: '股东变更', label: '股东变更' },
+                              { value: '监事变更', label: '监事变更' },
+                              { value: '范围变更', label: '范围变更' },
+                              { value: '注册资本变更', label: '注册资本变更' },
+                              { value: '跨区域变更', label: '跨区域变更' }
+                            ]}
+                          />
                         </Form.Item>
 
                         <Form.Item name="changeFee" label="变更收费">
@@ -670,12 +802,26 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     )
                   },
                   {
-                    key: '4',
+                    key: '6',
                     label: '行政许可 (¥0)',
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="administrativeLicense" label="行政许可">
-                          <Input placeholder="请输入行政许可" />
+                          <Select
+                            placeholder="请选择或输入行政许可"
+                            mode="tags"
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '食品经营许可证', label: '食品经营许可证' },
+                              { value: '卫生许可证', label: '卫生许可证' },
+                              { value: '酒类经营许可证', label: '酒类经营许可证' },
+                              { value: '烟草专卖零售许可证', label: '烟草专卖零售许可证' },
+                              { value: '道路运输许可证', label: '道路运输许可证' },
+                              { value: '医疗器械经营许可证', label: '医疗器械经营许可证' },
+                              { value: '建筑施工许可证', label: '建筑施工许可证' },
+                              { value: '特种行业许可证', label: '特种行业许可证' }
+                            ]}
+                          />
                         </Form.Item>
 
                         <Form.Item name="administrativeLicenseFee" label="行政许可收费">
@@ -691,12 +837,33 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     )
                   },
                   {
-                    key: '5',
+                    key: '7',
                     label: '其他业务 (¥0)',
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="otherBusiness" label="其他业务">
-                          <Input placeholder="请输入其他业务" />
+                          <Select
+                            placeholder="请选择或输入其他业务"
+                            mode="tags"
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '审计报告', label: '审计报告' },
+                              { value: '评估报告', label: '评估报告' },
+                              { value: '检测报告', label: '检测报告' },
+                              { value: '商标', label: '商标' },
+                              { value: '条形码', label: '条形码' },
+                              { value: '工商异常', label: '工商异常' },
+                              { value: '税务异常', label: '税务异常' },
+                              { value: '银行融资平台', label: '银行融资平台' },
+                              { value: '劳务派遣年检', label: '劳务派遣年检' },
+                              { value: '工商年检', label: '工商年检' },
+                              { value: '补充申报', label: '补充申报' },
+                              { value: '代理企业注销', label: '代理企业注销' },
+                              { value: '非代理企业注销', label: '非代理企业注销' },
+                              { value: '银行开户费', label: '银行开户费' },
+                              { value: '公司转让', label: '公司转让' }
+                            ]}
+                          />
                         </Form.Item>
 
                         <Form.Item name="otherBusinessFee" label="其他业务收费">
