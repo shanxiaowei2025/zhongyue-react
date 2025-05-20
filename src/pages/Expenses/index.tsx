@@ -11,7 +11,7 @@ import {
   Popconfirm,
   DatePicker,
   Modal,
-  Tag
+  Tag,
 } from 'antd'
 import type { ColumnType, ColumnGroupType } from 'antd/es/table'
 import {
@@ -23,7 +23,7 @@ import {
   EyeOutlined,
   AuditOutlined,
   ExportOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
@@ -33,12 +33,12 @@ import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import dayjs from 'dayjs'
-import { 
-  getExpenseList, 
+import {
+  getExpenseList,
   getExpenseById,
-  deleteExpense as deleteExpenseApi, 
+  deleteExpense as deleteExpenseApi,
   auditExpense as auditExpenseApi,
-  cancelAuditExpense as cancelAuditExpenseApi 
+  cancelAuditExpense as cancelAuditExpenseApi,
 } from '../../api/expense'
 
 const { RangePicker } = DatePicker
@@ -47,14 +47,14 @@ const { RangePicker } = DatePicker
 const STATUS_LABELS = {
   [ExpenseStatus.Pending]: '未审核',
   [ExpenseStatus.Approved]: '已审核',
-  [ExpenseStatus.Rejected]: '已退回'
+  [ExpenseStatus.Rejected]: '已退回',
 }
 
 // 状态映射为标签颜色
 const STATUS_COLORS = {
   [ExpenseStatus.Pending]: 'orange',
   [ExpenseStatus.Approved]: 'green',
-  [ExpenseStatus.Rejected]: 'red'
+  [ExpenseStatus.Rejected]: 'red',
 }
 
 // 定义表格列
@@ -64,32 +64,32 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'companyName',
     key: 'companyName',
     width: 180,
-    ellipsis: true
+    ellipsis: true,
   },
   {
     title: '总计费用',
     dataIndex: 'totalFee',
     key: 'totalFee',
     width: 100,
-    render: (value: number) => `¥${value.toFixed(2)}`
+    render: (value: number) => `¥${value.toFixed(2)}`,
   },
   {
     title: '收费日期',
     dataIndex: 'chargeDate',
     key: 'chargeDate',
-    width: 120
+    width: 120,
   },
   {
     title: '收费方式',
     dataIndex: 'chargeMethod',
     key: 'chargeMethod',
-    width: 100
+    width: 100,
   },
   {
     title: '业务员',
     dataIndex: 'salesperson',
     key: 'salesperson',
-    width: 100
+    width: 100,
   },
   {
     title: '审核状态',
@@ -97,78 +97,79 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     key: 'status',
     width: 100,
     render: (status: ExpenseStatus) => (
-      <Tag color={STATUS_COLORS[status]}>
-        {STATUS_LABELS[status]}
-      </Tag>
-    )
+      <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
+    ),
   },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: 150
+    width: 150,
   },
   {
     title: '操作',
     key: 'action',
     fixed: 'right',
-    width: 220
-  }
-];
+    width: 220,
+  },
+]
 
 const Expenses: React.FC = () => {
   // 页面状态
-  const PAGE_STATE_KEY = 'expense_list_state';
+  const PAGE_STATE_KEY = 'expense_list_state'
   const [savedState, setSavedState] = usePageStates<{
-    companyName: string;
-    status?: ExpenseStatus;
-    dateRange?: any; // 使用any类型避免typescript错误
-    page: number;
-    pageSize: number;
+    companyName: string
+    unifiedSocialCreditCode: string
+    status?: ExpenseStatus
+    salesperson: string
+    dateRange?: any // 使用any类型避免typescript错误
+    page: number
+    pageSize: number
   }>(PAGE_STATE_KEY, {
     companyName: '',
+    unifiedSocialCreditCode: '',
     status: undefined,
+    salesperson: '',
     dateRange: undefined,
     page: 1,
-    pageSize: 10
-  });
+    pageSize: 10,
+  })
 
   // 搜索参数状态
-  const [form] = Form.useForm();
-  
+  const [form] = Form.useForm()
+
   // 正确处理savedState中的日期范围
   const initialDateRange = useMemo(() => {
-    if (!savedState.dateRange) return undefined;
+    if (!savedState.dateRange) return undefined
     try {
       // 确保日期是有效的数组
       if (Array.isArray(savedState.dateRange) && savedState.dateRange.length === 2) {
-        return [
-          dayjs(savedState.dateRange[0]),
-          dayjs(savedState.dateRange[1])
-        ];
+        return [dayjs(savedState.dateRange[0]), dayjs(savedState.dateRange[1])]
       }
     } catch (error) {
-      console.error('解析日期范围失败:', error);
+      console.error('解析日期范围失败:', error)
     }
-    return undefined;
-  }, [savedState.dateRange]);
-  
+    return undefined
+  }, [savedState.dateRange])
+
   const [searchParams, setSearchParams] = useState({
     companyName: savedState.companyName || '',
+    unifiedSocialCreditCode: savedState.unifiedSocialCreditCode || '',
     status: savedState.status !== undefined ? savedState.status : undefined,
+    salesperson: savedState.salesperson || '',
     dateRange: initialDateRange,
     page: Number(savedState.page) || 1,
-    pageSize: Number(savedState.pageSize) || 10
-  });
+    pageSize: Number(savedState.pageSize) || 10,
+  })
 
   // 费用详情状态
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [formVisible, setFormVisible] = useState(false);
-  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
-  const [receiptVisible, setReceiptVisible] = useState(false);
-  const [receiptExpenseId, setReceiptExpenseId] = useState<number | null>(null);
-  const [auditModalVisible, setAuditModalVisible] = useState(false);
-  const [expenseToAudit, setExpenseToAudit] = useState<Expense | null>(null);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
+  const [formVisible, setFormVisible] = useState(false)
+  const [formMode, setFormMode] = useState<'add' | 'edit'>('add')
+  const [receiptVisible, setReceiptVisible] = useState(false)
+  const [receiptExpenseId, setReceiptExpenseId] = useState<number | null>(null)
+  const [auditModalVisible, setAuditModalVisible] = useState(false)
+  const [expenseToAudit, setExpenseToAudit] = useState<Expense | null>(null)
 
   // 使用数据获取钩子
   const {
@@ -179,191 +180,206 @@ const Expenses: React.FC = () => {
     refreshExpenseList: fetchExpenses,
     removeExpense: deleteExpense,
     auditExpense,
-    cancelAudit: cancelAuditExpense
-  } = useExpenseList(searchParams);
+    cancelAudit: cancelAuditExpense,
+  } = useExpenseList(searchParams)
 
   // 导航
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   // 初始化表单
   useEffect(() => {
     form.setFieldsValue({
       companyName: searchParams.companyName,
+      unifiedSocialCreditCode: searchParams.unifiedSocialCreditCode,
       status: searchParams.status,
-      dateRange: searchParams.dateRange
-    });
-  }, [form, searchParams]);
+      salesperson: searchParams.salesperson,
+      dateRange: searchParams.dateRange,
+    })
+  }, [form, searchParams])
 
   // 保存页面状态 - 添加依赖项管理，避免无限循环
   useEffect(() => {
     // 记录上次状态变更时间，避免短时间内的多次保存
     const stateToSave = {
       companyName: searchParams.companyName,
+      unifiedSocialCreditCode: searchParams.unifiedSocialCreditCode,
       status: searchParams.status,
+      salesperson: searchParams.salesperson,
       page: searchParams.page,
       pageSize: searchParams.pageSize,
-      dateRange: searchParams.dateRange 
-        ? [searchParams.dateRange[0].format('YYYY-MM-DD'), searchParams.dateRange[1].format('YYYY-MM-DD')] 
-        : undefined
-    };
-    
+      dateRange: searchParams.dateRange
+        ? [
+            searchParams.dateRange[0].format('YYYY-MM-DD'),
+            searchParams.dateRange[1].format('YYYY-MM-DD'),
+          ]
+        : undefined,
+    }
+
     // 使用ref或变量来跟踪初始渲染
     const timeoutId = setTimeout(() => {
-      setSavedState(stateToSave);
-    }, 300);
-    
-    return () => clearTimeout(timeoutId);
-  }, [searchParams.companyName, searchParams.status, searchParams.page, searchParams.pageSize, 
-      searchParams.dateRange, setSavedState]);
+      setSavedState(stateToSave)
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [
+    searchParams.companyName,
+    searchParams.unifiedSocialCreditCode,
+    searchParams.status,
+    searchParams.salesperson,
+    searchParams.page,
+    searchParams.pageSize,
+    searchParams.dateRange,
+    setSavedState,
+  ])
 
   // 点击搜索
   const handleSearch = () => {
-    const values = form.getFieldsValue();
-    
+    const values = form.getFieldsValue()
+
     // 处理日期范围
     const params: any = {
       ...searchParams,
       companyName: values.companyName,
+      unifiedSocialCreditCode: values.unifiedSocialCreditCode,
       status: values.status,
-      page: 1
-    };
-    
+      salesperson: values.salesperson,
+      page: 1,
+    }
+
     // 如果有日期范围，格式化后加入查询参数
     if (values.dateRange && values.dateRange.length === 2) {
-      params.dateRange = values.dateRange;
+      params.dateRange = values.dateRange
     } else {
-      params.dateRange = undefined;
+      params.dateRange = undefined
     }
-    
-    setSearchParams(params);
-  };
+
+    setSearchParams(params)
+  }
 
   // 重置搜索条件
   const handleReset = () => {
-    form.resetFields();
+    form.resetFields()
     // 重置所有查询参数
     setSearchParams({
       companyName: '',
+      unifiedSocialCreditCode: '',
       status: undefined,
+      salesperson: '',
       dateRange: undefined,
       page: 1,
-      pageSize: 10
-    });
-  };
+      pageSize: 10,
+    })
+  }
 
   // 表格页码改变
   const handleTableChange = (pagination: any) => {
     setSearchParams({
       ...searchParams,
       page: pagination.current,
-      pageSize: pagination.pageSize
-    });
-  };
+      pageSize: pagination.pageSize,
+    })
+  }
 
   // 处理新增费用
   const handleAdd = () => {
-    setSelectedExpense(null);
-    setFormMode('add');
-    setFormVisible(true);
-  };
+    setSelectedExpense(null)
+    setFormMode('add')
+    setFormVisible(true)
+  }
 
   // 处理编辑费用
   const handleEdit = (record: Expense) => {
-    console.log('选中的费用记录:', record);
-    
+    console.log('选中的费用记录:', record)
+
     // 从API重新获取最新数据
     const fetchExpenseDetail = async () => {
       try {
-        const response = await getExpenseById(record.id);
-        console.log('从API获取的费用详情:', response);
+        const response = await getExpenseById(record.id)
+        console.log('从API获取的费用详情:', response)
         // 确保使用API返回的最新数据更新state
         if (response && typeof response === 'object') {
           // 处理不同的响应结构
-          const expenseData = 'data' in response ? response.data : response;
-          setSelectedExpense(expenseData as Expense);
-          setFormMode('edit');
-          setFormVisible(true);
+          const expenseData = 'data' in response ? response.data : response
+          setSelectedExpense(expenseData as Expense)
+          setFormMode('edit')
+          setFormVisible(true)
         } else {
-          throw new Error('Invalid response format');
+          throw new Error('Invalid response format')
         }
       } catch (error) {
-        console.error('获取费用详情失败:', error);
-        message.error('获取费用详情失败');
+        console.error('获取费用详情失败:', error)
+        message.error('获取费用详情失败')
       }
-    };
-    
-    fetchExpenseDetail();
-  };
+    }
+
+    fetchExpenseDetail()
+  }
 
   // 处理删除费用
   const handleDelete = async (id: number) => {
     try {
-      await deleteExpense(id);
-      message.success('删除成功');
-      fetchExpenses();
+      await deleteExpense(id)
+      message.success('删除成功')
+      fetchExpenses()
     } catch (error) {
-      console.error('删除费用失败:', error);
-      message.error('删除失败');
+      console.error('删除费用失败:', error)
+      message.error('删除失败')
     }
-  };
+  }
 
   // 处理查看收据
   const handleViewReceipt = (id: number) => {
-    setReceiptExpenseId(id);
-    setReceiptVisible(true);
-  };
+    setReceiptExpenseId(id)
+    setReceiptVisible(true)
+  }
 
   // 处理审核
   const handleAudit = (record: Expense) => {
-    setExpenseToAudit(record);
-    setAuditModalVisible(true);
-  };
+    setExpenseToAudit(record)
+    setAuditModalVisible(true)
+  }
 
   // 提交审核
   const handleAuditSubmit = async (values: { status: ExpenseStatus; reason?: string }) => {
-    if (!expenseToAudit) return;
-    
+    if (!expenseToAudit) return
+
     try {
       await auditExpense(expenseToAudit.id, {
         status: values.status,
-        reason: values.reason
-      });
-      
-      message.success(
-        values.status === ExpenseStatus.Approved 
-          ? '费用已审核通过' 
-          : '费用已退回'
-      );
-      
-      setAuditModalVisible(false);
-      fetchExpenses();
+        reason: values.reason,
+      })
+
+      message.success(values.status === ExpenseStatus.Approved ? '费用已审核通过' : '费用已退回')
+
+      setAuditModalVisible(false)
+      fetchExpenses()
     } catch (error) {
-      console.error('审核失败:', error);
-      message.error('审核操作失败');
+      console.error('审核失败:', error)
+      message.error('审核操作失败')
     }
-  };
+  }
 
   // 取消审核
   const handleCancelAudit = async (record: Expense) => {
     try {
-      await cancelAuditExpense(record.id, { cancelReason: '取消审核' });
-      message.success('已取消审核');
-      fetchExpenses();
+      await cancelAuditExpense(record.id, { cancelReason: '取消审核' })
+      message.success('已取消审核')
+      fetchExpenses()
     } catch (error) {
-      console.error('取消审核失败:', error);
-      message.error('取消审核失败');
+      console.error('取消审核失败:', error)
+      message.error('取消审核失败')
     }
-  };
+  }
 
   // 导出数据
   const handleExport = () => {
-    message.info('导出功能开发中');
-  };
+    message.info('导出功能开发中')
+  }
 
   // 操作列渲染函数
   const renderActions = (record: Expense) => {
     // 根据审核状态显示不同的操作按钮
-    switch(record.status) {
+    switch (record.status) {
       case ExpenseStatus.Pending: // 未审核
         return (
           <Space size="small" className="action-buttons">
@@ -401,8 +417,8 @@ const Expenses: React.FC = () => {
               </Button>
             </Popconfirm>
           </Space>
-        );
-        
+        )
+
       case ExpenseStatus.Approved: // 已审核通过
         return (
           <Space size="small" className="action-buttons">
@@ -415,17 +431,12 @@ const Expenses: React.FC = () => {
             >
               查看收据
             </Button>
-            <Button
-              type="link"
-              size="small"
-              danger
-              onClick={() => handleCancelAudit(record)}
-            >
+            <Button type="link" size="small" danger onClick={() => handleCancelAudit(record)}>
               取消审核
             </Button>
           </Space>
-        );
-        
+        )
+
       case ExpenseStatus.Rejected: // 已退回/拒绝
         return (
           <Space size="small" className="action-buttons">
@@ -449,11 +460,7 @@ const Expenses: React.FC = () => {
               okText="关闭"
               cancelButtonProps={{ style: { display: 'none' } }}
             >
-              <Button
-                type="link"
-                size="small"
-                danger
-              >
+              <Button type="link" size="small" danger>
                 退回原因
               </Button>
             </Popconfirm>
@@ -474,88 +481,83 @@ const Expenses: React.FC = () => {
               </Button>
             </Popconfirm>
           </Space>
-        );
-        
+        )
+
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   // 为columns添加操作列
-  const tableColumns = [...columns];
+  const tableColumns = [...columns]
   // 替换操作列
   if (tableColumns[tableColumns.length - 1].key === 'action') {
     tableColumns[tableColumns.length - 1] = {
       ...tableColumns[tableColumns.length - 1],
-      render: (_: any, record: Expense) => renderActions(record)
-    };
+      render: (_: any, record: Expense) => renderActions(record),
+    }
   }
 
   return (
     <div className="expenses-page">
       <Card className="search-card mb-4">
-        <Form
-          form={form}
-          layout="inline"
-          className="search-form"
-          onFinish={handleSearch}
-        >
-          <Form.Item name="companyName" label="企业名称">
-            <Input placeholder="输入企业名称" allowClear />
-          </Form.Item>
-          
-          <Form.Item name="status" label="状态">
-            <Select
-              placeholder="选择状态"
-              allowClear
-              style={{ width: 150 }}
+        <Form form={form} layout="inline" className="search-form" onFinish={handleSearch}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-4">
+            <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
+              <Input placeholder="输入企业名称" allowClear />
+            </Form.Item>
+
+            <Form.Item
+              name="unifiedSocialCreditCode"
+              label="统一社会信用代码"
+              className="m-0 w-full"
             >
-              <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
-              <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
-              <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
-            </Select>
-          </Form.Item>
-          
-          <Form.Item name="dateRange" label="收费日期">
-            <RangePicker allowClear />
-          </Form.Item>
-          
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={<SearchOutlined />}
-            >
-              搜索
-            </Button>
-          </Form.Item>
-          
-          <Form.Item>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleReset}
-            >
-              重置
-            </Button>
-          </Form.Item>
+              <Input placeholder="输入统一社会信用代码" allowClear />
+            </Form.Item>
+
+            <Form.Item name="status" label="状态" className="m-0 w-full">
+              <Select placeholder="选择状态" allowClear>
+                <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
+                <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
+                <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
+              <Input placeholder="输入业务员" allowClear />
+            </Form.Item>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-4 w-full">
+            <Form.Item name="dateRange" label="收费日期" className="m-0 flex-grow">
+              <RangePicker allowClear style={{ width: '100%' }} />
+            </Form.Item>
+
+            <div className="flex gap-2">
+              <Form.Item className="m-0">
+                <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                  搜索
+                </Button>
+              </Form.Item>
+
+              <Form.Item className="m-0">
+                <Button icon={<ReloadOutlined />} onClick={handleReset}>
+                  重置
+                </Button>
+              </Form.Item>
+            </div>
+          </div>
         </Form>
       </Card>
-      
+
       <Card
         title="费用管理"
         extra={
           <Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAdd}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               新增费用
             </Button>
-            <Button
-              icon={<ExportOutlined />}
-              onClick={handleExport}
-            >
+            <Button icon={<ExportOutlined />} onClick={handleExport}>
               导出
             </Button>
           </Space>
@@ -573,12 +575,12 @@ const Expenses: React.FC = () => {
             total: total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条数据`
+            showTotal: total => `共 ${total} 条数据`,
           }}
           onChange={handleTableChange}
         />
       </Card>
-      
+
       {/* 费用表单弹窗 */}
       {formVisible && (
         <ExpenseForm
@@ -586,10 +588,10 @@ const Expenses: React.FC = () => {
           mode={formMode}
           expense={selectedExpense}
           onCancel={() => {
-            setFormVisible(false);
+            setFormVisible(false)
             // 清空選中的費用記錄
-            setTimeout(() => setSelectedExpense(null), 300);
-            fetchExpenses();
+            setTimeout(() => setSelectedExpense(null), 300)
+            fetchExpenses()
           }}
         />
       )}
@@ -608,7 +610,7 @@ const Expenses: React.FC = () => {
         onConfirm={handleAuditSubmit}
       />
     </div>
-  );
-};
+  )
+}
 
-export default Expenses; 
+export default Expenses

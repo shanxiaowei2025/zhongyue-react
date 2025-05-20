@@ -1,12 +1,12 @@
 import request from './request'
-import { 
-  Expense, 
-  ExpenseQueryParams, 
-  CreateExpenseDto, 
-  UpdateExpenseDto, 
-  AuditExpenseDto, 
+import {
+  Expense,
+  ExpenseQueryParams,
+  CreateExpenseDto,
+  UpdateExpenseDto,
+  AuditExpenseDto,
   CancelAuditDto,
-  ReceiptViewDto
+  ReceiptViewDto,
 } from '../types/expense'
 
 // 获取费用列表
@@ -15,30 +15,41 @@ export const getExpenseList = (params: ExpenseQueryParams) => {
   const queryParams = {
     ...params,
     page: params.page || 1,
-    pageSize: params.pageSize || 10
+    pageSize: params.pageSize || 10,
   }
-  
-  // 删除dateRange参数，使用startDate和endDate代替
+
+  // 删除dateRange参数，使用chargeDateStart和chargeDateEnd代替
   if (queryParams.dateRange) {
-    delete queryParams.dateRange;
+    delete queryParams.dateRange
   }
-  
+
+  // 删除startDate和endDate字段，这些是旧字段
+  if (queryParams.startDate) {
+    delete queryParams.startDate
+  }
+
+  if (queryParams.endDate) {
+    delete queryParams.endDate
+  }
+
   return request.get<{
     data: {
-      list: Expense[];
-      total: number;
-      currentPage: number;
-      pageSize: number;
-    };
-    code: number;
-    message: string;
-    timestamp: number;
+      list: Expense[]
+      total: number
+      currentPage: number
+      pageSize: number
+    }
+    code: number
+    message: string
+    timestamp: number
   }>('/expense', queryParams)
 }
 
 // 获取费用详情
 export const getExpenseById = (id: number) => {
-  return request.get<{ data: Expense; code: number; message: string; timestamp: number }>(`/expense/${id}`)
+  return request.get<{ data: Expense; code: number; message: string; timestamp: number }>(
+    `/expense/${id}`
+  )
 }
 
 // 创建费用
@@ -74,4 +85,4 @@ export const getExpenseAutocomplete = (field: string) => {
 // 查看费用收据
 export const getExpenseReceipt = (id: number) => {
   return request.get<ReceiptViewDto>(`/expense/${id}/receipt`)
-} 
+}

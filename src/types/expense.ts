@@ -137,11 +137,14 @@ export interface ExpenseQueryParams {
   page: number
   pageSize: number
   companyName?: string
+  unifiedSocialCreditCode?: string
   status?: ExpenseStatus
   salesperson?: string
   startDate?: string
   endDate?: string
-  dateRange?: any // 前端日期范围选择器值
+  dateRange?: any
+  chargeDateStart?: string
+  chargeDateEnd?: string
 }
 
 // 费用审核DTO
