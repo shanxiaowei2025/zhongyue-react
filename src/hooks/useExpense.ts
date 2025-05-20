@@ -88,8 +88,9 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
 // 费用详情数据获取函数
 export const expenseDetailFetcher = async (url: string) => {
   try {
-    const res = await getExpenseById(Number(url.split('/').pop()))
-    return res
+    const response = await getExpenseById(Number(url.split('/').pop()))
+    console.log('费用详情数据获取成功:', response)
+    return response
   } catch (error) {
     console.error('获取费用详情失败:', error)
     throw error
@@ -219,12 +220,25 @@ export const useExpenseList = (params: ExpenseQueryParams) => {
 export const useExpenseDetail = (id?: number | null) => {
   const { data, error, isLoading, isValidating } = useSWR(
     getExpenseDetailKey(id),
-    id ? expenseDetailFetcher : null
+    id ? expenseDetailFetcher : null,
+    {
+      revalidateOnFocus: false, // 防止焦点切换时自动重新验证
+      dedupingInterval: 5000, // 5秒内相同请求只发送一次
+      errorRetryCount: 2, // 失败后重试次数
+      onSuccess: (data) => {
+        console.log('useExpenseDetail fetch success:', data)
+      },
+      onError: (err) => {
+        console.error('useExpenseDetail fetch error:', err)
+        message.error('获取费用详情失败')
+      }
+    }
   )
 
   // 刷新费用详情
   const refreshExpenseDetail = async () => {
     if (id) {
+      console.log('刷新费用详情, id:', id)
       await mutate(getExpenseDetailKey(id))
     }
   }
@@ -232,6 +246,7 @@ export const useExpenseDetail = (id?: number | null) => {
   // 更新费用
   const updateExpenseData = async (expenseId: number, updateData: UpdateExpenseDto) => {
     try {
+      console.log('更新费用数据, id:', expenseId, 'data:', updateData)
       const res = await updateExpense(expenseId, updateData)
       message.success('更新成功')
       

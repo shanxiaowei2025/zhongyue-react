@@ -33,6 +33,13 @@ import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import dayjs from 'dayjs'
+import { 
+  getExpenseList, 
+  getExpenseById,
+  deleteExpense as deleteExpenseApi, 
+  auditExpense as auditExpenseApi,
+  cancelAuditExpense as cancelAuditExpenseApi 
+} from '../../api/expense'
 
 const { RangePicker } = DatePicker
 
@@ -262,9 +269,30 @@ const Expenses: React.FC = () => {
 
   // 处理编辑费用
   const handleEdit = (record: Expense) => {
-    setSelectedExpense(record);
-    setFormMode('edit');
-    setFormVisible(true);
+    console.log('选中的费用记录:', record);
+    
+    // 从API重新获取最新数据
+    const fetchExpenseDetail = async () => {
+      try {
+        const response = await getExpenseById(record.id);
+        console.log('从API获取的费用详情:', response);
+        // 确保使用API返回的最新数据更新state
+        if (response && typeof response === 'object') {
+          // 处理不同的响应结构
+          const expenseData = 'data' in response ? response.data : response;
+          setSelectedExpense(expenseData as Expense);
+          setFormMode('edit');
+          setFormVisible(true);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error('获取费用详情失败:', error);
+        message.error('获取费用详情失败');
+      }
+    };
+    
+    fetchExpenseDetail();
   };
 
   // 处理删除费用
@@ -413,7 +441,7 @@ const Expenses: React.FC = () => {
             <Popconfirm
               title={
                 <div>
-                  <p>拒绝原因:</p>
+                  <p>退回原因:</p>
                   <p>{record.rejectReason || '无'}</p>
                 </div>
               }
@@ -426,7 +454,7 @@ const Expenses: React.FC = () => {
                 size="small"
                 danger
               >
-                拒绝原因
+                退回原因
               </Button>
             </Popconfirm>
             <Popconfirm
@@ -552,15 +580,19 @@ const Expenses: React.FC = () => {
       </Card>
       
       {/* 费用表单弹窗 */}
-      <ExpenseForm
-        visible={formVisible}
-        mode={formMode}
-        expense={selectedExpense}
-        onCancel={() => {
-          setFormVisible(false);
-          fetchExpenses();
-        }}
-      />
+      {formVisible && (
+        <ExpenseForm
+          visible={true}
+          mode={formMode}
+          expense={selectedExpense}
+          onCancel={() => {
+            setFormVisible(false);
+            // 清空選中的費用記錄
+            setTimeout(() => setSelectedExpense(null), 300);
+            fetchExpenses();
+          }}
+        />
+      )}
 
       {/* 收据查看弹窗 */}
       <ExpenseReceipt

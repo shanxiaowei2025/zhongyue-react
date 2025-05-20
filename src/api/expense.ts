@@ -38,7 +38,7 @@ export const getExpenseList = (params: ExpenseQueryParams) => {
 
 // 获取费用详情
 export const getExpenseById = (id: number) => {
-  return request.get<Expense>(`/expense/${id}`)
+  return request.get<{ data: Expense; code: number; message: string; timestamp: number }>(`/expense/${id}`)
 }
 
 // 创建费用

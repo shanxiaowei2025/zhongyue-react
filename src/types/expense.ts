@@ -58,7 +58,7 @@ export interface Expense {
   auditor?: string;
   auditDate?: string;
   status: ExpenseStatus;
-  rejectReason?: string;
+  rejectReason?: string; // 退回原因
   receiptRemarks?: string;
   internalRemarks?: string;
 }
@@ -117,7 +117,7 @@ export interface UpdateExpenseDto extends CreateExpenseDto {
   auditor?: string;
   auditDate?: string;
   status?: ExpenseStatus;
-  rejectReason?: string;
+  rejectReason?: string; // 退回原因
 }
 
 // 费用列表查询参数

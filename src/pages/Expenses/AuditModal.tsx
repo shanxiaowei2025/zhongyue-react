@@ -46,7 +46,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
               </Radio.Button>
               <Radio.Button value={ExpenseStatus.Rejected} className="bg-red-50 border-red-500 text-red-700 px-8 ml-4">
                 <CloseOutlined className="mr-2" />
-                审核拒绝
+                审核退回
               </Radio.Button>
             </Radio.Group>
           </Form.Item>
@@ -60,10 +60,10 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
             getFieldValue('status') === ExpenseStatus.Rejected && (
               <Form.Item
                 name="reason"
-                label="拒绝原因"
-                rules={[{ required: true, message: '请输入拒绝原因' }]}
+                label="退回原因"
+                rules={[{ required: true, message: '请输入退回原因' }]}
               >
-                <Input.TextArea rows={4} placeholder="请输入拒绝原因" />
+                <Input.TextArea rows={4} placeholder="请输入退回原因" />
               </Form.Item>
             )
           )}
