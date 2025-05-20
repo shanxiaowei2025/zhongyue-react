@@ -28,6 +28,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useExpenseList } from '../../hooks/useExpense'
+import { usePermission } from '../../hooks/usePermission'
 import { Expense, ExpenseStatus } from '../../types/expense'
 import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
@@ -115,6 +116,22 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
 ]
 
 const Expenses: React.FC = () => {
+  // 获取权限控制
+  const { expensePermissions, loading: permissionsLoading, refreshPermissions } = usePermission()
+
+  // 权限标志 - 如果权限加载中，默认允许所有操作，避免界面闪烁
+  const canCreateExpense = permissionsLoading ? true : expensePermissions?.canCreate
+  const canEditExpense = permissionsLoading ? true : expensePermissions?.canEdit
+  const canDeleteExpense = permissionsLoading ? true : expensePermissions?.canDelete
+  const canAuditExpense = permissionsLoading ? true : expensePermissions?.canAudit
+  const canCancelAuditExpense = permissionsLoading ? true : expensePermissions?.canCancelAudit
+  const canViewReceipt = permissionsLoading ? true : expensePermissions?.canViewReceipt
+
+  // 刷新权限信息
+  useEffect(() => {
+    refreshPermissions()
+  }, [refreshPermissions])
+
   // 页面状态
   const PAGE_STATE_KEY = 'expense_list_state'
   const [savedState, setSavedState] = usePageStates<{
@@ -282,6 +299,12 @@ const Expenses: React.FC = () => {
 
   // 处理新增费用
   const handleAdd = () => {
+    // 检查创建权限
+    if (!canCreateExpense) {
+      message.error('您没有创建费用的权限')
+      return
+    }
+
     setSelectedExpense(null)
     setFormMode('add')
     setFormVisible(true)
@@ -289,6 +312,12 @@ const Expenses: React.FC = () => {
 
   // 处理编辑费用
   const handleEdit = (record: Expense) => {
+    // 检查编辑权限
+    if (!canEditExpense) {
+      message.error('您没有编辑费用的权限')
+      return
+    }
+
     console.log('选中的费用记录:', record)
 
     // 从API重新获取最新数据
@@ -317,6 +346,12 @@ const Expenses: React.FC = () => {
 
   // 处理删除费用
   const handleDelete = async (id: number) => {
+    // 检查删除权限
+    if (!canDeleteExpense) {
+      message.error('您没有删除费用的权限')
+      return
+    }
+
     try {
       await deleteExpense(id)
       message.success('删除成功')
@@ -329,27 +364,37 @@ const Expenses: React.FC = () => {
 
   // 处理查看收据
   const handleViewReceipt = (id: number) => {
+    // 检查查看收据权限
+    if (!canViewReceipt) {
+      message.error('您没有查看收据的权限')
+      return
+    }
+
     setReceiptExpenseId(id)
     setReceiptVisible(true)
   }
 
   // 处理审核
   const handleAudit = (record: Expense) => {
+    // 检查审核权限
+    if (!canAuditExpense) {
+      message.error('您没有审核费用的权限')
+      return
+    }
+
     setExpenseToAudit(record)
     setAuditModalVisible(true)
   }
 
   // 提交审核
   const handleAuditSubmit = async (values: { status: ExpenseStatus; reason?: string }) => {
-    if (!expenseToAudit) return
+    if (!expenseToAudit || !canAuditExpense) return
 
     try {
       await auditExpense(expenseToAudit.id, {
         status: values.status,
         reason: values.reason,
       })
-
-      message.success(values.status === ExpenseStatus.Approved ? '费用已审核通过' : '费用已退回')
 
       setAuditModalVisible(false)
       fetchExpenses()
@@ -361,6 +406,12 @@ const Expenses: React.FC = () => {
 
   // 取消审核
   const handleCancelAudit = async (record: Expense) => {
+    // 检查取消审核权限
+    if (!canCancelAuditExpense) {
+      message.error('您没有取消审核的权限')
+      return
+    }
+
     try {
       await cancelAuditExpense(record.id, { cancelReason: '取消审核' })
       message.success('已取消审核')
@@ -383,72 +434,84 @@ const Expenses: React.FC = () => {
       case ExpenseStatus.Pending: // 未审核
         return (
           <Space size="small" className="action-buttons">
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              className="edit-btn"
-              onClick={() => handleEdit(record)}
-            >
-              编辑
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              icon={<AuditOutlined />}
-              onClick={() => handleAudit(record)}
-            >
-              审核
-            </Button>
-            <Popconfirm
-              title="确定要删除吗?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="确定"
-              cancelText="取消"
-            >
+            {canEditExpense && (
               <Button
                 type="link"
                 size="small"
-                danger
-                icon={<DeleteOutlined />}
-                className="delete-btn"
+                icon={<EditOutlined />}
+                className="edit-btn"
+                onClick={() => handleEdit(record)}
               >
-                删除
+                编辑
               </Button>
-            </Popconfirm>
+            )}
+            {canAuditExpense && (
+              <Button
+                type="link"
+                size="small"
+                icon={<AuditOutlined />}
+                onClick={() => handleAudit(record)}
+              >
+                审核
+              </Button>
+            )}
+            {canDeleteExpense && (
+              <Popconfirm
+                title="确定要删除吗?"
+                onConfirm={() => handleDelete(record.id)}
+                okText="确定"
+                cancelText="取消"
+              >
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  className="delete-btn"
+                >
+                  删除
+                </Button>
+              </Popconfirm>
+            )}
           </Space>
         )
 
       case ExpenseStatus.Approved: // 已审核通过
         return (
           <Space size="small" className="action-buttons">
-            <Button
-              type="link"
-              size="small"
-              icon={<EyeOutlined />}
-              className="view-btn"
-              onClick={() => handleViewReceipt(record.id)}
-            >
-              查看收据
-            </Button>
-            <Button type="link" size="small" danger onClick={() => handleCancelAudit(record)}>
-              取消审核
-            </Button>
+            {canViewReceipt && (
+              <Button
+                type="link"
+                size="small"
+                icon={<EyeOutlined />}
+                className="view-btn"
+                onClick={() => handleViewReceipt(record.id)}
+              >
+                查看收据
+              </Button>
+            )}
+            {canCancelAuditExpense && (
+              <Button type="link" size="small" danger onClick={() => handleCancelAudit(record)}>
+                取消审核
+              </Button>
+            )}
           </Space>
         )
 
       case ExpenseStatus.Rejected: // 已退回/拒绝
         return (
           <Space size="small" className="action-buttons">
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              className="edit-btn"
-              onClick={() => handleEdit(record)}
-            >
-              编辑
-            </Button>
+            {canEditExpense && (
+              <Button
+                type="link"
+                size="small"
+                icon={<EditOutlined />}
+                className="edit-btn"
+                onClick={() => handleEdit(record)}
+              >
+                编辑
+              </Button>
+            )}
             <Popconfirm
               title={
                 <div>
@@ -464,22 +527,24 @@ const Expenses: React.FC = () => {
                 退回原因
               </Button>
             </Popconfirm>
-            <Popconfirm
-              title="确定要删除吗?"
-              onConfirm={() => handleDelete(record.id)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <Button
-                type="link"
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-                className="delete-btn"
+            {canDeleteExpense && (
+              <Popconfirm
+                title="确定要删除吗?"
+                onConfirm={() => handleDelete(record.id)}
+                okText="确定"
+                cancelText="取消"
               >
-                删除
-              </Button>
-            </Popconfirm>
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  className="delete-btn"
+                >
+                  删除
+                </Button>
+              </Popconfirm>
+            )}
           </Space>
         )
 
@@ -554,9 +619,11 @@ const Expenses: React.FC = () => {
         title="费用管理"
         extra={
           <Space>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-              新增费用
-            </Button>
+            {canCreateExpense && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                新增费用
+              </Button>
+            )}
             <Button icon={<ExportOutlined />} onClick={handleExport}>
               导出
             </Button>

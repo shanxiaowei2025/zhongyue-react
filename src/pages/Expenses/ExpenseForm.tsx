@@ -22,11 +22,12 @@ import {
   ExpenseFormData,
   FileItem,
 } from '../../types/expense'
-import { getExpenseAutocomplete } from '../../api/expense'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
+import { useBranchOffices } from '../../hooks/useDepartments'
+import { BUSINESS_STATUS_MAP } from '../../constants'
 
 // 定义状态标签映射
 const STATUS_LABELS = {
@@ -65,12 +66,6 @@ type FormData = Omit<ExpenseFormData, keyof FormDateFields> & FormDateFields
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCancel }) => {
   const [form] = Form.useForm<FormData>()
   const [activeTab, setActiveTab] = useState('1')
-  const [companyNameOptions, setCompanyNameOptions] = useState<string[]>([])
-  const [locationOptions, setLocationOptions] = useState<string[]>([])
-  const [companyTypeOptions, setCompanyTypeOptions] = useState<string[]>([])
-  const [searchingCompanyName, setSearchingCompanyName] = useState(false)
-  const [searchingLocation, setSearchingLocation] = useState(false)
-  const [searchingCompanyType, setSearchingCompanyType] = useState(false)
   const [tabFeeSums, setTabFeeSums] = useState<Record<string, number>>({
     '1': 0, // 代理记账
     '2': 0, // 社保代理
@@ -80,6 +75,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     '6': 0, // 行政许可
     '7': 0, // 其他业务
   })
+
+  // 获取分公司/归属地数据
+  const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
 
   // 使用formMountedRef跟踪表单是否已挂载和初始化
   const formMountedRef = useRef(false)
@@ -218,7 +216,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     }
   }, [form])
 
-  // 处理费用数据加载
+  // 加载数据时初始化
   useEffect(() => {
     // 只有在表单已挂载且visible为true时才初始化表单
     if (!formMountedRef.current || !visible) {
@@ -304,65 +302,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       formInitializedRef.current = true
     }
 
-    // 加载自动完成选项
-    fetchCompanyNameOptions('')
-    fetchLocationOptions('')
-    fetchCompanyTypeOptions('')
-
     // 设置默认选项卡
     setActiveTab('1')
   }, [visible, expense, mode, form])
-
-  // 获取公司名称自动完成选项
-  const fetchCompanyNameOptions = async (keyword: string) => {
-    if (!keyword) return
-    setSearchingCompanyName(true)
-    try {
-      const res = await getExpenseAutocomplete('companyName')
-      const filteredOptions = res.filter((option: string) =>
-        option.toLowerCase().includes(keyword.toLowerCase())
-      )
-      setCompanyNameOptions(filteredOptions)
-    } catch (error) {
-      console.error('Failed to fetch company name options:', error)
-    } finally {
-      setSearchingCompanyName(false)
-    }
-  }
-
-  // 获取地区自动完成选项
-  const fetchLocationOptions = async (keyword: string) => {
-    if (!keyword) return
-    setSearchingLocation(true)
-    try {
-      const res = await getExpenseAutocomplete('companyLocation')
-      const filteredOptions = res.filter((option: string) =>
-        option.toLowerCase().includes(keyword.toLowerCase())
-      )
-      setLocationOptions(filteredOptions)
-    } catch (error) {
-      console.error('Failed to fetch location options:', error)
-    } finally {
-      setSearchingLocation(false)
-    }
-  }
-
-  // 获取公司类型自动完成选项
-  const fetchCompanyTypeOptions = async (keyword: string) => {
-    if (!keyword) return
-    setSearchingCompanyType(true)
-    try {
-      const res = await getExpenseAutocomplete('companyType')
-      const filteredOptions = res.filter((option: string) =>
-        option.toLowerCase().includes(keyword.toLowerCase())
-      )
-      setCompanyTypeOptions(filteredOptions)
-    } catch (error) {
-      console.error('Failed to fetch company type options:', error)
-    } finally {
-      setSearchingCompanyType(false)
-    }
-  }
 
   // 上传合同图片的处理函数
   const handleContractUpload = (info: any) => {
@@ -557,28 +499,29 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 </Form.Item>
 
                 <Form.Item name="companyType" label="企业类型">
-                  <Select
-                    showSearch
-                    placeholder="请选择企业类型"
-                    filterOption={false}
-                    onSearch={fetchCompanyTypeOptions}
-                    loading={searchingCompanyType}
-                    options={companyTypeOptions.map(type => ({ value: type, label: type }))}
-                  />
+                  <Select placeholder="请选择企业类型">
+                    <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
+                    <Select.Option value="小规模（个体）">小规模（个体）</Select.Option>
+                    <Select.Option value="一般纳税人">一般纳税人</Select.Option>
+                    <Select.Option value="小规模（个人独资）">小规模（个人独资）</Select.Option>
+                    <Select.Option value="合作社">合作社</Select.Option>
+                    <Select.Option value="民办非企业单位">民办非企业单位</Select.Option>
+                    <Select.Option value="其他">其他</Select.Option>
+                  </Select>
                 </Form.Item>
 
-                <Form.Item name="companyLocation" label="企业归属地">
-                  <Select
-                    showSearch
-                    placeholder="请选择企业归属地"
-                    filterOption={false}
-                    onSearch={fetchLocationOptions}
-                    loading={searchingLocation}
-                    options={locationOptions.map(location => ({
-                      value: location,
-                      label: location,
-                    }))}
-                  />
+                <Form.Item
+                  name="companyLocation"
+                  label="企业归属地"
+                  rules={[{ required: true, message: '请选择归属地' }]}
+                >
+                  <Select loading={isLoadingBranchOffices}>
+                    {branchOffices.map(office => (
+                      <Select.Option key={office.id} value={office.name}>
+                        {office.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
                 </Form.Item>
 
                 <Form.Item name="chargeDate" label="收费日期">

@@ -28,6 +28,10 @@ export const usePermission = () => {
         const customerPermissions = response.data.filter(p => p.page_name === '客户管理')
         console.log('客户管理相关权限:', customerPermissions)
 
+        // 记录费用管理相关的权限
+        const expensePermissions = response.data.filter(p => p.page_name === '费用管理')
+        console.log('费用管理相关权限:', expensePermissions)
+
         // 记录当前用户角色的权限
         if (user.roles.length > 0) {
           const userRolePermissions = response.data.filter(p => user.roles.includes(p.role_name))
@@ -38,6 +42,10 @@ export const usePermission = () => {
             p => p.page_name === '客户管理'
           )
           console.log('当前用户角色的客户管理权限:', userCustomerPermissions)
+
+          // 特别记录当前用户角色的费用管理权限
+          const userExpensePermissions = userRolePermissions.filter(p => p.page_name === '费用管理')
+          console.log('当前用户角色的费用管理权限:', userExpensePermissions)
         }
 
         setPermissions(response.data)
@@ -123,7 +131,7 @@ export const usePermission = () => {
   const customerPermissions = useMemo(() => {
     // 如果权限列表为空，开启降级模式，默认所有权限为true
     if (!user || permissions.length === 0) {
-      console.log('权限列表为空，开启降级模式，默认所有权限为true')
+      console.log('权限列表为空，开启降级模式，默认所有客户管理权限为true')
       return {
         canCreate: true,
         canEdit: true,
@@ -151,12 +159,51 @@ export const usePermission = () => {
     return permissionResults
   }, [hasPermission, user, permissions.length])
 
+  // 费用管理页面相关权限
+  const expensePermissions = useMemo(() => {
+    // 如果权限列表为空，开启降级模式，默认所有权限为true
+    if (!user || permissions.length === 0) {
+      console.log('权限列表为空，开启降级模式，默认所有费用管理权限为true')
+      return {
+        canCreate: true,
+        canEdit: true,
+        canDelete: true,
+        canAudit: true,
+        canCancelAudit: true,
+        canViewReceipt: true,
+        canViewAll: true,
+        canViewByLocation: true,
+        canViewOwn: true,
+      }
+    }
+
+    // 添加详细的权限调试信息
+    const permissionResults = {
+      canCreate: hasPermission('expense_action_create'),
+      canEdit: hasPermission('expense_action_edit'),
+      canDelete: hasPermission('expense_action_delete'),
+      canAudit: hasPermission('expense_action_audit'),
+      canCancelAudit: hasPermission('expense_action_cancel_audit'),
+      canViewReceipt: hasPermission('expense_action_view_receipt'),
+      canViewAll: hasPermission('expense_data_view_all'),
+      canViewByLocation: hasPermission('expense_data_view_by_location'),
+      canViewOwn: hasPermission('expense_data_view_own'),
+    }
+
+    // 输出用户角色和权限调试信息
+    console.log('当前用户角色:', user?.roles)
+    console.log('费用管理权限详情:', permissionResults)
+
+    return permissionResults
+  }, [hasPermission, user, permissions.length])
+
   return {
     permissions,
     loading,
     error,
     hasPermission,
     customerPermissions,
+    expensePermissions,
     refreshPermissions: fetchPermissions,
   }
 }
