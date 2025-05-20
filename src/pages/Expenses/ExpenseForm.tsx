@@ -51,9 +51,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const [searchingCompanyName, setSearchingCompanyName] = useState(false)
   const [searchingLocation, setSearchingLocation] = useState(false)
   const [searchingCompanyType, setSearchingCompanyType] = useState(false)
-  const [calculatingTotal, setCalculatingTotal] = useState(false)
+  const [tabFeeSums, setTabFeeSums] = useState<Record<string, number>>({
+    '1': 0, // 代理记账
+    '2': 0, // 社保代理
+    '3': 0, // 统计报表
+    '4': 0, // 新办执照
+    '5': 0, // 变更业务
+    '6': 0, // 行政许可
+    '7': 0  // 其他业务
+  })
   
-  // 使用useRef跟踪表单是否已挂载和初始化
+  // 使用formMountedRef跟踪表单是否已挂载和初始化
   const formMountedRef = useRef(false)
   const formInitializedRef = useRef(false)
   const [prevFormValues, setPrevFormValues] = useState<Record<string, any>>({})
@@ -67,6 +75,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     'invoiceSoftwareFee', 'socialInsuranceAgencyFee', 'statisticalReportFee',
     'changeFee', 'administrativeLicenseFee', 'otherBusinessFee'
   ]
+  
+  // 定义每个标签页包含的费用字段映射
+  const tabFeeFieldsMap: Record<string, string[]> = {
+    '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee'], // 代理记账
+    '2': ['socialInsuranceAgencyFee'], // 社保代理
+    '3': ['statisticalReportFee'], // 统计报表
+    '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee', 'addressFee'], // 新办执照
+    '5': ['changeFee'], // 变更业务
+    '6': ['administrativeLicenseFee'], // 行政许可
+    '7': ['otherBusinessFee'] // 其他业务
+  };
+  
+  // 使用Form.useWatch监听所有费用字段
+  const watchedFeeFields = feeFields.map(field => Form.useWatch(field, form));
+  
+  // 当任何费用字段变化时，重新计算总费用和每个标签页的费用子总和
+  useEffect(() => {
+    if (formMountedRef.current && formInitializedRef.current) {
+      calculateTotalFee();
+      calculateTabFeeSums();
+    }
+  }, [watchedFeeFields]);
 
   // 在组件挂载时重置表单状态
   useEffect(() => {
@@ -146,29 +176,51 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const calculateTotalFee = React.useCallback(() => {
     if (!visible || !formMountedRef.current) return // 不可见或表单未挂载时不执行
     
-    setCalculatingTotal(true)
     try {
-      // 确保表单已挂载后再获取值
-      setTimeout(() => {
-        if (formMountedRef.current) {
-          const formValues = form.getFieldsValue()
-          
-          let total = 0
-          feeFields.forEach(field => {
-            if (formValues[field]) {
-              total += Number(formValues[field])
-            }
-          })
-          
-          form.setFieldsValue({ totalFee: total })
+      // 获取所有费用字段的值
+      const formValues = form.getFieldsValue(feeFields);
+      let total = 0;
+      
+      for (const field of feeFields) {
+        const value = formValues[field];
+        if (value) {
+          total += Number(value);
         }
-        setCalculatingTotal(false)
-      }, 100)
+      }
+      
+      // 设置总费用
+      form.setFieldValue('totalFee', total);
     } catch (error) {
-      console.error('计算总费用失败:', error)
-      setCalculatingTotal(false)
+      console.error('计算总费用失败:', error);
     }
   }, [form, visible, feeFields])
+
+  // 计算每个标签页的费用子总和
+  const calculateTabFeeSums = useCallback(() => {
+    if (!visible || !formMountedRef.current) return;
+    
+    try {
+      const formValues = form.getFieldsValue(feeFields);
+      const newTabFeeSums: Record<string, number> = {
+        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0
+      };
+      
+      // 计算每个标签页的费用子总和
+      Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
+        let sum = 0;
+        fieldsInTab.forEach(field => {
+          if (formValues[field]) {
+            sum += Number(formValues[field]);
+          }
+        });
+        newTabFeeSums[tabKey] = sum;
+      });
+      
+      setTabFeeSums(newTabFeeSums);
+    } catch (error) {
+      console.error('计算标签页费用子总和失败:', error);
+    }
+  }, [form, visible, tabFeeFieldsMap, feeFields]);
 
   // 获取公司名称自动完成选项
   const fetchCompanyNameOptions = async (keyword: string) => {
@@ -228,22 +280,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     if (info.file.status === 'done') {
       message.success(`${info.file.name} 上传成功`)
       // 不再需要手动设置表单值，Form.Item 的 getValueFromEvent 会处理
-      
-      // 在表单值变化后计算总费用
-      setTimeout(() => {
-        // 直接计算总费用
-        const formValues = form.getFieldsValue(feeFields);
-        let total = 0;
-        
-        for (const field of feeFields) {
-          const value = formValues[field];
-          if (value) {
-            total += Number(value);
-          }
-        }
-        
-        form.setFieldValue('totalFee', total);
-      }, 300);
     } else if (info.file.status === 'error') {
       message.error(`${info.file.name} 上传失败`)
     }
@@ -267,8 +303,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       const values = await form.validateFields()
       console.log('提交表单值:', values)
 
+      // 确保总费用正确计算并包含在提交数据中
+      const currentTotalFee = values.totalFee || 0;
+      
       // 处理日期字段
-      const formattedValues: Record<string, any> = { ...values }
+      const formattedValues: Record<string, any> = { 
+        ...values,
+        totalFee: currentTotalFee
+      }
       
       // 转换所有日期字段为ISO字符串格式
       const dateFields = [
@@ -296,7 +338,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           (file: any) => file.response?.url || file.url || ''
         )
       }
-
+      
       if (mode === 'add') {
         await createExpense(formattedValues as CreateExpenseDto)
         message.success('创建成功')
@@ -428,8 +470,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   </Select>
                 </Form.Item>
 
-                <Form.Item name="salesperson" label="提交人">
-                  <Input placeholder="请输入提交人" />
+                <Form.Item name="salesperson" label="业务员">
+                  <Input placeholder="请输入业务员" />
                 </Form.Item>
               </div>
 
@@ -513,7 +555,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 items={[
                   {
                     key: '1',
-                    label: '代理记账 (¥0)',
+                    label: `代理记账 (¥${tabFeeSums['1']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="businessType" label="业务类型">
@@ -608,7 +650,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   },
                   {
                     key: '2',
-                    label: '社保代理 (¥0)',
+                    label: `社保代理 (¥${tabFeeSums['2']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="insuranceTypes" label="参保险种">
@@ -661,7 +703,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   },
                   {
                     key: '3',
-                    label: '统计报表 (¥0)',
+                    label: `统计报表 (¥${tabFeeSums['3']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="statisticalReportFee" label="统计局报表费">
@@ -690,7 +732,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   },
                   {
                     key: '4',
-                    label: '新办执照 (¥0)',
+                    label: `新办执照 (¥${tabFeeSums['4']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="licenseType" label="办照类型">
@@ -769,7 +811,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   },
                   {
                     key: '5',
-                    label: '变更业务 (¥0)',
+                    label: `变更业务 (¥${tabFeeSums['5']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="changeBusiness" label="变更业务">
@@ -803,7 +845,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   },
                   {
                     key: '6',
-                    label: '行政许可 (¥0)',
+                    label: `行政许可 (¥${tabFeeSums['6']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="administrativeLicense" label="行政许可">
@@ -838,7 +880,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   },
                   {
                     key: '7',
-                    label: '其他业务 (¥0)',
+                    label: `其他业务 (¥${tabFeeSums['7']?.toFixed(2) || 0})`,
                     children: (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                         <Form.Item name="otherBusiness" label="其他业务">
