@@ -43,6 +43,8 @@ interface FileUploadProps {
   accept?: string // 新增: 接受的文件类型，默认为所有文件
   multiple?: boolean // 新增: 是否允许多文件上传
   maxCount?: number // 新增: 最大上传数量，默认为1
+  onFileUpload?: (fileName: string) => void // 新增: 文件上传成功回调
+  onFileRemove?: () => void // 新增: 文件删除回调
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -54,6 +56,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
   accept = '*',
   multiple = false,
   maxCount = 1,
+  onFileUpload,
+  onFileRemove,
 }) => {
   const [loading, setLoading] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
@@ -148,6 +152,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
         message.success('上传成功')
         setFileError(false)
 
+        // 记录上传的文件
+        onFileUpload?.(result.fileName)
+
         // 检查是否是图片
         setIsImage(checkIsImage(result.fileName))
 
@@ -185,6 +192,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
       if (success) {
         onChange?.(undefined)
         message.success('删除成功')
+
+        // 通知外部组件文件已删除
+        onFileRemove?.()
 
         // 删除成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)

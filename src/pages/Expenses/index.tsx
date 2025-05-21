@@ -677,7 +677,7 @@ const Expenses: React.FC = () => {
 
   return (
     <div className="expenses-page">
-      <Card className="search-card mb-4">
+      <div className="search-card mb-4">
         <div className="flex flex-col md:flex-row justify-between gap-4">
           {/* 左侧：搜索表单 */}
           <div className="flex-1">
@@ -751,9 +751,9 @@ const Expenses: React.FC = () => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
 
-      <Card>
+      <div>
         <Table
           columns={tableColumns}
           dataSource={expenses}
@@ -770,7 +770,7 @@ const Expenses: React.FC = () => {
           }}
           onChange={handleTableChange}
         />
-      </Card>
+      </div>
 
       {/* 费用表单弹窗 */}
       {formVisible && (

@@ -50,6 +50,8 @@ interface MultiFileUploadProps {
   onSuccess?: (isAutoSave: boolean) => void
   accept?: string // 接受的文件类型，默认为所有文件
   maxCount?: number // 最大上传数量，默认为无限制
+  onFileUpload?: (fileName: string) => void // 新增: 文件上传成功回调
+  onFileRemove?: (fileName: string) => void // 新增: 文件删除回调
 }
 
 const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
@@ -60,6 +62,8 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   onSuccess,
   accept = '*',
   maxCount = 999, // 设置为一个很大的数字，实际上相当于无限制
+  onFileUpload,
+  onFileRemove,
 }) => {
   const [loading, setLoading] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
@@ -131,13 +135,26 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     setLoading(true)
 
     try {
+      // 如果已达到最大数量，则不上传
+      if (safeValue.length >= maxCount) {
+        message.error(`最多只能上传${maxCount}个文件`)
+        onError('已达到最大上传数量')
+        return
+      }
+
+      // 使用工具上传文件
       const result = await uploadFile(file)
+
       if (result) {
-        // 更新文件列表，确保safeValue是一个数组
-        const newFiles = [...safeValue, result]
-        onChange?.(newFiles)
+        // 新文件
+        const newFile: FileItem = result
+        // 更新状态，将新文件添加到现有文件列表
+        onChange?.([...safeValue, newFile])
         onUploadSuccess('上传成功')
         message.success('上传成功')
+
+        // 记录上传的文件名
+        onFileUpload?.(result.fileName)
 
         // 上传成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)
@@ -146,6 +163,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       }
     } catch (error) {
       console.error('上传出错:', error)
+      message.error('上传失败，请重试')
       onError('上传失败')
     } finally {
       setLoading(false)
@@ -173,6 +191,9 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         const newFiles = safeValue.filter(item => item.fileName !== fileItem.fileName)
         onChange?.(newFiles)
         message.success('删除成功')
+
+        // 通知外部组件文件已删除
+        onFileRemove?.(fileItem.fileName)
 
         // 删除成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)

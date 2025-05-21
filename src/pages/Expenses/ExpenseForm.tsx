@@ -28,6 +28,7 @@ import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { useBranchOffices } from '../../hooks/useDepartments'
 import { BUSINESS_STATUS_MAP } from '../../constants'
+import { deleteFile } from '../../utils/upload'
 
 // 定义状态标签映射
 const STATUS_LABELS = {
@@ -308,6 +309,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     setActiveTab('1')
   }, [visible, expense, mode, form])
 
+  // 跟踪新上传的附件
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    contractImage?: string;
+    proofOfCharge?: string[];
+  }>({
+    contractImage: undefined,
+    proofOfCharge: []
+  });
+
   // 上传合同图片的处理函数
   const handleContractUpload = (info: any) => {
     console.log('合同上传:', info)
@@ -395,10 +405,62 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   }
 
   // 处理取消
-  const handleCancel = () => {
-    form.resetFields()
-    onCancel()
+  const handleCancel = async () => {
+    // 如果是新建模式，需要清理已上传的文件
+    if (mode === 'add') {
+      try {
+        // 删除已上传的合同图片
+        if (uploadedFiles.contractImage) {
+          await deleteFile(uploadedFiles.contractImage);
+          console.log('已删除未保存的合同图片:', uploadedFiles.contractImage);
+        }
+        
+        // 删除已上传的收费凭证
+        if (uploadedFiles.proofOfCharge && uploadedFiles.proofOfCharge.length > 0) {
+          for (const fileName of uploadedFiles.proofOfCharge) {
+            await deleteFile(fileName);
+            console.log('已删除未保存的收费凭证:', fileName);
+          }
+        }
+      } catch (error) {
+        console.error('删除未保存文件失败:', error);
+      }
+    }
+    
+    form.resetFields();
+    onCancel();
   }
+
+  // 跟踪新上传的合同图片
+  const handleContractFileUpload = useCallback((fileName: string) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      contractImage: fileName
+    }));
+  }, []);
+
+  // 跟踪新上传的收费凭证
+  const handleProofFileUpload = useCallback((fileName: string) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      proofOfCharge: [...(prev.proofOfCharge || []), fileName]
+    }));
+  }, []);
+
+  // 从跟踪列表中移除已删除的文件
+  const handleContractFileRemove = useCallback(() => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      contractImage: undefined
+    }));
+  }, []);
+
+  const handleProofFileRemove = useCallback((fileName: string) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      proofOfCharge: prev.proofOfCharge?.filter(name => name !== fileName) || []
+    }));
+  }, []);
 
   return (
     <Modal
@@ -557,11 +619,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     label="收据凭证"
                     accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                     onSuccess={isAutoSave => {
-                      if (isAutoSave) {
-                        // 自动保存但不关闭模态框
-                        handleSubmit(true)
+                      // 在编辑模式下自动保存，新建模式不自动保存
+                      if (isAutoSave && mode === 'edit') {
+                        handleSubmit(true);
                       }
                     }}
+                    onFileUpload={handleProofFileUpload}
+                    onFileRemove={handleProofFileRemove}
                   />
                 </Form.Item>
 
@@ -570,11 +634,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     label="电子合同"
                     accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                     onSuccess={isAutoSave => {
-                      if (isAutoSave) {
-                        // 自动保存但不关闭模态框
-                        handleSubmit(true)
+                      // 在编辑模式下自动保存，新建模式不自动保存
+                      if (isAutoSave && mode === 'edit') {
+                        handleSubmit(true);
                       }
                     }}
+                    onFileUpload={handleContractFileUpload}
+                    onFileRemove={handleContractFileRemove}
                   />
                 </Form.Item>
               </div>

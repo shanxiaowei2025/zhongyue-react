@@ -262,7 +262,6 @@ export const useExpenseDetail = (id?: number | null) => {
     try {
       console.log('更新费用数据, id:', expenseId, 'data:', updateData)
       const res = await updateExpense(expenseId, updateData)
-      message.success('更新成功')
 
       // 刷新当前详情数据
       await refreshExpenseDetail()
