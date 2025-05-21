@@ -198,7 +198,7 @@ const Expenses: React.FC = () => {
     isLoading: loading,
     error,
     refreshExpenseList: fetchExpenses,
-    removeExpense: deleteExpense,
+    removeExpense,
     auditExpense,
     cancelAudit: cancelAuditExpense,
   } = useExpenseList(searchParams)
@@ -356,12 +356,13 @@ const Expenses: React.FC = () => {
     }
 
     try {
-      await deleteExpense(id)
-      message.success('删除成功')
-      fetchExpenses()
+      // 使用removeExpense函数代替直接调用API
+      // 这样可以避免显示两次成功消息
+      await removeExpense(id)
+      // 不再需要单独刷新列表，因为removeExpense会自动刷新
     } catch (error) {
       console.error('删除费用失败:', error)
-      message.error('删除失败')
+      // 错误消息已经在removeExpense中处理，这里不需要重复显示
     }
   }
 

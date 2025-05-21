@@ -17,6 +17,7 @@ export enum ExpenseStatus {
 export interface Expense {
   id: number
   companyName: string
+  unifiedSocialCreditCode?: string
   companyType: string
   companyLocation: string
   licenseType: string
@@ -78,6 +79,7 @@ export interface ExpenseFormData extends Omit<Expense, 'contractImage' | 'proofO
 // 费用创建DTO
 export interface CreateExpenseDto {
   companyName?: string
+  unifiedSocialCreditCode?: string
   companyType?: string
   companyLocation?: string
   licenseType?: string

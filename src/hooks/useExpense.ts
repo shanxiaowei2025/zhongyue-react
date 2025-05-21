@@ -284,7 +284,6 @@ export const useExpenseDetail = (id?: number | null) => {
   const createExpenseData = async (createData: CreateExpenseDto) => {
     try {
       const res = await createExpense(createData)
-      message.success('创建成功')
 
       // 刷新列表数据
       await mutate(key => {

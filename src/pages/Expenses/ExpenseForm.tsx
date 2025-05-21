@@ -125,7 +125,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 使用临时变量保存表单值，避免直接使用form.getFieldsValues
       const values: Record<string, any> = {}
       for (const field of feeFields) {
-        values[field] = form.getFieldValue(field) || 0
+        // 使用as any解决TypeScript类型约束问题
+        values[field] = form.getFieldValue(field as any) || 0
       }
 
       let total = 0
@@ -154,7 +155,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 使用临时变量保存表单值，避免直接使用form.getFieldsValues
       const values: Record<string, any> = {}
       for (const field of feeFields) {
-        values[field] = form.getFieldValue(field) || 0
+        // 使用as any解决TypeScript类型约束问题
+        values[field] = form.getFieldValue(field as any) || 0
       }
 
       const newTabFeeSums: Record<string, number> = {
@@ -495,6 +497,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   rules={[{ required: true, message: '请输入企业名称' }]}
                 >
                   <Input placeholder="请输入企业名称" />
+                </Form.Item>
+
+                <Form.Item
+                  name="unifiedSocialCreditCode"
+                  label="统一社会信用代码"
+                >
+                  <Input placeholder="请输入统一社会信用代码" />
                 </Form.Item>
 
                 <Form.Item name="companyType" label="企业类型">
