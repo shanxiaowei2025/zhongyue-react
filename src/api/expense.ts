@@ -84,7 +84,12 @@ export const getExpenseAutocomplete = (field: string) => {
 
 // 查看费用收据
 export const getExpenseReceipt = (id: number) => {
-  return request.get<ReceiptViewDto>(`/expense/${id}/receipt`)
+  return request.get<{
+    data: ReceiptViewDto
+    code: number
+    message: string
+    timestamp: number
+  }>(`/expense/${id}/receipt`)
 }
 
 // 导出费用数据为CSV

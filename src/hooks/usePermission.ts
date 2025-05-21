@@ -174,6 +174,7 @@ export const usePermission = () => {
         canViewAll: true,
         canViewByLocation: true,
         canViewOwn: true,
+        canExport: true
       }
     }
 
@@ -188,6 +189,7 @@ export const usePermission = () => {
       canViewAll: hasPermission('expense_data_view_all'),
       canViewByLocation: hasPermission('expense_data_view_by_location'),
       canViewOwn: hasPermission('expense_data_view_own'),
+      canExport: hasPermission('expense_action_export')
     }
 
     // 输出用户角色和权限调试信息

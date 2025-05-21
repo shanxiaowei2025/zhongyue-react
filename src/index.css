@@ -199,7 +199,6 @@ body.ant-modal-open {
 .full-height-modal .ant-modal-content {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 50px); /* 修改高度设置，50px是顶部和底部的间隙总和 */
   overflow: hidden; /* 防止模态框本身出现滚动条 */
   box-sizing: border-box;
 }

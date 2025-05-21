@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Modal, Spin, Button, Flex, Radio } from 'antd'
-import { useExpenseReceipt } from '../../hooks/useExpense'
-import { DownloadOutlined } from '@ant-design/icons'
+import { useExpenseReceipt, getExpenseReceiptKey } from '../../hooks/useExpense'
+import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import html2canvas from 'html2canvas'
+import { message } from 'antd'
+import { mutate } from 'swr'
 
 interface ExpenseReceiptProps {
   visible: boolean
@@ -22,15 +25,121 @@ const sealImages: Record<SealType, string> = {
   '如你心意': '/images/runixinyi-zhang.png'
 }
 
+// 定义不同盖章单位对应的收款方信息
+const receiverMap: Record<SealType, string> = {
+  '中岳': '定兴县中岳会计服务有限责任公司',
+  '雄安': '定兴县中岳会计服务有限责任公司河北雄安分公司',
+  '高碑店': '定兴县中岳会计服务有限责任公司高碑店分公司',
+  '脉信': '保定脉信会计服务有限公司',
+  '金盾': '定兴县金盾企业管理咨询有限公司',
+  '如你心意': '保定如你心意企业管理咨询有限公司'
+}
+
 const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onClose }) => {
   const { receipt, isLoading } = useExpenseReceipt(visible ? expenseId : null)
   const [selectedSeal, setSelectedSeal] = useState<SealType>('中岳')
+  const [hasRefreshed, setHasRefreshed] = useState(false)
+
+  // 在组件显示时刷新数据，但只刷新一次
+  useEffect(() => {
+    // 只有当模态框打开且有ID且尚未刷新过时才刷新
+    if (visible && expenseId && !hasRefreshed) {
+      // 自动刷新时不显示消息提示
+      refreshReceipt(false);
+      setHasRefreshed(true);
+    }
+    
+    // 当模态框关闭时重置刷新状态
+    if (!visible) {
+      setHasRefreshed(false);
+    }
+  }, [visible, expenseId, hasRefreshed]);
+
+  // 仅在开发环境下记录日志，并添加条件以避免频繁输出
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && receipt && !isLoading && visible) {
+      console.log('收据数据加载完成:', receipt);
+      if (receipt.feeItems && receipt.feeItems.length > 0) {
+        console.log('费用明细项目:', receipt.feeItems);
+      }
+    }
+  }, [receipt, isLoading, visible]);
+
+  // 刷新收据数据
+  const refreshReceipt = async (showMessage = true) => {
+    if (!expenseId) return;
+    
+    try {
+      if (showMessage) {
+        message.loading('正在刷新收据数据...', 0.5);
+      }
+      
+      await mutate(getExpenseReceiptKey(expenseId));
+      
+      if (showMessage) {
+        message.success('收据数据已刷新');
+      }
+    } catch (error) {
+      console.error('刷新收据数据失败:', error);
+      if (showMessage) {
+        message.error('刷新收据数据失败');
+      }
+    }
+  }
 
   // 处理保存为图片
   const handleSaveAsImage = () => {
-    // 这里使用html2canvas实现
-    // 由于需要额外引入库，先用alert代替
-    alert('保存为图片功能正在开发中')
+    const element = document.getElementById('receipt-printable')
+    if (!element) {
+      message.error('无法找到收据内容')
+      return
+    }
+
+    // 获取公司名称用于文件名
+    const companyName = receipt?.companyName || '未知企业'
+    const receiptId = receipt?.id || 'unknown'
+    const fileName = `${companyName.trim()}-收据-${receiptId}.png`
+
+    // 隐藏印章选择器，以便截图不包含它
+    const sealSelector = element.querySelector('.seal-selector') as HTMLElement
+    const originalDisplay = sealSelector ? sealSelector.style.display : ''
+    if (sealSelector) {
+      sealSelector.style.display = 'none'
+    }
+
+    message.loading('正在生成图片...', 0)
+
+    html2canvas(element, {
+      scale: 2, // 提高分辨率
+      backgroundColor: '#ffffff',
+      logging: false,
+      useCORS: true, // 允许加载跨域图片
+      allowTaint: true,
+    }).then(canvas => {
+      // 恢复印章选择器显示
+      if (sealSelector) {
+        sealSelector.style.display = originalDisplay
+      }
+
+      message.destroy() // 清除加载提示
+
+      // 转换为图片并下载
+      const imgData = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = fileName
+      link.href = imgData
+      link.click()
+
+      message.success('收据图片已保存')
+    }).catch(err => {
+      console.error('生成图片错误:', err)
+      message.error('生成图片失败')
+      
+      // 恢复印章选择器显示
+      if (sealSelector) {
+        sealSelector.style.display = originalDisplay
+      }
+    })
   }
 
   // 处理印章选择变更
@@ -119,21 +228,38 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
 
   // 构建款项明细
   const renderFeeDetails = () => {
-    const details = [];
+    const details: string[] = [];
     
-    if (receipt?.licenseFee) details.push(`办照费用: ¥${receipt.licenseFee.toFixed(2)}`);
-    if (receipt?.brandFee) details.push(`牌子费: ¥${receipt.brandFee.toFixed(2)}`);
-    if (receipt?.recordSealFee) details.push(`备案章费用: ¥${receipt.recordSealFee.toFixed(2)}`);
-    if (receipt?.generalSealFee) details.push(`一般刻章费用: ¥${receipt.generalSealFee.toFixed(2)}`);
-    if (receipt?.agencyFee) details.push(`代理费: ¥${receipt.agencyFee.toFixed(2)}`);
-    if (receipt?.accountingSoftwareFee) details.push(`记账软件费: ¥${receipt.accountingSoftwareFee.toFixed(2)}`);
-    if (receipt?.addressFee) details.push(`地址费: ¥${receipt.addressFee.toFixed(2)}`);
-    if (receipt?.invoiceSoftwareFee) details.push(`发票软件费: ¥${receipt.invoiceSoftwareFee.toFixed(2)}`);
-    if (receipt?.socialInsuranceAgencyFee) details.push(`社保代理费: ¥${receipt.socialInsuranceAgencyFee.toFixed(2)}`);
-    if (receipt?.statisticalReportFee) details.push(`统计报表费: ¥${receipt.statisticalReportFee.toFixed(2)}`);
-    if (receipt?.changeFee) details.push(`变更费: ¥${receipt.changeFee.toFixed(2)}`);
-    if (receipt?.administrativeLicenseFee) details.push(`行政许可费: ¥${receipt.administrativeLicenseFee.toFixed(2)}`);
-    if (receipt?.otherBusinessFee) details.push(`其他业务费: ¥${receipt.otherBusinessFee.toFixed(2)}`);
+    // 首先尝试使用新的feeItems数组（如果存在）
+    if (receipt?.feeItems && receipt.feeItems.length > 0) {
+      receipt.feeItems.forEach(item => {
+        if (item.name && item.amount !== undefined && item.amount !== null && item.amount > 0) {
+          details.push(`${item.name}: ¥${Number(item.amount).toFixed(2)}`);
+        }
+      });
+    } else {
+      // 回退到旧的单独费用字段（为了向后兼容）
+      // 添加安全检查，确保金额存在且是数字
+      const addFeeItem = (label: string, value?: number) => {
+        if (value !== undefined && value !== null && !isNaN(Number(value)) && value > 0) {
+          details.push(`${label}: ¥${Number(value).toFixed(2)}`);
+        }
+      };
+      
+      addFeeItem('办照费用', receipt?.licenseFee);
+      addFeeItem('牌子费', receipt?.brandFee);
+      addFeeItem('备案章费用', receipt?.recordSealFee);
+      addFeeItem('一般刻章费用', receipt?.generalSealFee);
+      addFeeItem('代理费', receipt?.agencyFee);
+      addFeeItem('记账软件费', receipt?.accountingSoftwareFee);
+      addFeeItem('地址费', receipt?.addressFee);
+      addFeeItem('发票软件费', receipt?.invoiceSoftwareFee);
+      addFeeItem('社保代理费', receipt?.socialInsuranceAgencyFee);
+      addFeeItem('统计报表费', receipt?.statisticalReportFee);
+      addFeeItem('变更费', receipt?.changeFee);
+      addFeeItem('行政许可费', receipt?.administrativeLicenseFee);
+      addFeeItem('其他业务费', receipt?.otherBusinessFee);
+    }
     
     if (details.length === 0) return '费用明细';
     
@@ -148,6 +274,9 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
       width={800}
       className="receipt-modal"
       footer={[
+        <Button key="refresh" onClick={() => refreshReceipt(true)} icon={<ReloadOutlined />}>
+          刷新数据
+        </Button>,
         <Button key="close" onClick={onClose}>关闭</Button>,
         <Button 
           key="download" 
@@ -175,7 +304,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               <p className="receipt-date">日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}</p>
             </div>
             <div className="receipt-number">
-              <h3>NO. {receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000'}</h3>
+              <h3>NO. {receipt?.receiptNo || (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}</h3>
             </div>
           </div>
 
@@ -196,7 +325,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
                   <td className="value-cell" colSpan={3}>
                     <div className="amount-row">
                       <span className="amount-chinese">大写：{formatAmountToChinese(receipt?.totalFee || 0)}</span>
-                      <span className="amount-digit">小写：¥{receipt?.totalFee?.toFixed(2) || '0.00'}</span>
+                      <span className="amount-digit">小写：¥{receipt?.totalFee ? Number(receipt.totalFee).toFixed(2) : '0.00'}</span>
                     </div>
                   </td>
                 </tr>
@@ -225,7 +354,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
           <div className="receipt-footer">
             <div className="receipt-issuer">
               <p className="issuer-title">收款方：</p>
-              <p className="issuer-name">定兴县中岳会计服务有限责任公司</p>
+              <p className="issuer-name">{receiverMap[selectedSeal]}</p>
             </div>
             <div className="receipt-seal">
               <p className="seal-title">盖章：</p>

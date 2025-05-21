@@ -65,6 +65,9 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null)
   const [isImage, setIsImage] = useState(false)
+  
+  // 确保value始终是一个数组
+  const safeValue = Array.isArray(value) ? value : []
 
   // 判断文件类型
   const getFileType = (fileName: string): string => {
@@ -130,8 +133,8 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     try {
       const result = await uploadFile(file)
       if (result) {
-        // 更新文件列表
-        const newFiles = [...(value || []), result]
+        // 更新文件列表，确保safeValue是一个数组
+        const newFiles = [...safeValue, result]
         onChange?.(newFiles)
         onUploadSuccess('上传成功')
         message.success('上传成功')
@@ -166,8 +169,8 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
       const success = await deleteFile(fileNameToDelete)
       if (success) {
-        // 更新文件列表，移除已删除的文件
-        const newFiles = value?.filter(item => item.fileName !== fileItem.fileName) || []
+        // 更新文件列表，移除已删除的文件，确保使用safeValue
+        const newFiles = safeValue.filter(item => item.fileName !== fileItem.fileName)
         onChange?.(newFiles)
         message.success('删除成功')
 
@@ -247,14 +250,14 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
             </Button>
           </Upload>
           <Text type="secondary" className="ml-2">
-            {`已上传 ${value.length} 个文件`}
+            {`已上传 ${safeValue.length} 个文件`}
           </Text>
         </div>
 
         {/* 文件列表 */}
         <div className="file-list grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {value && value.length > 0 ? (
-            value.map((file, index) => (
+          {safeValue && safeValue.length > 0 ? (
+            safeValue.map((file, index) => (
               <Card
                 key={index}
                 size="small"

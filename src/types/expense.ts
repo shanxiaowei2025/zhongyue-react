@@ -158,11 +158,18 @@ export interface CancelAuditDto {
   cancelReason: string
 }
 
+// 费用项目接口
+export interface FeeItem {
+  name: string;
+  amount: number;
+}
+
 // 收据视图DTO
 export interface ReceiptViewDto {
   id?: number
   companyName?: string
   chargeDate?: string
+  receiptNo?: string
   totalFee?: number
   chargeMethod?: string
   remarks?: string
@@ -172,6 +179,7 @@ export interface ReceiptViewDto {
   companyType?: string
   companyLocation?: string
   status?: ExpenseStatus
+  // 旧的单独费用字段，保留向后兼容性
   licenseFee?: number
   brandFee?: number
   recordSealFee?: number
@@ -186,4 +194,6 @@ export interface ReceiptViewDto {
   administrativeLicenseFee?: number
   otherBusinessFee?: number
   receiptRemarks?: string
+  // 新的费用明细数组
+  feeItems?: FeeItem[]
 }

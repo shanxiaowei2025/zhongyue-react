@@ -413,7 +413,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           <Form
             form={form}
             layout="vertical"
-            style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
           >
             {/* 固定在顶部的状态栏 */}
             <div

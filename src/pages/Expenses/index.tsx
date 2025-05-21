@@ -73,7 +73,8 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'totalFee',
     key: 'totalFee',
     width: 100,
-    render: (value: number) => `¥${value.toFixed(2)}`,
+    render: (value: number | null | undefined) => 
+      value !== null && value !== undefined ? `¥${value.toFixed(2)}` : '¥0.00',
   },
   {
     title: '收费日期',
@@ -127,6 +128,7 @@ const Expenses: React.FC = () => {
   const canAuditExpense = permissionsLoading ? true : expensePermissions?.canAudit
   const canCancelAuditExpense = permissionsLoading ? true : expensePermissions?.canCancelAudit
   const canViewReceipt = permissionsLoading ? true : expensePermissions?.canViewReceipt
+  const canExportExpense = permissionsLoading ? true : expensePermissions?.canExport
 
   // 刷新权限信息
   useEffect(() => {
@@ -370,7 +372,7 @@ const Expenses: React.FC = () => {
       message.error('您没有查看收据的权限')
       return
     }
-
+    
     setReceiptExpenseId(id)
     setReceiptVisible(true)
   }
@@ -389,9 +391,18 @@ const Expenses: React.FC = () => {
 
   // 提交审核
   const handleAuditSubmit = async (values: { status: ExpenseStatus; reason?: string }) => {
-    if (!expenseToAudit || !canAuditExpense) return
-
     try {
+      // 检查审核权限
+      if (!canAuditExpense) {
+        message.error('您没有审核费用的权限')
+        return
+      }
+
+      if (!expenseToAudit) {
+        message.error('未选择要审核的费用')
+        return
+      }
+
       await auditExpense(expenseToAudit.id, {
         status: values.status,
         reason: values.reason,
@@ -407,13 +418,13 @@ const Expenses: React.FC = () => {
 
   // 取消审核
   const handleCancelAudit = async (record: Expense) => {
-    // 检查取消审核权限
-    if (!canCancelAuditExpense) {
-      message.error('您没有取消审核的权限')
-      return
-    }
-
     try {
+      // 检查取消审核权限
+      if (!canCancelAuditExpense) {
+        message.error('您没有取消审核的权限')
+        return
+      }
+      
       await cancelAuditExpense(record.id, { cancelReason: '取消审核' })
       message.success('已取消审核')
       fetchExpenses()
@@ -622,70 +633,76 @@ const Expenses: React.FC = () => {
   return (
     <div className="expenses-page">
       <Card className="search-card mb-4">
-        <Form form={form} layout="inline" className="search-form" onFinish={handleSearch}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-4">
-            <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
-              <Input placeholder="输入企业名称" allowClear />
-            </Form.Item>
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          {/* 左侧：搜索表单 */}
+          <div className="flex-1">
+            <Form form={form} layout="inline" className="search-form" onFinish={handleSearch}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
+                <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
+                  <Input placeholder="输入企业名称" allowClear />
+                </Form.Item>
 
-            <Form.Item
-              name="unifiedSocialCreditCode"
-              label="统一社会信用代码"
-              className="m-0 w-full"
-            >
-              <Input placeholder="输入统一社会信用代码" allowClear />
-            </Form.Item>
+                <Form.Item
+                  name="unifiedSocialCreditCode"
+                  label="统一社会信用代码"
+                  className="m-0 w-full"
+                >
+                  <Input placeholder="输入统一社会信用代码" allowClear />
+                </Form.Item>
 
-            <Form.Item name="status" label="状态" className="m-0 w-full">
-              <Select placeholder="选择状态" allowClear>
-                <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
-                <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
-                <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
-              </Select>
-            </Form.Item>
+                <Form.Item name="status" label="状态" className="m-0 w-full">
+                  <Select placeholder="选择状态" allowClear>
+                    <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
+                    <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
+                    <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
+                  </Select>
+                </Form.Item>
 
-            <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
-              <Input placeholder="输入业务员" allowClear />
-            </Form.Item>
+                <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
+                  <Input placeholder="输入业务员" allowClear />
+                </Form.Item>
+                
+                <Form.Item name="dateRange" label="收费日期" className="m-0 w-full" style={{ gridColumn: 'span 2' }}>
+                  <RangePicker allowClear style={{ width: '100%' }} />
+                </Form.Item>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 w-full">
+
+                <div className="flex gap-2">
+                  <Form.Item className="m-0">
+                    <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                      搜索
+                    </Button>
+                  </Form.Item>
+
+                  <Form.Item className="m-0">
+                    <Button icon={<ReloadOutlined />} onClick={handleReset}>
+                      重置
+                    </Button>
+                  </Form.Item>
+                </div>
+              </div>
+            </Form>
           </div>
-
-          <div className="flex flex-wrap items-end gap-4 w-full">
-            <Form.Item name="dateRange" label="收费日期" className="m-0 flex-grow">
-              <RangePicker allowClear style={{ width: '100%' }} />
-            </Form.Item>
-
-            <div className="flex gap-2">
-              <Form.Item className="m-0">
-                <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                  搜索
+          
+          {/* 右侧：操作按钮区域 */}
+          <div className="flex flex-col justify-center gap-2 min-w-[200px]">
+            <div className="flex gap-2 justify-end">
+              {canCreateExpense && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                  新增费用
                 </Button>
-              </Form.Item>
-
-              <Form.Item className="m-0">
-                <Button icon={<ReloadOutlined />} onClick={handleReset}>
-                  重置
-                </Button>
-              </Form.Item>
+              )}
+              <Button icon={<ExportOutlined />} onClick={handleExport}>
+                导出
+              </Button>
             </div>
           </div>
-        </Form>
+        </div>
       </Card>
 
-      <Card
-        title="费用管理"
-        extra={
-          <Space>
-            {canCreateExpense && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                新增费用
-              </Button>
-            )}
-            <Button icon={<ExportOutlined />} onClick={handleExport}>
-              导出
-            </Button>
-          </Space>
-        }
-      >
+      <Card>
         <Table
           columns={tableColumns}
           dataSource={expenses}
@@ -719,12 +736,14 @@ const Expenses: React.FC = () => {
         />
       )}
 
-      {/* 收据查看弹窗 */}
-      <ExpenseReceipt
-        visible={receiptVisible}
-        expenseId={receiptExpenseId!}
-        onClose={() => setReceiptVisible(false)}
-      />
+      {/* 收据查看弹窗 - 只有在需要显示时才渲染 */}
+      {receiptVisible && receiptExpenseId && (
+        <ExpenseReceipt
+          visible={receiptVisible}
+          expenseId={receiptExpenseId}
+          onClose={() => setReceiptVisible(false)}
+        />
+      )}
 
       {/* 审核弹窗 */}
       <AuditModal

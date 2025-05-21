@@ -115,17 +115,27 @@ export const expenseReceiptFetcher = async (url: string) => {
       return null
     }
 
-    const res = await getExpenseReceipt(id)
+    const response = await getExpenseReceipt(id)
+    
+    // 从响应中提取data部分
+    const receiptData = response.data
+    
+    // 仅在开发环境且只有首次获取时记录详细日志
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`获取费用收据#${id}成功`);
+    }
 
     // 确保返回有效的对象，即使API返回不完整数据
     return (
-      res || {
+      receiptData || {
         id,
         companyName: '未知企业',
         totalFee: 0,
         chargeDate: new Date().toISOString(),
         chargeMethod: '未知',
         remarks: '',
+        receiptNo: `R${new Date().getTime()}`,
+        feeItems: [], // 确保有一个空的feeItems数组
       }
     )
   } catch (error) {
@@ -138,6 +148,8 @@ export const expenseReceiptFetcher = async (url: string) => {
       chargeDate: new Date().toISOString(),
       chargeMethod: '',
       remarks: '',
+      receiptNo: `R${new Date().getTime()}`,
+      feeItems: [], // 确保有一个空的feeItems数组
     }
   }
 }
@@ -304,10 +316,12 @@ export const useExpenseReceipt = (id?: number | null) => {
     getExpenseReceiptKey(id),
     id ? expenseReceiptFetcher : null,
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: false, // 禁止在窗口聚焦时重新验证
+      revalidateOnReconnect: false, // 禁止在网络重连时重新验证
       shouldRetryOnError: true, // 允许错误重试
       errorRetryCount: 2, // 增加重试次数
       errorRetryInterval: 1500, // 设置重试间隔
+      dedupingInterval: 10000, // 增加重复数据删除间隔，避免短时间内多次请求
       fallbackData: {
         // 提供兜底数据
         id: id || 0,
@@ -316,6 +330,8 @@ export const useExpenseReceipt = (id?: number | null) => {
         chargeDate: new Date().toISOString(),
         chargeMethod: '',
         remarks: '',
+        receiptNo: '',
+        feeItems: [], // 确保有一个空的feeItems数组
       },
       onError: err => {
         console.error('获取收据数据错误:', err)
