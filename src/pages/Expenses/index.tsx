@@ -29,6 +29,7 @@ import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useExpenseList } from '../../hooks/useExpense'
 import { usePermission } from '../../hooks/usePermission'
+import { useDebounce } from '../../hooks/useDebounce'
 import { Expense, ExpenseStatus, ExpenseQueryParams } from '../../types/expense'
 import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
@@ -45,6 +46,9 @@ import {
 } from '../../api/expense'
 
 const { RangePicker } = DatePicker
+
+// 搜索防抖延迟时间（毫秒）
+const DEBOUNCE_DELAY = 500
 
 // 状态映射为显示文本
 const STATUS_LABELS = {
@@ -207,6 +211,9 @@ const Expenses: React.FC = () => {
   // 导航
   const navigate = useNavigate()
 
+  // 增加搜索状态跟踪
+  const [isSearching, setIsSearching] = useState(false)
+
   // 初始化表单
   useEffect(() => {
     form.setFieldsValue({
@@ -277,6 +284,22 @@ const Expenses: React.FC = () => {
     setSearchParams(params)
   }
 
+  // 创建防抖处理后的搜索函数
+  const debouncedSearch = useDebounce(handleSearch, DEBOUNCE_DELAY)
+
+  // 表单字段变化时的处理函数
+  const handleFormFieldChange = () => {
+    setIsSearching(true)
+    debouncedSearch()
+  }
+
+  // 监听加载状态变化
+  useEffect(() => {
+    if (!loading && isSearching) {
+      setIsSearching(false)
+    }
+  }, [loading, isSearching])
+
   // 重置搜索条件
   const handleReset = () => {
     form.resetFields()
@@ -290,6 +313,8 @@ const Expenses: React.FC = () => {
       page: 1,
       pageSize: 10,
     })
+    // 直接触发搜索，不使用防抖
+    // 因为重置是用户主动操作，应该立即生效
   }
 
   // 表格页码改变
@@ -654,7 +679,13 @@ const Expenses: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between gap-4">
           {/* 左侧：搜索表单 */}
           <div className="flex-1">
-            <Form form={form} layout="inline" className="search-form" onFinish={handleSearch}>
+            <Form 
+              form={form} 
+              layout="inline" 
+              className="search-form" 
+              onFinish={handleSearch}
+              onValuesChange={handleFormFieldChange}
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
                 <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
                   <Input placeholder="输入企业名称" allowClear />
@@ -681,19 +712,19 @@ const Expenses: React.FC = () => {
                 </Form.Item>
                 
                 <Form.Item name="dateRange" label="收费日期" className="m-0 w-full" style={{ gridColumn: 'span 2' }}>
-                  <RangePicker allowClear style={{ width: '100%' }} />
+                  <RangePicker 
+                    allowClear 
+                    style={{ width: '100%' }} 
+                    onChange={() => {
+                      // 日期变化时特殊处理，确保能正确触发搜索
+                      setTimeout(handleFormFieldChange, 0)
+                    }}
+                  />
                 </Form.Item>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 w-full">
-
                 <div className="flex gap-2">
-                  <Form.Item className="m-0">
-                    <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                      搜索
-                    </Button>
-                  </Form.Item>
-
                   <Form.Item className="m-0">
                     <Button icon={<ReloadOutlined />} onClick={handleReset}>
                       重置
@@ -726,7 +757,7 @@ const Expenses: React.FC = () => {
           dataSource={expenses}
           rowKey="id"
           scroll={{ x: 1500 }}
-          loading={loading}
+          loading={loading || isSearching}
           pagination={{
             current: searchParams.page,
             pageSize: searchParams.pageSize,
