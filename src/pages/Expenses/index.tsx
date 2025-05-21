@@ -86,6 +86,7 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'chargeDate',
     key: 'chargeDate',
     width: 120,
+    render: (value: string) => value ? dayjs(value).format('YYYY-MM-DD') : '-',
   },
   {
     title: '收费方式',
@@ -113,6 +114,7 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 150,
+    render: (value: string) => value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-',
   },
   {
     title: '操作',
