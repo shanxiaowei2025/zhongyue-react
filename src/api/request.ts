@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosResponse, ResponseType } from 'axios'
 import { message } from 'antd'
 import type { ApiResponse } from '../types'
 
@@ -76,6 +76,11 @@ instance.interceptors.request.use(
 // 响应拦截器
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
+    // 如果是blob类型，直接返回响应
+    if (response.config.responseType === 'blob') {
+      return response
+    }
+    
     // 添加响应日志
     console.log('API响应原始数据:', response.data)
 
@@ -168,9 +173,9 @@ instance.interceptors.response.use(
 
 // 封装 HTTP 请求方法
 const request = {
-  get<T>(url: string, params?: object): Promise<T> {
+  get<T>(url: string, params?: object, responseType?: ResponseType): Promise<T> {
     // 直接使用params作为请求参数，不额外包装
-    return instance.get(url, { params }).then(res => res.data)
+    return instance.get(url, { params, responseType }).then(res => res.data)
   },
   post<T>(url: string, data?: object): Promise<T> {
     return instance.post(url, data).then(res => res.data)

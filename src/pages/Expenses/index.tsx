@@ -29,7 +29,7 @@ import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useExpenseList } from '../../hooks/useExpense'
 import { usePermission } from '../../hooks/usePermission'
-import { Expense, ExpenseStatus } from '../../types/expense'
+import { Expense, ExpenseStatus, ExpenseQueryParams } from '../../types/expense'
 import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
@@ -40,6 +40,7 @@ import {
   deleteExpense as deleteExpenseApi,
   auditExpense as auditExpenseApi,
   cancelAuditExpense as cancelAuditExpenseApi,
+  exportExpenseCSV,
 } from '../../api/expense'
 
 const { RangePicker } = DatePicker
@@ -423,8 +424,63 @@ const Expenses: React.FC = () => {
   }
 
   // 导出数据
-  const handleExport = () => {
-    message.info('导出功能开发中')
+  const handleExport = async () => {
+    try {
+      // 显示加载提示
+      message.loading('正在导出数据，请稍候...', 0)
+
+      // 准备查询参数，使用当前搜索条件
+      const exportParams: Partial<ExpenseQueryParams> = { ...searchParams }
+      
+      // 处理日期范围
+      if (form.getFieldValue('dateRange')) {
+        const dateRange = form.getFieldValue('dateRange')
+        if (dateRange && dateRange[0] && dateRange[1]) {
+          exportParams.chargeDateStart = dayjs(dateRange[0]).format('YYYY-MM-DD')
+          exportParams.chargeDateEnd = dayjs(dateRange[1]).format('YYYY-MM-DD')
+        }
+      }
+
+      // 移除分页参数，导出全部数据
+      if ('page' in exportParams) {
+        delete exportParams.page
+      }
+      
+      if ('pageSize' in exportParams) {
+        delete exportParams.pageSize
+      }
+
+      const response = await exportExpenseCSV(exportParams)
+      
+      // 创建Blob对象
+      const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' })
+      
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      // 设置文件名，使用当前日期
+      const date = dayjs().format('YYYYMMDD_HHmmss')
+      link.download = `费用数据_${date}.csv`
+      
+      // 添加到DOM并触发点击
+      document.body.appendChild(link)
+      link.click()
+      
+      // 清理
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      // 关闭加载提示
+      message.destroy()
+      message.success('导出成功')
+    } catch (error) {
+      // 关闭加载提示
+      message.destroy()
+      console.error('导出错误:', error)
+      message.error('导出失败，请稍后重试')
+    }
   }
 
   // 操作列渲染函数

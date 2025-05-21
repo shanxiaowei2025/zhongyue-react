@@ -86,3 +86,9 @@ export const getExpenseAutocomplete = (field: string) => {
 export const getExpenseReceipt = (id: number) => {
   return request.get<ReceiptViewDto>(`/expense/${id}/receipt`)
 }
+
+// 导出费用数据为CSV
+export const exportExpenseCSV = (params?: Partial<ExpenseQueryParams>) => {
+  // 以blob格式获取CSV数据
+  return request.get<Blob>('/expense/export/csv', params, 'blob')
+}
