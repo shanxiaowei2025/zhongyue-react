@@ -34,6 +34,7 @@ import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import dayjs from 'dayjs'
+import './expenses.css'
 import {
   getExpenseList,
   getExpenseById,
@@ -582,14 +583,30 @@ const Expenses: React.FC = () => {
             )}
             <Popconfirm
               title={
-                <div>
-                  <p>退回原因:</p>
-                  <p>{record.rejectReason || '无'}</p>
+                <div className="reject-reason-popup">
+                  <div className="reject-reason-header">
+                    <InfoCircleOutlined style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }} />
+                    <span style={{ fontWeight: 'bold', fontSize: '16px' }}>退回原因</span>
+                  </div>
+                  <div className="reject-reason-content" style={{ 
+                    margin: '12px 0', 
+                    padding: '10px', 
+                    background: '#f9f9f9', 
+                    border: '1px solid #f0f0f0',
+                    borderRadius: '4px',
+                    minHeight: '60px',
+                    maxHeight: '200px',
+                    overflow: 'auto'
+                  }}>
+                    {record.rejectReason || '未提供退回原因'}
+                  </div>
                 </div>
               }
-              icon={<InfoCircleOutlined style={{ color: '#FF4D4F' }} />}
               okText="关闭"
               cancelButtonProps={{ style: { display: 'none' } }}
+              okButtonProps={{ style: { backgroundColor: '#1890ff', borderColor: '#1890ff' } }}
+              overlayStyle={{ maxWidth: '400px' }}
+              icon={null}
             >
               <Button type="link" size="small" danger>
                 退回原因

@@ -2,6 +2,7 @@ import React from 'react'
 import { Modal, Form, Radio, Input, Button } from 'antd'
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { ExpenseStatus } from '../../types/expense'
+import './audit-modal.css'
 
 interface AuditModalProps {
   visible: boolean
@@ -39,13 +40,19 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
       >
         <div className="text-center mb-6">
           <Form.Item name="status" className="mb-8">
-            <Radio.Group buttonStyle="solid" size="large">
-              <Radio.Button value={ExpenseStatus.Approved} className="bg-green-50 border-green-500 text-green-700 px-8">
-                <CheckOutlined className="mr-2" />
+            <Radio.Group buttonStyle="solid" size="large" className="audit-button-group" optionType="button">
+              <Radio.Button 
+                value={ExpenseStatus.Approved} 
+                className="audit-button-approved"
+              >
+                <CheckOutlined style={{ marginRight: '8px' }} />
                 审核通过
               </Radio.Button>
-              <Radio.Button value={ExpenseStatus.Rejected} className="bg-red-50 border-red-500 text-red-700 px-8 ml-4">
-                <CloseOutlined className="mr-2" />
+              <Radio.Button 
+                value={ExpenseStatus.Rejected} 
+                className="audit-button-rejected"
+              >
+                <CloseOutlined style={{ marginRight: '8px' }} />
                 审核退回
               </Radio.Button>
             </Radio.Group>

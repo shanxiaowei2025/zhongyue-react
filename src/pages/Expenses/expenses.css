@@ -1,0 +1,37 @@
+/* 退回原因弹窗样式 */
+.reject-reason-popup {
+  min-width: 280px;
+  max-width: 100%;
+}
+
+.reject-reason-header {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 12px;
+}
+
+.reject-reason-content {
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: #595959;
+}
+
+/* 自定义 Popconfirm 样式覆盖 */
+.ant-popover-inner {
+  border-radius: 8px !important;
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ant-popover-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.ant-popover-buttons .ant-btn {
+  min-width: 70px;
+} 

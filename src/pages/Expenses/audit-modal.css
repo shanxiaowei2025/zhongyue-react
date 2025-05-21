@@ -1,0 +1,133 @@
+/* 审核模态框样式 */
+.audit-button-group {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* 基础按钮样式 */
+.audit-button-group .ant-radio-button-wrapper {
+  border-width: 1px !important;
+  border-style: solid !important;
+  overflow: hidden;
+  border-radius: 4px !important;
+  position: relative;
+  height: 40px;
+  min-width: 120px;
+  line-height: 38px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+/* 移除Radio Button默认的左边框样式 */
+.audit-button-group .ant-radio-button-wrapper:not(:first-child)::before {
+  display: none !important;
+}
+
+/* 审核通过按钮 - 未选中状态 */
+.audit-button-approved {
+  background-color: #f6ffed !important;
+  color: #52c41a !important;
+  border-color: #52c41a !important;
+}
+
+/* 审核通过按钮 - 选中状态 */
+.audit-button-group .ant-radio-button-wrapper-checked.audit-button-approved {
+  background-color: #b7eb8f !important; /* 更深的绿色背景 */
+  border-color: #52c41a !important;
+  color: #52c41a !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2) !important;
+  position: relative; /* 为选中指示器添加定位 */
+}
+
+/* 给选中的审核通过按钮添加底部指示器 */
+.audit-button-group .ant-radio-button-wrapper-checked.audit-button-approved::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 3px;
+  background-color: #52c41a;
+  border-radius: 3px 3px 0 0;
+}
+
+/* 审核通过按钮 - 悬停状态 */
+.audit-button-approved:hover, 
+.audit-button-approved:focus {
+  background-color: #d9f7be !important;
+  border-color: #52c41a !important;
+  color: #52c41a !important;
+}
+
+/* 审核退回按钮 - 未选中状态 */
+.audit-button-rejected {
+  background-color: #fff2f0 !important;
+  color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+}
+
+/* 审核退回按钮 - 选中状态 */
+.audit-button-group .ant-radio-button-wrapper-checked.audit-button-rejected {
+  background-color: #ffa39e !important; /* 更深的红色背景 */
+  border-color: #ff4d4f !important;
+  color: #ff4d4f !important;
+  font-weight: bold !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+  position: relative; /* 为选中指示器添加定位 */
+}
+
+/* 给选中的审核退回按钮添加底部指示器 */
+.audit-button-group .ant-radio-button-wrapper-checked.audit-button-rejected::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 3px;
+  background-color: #ff4d4f;
+  border-radius: 3px 3px 0 0;
+}
+
+/* 审核退回按钮 - 悬停状态 */
+.audit-button-rejected:hover, 
+.audit-button-rejected:focus {
+  background-color: #ffccc7 !important;
+  border-color: #ff4d4f !important;
+  color: #ff4d4f !important;
+}
+
+/* 状态图标样式 */
+.audit-button-approved .anticon {
+  color: #52c41a;
+  font-size: 16px;
+}
+
+.audit-button-rejected .anticon {
+  color: #ff4d4f;
+  font-size: 16px;
+}
+
+/* 确保Radio选择器正常工作 */
+.audit-button-group .ant-radio-button-wrapper input[type="radio"] {
+  opacity: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+/* 重写Ant Design默认样式 */
+.audit-button-group .ant-radio-button-wrapper:hover {
+  position: relative;
+}
+
+/* 强制应用选中样式 */
+.ant-radio-button-wrapper-checked {
+  z-index: 1 !important;
+} 
