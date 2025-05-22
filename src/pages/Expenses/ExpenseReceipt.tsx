@@ -16,6 +16,9 @@ interface ExpenseReceiptProps {
 // 定义印章类型
 type SealType = '中岳' | '雄安' | '高碑店' | '脉信' | '金盾' | '如你心意'
 
+// 定义哪些印章类型需要显示logo
+const showLogoSealTypes: SealType[] = ['中岳', '雄安', '高碑店'];
+
 const sealImages: Record<SealType, string> = {
   '中岳': '/images/dingxing-zhang.png',
   '雄安': '/images/xiongan-zhang.png',
@@ -266,6 +269,9 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
     return details.join('；');
   }
 
+  // 判断当前选择的印章是否需要显示logo
+  const shouldShowLogo = showLogoSealTypes.includes(selectedSeal);
+
   return (
     <Modal
       title="电子收款收据"
@@ -294,19 +300,59 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
         </div>
       ) : receipt ? (
         <div className="bg-white receipt-container" id="receipt-printable">
-          {/* 收据头部 */}
-          <div className="receipt-header">
-            <div className="logo-section">
-              <img src="/images/logo.png" alt="中岳会计" className="logo-image" />
+          {/* 收据头部 - 根据是否显示logo使用不同的布局方式 */}
+          {shouldShowLogo ? (
+            // 当显示logo时，使用三栏布局，但确保标题居中
+            <div className="receipt-header" style={{ position: 'relative' }}>
+              <div className="logo-section" style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                <img src="/images/logo.png" alt="中岳会计" className="logo-image" />
+              </div>
+              <div className="title-section" style={{ 
+                width: '100%', 
+                textAlign: 'center',
+                margin: '0 auto',
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)'
+              }}>
+                <h1 className="receipt-title">电子收款收据</h1>
+                <p className="receipt-date">日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}</p>
+              </div>
+              <div className="receipt-number" style={{ 
+                position: 'absolute',
+                right: '0',
+                top: '50%',
+                transform: 'translateY(-50%)'
+              }}>
+                <h3>NO. {receipt?.receiptNo || (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}</h3>
+              </div>
             </div>
-            <div className="title-section">
-              <h1 className="receipt-title">电子收款收据</h1>
-              <p className="receipt-date">日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}</p>
+          ) : (
+            // 当不显示logo时，使用单栏布局，标题完全居中
+            <div className="receipt-header" style={{ display: 'block', position: 'relative' }}>
+              <div className="title-section" style={{ 
+                width: '100%', 
+                textAlign: 'center',
+                margin: '0 auto',
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)'
+              }}>
+                <h1 className="receipt-title">电子收款收据</h1>
+                <p className="receipt-date">日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}</p>
+              </div>
+              <div className="receipt-number" style={{ 
+                position: 'absolute',
+                right: '0',
+                top: '50%',
+                transform: 'translateY(-50%)'
+              }}>
+                <h3>NO. {receipt?.receiptNo || (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}</h3>
+              </div>
             </div>
-            <div className="receipt-number">
-              <h3>NO. {receipt?.receiptNo || (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}</h3>
-            </div>
-          </div>
+          )}
 
           {/* 收据内容 */}
           <div className="receipt-content">
@@ -387,17 +433,18 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
             }
             
             .receipt-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
+              display: block;
               margin-bottom: 30px;
               padding-bottom: 15px;
               border-bottom: 2px dashed #d9d9d9;
+              min-height: 90px;
+              position: relative;
             }
             
             .logo-section {
               display: flex;
               align-items: center;
+              z-index: 1;
             }
             
             .logo-image {
@@ -406,8 +453,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
             
             .title-section {
               text-align: center;
-              flex: 1;
-              margin: 0 15px;
+              z-index: 0;
             }
             
             .receipt-title {
@@ -426,6 +472,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
             
             .receipt-number {
               text-align: right;
+              z-index: 1;
             }
             
             .receipt-number h3 {
@@ -433,6 +480,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               color: #d81b60;
               font-size: 18px;
               font-weight: 500;
+              white-space: nowrap;
             }
             
             .receipt-content {
