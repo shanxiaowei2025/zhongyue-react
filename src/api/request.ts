@@ -175,7 +175,13 @@ instance.interceptors.response.use(
 const request = {
   get<T>(url: string, params?: object, responseType?: ResponseType): Promise<T> {
     // 直接使用params作为请求参数，不额外包装
-    return instance.get(url, { params, responseType }).then(res => res.data)
+    return instance.get(url, { params, responseType }).then(res => {
+      // 如果是blob类型，直接返回response.data
+      if (responseType === 'blob') {
+        return res.data as T
+      }
+      return res.data
+    })
   },
   post<T>(url: string, data?: object): Promise<T> {
     return instance.post(url, data).then(res => res.data)

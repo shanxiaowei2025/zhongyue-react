@@ -23,6 +23,7 @@ import {
   SearchOutlined,
   LoadingOutlined,
   ReloadOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Customer, ImageType } from '../../types'
@@ -41,7 +42,7 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
 import useSWR, { mutate } from 'swr'
-import { getCustomerDetail, getCustomerById } from '../../api/customer'
+import { getCustomerDetail, getCustomerById, exportCustomerCSV } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 
 // 启用 dayjs 插件
@@ -376,6 +377,41 @@ export default function Customers() {
     }
   }
 
+  // 添加导出CSV功能
+  const handleExport = async () => {
+    try {
+      message.loading('正在导出数据，请稍候...', 0)
+      const response = await exportCustomerCSV()
+      message.destroy()
+      
+      // 创建Blob对象
+      const blob = new Blob([response as BlobPart], { type: 'text/csv;charset=utf-8;' })
+      
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      // 设置下载文件名
+      const date = new Date().toISOString().split('T')[0]
+      link.download = `客户数据_${date}.csv`
+      
+      // 触发下载
+      document.body.appendChild(link)
+      link.click()
+      
+      // 清理
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(link)
+      
+      message.success('导出成功')
+    } catch (error) {
+      message.destroy()
+      console.error('导出失败', error)
+      message.error('导出失败，请稍后重试')
+    }
+  }
+
   const columns: ColumnsType<Customer> = [
     {
       title: '企业名称',
@@ -678,6 +714,14 @@ export default function Customers() {
             添加客户
           </Button>
         )}
+        <Button
+          type="default"
+          icon={<DownloadOutlined />}
+          onClick={handleExport}
+          className="w-full sm:w-auto mt-2 sm:mt-0 ml-0 sm:ml-2"
+        >
+          导出
+        </Button>
       </div>
 
       {/* 数据表格 */}

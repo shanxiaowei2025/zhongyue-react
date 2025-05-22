@@ -1,5 +1,5 @@
 import request from './request'
-import type { Customer, PaginationParams, ApiResponse } from '../types'
+import type { Customer, PaginationParams, PaginatedResponse, ApiResponse } from '../types'
 
 // 获取客户列表
 export const getCustomerList = (params: PaginationParams) => {
@@ -129,4 +129,8 @@ export const getPaginatedCustomers = async (params: Record<string, any>) => {
     console.error('获取分页客户列表出错:', error)
     return { items: [], total: 0 }
   }
+}
+
+export const exportCustomerCSV = () => {
+  return request.get('/customer/export/csv', {}, 'blob')
 }
