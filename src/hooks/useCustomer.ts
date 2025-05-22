@@ -165,7 +165,11 @@ export const useCustomerDetail = (id?: number | null) => {
       if (response && response.code === 0) {
         // 刷新详情和列表
         await refreshCustomerDetail()
-        await mutate((key: string) => key.startsWith('/customer?'), undefined, {
+        await mutate((key: any) => {
+          // 确保key是字符串
+          if (typeof key !== 'string') return false
+          return key.startsWith('/customer?')
+        }, undefined, {
           revalidate: true,
         })
 
@@ -190,7 +194,11 @@ export const useCustomerDetail = (id?: number | null) => {
         message.success('客户创建成功')
 
         // 刷新列表
-        await mutate((key: string) => key.startsWith('/customer?'), undefined, {
+        await mutate((key: any) => {
+          // 确保key是字符串
+          if (typeof key !== 'string') return false
+          return key.startsWith('/customer?')
+        }, undefined, {
           revalidate: true,
         })
 
