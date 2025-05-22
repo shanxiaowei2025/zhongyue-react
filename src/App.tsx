@@ -6,10 +6,18 @@ import { Spin, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import './index.css'
 import { useAuthStore } from './store/auth'
+import PasswordExpiredModal from './components/PasswordExpiredModal'
 
 const App = () => {
   const [loading, setLoading] = useState(true)
-  const { isAuthenticated, resetTimer, startTimer, clearTimer } = useAuthStore()
+  const { 
+    isAuthenticated, 
+    resetTimer, 
+    startTimer, 
+    clearTimer, 
+    passwordModalVisible, 
+    checkPasswordExpiration 
+  } = useAuthStore()
 
   // 在应用启动时预加载角色数据，但仅当用户已登录时
   useEffect(() => {
@@ -20,6 +28,11 @@ const App = () => {
           // 预加载角色数据
           await loadRolesFromAPI()
           // 这里可以添加其他需要预加载的数据
+          
+          // 检查密码是否过期
+          if (checkPasswordExpiration()) {
+            useAuthStore.getState().showPasswordModal()
+          }
         }
       } catch (error) {
         console.error('预加载数据失败:', error)
@@ -29,7 +42,7 @@ const App = () => {
     }
 
     preloadData()
-  }, [isAuthenticated])
+  }, [isAuthenticated, checkPasswordExpiration])
 
   // 添加自动登出功能
   useEffect(() => {
@@ -89,6 +102,9 @@ const App = () => {
         }
       >
         <RouterProvider router={router} />
+        
+        {/* 密码过期强制修改弹窗 */}
+        {isAuthenticated && <PasswordExpiredModal visible={passwordModalVisible} />}
       </Suspense>
     </ConfigProvider>
   )

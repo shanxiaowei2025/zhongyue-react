@@ -101,6 +101,12 @@ const Profile = () => {
       message.error('两次输入的新密码不一致')
       return
     }
+    
+    // 验证新密码不能与旧密码相同
+    if (values.oldPassword === values.newPassword) {
+      message.error('新密码不能与当前密码相同')
+      return
+    }
 
     setLoading(true)
     try {
@@ -112,6 +118,10 @@ const Profile = () => {
       if (response && response.code === 0) {
         message.success('密码修改成功')
         passwordForm.resetFields()
+        
+        // 更新密码修改时间
+        const now = new Date().toISOString()
+        useAuthStore.getState().setPasswordUpdatedAt(now)
       } else {
         message.error(response?.message || '密码修改失败，请稍后重试')
       }
@@ -290,6 +300,14 @@ const Profile = () => {
                   rules={[
                     { required: true, message: '请输入新密码' },
                     { min: 6, message: '密码长度不能少于 6 位' },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('oldPassword') !== value) {
+                          return Promise.resolve()
+                        }
+                        return Promise.reject(new Error('新密码不能与当前密码相同'))
+                      },
+                    }),
                   ]}
                 >
                   <Input.Password prefix={<LockOutlined />} placeholder="新密码" />

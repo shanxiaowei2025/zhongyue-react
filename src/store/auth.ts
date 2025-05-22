@@ -25,8 +25,15 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   inactivityTimer: number | null
+  passwordUpdatedAt: string | null
+  isPasswordExpired: boolean
+  passwordModalVisible: boolean
   setUser: (user: User | null) => void
   setToken: (token: string | null) => void
+  setPasswordUpdatedAt: (date: string | null) => void
+  checkPasswordExpiration: () => boolean
+  showPasswordModal: () => void
+  hidePasswordModal: () => void
   logout: () => void
   resetTimer: () => void
   startTimer: () => void
@@ -39,6 +46,9 @@ export const useAuthStore = create<AuthState>()(
     token: localStorage.getItem('token'),
     isAuthenticated: !!(localStorage.getItem('token') && getUserFromStorage()),
     inactivityTimer: null,
+    passwordUpdatedAt: localStorage.getItem('passwordUpdatedAt'),
+    isPasswordExpired: false,
+    passwordModalVisible: false,
     
     setUser: user =>
       set(state => {
@@ -61,14 +71,56 @@ export const useAuthStore = create<AuthState>()(
         }
         state.isAuthenticated = !!(token && state.user)
       }),
+    
+    setPasswordUpdatedAt: (date) =>
+      set(state => {
+        state.passwordUpdatedAt = date
+        if (date) {
+          localStorage.setItem('passwordUpdatedAt', date)
+        } else {
+          localStorage.removeItem('passwordUpdatedAt')
+        }
+        // 检查密码是否过期
+        state.isPasswordExpired = state.checkPasswordExpiration()
+      }),
+    
+    checkPasswordExpiration: () => {
+      const passwordUpdatedAt = localStorage.getItem('passwordUpdatedAt')
+      if (!passwordUpdatedAt) return false
+      
+      const lastUpdate = new Date(passwordUpdatedAt)
+      const now = new Date()
+      
+      // 计算相差的毫秒数
+      const diffTime = now.getTime() - lastUpdate.getTime()
+      
+      // 3个月的毫秒数 (大约90天)
+      const threeMonths = 90 * 24 * 60 * 60 * 1000
+      
+      // 如果超过3个月，返回true表示密码已过期
+      return diffTime > threeMonths
+    },
+    
+    showPasswordModal: () =>
+      set(state => {
+        state.passwordModalVisible = true
+      }),
+      
+    hidePasswordModal: () =>
+      set(state => {
+        state.passwordModalVisible = false
+      }),
       
     logout: () =>
       set(state => {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
+        localStorage.removeItem('passwordUpdatedAt')
         state.user = null
         state.token = null
         state.isAuthenticated = false
+        state.passwordUpdatedAt = null
+        state.isPasswordExpired = false
         // 清除超时计时器
         if (state.inactivityTimer) {
           window.clearTimeout(state.inactivityTimer)

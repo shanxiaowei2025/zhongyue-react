@@ -14,7 +14,7 @@ const loginSchema = Yup.object().shape({
 
 const Login = () => {
   const navigate = useNavigate()
-  const { setUser, setToken, isAuthenticated, startTimer } = useAuthStore()
+  const { setUser, setToken, isAuthenticated, startTimer, setPasswordUpdatedAt, showPasswordModal } = useAuthStore()
 
   // 如果用户已登录，则自动重定向到主页
   if (isAuthenticated) {
@@ -32,6 +32,7 @@ const Login = () => {
           roles: string[]
           phone: string | null
           email: string
+          passwordUpdatedAt?: string
         }
       }>
 
@@ -75,6 +76,22 @@ const Login = () => {
         }
 
         setUser(user)
+        
+        // 保存密码最后更新时间
+        if (user_info.passwordUpdatedAt) {
+          setPasswordUpdatedAt(user_info.passwordUpdatedAt)
+          
+          // 检查密码是否过期 (3个月)
+          const lastUpdate = new Date(user_info.passwordUpdatedAt)
+          const now = new Date()
+          const diffTime = now.getTime() - lastUpdate.getTime()
+          const threeMonths = 90 * 24 * 60 * 60 * 1000
+          
+          if (diffTime > threeMonths) {
+            // 密码过期，显示修改密码弹窗
+            showPasswordModal()
+          }
+        }
         
         // 启动自动登出计时器
         startTimer()

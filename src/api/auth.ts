@@ -17,6 +17,7 @@ export const login = (data: LoginForm) => {
         phone: string | null
         email: string
         avatar: string
+        passwordUpdatedAt?: string
       }
     }>
   >('/auth/login', {
@@ -39,6 +40,7 @@ export const getUserProfile = () => {
       phone: string | null
       email: string
       avatar: string
+      passwordUpdatedAt?: string
     }>
   >('/auth/profile')
 }
