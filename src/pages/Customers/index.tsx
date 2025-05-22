@@ -443,7 +443,7 @@ export default function Customers() {
       },
     },
     {
-      title: '业务状态',
+      title: '税务状态',
       dataIndex: 'businessStatus',
       key: 'businessStatus',
       width: isMobile ? 80 : 100,
@@ -626,7 +626,7 @@ export default function Customers() {
             }))}
           />
           <Select
-            placeholder="业务状态"
+            placeholder="税务状态"
             value={searchParams.businessStatus || undefined}
             onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
             allowClear
@@ -1175,10 +1175,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="开票员">
             {displayCustomer.invoiceOfficer || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="企业状态">
+          <Descriptions.Item label="工商状态">
             {formatStatus(displayCustomer.enterpriseStatus || null, 'enterprise')}
           </Descriptions.Item>
-          <Descriptions.Item label="业务状态">
+          <Descriptions.Item label="税务状态">
             {formatStatus(displayCustomer.businessStatus || null, 'business')}
           </Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>

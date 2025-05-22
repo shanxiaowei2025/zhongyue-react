@@ -1007,7 +1007,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             </Select>
           </Form.Item>
 
-          <Form.Item name="businessStatus" label="业务状态">
+          <Form.Item name="businessStatus" label="税务状态">
             <Select>
               {Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => (
                 <Select.Option key={value} value={value}>

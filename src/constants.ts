@@ -1,4 +1,4 @@
-// 业务状态映射
+// 税务状态映射
 export const BUSINESS_STATUS_MAP = {
   normal: '正常',
   logged_out: '已注销',
@@ -7,7 +7,7 @@ export const BUSINESS_STATUS_MAP = {
   waiting_transfer: '等待转出',
 } as const
 
-// 企业状态映射（工商状态）
+// 工商状态映射
 export const ENTERPRISE_STATUS_MAP = {
   normal: '工商正常',
   abnormal: '工商异常',
@@ -15,7 +15,7 @@ export const ENTERPRISE_STATUS_MAP = {
   revoked: '已吊销',
 } as const
 
-// 业务状态颜色映射
+// 税务状态颜色映射
 export const BUSINESS_STATUS_COLOR_MAP = {
   normal: 'success',
   logged_out: 'error',
@@ -24,7 +24,7 @@ export const BUSINESS_STATUS_COLOR_MAP = {
   waiting_transfer: 'processing',
 } as const
 
-// 企业状态颜色映射
+// 工商状态颜色映射
 export const ENTERPRISE_STATUS_COLOR_MAP = {
   normal: 'success',
   abnormal: 'warning',
