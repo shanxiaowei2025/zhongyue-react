@@ -7,11 +7,12 @@ export const BUSINESS_STATUS_MAP = {
   waiting_transfer: '等待转出',
 } as const
 
-// 企业状态映射
+// 企业状态映射（工商状态）
 export const ENTERPRISE_STATUS_MAP = {
-  active: '正常经营',
-  inactive: '停业',
-  pending: '待处理',
+  normal: '工商正常',
+  abnormal: '工商异常',
+  cancelled: '已注销',
+  revoked: '已吊销',
 } as const
 
 // 业务状态颜色映射
@@ -25,9 +26,10 @@ export const BUSINESS_STATUS_COLOR_MAP = {
 
 // 企业状态颜色映射
 export const ENTERPRISE_STATUS_COLOR_MAP = {
-  active: 'success',
-  inactive: 'error',
-  pending: 'processing',
+  normal: 'success',
+  abnormal: 'warning',
+  cancelled: 'error',
+  revoked: 'error',
 } as const
 
 // 其他常量

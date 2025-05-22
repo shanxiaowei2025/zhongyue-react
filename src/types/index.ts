@@ -249,7 +249,7 @@ export interface Customer {
   personalIncomeTaxStaff: string
   enterpriseInfoSheetNumber: string
   sealStorageNumber: string
-  enterpriseStatus?: 'active' | 'inactive' | 'pending'
+  enterpriseStatus?: 'normal' | 'abnormal' | 'cancelled' | 'revoked'
   businessStatus?: 'normal' | 'logged_out' | 'logging_out' | 'lost' | 'waiting_transfer'
   createTime: string
   updateTime: string

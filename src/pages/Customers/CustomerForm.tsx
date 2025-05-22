@@ -28,7 +28,7 @@ import { useCustomerDetail } from '../../hooks/useCustomer'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { useBranchOffices } from '../../hooks/useDepartments'
-import { BUSINESS_STATUS_MAP } from '../../constants'
+import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
 
 // 字段名到标签页的映射
 const FIELD_TO_TAB_MAP: Record<string, string> = {
@@ -997,11 +997,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
-          <Form.Item name="enterpriseStatus" label="企业状态">
+          <Form.Item name="enterpriseStatus" label="工商状态">
             <Select>
-              <Select.Option value="active">正常经营</Select.Option>
-              <Select.Option value="inactive">停业</Select.Option>
-              <Select.Option value="pending">待处理</Select.Option>
+              {Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => (
+                <Select.Option key={value} value={value}>
+                  {String(label)}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
 

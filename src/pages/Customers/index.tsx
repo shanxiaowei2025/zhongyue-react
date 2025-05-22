@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Table,
   Button,
@@ -426,7 +427,7 @@ export default function Customers() {
       responsive: ['md'],
     },
     {
-      title: '企业状态',
+      title: '工商状态',
       dataIndex: 'enterpriseStatus',
       key: 'enterpriseStatus',
       width: isMobile ? 80 : 100,
@@ -614,16 +615,15 @@ export default function Customers() {
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
           />
           <Select
-            placeholder="企业状态"
+            placeholder="工商状态"
             value={searchParams.enterpriseStatus || undefined}
             onChange={value => setSearchParams({ ...searchParams, enterpriseStatus: value })}
             allowClear
             className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-            options={[
-              { value: 'active', label: '正常经营' },
-              { value: 'inactive', label: '停业' },
-              { value: 'pending', label: '待处理' },
-            ]}
+            options={Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
+              value,
+              label,
+            }))}
           />
           <Select
             placeholder="业务状态"
