@@ -37,7 +37,7 @@ export interface Expense {
   agencyEndDate: string
   businessType: string
   contractType: string
-  contractImage: string
+  contractImage: string[]
   invoiceSoftwareFee: number
   invoiceSoftwareStartDate: string
   invoiceSoftwareEndDate: string
@@ -72,7 +72,7 @@ export interface Expense {
 
 // 前端表单使用的类型定义，支持文件上传组件
 export interface ExpenseFormData extends Omit<Expense, 'contractImage' | 'proofOfCharge'> {
-  contractImage?: FileItem | string
+  contractImage?: FileItem[] | string[]
   proofOfCharge?: FileItem[] | string[]
 }
 
@@ -99,7 +99,7 @@ export interface CreateExpenseDto {
   agencyEndDate?: string
   businessType?: string
   contractType?: string
-  contractImage?: string
+  contractImage?: string[]
   invoiceSoftwareFee?: number
   invoiceSoftwareStartDate?: string
   invoiceSoftwareEndDate?: string

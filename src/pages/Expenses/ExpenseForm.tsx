@@ -270,10 +270,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 处理contractImage
       if (expense.contractImage) {
-        // @ts-ignore - 类型忽略，实际运行时会正确处理
-        formData.contractImage = {
-          fileName: expense.contractImage,
-          url: expense.contractImage,
+        // 将单个字符串或字符串数组转换为FileItem数组
+        if (Array.isArray(expense.contractImage)) {
+          // @ts-ignore - 类型忽略，实际运行时会正确处理
+          formData.contractImage = expense.contractImage.map(fileName => ({
+            fileName,
+            url: fileName,
+          }));
+        } else {
+          // 兼容旧数据，单个字符串转换为数组
+          // @ts-ignore - 类型忽略，实际运行时会正确处理
+          formData.contractImage = [{
+            fileName: expense.contractImage,
+            url: expense.contractImage,
+          }];
         }
       }
 
@@ -311,17 +321,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 跟踪新上传的附件
   const [uploadedFiles, setUploadedFiles] = useState<{
-    contractImage?: string;
+    contractImage?: string[];
     proofOfCharge?: string[];
   }>({
-    contractImage: undefined,
+    contractImage: [],
     proofOfCharge: []
   });
 
   // 上传合同图片的处理函数
   const handleContractUpload = (info: any) => {
     console.log('合同上传:', info)
-    // 此处逻辑已替换为FileUpload组件内部处理
+    // 此处逻辑已替换为MultiFileUpload组件内部处理
   }
 
   // 上传收费凭证的处理函数
@@ -360,15 +370,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         }
       })
 
-      // 处理合同图片
-      if (formattedValues.contractImage && typeof formattedValues.contractImage === 'object') {
-        formattedValues.contractImage = formattedValues.contractImage.fileName
+      // 处理合同图片 - 将对象数组转换为文件名数组
+      if (formattedValues.contractImage && Array.isArray(formattedValues.contractImage)) {
+        formattedValues.contractImage = formattedValues.contractImage.map(
+          (item: any) => item.fileName
+        )
       } else if (
         formattedValues.contractImage === undefined ||
         formattedValues.contractImage === null
       ) {
-        // 如果contractImage为undefined或null，表示已被删除，需要明确设置为null或空字符串
-        formattedValues.contractImage = ''
+        // 如果contractImage为undefined或null，表示已全部被删除，设置为空数组
+        formattedValues.contractImage = []
       }
 
       // 处理收据凭证 - 将对象数组转换为文件名数组
@@ -415,9 +427,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     if (mode === 'add') {
       try {
         // 删除已上传的合同图片
-        if (uploadedFiles.contractImage) {
-          await deleteFile(uploadedFiles.contractImage);
-          console.log('已删除未保存的合同图片:', uploadedFiles.contractImage);
+        if (uploadedFiles.contractImage && uploadedFiles.contractImage.length > 0) {
+          for (const fileName of uploadedFiles.contractImage) {
+            await deleteFile(fileName);
+            console.log('已删除未保存的合同图片:', fileName);
+          }
         }
         
         // 删除已上传的收费凭证
@@ -440,7 +454,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const handleContractFileUpload = useCallback((fileName: string) => {
     setUploadedFiles(prev => ({
       ...prev,
-      contractImage: fileName
+      contractImage: [...(prev.contractImage || []), fileName]
     }));
   }, []);
 
@@ -453,10 +467,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   }, []);
 
   // 从跟踪列表中移除已删除的文件
-  const handleContractFileRemove = useCallback(() => {
+  const handleContractFileRemove = useCallback((fileName: string) => {
     setUploadedFiles(prev => ({
       ...prev,
-      contractImage: undefined
+      contractImage: prev.contractImage?.filter(name => name !== fileName) || []
     }));
   }, []);
 
@@ -641,7 +655,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <Form.Item name="proofOfCharge" label="收据凭证" tooltip="上传收款收据、发票等凭证">
+                <Form.Item 
+                  name="proofOfCharge" 
+                  label="收据凭证" 
+                  tooltip="上传收款收据、发票等凭证"
+                  rules={[
+                    {
+                      required: true,
+                      message: '请至少上传一个收据凭证',
+                      validator: (_, value) => {
+                        if (value && Array.isArray(value) && value.length > 0) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error('请至少上传一个收据凭证'));
+                      },
+                    },
+                  ]}
+                >
                   <MultiFileUpload
                     label="收据凭证"
                     accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
@@ -657,7 +687,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 </Form.Item>
 
                 <Form.Item name="contractImage" label="电子合同" tooltip="上传签署的电子合同文件">
-                  <FileUpload
+                  <MultiFileUpload
                     label="电子合同"
                     accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                     onSuccess={isAutoSave => {

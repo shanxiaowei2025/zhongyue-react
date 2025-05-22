@@ -86,16 +86,27 @@ const FileUpload: React.FC<FileUploadProps> = ({
   }, [value?.url])
 
   // 判断文件类型
-  const getFileType = (fileName: string): string => {
+  const getFileType = (fileName: any): string => {
     if (!fileName) return 'default'
-    const extension = fileName.split('.').pop()?.toLowerCase() || 'default'
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                        (fileName.fileName ? fileName.fileName : 
+                        (fileName.url ? fileName.url : String(fileName)))
+    
+    const extension = fileNameStr.split('.').pop()?.toLowerCase() || 'default'
     return FILE_ICONS[extension] ? extension : 'default'
   }
 
   // 判断是否为图片
-  const checkIsImage = (fileName: string): boolean => {
+  const checkIsImage = (fileName: any): boolean => {
+    if (!fileName) return false
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                        (fileName.fileName ? fileName.fileName : 
+                        (fileName.url ? fileName.url : String(fileName)))
+    
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
-    const extension = fileName.split('.').pop()?.toLowerCase() || ''
+    const extension = fileNameStr.split('.').pop()?.toLowerCase() || ''
     return imageExtensions.includes(extension)
   }
 
@@ -282,8 +293,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
     return FILE_ICONS[fileType] || FILE_ICONS.default
   }
 
-  const getFileExtension = (fileName: string) => {
-    return fileName.split('.').pop()?.toUpperCase() || ''
+  const getFileExtension = (fileName: any) => {
+    if (!fileName) return ''
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                        (fileName.fileName ? fileName.fileName : 
+                        (fileName.url ? fileName.url : String(fileName)))
+    
+    return fileNameStr.split('.').pop()?.toUpperCase() || ''
   }
 
   return (

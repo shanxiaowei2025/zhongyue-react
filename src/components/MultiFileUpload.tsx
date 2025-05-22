@@ -74,16 +74,27 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const safeValue = Array.isArray(value) ? value : []
 
   // 判断文件类型
-  const getFileType = (fileName: string): string => {
+  const getFileType = (fileName: any): string => {
     if (!fileName) return 'default'
-    const extension = fileName.split('.').pop()?.toLowerCase() || 'default'
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                       (fileName.fileName ? fileName.fileName : 
+                       (fileName.url ? fileName.url : String(fileName)))
+    
+    const extension = fileNameStr.split('.').pop()?.toLowerCase() || 'default'
     return FILE_ICONS[extension] ? extension : 'default'
   }
 
   // 判断是否为图片
-  const checkIsImage = (fileName: string): boolean => {
+  const checkIsImage = (fileName: any): boolean => {
+    if (!fileName) return false
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                       (fileName.fileName ? fileName.fileName : 
+                       (fileName.url ? fileName.url : String(fileName)))
+    
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
-    const extension = fileName.split('.').pop()?.toLowerCase() || ''
+    const extension = fileNameStr.split('.').pop()?.toLowerCase() || ''
     return imageExtensions.includes(extension)
   }
 
@@ -232,23 +243,41 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     return FILE_ICONS[fileType] || FILE_ICONS.default
   }
 
-  const getFileExtension = (fileName: string) => {
-    return fileName.split('.').pop()?.toUpperCase() || ''
+  const getFileExtension = (fileName: any) => {
+    if (!fileName) return ''
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                       (fileName.fileName ? fileName.fileName : 
+                       (fileName.url ? fileName.url : String(fileName)))
+    
+    return fileNameStr.split('.').pop()?.toUpperCase() || ''
   }
 
   // 获取文件名（不包含扩展名）
-  const getFileNameWithoutExtension = (fileName: string) => {
-    const lastDotIndex = fileName.lastIndexOf('.')
-    return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName
+  const getFileNameWithoutExtension = (fileName: any) => {
+    if (!fileName) return ''
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                       (fileName.fileName ? fileName.fileName : 
+                       (fileName.url ? fileName.url : String(fileName)))
+    
+    const lastDotIndex = fileNameStr.lastIndexOf('.')
+    return lastDotIndex > 0 ? fileNameStr.substring(0, lastDotIndex) : fileNameStr
   }
 
   // 截断长文件名
-  const truncateFileName = (fileName: string, maxLength: number = 15) => {
-    const name = getFileNameWithoutExtension(fileName)
-    const extension = getFileExtension(fileName)
+  const truncateFileName = (fileName: any, maxLength: number = 15) => {
+    if (!fileName) return ''
+    // 确保fileName是字符串类型
+    const fileNameStr = typeof fileName === 'string' ? fileName : 
+                       (fileName.fileName ? fileName.fileName : 
+                       (fileName.url ? fileName.url : String(fileName)))
+    
+    const name = getFileNameWithoutExtension(fileNameStr)
+    const extension = getFileExtension(fileNameStr)
 
     if (name.length <= maxLength) {
-      return fileName
+      return fileNameStr
     }
 
     return `${name.substring(0, maxLength)}...${extension ? `.${extension}` : ''}`
