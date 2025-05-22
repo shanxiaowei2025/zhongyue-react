@@ -14,7 +14,7 @@ const loginSchema = Yup.object().shape({
 
 const Login = () => {
   const navigate = useNavigate()
-  const { setUser, setToken, isAuthenticated } = useAuthStore()
+  const { setUser, setToken, isAuthenticated, startTimer } = useAuthStore()
 
   // 如果用户已登录，则自动重定向到主页
   if (isAuthenticated) {
@@ -75,6 +75,10 @@ const Login = () => {
         }
 
         setUser(user)
+        
+        // 启动自动登出计时器
+        startTimer()
+        
         message.success('登录成功')
         navigate('/')
       } else {
@@ -140,23 +144,9 @@ const Login = () => {
                 )}
               </div>
 
-              {/* <div className="mb-4">
-                <Field name="remember" type="checkbox">
-                  {({ field }: { field: FieldInputProps<boolean> }) => (
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      />
-                      <span>记住我</span>
-                    </label>
-                  )}
-                </Field>
-              </div> */}
+              <div className="mb-4 text-sm text-gray-500">
+                注意：系统将在30分钟无操作后自动登出
+              </div>
 
               <Button type="primary" htmlType="submit" block size="large">
                 登录

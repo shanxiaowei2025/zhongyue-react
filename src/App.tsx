@@ -9,7 +9,7 @@ import { useAuthStore } from './store/auth'
 
 const App = () => {
   const [loading, setLoading] = useState(true)
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, resetTimer, startTimer, clearTimer } = useAuthStore()
 
   // 在应用启动时预加载角色数据，但仅当用户已登录时
   useEffect(() => {
@@ -30,6 +30,38 @@ const App = () => {
 
     preloadData()
   }, [isAuthenticated])
+
+  // 添加自动登出功能
+  useEffect(() => {
+    // 只有当用户已认证时才启动计时器
+    if (isAuthenticated) {
+      // 初始化计时器
+      startTimer()
+
+      // 定义用户活动处理函数
+      const handleUserActivity = () => {
+        resetTimer() // 重置计时器
+      }
+
+      // 添加用户活动事件监听器
+      window.addEventListener('mousemove', handleUserActivity)
+      window.addEventListener('mousedown', handleUserActivity)
+      window.addEventListener('keypress', handleUserActivity)
+      window.addEventListener('touchmove', handleUserActivity)
+      window.addEventListener('scroll', handleUserActivity)
+
+      // 组件卸载时清理
+      return () => {
+        window.removeEventListener('mousemove', handleUserActivity)
+        window.removeEventListener('mousedown', handleUserActivity)
+        window.removeEventListener('keypress', handleUserActivity)
+        window.removeEventListener('touchmove', handleUserActivity)
+        window.removeEventListener('scroll', handleUserActivity)
+        clearTimer() // 清除计时器
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]) // 仅在认证状态变化时重新运行
 
   // 显示一个全屏加载指示器，直到预加载完成
   if (loading) {
