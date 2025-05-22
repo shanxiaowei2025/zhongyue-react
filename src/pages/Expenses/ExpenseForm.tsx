@@ -384,6 +384,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formattedValues.proofOfCharge = []
       }
 
+      // 处理收费方式字段，确保它是字符串而不是数组
+      if (formattedValues.chargeMethod && Array.isArray(formattedValues.chargeMethod)) {
+        formattedValues.chargeMethod = formattedValues.chargeMethod[0] || '';
+      }
+
       console.log('提交格式化后的表单数据:', formattedValues)
 
       if (mode === 'add') {
@@ -599,12 +604,34 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 </Form.Item>
 
                 <Form.Item name="chargeMethod" label="收费方式">
-                  <Select placeholder="请选择收费方式">
+                  <Select 
+                    placeholder="请选择收费方式" 
+                    allowClear
+                    showSearch
+                    optionFilterProp="children"
+                    mode="tags"
+                    tokenSeparators={[]}
+                    maxTagCount={1}
+                    style={{ width: '100%' }}
+                    onChange={(value) => {
+                      // 如果是数组且长度大于1，只保留最后一个值
+                      if (Array.isArray(value) && value.length > 1) {
+                        const lastValue = value[value.length - 1];
+                        form.setFieldValue('chargeMethod', [lastValue]);
+                      }
+                    }}
+                  >
+                    <Select.Option value="定兴中岳对公户">定兴中岳对公户</Select.Option>
+                    <Select.Option value="高碑店中岳对公户">高碑店中岳对公户</Select.Option>
                     <Select.Option value="雄安中岳对公户">雄安中岳对公户</Select.Option>
-                    <Select.Option value="高碑店对公户">高碑店对公户</Select.Option>
-                    <Select.Option value="微信">微信</Select.Option>
-                    <Select.Option value="支付宝">支付宝</Select.Option>
+                    <Select.Option value="脉信对公户">脉信对公户</Select.Option>
+                    <Select.Option value="金盾对公户">金盾对公户</Select.Option>
+                    <Select.Option value="如你心意对公户">如你心意对公户</Select.Option>
+                    <Select.Option value="维融对公户">维融对公户</Select.Option>
                     <Select.Option value="现金">现金</Select.Option>
+                    <Select.Option value="定兴收款码">定兴收款码</Select.Option>
+                    <Select.Option value="高碑店收款码">高碑店收款码</Select.Option>
+                    <Select.Option value="雄安收款码">雄安收款码</Select.Option>
                   </Select>
                 </Form.Item>
 
