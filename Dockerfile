@@ -1,5 +1,5 @@
 # 阶段1：构建应用程序
-FROM node:20-alpine AS builder
+FROM node:20-bullseye AS builder
 
 # 设置工作目录
 WORKDIR /app
