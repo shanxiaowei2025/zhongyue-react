@@ -184,7 +184,11 @@ const request = {
     })
   },
   post<T>(url: string, data?: object): Promise<T> {
-    return instance.post(url, data).then(res => res.data)
+    // 检查是否为FormData类型，如果是FormData则设置正确的Content-Type
+    const config = data instanceof FormData 
+      ? { headers: { 'Content-Type': 'multipart/form-data' } } 
+      : {};
+    return instance.post(url, data, config).then(res => res.data)
   },
   put<T>(url: string, data?: object): Promise<T> {
     return instance.put(url, data).then(res => res.data)

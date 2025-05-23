@@ -134,3 +134,32 @@ export const getPaginatedCustomers = async (params: Record<string, any>) => {
 export const exportCustomerCSV = () => {
   return request.get('/customer/export/csv', {}, 'blob')
 }
+
+// 导入客户Excel文件
+export const importCustomerExcel = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  try {
+    const response = await request.post<
+      ApiResponse<{
+        success: boolean;
+        message: string;
+        count: number;
+        failedRecords?: Array<{
+          index: number;
+          row: number;
+          companyName: string;
+          unifiedSocialCreditCode: string;
+          errors?: string[];
+          reason: string;
+        }>;
+      }>
+    >('/customer/import-excel', formData);
+    
+    return response;
+  } catch (error) {
+    console.error('导入客户Excel文件出错:', error);
+    throw error;
+  }
+}

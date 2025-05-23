@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import {
   Table,
-  Card,
   Button,
   Space,
   Input,
@@ -10,20 +9,18 @@ import {
   message,
   Popconfirm,
   DatePicker,
-  Modal,
   Tag,
 } from 'antd'
 import type { ColumnType, ColumnGroupType } from 'antd/es/table'
 import {
-  SearchOutlined,
   ReloadOutlined,
   EditOutlined,
   DeleteOutlined,
   PlusOutlined,
   EyeOutlined,
   AuditOutlined,
-  ExportOutlined,
   InfoCircleOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
@@ -37,11 +34,7 @@ import AuditModal from './AuditModal'
 import dayjs from 'dayjs'
 import './expenses.css'
 import {
-  getExpenseList,
   getExpenseById,
-  deleteExpense as deleteExpenseApi,
-  auditExpense as auditExpenseApi,
-  cancelAuditExpense as cancelAuditExpenseApi,
   exportExpenseCSV,
 } from '../../api/expense'
 
@@ -745,7 +738,7 @@ const Expenses: React.FC = () => {
                   新增费用
                 </Button>
               )}
-              <Button icon={<ExportOutlined />} onClick={handleExport}>
+              <Button icon={<DownloadOutlined />} onClick={handleExport}>
                 导出
               </Button>
             </div>
