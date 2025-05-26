@@ -21,6 +21,7 @@ import {
   AuditOutlined,
   InfoCircleOutlined,
   DownloadOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
@@ -195,6 +196,8 @@ const Expenses: React.FC = () => {
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add')
   const [receiptVisible, setReceiptVisible] = useState(false)
   const [receiptExpenseId, setReceiptExpenseId] = useState<number | null>(null)
+  const [previewVisible, setPreviewVisible] = useState(false)
+  const [previewExpenseId, setPreviewExpenseId] = useState<number | null>(null)
   const [auditModalVisible, setAuditModalVisible] = useState(false)
   const [expenseToAudit, setExpenseToAudit] = useState<Expense | null>(null)
 
@@ -405,6 +408,12 @@ const Expenses: React.FC = () => {
     setReceiptExpenseId(id)
     setReceiptVisible(true)
   }
+  
+  // 处理预览收据
+  const handlePreviewReceipt = (id: number) => {
+    setPreviewExpenseId(id)
+    setPreviewVisible(true)
+  }
 
   // 处理审核
   const handleAudit = (record: Expense) => {
@@ -530,6 +539,17 @@ const Expenses: React.FC = () => {
       case ExpenseStatus.Pending: // 未审核
         return (
           <Space size="small" className="action-buttons">
+            {/* 新增预览收据按钮 */}
+            <Button
+              type="link"
+              size="small"
+              icon={<FileSearchOutlined />}
+              className="preview-btn"
+              onClick={() => handlePreviewReceipt(record.id)}
+            >
+              预览收据
+            </Button>
+            
             {canEditExpense && (
               <Button
                 type="link"
@@ -793,6 +813,16 @@ const Expenses: React.FC = () => {
           visible={receiptVisible}
           expenseId={receiptExpenseId}
           onClose={() => setReceiptVisible(false)}
+        />
+      )}
+      
+      {/* 收据预览弹窗 - 只有在需要显示时才渲染 */}
+      {previewVisible && previewExpenseId && (
+        <ExpenseReceipt
+          visible={previewVisible}
+          expenseId={previewExpenseId}
+          onClose={() => setPreviewVisible(false)}
+          previewMode={true}
         />
       )}
 

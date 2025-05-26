@@ -34,4 +34,52 @@
 
 .ant-popover-buttons .ant-btn {
   min-width: 70px;
+}
+
+/* 预览按钮样式 */
+.action-buttons .preview-btn {
+  color: #722ed1;
+}
+
+.action-buttons .preview-btn:hover {
+  color: #9254de;
+}
+
+/* 水印样式 */
+.receipt-watermark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.watermark-grid {
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  right: -50px;
+  bottom: -50px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  transform: rotate(-30deg);
+  gap: 30px 60px; /* 增加行和列之间的间距，纵向30px，横向60px */
+}
+
+.watermark-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: rgba(255, 0, 0, 0.15);
+  font-weight: bold;
+  white-space: nowrap;
+  user-select: none;
+  text-align: center;
+  padding: 0 20px; /* 添加左右内边距增加文字横向间距 */
+  letter-spacing: 1px; /* 增加字符间距 */
 } 

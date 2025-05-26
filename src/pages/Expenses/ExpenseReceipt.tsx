@@ -11,6 +11,7 @@ interface ExpenseReceiptProps {
   visible: boolean
   expenseId: number
   onClose: () => void
+  previewMode?: boolean // 新增预览模式参数
 }
 
 // 定义印章类型
@@ -38,7 +39,7 @@ const receiverMap: Record<SealType, string> = {
   '如你心意': '保定如你心意企业管理咨询有限公司'
 }
 
-const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onClose }) => {
+const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onClose, previewMode = false }) => {
   const { receipt, isLoading } = useExpenseReceipt(visible ? expenseId : null)
   const [selectedSeal, setSelectedSeal] = useState<SealType>('中岳')
   const [hasRefreshed, setHasRefreshed] = useState(false)
@@ -404,12 +405,14 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
 
   return (
     <Modal
-      title="电子收款收据"
+      title={previewMode ? "预览收据" : "电子收款收据"}
       open={visible}
       onCancel={onClose}
       width={800}
       className="receipt-modal"
-      footer={[
+      footer={previewMode ? [
+        <Button key="close" onClick={onClose}>关闭</Button>
+      ] : [
         <Button key="refresh" onClick={() => refreshReceipt(true)} icon={<ReloadOutlined />}>
           刷新数据
         </Button>,
@@ -429,7 +432,10 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
           <Spin tip="加载中..." />
         </div>
       ) : receipt ? (
-        <div className="bg-white receipt-container" id="receipt-printable">
+        <div
+          className={`bg-white receipt-container${previewMode ? ' preview-mode' : ''}`}
+          id="receipt-printable"
+        >
           {/* 收据头部 - 根据是否显示logo使用不同的布局方式 */}
           {shouldShowLogo ? (
             // 当显示logo时，使用三栏布局，但确保标题居中
@@ -541,18 +547,31 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
             </div>
           </div>
 
-          {/* 印章选择 */}
-          <div className="seal-selector">
-            <p>选择盖章单位：</p>
-            <Radio.Group onChange={handleSealChange} value={selectedSeal}>
-              <Radio.Button value="中岳">中岳</Radio.Button>
-              <Radio.Button value="雄安">雄安</Radio.Button>
-              <Radio.Button value="高碑店">高碑店</Radio.Button>
-              <Radio.Button value="脉信">脉信</Radio.Button>
-              <Radio.Button value="金盾">金盾</Radio.Button>
-              <Radio.Button value="如你心意">如你心意</Radio.Button>
-            </Radio.Group>
-          </div>
+          {/* 印章选择 - 在预览模式下不显示 */}
+          {!previewMode && (
+            <div className="seal-selector">
+              <p>选择盖章单位：</p>
+              <Radio.Group onChange={handleSealChange} value={selectedSeal}>
+                <Radio.Button value="中岳">中岳</Radio.Button>
+                <Radio.Button value="雄安">雄安</Radio.Button>
+                <Radio.Button value="高碑店">高碑店</Radio.Button>
+                <Radio.Button value="脉信">脉信</Radio.Button>
+                <Radio.Button value="金盾">金盾</Radio.Button>
+                <Radio.Button value="如你心意">如你心意</Radio.Button>
+              </Radio.Group>
+            </div>
+          )}
+          
+          {/* 预览水印 */}
+          {previewMode && (
+            <div className="receipt-watermark">
+              <div className="watermark-grid">
+                {[...Array(25)].map((_, i) => (
+                  <div key={i} className="watermark-item">预览图片，收据无效</div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 添加CSS样式 */}
           <style>{`
@@ -756,6 +775,38 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               border-bottom: none;
             }
             
+            /* 水印样式 */
+            .receipt-watermark {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              pointer-events: none;
+              z-index: 100;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              overflow: hidden;
+            }
+            
+            .watermark-content {
+              transform: rotate(-45deg);
+              color: rgba(255, 0, 0, 0.15);
+              font-size: 72px;
+              font-weight: bold;
+              text-align: center;
+              white-space: nowrap;
+              width: 100%;
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              pointer-events: none;
+              user-select: none;
+            }
+            
             /* 印刷样式 */
             @media print {
               .receipt-container {
@@ -764,13 +815,19 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
                 box-shadow: none;
               }
               
-              .seal-selector {
+              .seal-selector,
+              .receipt-watermark {
                 display: none;
               }
               
               .receipt-table {
                 page-break-inside: avoid;
               }
+            }
+
+            .receipt-container.preview-mode {
+              pointer-events: none;
+              user-select: none;
             }
           `}</style>
         </div>
