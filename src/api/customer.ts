@@ -163,3 +163,32 @@ export const importCustomerExcel = async (file: File) => {
     throw error;
   }
 }
+
+// 批量替换客户Excel文件
+export const updateCustomerExcel = async (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  try {
+    const response = await request.post<
+      ApiResponse<{
+        success: boolean;
+        message: string;
+        count: number;
+        failedRecords?: Array<{
+          index: number;
+          row: number;
+          companyName: string;
+          unifiedSocialCreditCode: string;
+          errors?: string[];
+          reason: string;
+        }>;
+      }>
+    >('/customer/update-excel', formData);
+    
+    return response;
+  } catch (error) {
+    console.error('批量替换客户Excel文件出错:', error);
+    throw error;
+  }
+}

@@ -46,7 +46,7 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
 import useSWR, { mutate } from 'swr'
-import { getCustomerDetail, getCustomerById, exportCustomerCSV, importCustomerExcel } from '../../api/customer'
+import { getCustomerDetail, getCustomerById, exportCustomerCSV, importCustomerExcel, updateCustomerExcel } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 
 // 启用 dayjs 插件
@@ -505,6 +505,98 @@ export default function Customers() {
     }
   }
 
+  // 处理批量替换Excel功能
+  const handleUpdateExcel = async (file: File) => {
+    try {
+      message.loading('正在批量替换数据，请稍候...', 0)
+      
+      const response = await updateCustomerExcel(file)
+      message.destroy()
+      
+      // 替换成功
+      if (response.code === 0) {
+        const { data } = response
+        
+        if (data.success) {
+          // 有失败记录需要展示
+          if (data.failedRecords && data.failedRecords.length > 0) {
+            // 创建模态框展示失败记录
+            Modal.error({
+              title: '部分数据替换失败',
+              content: (
+                <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                  <p>{data.message}</p>
+                  <Table 
+                    dataSource={data.failedRecords.map((record, index) => ({
+                      ...record,
+                      key: index
+                    }))}
+                    columns={[
+                      {
+                        title: '行号',
+                        dataIndex: 'row',
+                        key: 'row',
+                        width: 80
+                      },
+                      {
+                        title: '企业名称',
+                        dataIndex: 'companyName',
+                        key: 'companyName',
+                        width: 200
+                      },
+                      {
+                        title: '统一社会信用代码',
+                        dataIndex: 'unifiedSocialCreditCode',
+                        key: 'unifiedSocialCreditCode',
+                        width: 200
+                      },
+                      {
+                        title: '失败原因',
+                        dataIndex: 'reason',
+                        key: 'reason',
+                        render: (text, record) => {
+                          if (record.errors && record.errors.length > 0) {
+                            return (
+                              <>
+                                {record.errors.map((error, index) => (
+                                  <div key={index}>{error}</div>
+                                ))}
+                              </>
+                            )
+                          }
+                          return text
+                        }
+                      }
+                    ]}
+                    pagination={false}
+                    size="small"
+                  />
+                </div>
+              ),
+              width: 800,
+              maskClosable: false,
+              okText: '关闭'
+            })
+          } else {
+            // 全部替换成功
+            message.success(data.message)
+          }
+          
+          // 刷新客户列表
+          refreshCustomers()
+        } else {
+          message.error(data.message || '批量替换失败')
+        }
+      } else {
+        message.error(response.message || '批量替换失败')
+      }
+    } catch (error) {
+      message.destroy()
+      console.error('批量替换失败', error)
+      message.error('批量替换失败，请稍后重试')
+    }
+  }
+
   // 文件上传前校验
   const beforeUpload = (file: File) => {
     const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
@@ -525,6 +617,29 @@ export default function Customers() {
     
     // 处理文件上传
     handleImport(file)
+    return false // 阻止默认上传行为
+  }
+
+  // 批量替换前校验
+  const beforeUpdate = (file: File) => {
+    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                    file.type === 'application/vnd.ms-excel' ||
+                    file.name.endsWith('.xlsx') ||
+                    file.name.endsWith('.xls')
+    
+    if (!isExcel) {
+      message.error('只能上传Excel文件！')
+      return false
+    }
+    
+    const isLt10M = file.size / 1024 / 1024 < 10
+    if (!isLt10M) {
+      message.error('文件大小不能超过10MB！')
+      return false
+    }
+    
+    // 处理批量替换
+    handleUpdateExcel(file)
     return false // 阻止默认上传行为
   }
 
@@ -849,6 +964,19 @@ export default function Customers() {
             className="w-full sm:w-auto mt-2 sm:mt-0 ml-0 sm:ml-2"
           >
             导入
+          </Button>
+        </Upload>
+        <Upload
+          showUploadList={false}
+          beforeUpload={beforeUpdate}
+          accept=".xlsx,.xls"
+        >
+          <Button
+            type="default"
+            icon={<FileExcelOutlined />}
+            className="w-full sm:w-auto mt-2 sm:mt-0 ml-0 sm:ml-2"
+          >
+            批量替换
           </Button>
         </Upload>
       </div>
