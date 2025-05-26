@@ -131,12 +131,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
     // 移除了上传数量限制检查
 
-    // 文件大小限制（10MB）
-    const isLt10M = file.size / 1024 / 1024 < 10
-    if (!isLt10M) {
-      message.error('文件必须小于10MB！')
-      return false
-    }
+    // 移除文件大小限制，允许上传任意大小的文件
 
     return true
   }

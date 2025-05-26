@@ -42,7 +42,6 @@ const instance = axios.create({
     })
 
     const queryString = searchParams.toString()
-    console.log(`🔍 参数序列化: ${JSON.stringify(params)} → ${queryString}`)
     return queryString
   },
 })

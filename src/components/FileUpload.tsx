@@ -141,12 +141,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
     }
 
-    // 文件大小限制（10MB）
-    const isLt10M = file.size / 1024 / 1024 < 10
-    if (!isLt10M) {
-      message.error('文件必须小于10MB！')
-      return false
-    }
+    // 移除文件大小限制，允许上传任意大小的文件
 
     return true
   }

@@ -63,9 +63,6 @@ export default function Customers() {
   // 获取权限相关信息
   const { customerPermissions, loading: permissionLoading, refreshPermissions } = usePermission()
 
-  // 添加权限调试日志
-  console.log('客户管理页面权限状态:', customerPermissions)
-
   // 从 pageStates 恢复搜索参数
   const savedSearchParams = getState('customersSearchParams')
   const savedPagination = getState('customersPagination')

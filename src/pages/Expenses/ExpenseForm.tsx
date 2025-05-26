@@ -28,7 +28,8 @@ import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { useBranchOffices } from '../../hooks/useDepartments'
 import { BUSINESS_STATUS_MAP } from '../../constants'
-import { deleteFile } from '../../utils/upload'
+import { deleteFile, buildImageUrl } from '../../utils/upload'
+import { useDebounce } from '../../hooks/useDebounce'
 
 // 定义状态标签映射
 const STATUS_LABELS = {
@@ -115,98 +116,105 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     '7': ['otherBusinessFee'], // 其他业务
   }
 
-  // 使用Form.useWatch监听所有费用字段
-  const watchedFeeFields = feeFields.map(field => Form.useWatch(field, form))
+  // 定义防抖延迟时间（毫秒）
+  const DEBOUNCE_DELAY = 200
 
-  // 安全地获取表单值并计算总费用
-  const calculateTotalFee = React.useCallback(() => {
-    if (!visible || !formMountedRef.current) return // 不可见或表单未挂载时不执行
+  // 使用本地状态缓存最近的费用值，减少从表单获取值的频率
+  const [feeFieldsCache, setFeeFieldsCache] = useState<Record<string, any>>({})
 
+  // 共用的InputNumber解析函数
+  const parseNumberInput = (value: string | number | null | undefined): number => {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = typeof value === 'string' ? parseFloat(value) : Number(value);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  // 防抖函数：计算总费用和标签页费用
+  const calculateFees = useDebounce(() => {
+    if (!visible || !formMountedRef.current || !formInitializedRef.current) return
+    
     try {
-      // 使用临时变量保存表单值，避免直接使用form.getFieldsValues
+      // 从表单获取所有费用字段的当前值
       const values: Record<string, any> = {}
+      let hasChanges = false
+      
+      // 检查每个字段是否有变化
       for (const field of feeFields) {
-        // 使用as any解决TypeScript类型约束问题
-        values[field] = form.getFieldValue(field as any) || 0
+        const currentValue = form.getFieldValue(field as any) || 0
+        values[field] = currentValue
+        
+        // 检测值是否有变化
+        if (feeFieldsCache[field] !== currentValue) {
+          hasChanges = true
+        }
       }
-
+      
+      // 如果没有变化，不进行计算
+      if (!hasChanges) return
+      
+      // 更新缓存
+      setFeeFieldsCache(values)
+      
+      // 计算总费用
       let total = 0
       for (const field of feeFields) {
         const value = values[field]
         if (value) {
-          // 确保将字符串转换为数字
           total += typeof value === 'string' ? parseFloat(value) : Number(value)
         }
       }
-
-      // 设置总费用，仅当值变化时才更新
+      
+      // 更新总费用
       const currentTotal = form.getFieldValue('totalFee')
       if (currentTotal !== total) {
         form.setFieldValue('totalFee', total)
       }
-    } catch (error) {
-      console.error('计算总费用失败:', error)
-    }
-  }, [form, visible]) // 移除feeFields依赖，它是一个常量数组
-
-  // 计算每个标签页的费用子总和
-  const calculateTabFeeSums = useCallback(() => {
-    if (!visible || !formMountedRef.current) return
-
-    try {
-      // 使用临时变量保存表单值，避免直接使用form.getFieldsValues
-      const values: Record<string, any> = {}
-      for (const field of feeFields) {
-        // 使用as any解决TypeScript类型约束问题
-        values[field] = form.getFieldValue(field as any) || 0
-      }
-
+      
+      // 计算每个标签页的费用
       const newTabFeeSums: Record<string, number> = {
-        '1': 0,
-        '2': 0,
-        '3': 0,
-        '4': 0,
-        '5': 0,
-        '6': 0,
-        '7': 0,
+        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0,
       }
-
-      // 计算每个标签页的费用子总和
+      
+      // 计算各标签页的费用总和
       Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
         let sum = 0
         fieldsInTab.forEach(field => {
           if (values[field]) {
-            // 确保将字符串转换为数字
             sum += typeof values[field] === 'string' ? parseFloat(values[field]) : Number(values[field])
           }
         })
         newTabFeeSums[tabKey] = sum
       })
-
-      // 比较前后值，只有当值发生变化时才更新状态
-      let hasChanged = false
+      
+      // 检查是否有变化
+      let tabSumsChanged = false
       for (const key in newTabFeeSums) {
         if (newTabFeeSums[key] !== tabFeeSums[key]) {
-          hasChanged = true
+          tabSumsChanged = true
           break
         }
       }
-
-      if (hasChanged) {
+      
+      // 只在有变化时更新状态
+      if (tabSumsChanged) {
         setTabFeeSums(newTabFeeSums)
       }
     } catch (error) {
-      console.error('计算标签页费用子总和失败:', error)
+      console.error('计算费用失败:', error)
     }
-  }, [form, visible, tabFeeSums]) // 依赖tabFeeSums是安全的，因为我们已确保只在值变化时更新
+  }, DEBOUNCE_DELAY, [visible, form, feeFieldsCache, tabFeeSums])
 
-  // 当任何费用字段变化时，重新计算总费用和每个标签页的费用子总和
-  useEffect(() => {
-    if (formMountedRef.current && formInitializedRef.current) {
-      calculateTotalFee()
-      calculateTabFeeSums()
-    }
-  }, [watchedFeeFields, calculateTotalFee, calculateTabFeeSums])
+  // 监听所有费用字段的变化
+  feeFields.forEach(field => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const value = Form.useWatch(field, form)
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (formInitializedRef.current) {
+        calculateFees()
+      }
+    }, [value])
+  })
 
   // 在组件挂载时重置表单状态
   useEffect(() => {
@@ -310,14 +318,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           // @ts-ignore - 类型忽略，实际运行时会正确处理
           formData.contractImage = expense.contractImage.map(fileName => ({
             fileName,
-            url: fileName,
+            url: buildImageUrl(fileName), // 使用buildImageUrl构建完整URL
           }));
         } else {
           // 兼容旧数据，单个字符串转换为数组
           // @ts-ignore - 类型忽略，实际运行时会正确处理
           formData.contractImage = [{
             fileName: expense.contractImage,
-            url: expense.contractImage,
+            url: buildImageUrl(expense.contractImage), // 使用buildImageUrl构建完整URL
           }];
         }
       }
@@ -327,13 +335,42 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // @ts-ignore - 类型忽略，实际运行时会正确处理
         formData.proofOfCharge = expense.proofOfCharge.map(fileName => ({
           fileName,
-          url: fileName,
+          url: buildImageUrl(fileName), // 使用buildImageUrl构建完整URL
         }))
       }
 
       // 设置表单值
       form.setFieldsValue(formData)
       setPrevFormValues(formData)
+      
+      // 初始化费用字段缓存
+      const initialFeeValues: Record<string, any> = {}
+      feeFields.forEach(field => {
+        initialFeeValues[field] = formData[field as keyof typeof formData] || 0
+      })
+      setFeeFieldsCache(initialFeeValues)
+
+      // 立即计算并设置初始标签页费用
+      const newTabFeeSums: Record<string, number> = {
+        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0,
+      }
+      
+      // 计算各标签页的费用总和
+      Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
+        let sum = 0
+        fieldsInTab.forEach(field => {
+          const value = initialFeeValues[field];
+          if (value) {
+            sum += typeof value === 'string' ? parseFloat(value) : Number(value)
+          }
+        })
+        newTabFeeSums[tabKey] = sum
+      })
+      
+      // 直接设置费用合计状态
+      setTabFeeSums(newTabFeeSums)
+      
+      // 最后设置初始化完成标志
       formInitializedRef.current = true
     } else {
       // 添加模式，设置默认值
@@ -347,12 +384,35 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         totalFee: 0,
       })
 
+      // 初始化费用字段缓存为0
+      const initialFeeValues: Record<string, any> = {}
+      feeFields.forEach(field => {
+        initialFeeValues[field] = 0
+      })
+      setFeeFieldsCache(initialFeeValues)
+
+      // 新建模式下重置所有标签页费用为0
+      setTabFeeSums({
+        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0,
+      })
+
       formInitializedRef.current = true
     }
 
     // 设置默认选项卡
     setActiveTab('1')
-  }, [visible, expense, mode, form])
+  }, [visible, expense, mode, form]) // 移除不必要的依赖，feeFields和tabFeeFieldsMap是常量
+
+  // 优化初始化后的计算逻辑
+  useEffect(() => {
+    if (formInitializedRef.current) {
+      // 使用setTimeout确保状态更新完成后再执行一次计算
+      const timer = setTimeout(() => {
+        calculateFees()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [formInitializedRef.current ? 1 : 0]) // 仅在初始化完成时执行一次
 
   // 跟踪新上传的附件
   const [uploadedFiles, setUploadedFiles] = useState<{
@@ -826,6 +886,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -848,6 +909,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -870,6 +932,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -919,6 +982,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             style={{ width: '100%' }}
                             min={0}
                             precision={0}
+                            parser={(value) => {
+                              if (value === null || value === undefined || value === '') return 0;
+                              const parsed = parseInt(value as string, 10);
+                              return isNaN(parsed) ? 0 : parsed;
+                            }}
                           />
                         </Form.Item>
 
@@ -929,6 +997,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -964,6 +1033,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -1009,6 +1079,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -1019,6 +1090,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -1029,6 +1101,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -1039,6 +1112,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -1049,6 +1123,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
 
@@ -1101,6 +1176,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
                       </div>
@@ -1142,6 +1218,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
                       </div>
@@ -1190,6 +1267,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             min={0}
                             precision={2}
                             addonBefore="¥"
+                            parser={parseNumberInput}
                           />
                         </Form.Item>
                       </div>
