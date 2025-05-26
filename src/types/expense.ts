@@ -164,6 +164,8 @@ export interface CancelAuditDto {
 export interface FeeItem {
   name: string;
   amount: number | string;
+  startDate?: string;  // 费用开始日期
+  endDate?: string;    // 费用结束日期
 }
 
 // 收据视图DTO

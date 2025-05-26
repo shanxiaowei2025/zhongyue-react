@@ -110,39 +110,128 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
       sealSelector.style.display = 'none'
     }
 
+    // 在导出前临时添加样式修复表格边框
+    const exportStyle = document.createElement('style')
+    exportStyle.innerHTML = `
+      .receipt-printable-export .receipt-table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border: 1px solid #000 !important;
+      }
+      
+      .receipt-printable-export .receipt-table td {
+        border: none !important;
+        border-right: 1px solid #000 !important;
+        border-bottom: 1px solid #000 !important;
+      }
+      
+      .receipt-printable-export .receipt-table tr:last-child td {
+        border-bottom: 1px solid #000 !important;
+      }
+      
+      .receipt-printable-export .receipt-table tr td:last-child {
+        border-right: none !important;
+      }
+      
+      .receipt-printable-export .fee-details-cell {
+        padding: 0 !important;
+        border: none !important;
+      }
+      
+      .receipt-printable-export .fee-items-table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border: none !important;
+      }
+      
+      .receipt-printable-export .fee-items-table th {
+        border: none !important;
+        border-bottom: 1px solid #e8e8e8 !important;
+        background-color: #f9f9f9 !important;
+      }
+      
+      .receipt-printable-export .fee-items-table td {
+        border: none !important;
+        border-bottom: 1px solid #e8e8e8 !important;
+      }
+      
+      .receipt-printable-export .fee-items-table tr:last-child td {
+        border-bottom: none !important;
+      }
+    `
+    document.head.appendChild(exportStyle)
+    element.classList.add('receipt-printable-export')
+
     message.loading('正在生成图片...', 0)
 
-    html2canvas(element, {
-      scale: 2, // 提高分辨率
-      backgroundColor: '#ffffff',
-      logging: false,
-      useCORS: true, // 允许加载跨域图片
-      allowTaint: true,
-    }).then(canvas => {
-      // 恢复印章选择器显示
-      if (sealSelector) {
-        sealSelector.style.display = originalDisplay
-      }
+    // 给样式一点应用时间
+    setTimeout(() => {
+      // 使用html2canvas生成图片
+      html2canvas(element, {
+        scale: 2, // 提高分辨率
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true, // 允许加载跨域图片
+        allowTaint: true,
+        onclone: (documentClone) => {
+          // 在克隆的文档中强制应用样式，确保边框正确
+          const clonedElement = documentClone.getElementById('receipt-printable');
+          if (clonedElement) {
+            const receiptTable = documentClone.querySelector('.receipt-table');
+            if (receiptTable) {
+              (receiptTable as HTMLElement).style.border = '1px solid #000';
+              (receiptTable as HTMLElement).style.borderCollapse = 'separate';
+            }
+            
+            const tableCells = documentClone.querySelectorAll('.receipt-table td');
+            tableCells.forEach((cell) => {
+              (cell as HTMLElement).style.border = 'none';
+              (cell as HTMLElement).style.borderRight = '1px solid #000';
+              (cell as HTMLElement).style.borderBottom = '1px solid #000';
+            });
+            
+            const lastCells = documentClone.querySelectorAll('.receipt-table tr td:last-child');
+            lastCells.forEach((cell) => {
+              (cell as HTMLElement).style.borderRight = 'none';
+            });
+          }
+        }
+      })
+      .then((canvas) => {
+        // 恢复印章选择器显示
+        if (sealSelector) {
+          sealSelector.style.display = originalDisplay;
+        }
 
-      message.destroy() // 清除加载提示
+        // 移除临时样式
+        document.head.removeChild(exportStyle);
+        element.classList.remove('receipt-printable-export');
 
-      // 转换为图片并下载
-      const imgData = canvas.toDataURL('image/png')
-      const link = document.createElement('a')
-      link.download = fileName
-      link.href = imgData
-      link.click()
+        message.destroy(); // 清除加载提示
 
-      message.success('收据图片已保存')
-    }).catch(err => {
-      console.error('生成图片错误:', err)
-      message.error('生成图片失败')
-      
-      // 恢复印章选择器显示
-      if (sealSelector) {
-        sealSelector.style.display = originalDisplay
-      }
-    })
+        // 转换为图片并下载
+        const imgData = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = imgData;
+        link.click();
+
+        message.success('收据图片已保存');
+      })
+      .catch((err) => {
+        console.error('生成图片错误:', err);
+        message.error('生成图片失败');
+        
+        // 恢复印章选择器显示以及移除临时样式
+        if (sealSelector) {
+          sealSelector.style.display = originalDisplay;
+        }
+        if (document.head.contains(exportStyle)) {
+          document.head.removeChild(exportStyle);
+        }
+        element.classList.remove('receipt-printable-export');
+      });
+    }, 100);
   }
 
   // 处理印章选择变更
@@ -234,21 +323,51 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
 
   // 构建款项明细
   const renderFeeDetails = () => {
-    const details: string[] = [];
-    
     // 首先尝试使用新的feeItems数组（如果存在）
     if (receipt?.feeItems && receipt.feeItems.length > 0) {
-      receipt.feeItems.forEach(item => {
-        if (item.name && item.amount !== undefined && item.amount !== null) {
-          // 确保将任何类型的值转换为数字
-          const numValue = typeof item.amount === 'string' ? parseFloat(item.amount) : Number(item.amount);
-          if (!isNaN(numValue) && numValue > 0) {
-            details.push(`${item.name}: ¥${numValue.toFixed(2)}`);
-          }
-        }
-      });
+      // 返回HTML表格而不是字符串数组，让每个费用项独立成行
+      return (
+        <table className="fee-items-table">
+          <thead>
+            <tr>
+              <th style={{ padding: '8px 6px', textAlign: 'left', width: '50%' }}>费用项目</th>
+              <th style={{ padding: '8px 6px', textAlign: 'right', width: '20%' }}>金额</th>
+              <th style={{ padding: '8px 6px', textAlign: 'center', width: '30%' }}>日期范围</th>
+            </tr>
+          </thead>
+          <tbody>
+            {receipt.feeItems.map((item, index) => {
+              // 确保将任何类型的值转换为数字
+              const numValue = typeof item.amount === 'string' ? parseFloat(item.amount) : Number(item.amount);
+              
+              if (item.name && numValue !== undefined && numValue !== null && !isNaN(numValue) && numValue > 0) {
+                // 处理日期显示
+                let dateRangeText = '—';
+                if (item.startDate && item.endDate) {
+                  dateRangeText = `${dayjs(item.startDate).format('YYYY-MM-DD')} 至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`;
+                } else if (item.startDate) {
+                  dateRangeText = `从 ${dayjs(item.startDate).format('YYYY-MM-DD')} 起`;
+                } else if (item.endDate) {
+                  dateRangeText = `至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`;
+                }
+                
+                return (
+                  <tr key={index}>
+                    <td style={{ padding: '8px 6px', textAlign: 'left' }}>{item.name}</td>
+                    <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>¥{numValue.toFixed(2)}</td>
+                    <td style={{ padding: '8px 6px', textAlign: 'center', fontSize: '13px', color: '#666' }}>{dateRangeText}</td>
+                  </tr>
+                );
+              }
+              return null;
+            }).filter(Boolean)}
+          </tbody>
+        </table>
+      );
     } else {
       // 回退到旧的单独费用字段（为了向后兼容）
+      const details: string[] = [];
+      
       // 添加安全检查，确保金额存在且是数字
       const addFeeItem = (label: string, value?: number | string) => {
         if (value !== undefined && value !== null) {
@@ -273,11 +392,11 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
       addFeeItem('变更费', receipt?.changeFee);
       addFeeItem('行政许可费', receipt?.administrativeLicenseFee);
       addFeeItem('其他业务费', receipt?.otherBusinessFee);
+      
+      if (details.length === 0) return '费用明细';
+      
+      return details.join('；');
     }
-    
-    if (details.length === 0) return '费用明细';
-    
-    return details.join('；');
   }
 
   // 判断当前选择的印章是否需要显示logo
@@ -375,7 +494,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
                 </tr>
                 <tr>
                   <td className="label-cell">款项明细</td>
-                  <td className="value-cell" colSpan={3}>{renderFeeDetails()}</td>
+                  <td className="value-cell fee-details-cell" colSpan={3}>{renderFeeDetails()}</td>
                 </tr>
                 <tr>
                   <td className="label-cell">合计金额</td>
@@ -605,6 +724,36 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               margin-top: 40px;
               padding-top: 15px;
               border-top: 2px dashed #d9d9d9;
+            }
+            
+            /* 费用明细表格样式 */
+            .fee-details-cell {
+              padding: 0 !important;
+              border: none !important;
+            }
+            
+            .fee-items-table {
+              border-spacing: 0;
+              width: 100%;
+              border-collapse: collapse;
+              border: none;
+            }
+            
+            .fee-items-table th, 
+            .fee-items-table td {
+              border: none;
+              border-bottom: 1px solid #e8e8e8;
+            }
+            
+            .fee-items-table th {
+              background-color: #f9f9f9;
+              font-weight: normal;
+              color: #666;
+              font-size: 13px;
+            }
+            
+            .fee-items-table tr:last-child td {
+              border-bottom: none;
             }
             
             /* 印刷样式 */
