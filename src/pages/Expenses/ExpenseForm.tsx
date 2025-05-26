@@ -134,7 +134,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       for (const field of feeFields) {
         const value = values[field]
         if (value) {
-          total += Number(value)
+          // 确保将字符串转换为数字
+          total += typeof value === 'string' ? parseFloat(value) : Number(value)
         }
       }
 
@@ -175,7 +176,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         let sum = 0
         fieldsInTab.forEach(field => {
           if (values[field]) {
-            sum += Number(values[field])
+            // 确保将字符串转换为数字
+            sum += typeof values[field] === 'string' ? parseFloat(values[field]) : Number(values[field])
           }
         })
         newTabFeeSums[tabKey] = sum
@@ -233,9 +235,42 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     if (mode === 'edit' && expense) {
       console.log('设置编辑模式表单数据:', expense)
 
-      // 转换日期字段
+      // 处理字符串格式的数字值
       const formData = {
         ...expense,
+        // 处理费用字段，确保它们是数字类型
+        licenseFee: typeof expense.licenseFee === 'string' ? parseFloat(expense.licenseFee) : expense.licenseFee,
+        brandFee: typeof expense.brandFee === 'string' ? parseFloat(expense.brandFee) : expense.brandFee,
+        recordSealFee: typeof expense.recordSealFee === 'string' ? parseFloat(expense.recordSealFee) : expense.recordSealFee,
+        generalSealFee: typeof expense.generalSealFee === 'string' ? parseFloat(expense.generalSealFee) : expense.generalSealFee,
+        agencyFee: typeof expense.agencyFee === 'string' ? parseFloat(expense.agencyFee) : expense.agencyFee,
+        accountingSoftwareFee: typeof expense.accountingSoftwareFee === 'string' ? parseFloat(expense.accountingSoftwareFee) : expense.accountingSoftwareFee,
+        addressFee: typeof expense.addressFee === 'string' ? parseFloat(expense.addressFee) : expense.addressFee,
+        invoiceSoftwareFee: typeof expense.invoiceSoftwareFee === 'string' ? parseFloat(expense.invoiceSoftwareFee) : expense.invoiceSoftwareFee,
+        socialInsuranceAgencyFee: typeof expense.socialInsuranceAgencyFee === 'string' ? parseFloat(expense.socialInsuranceAgencyFee) : expense.socialInsuranceAgencyFee,
+        statisticalReportFee: typeof expense.statisticalReportFee === 'string' ? parseFloat(expense.statisticalReportFee) : expense.statisticalReportFee,
+        changeFee: typeof expense.changeFee === 'string' ? parseFloat(expense.changeFee) : expense.changeFee,
+        administrativeLicenseFee: typeof expense.administrativeLicenseFee === 'string' ? parseFloat(expense.administrativeLicenseFee) : expense.administrativeLicenseFee,
+        otherBusinessFee: typeof expense.otherBusinessFee === 'string' ? parseFloat(expense.otherBusinessFee) : expense.otherBusinessFee,
+        totalFee: typeof expense.totalFee === 'string' ? parseFloat(expense.totalFee) : expense.totalFee,
+        insuredCount: typeof expense.insuredCount === 'string' ? parseInt(expense.insuredCount) : expense.insuredCount,
+        
+        // 确保使用了mode=tags的Select组件的值为数组
+        chargeMethod: expense.chargeMethod ? 
+          (Array.isArray(expense.chargeMethod) ? expense.chargeMethod : [expense.chargeMethod]) : [],
+        
+        changeBusiness: expense.changeBusiness ? 
+          (Array.isArray(expense.changeBusiness) ? expense.changeBusiness : [expense.changeBusiness]) : [],
+        
+        administrativeLicense: expense.administrativeLicense ? 
+          (Array.isArray(expense.administrativeLicense) ? expense.administrativeLicense : [expense.administrativeLicense]) : [],
+        
+        otherBusiness: expense.otherBusiness ? 
+          (Array.isArray(expense.otherBusiness) ? expense.otherBusiness : [expense.otherBusiness]) : [],
+        
+        insuranceTypes: expense.insuranceTypes ? 
+          (Array.isArray(expense.insuranceTypes) ? expense.insuranceTypes : [expense.insuranceTypes]) : [],
+        
         // 转换日期字段为dayjs对象
         chargeDate: expense.chargeDate ? dayjs(expense.chargeDate) : undefined,
         accountingSoftwareStartDate: expense.accountingSoftwareStartDate
@@ -370,6 +405,42 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         }
       })
 
+      // 处理费用字段，确保它们是有效的数值
+      feeFields.forEach(field => {
+        // 如果字段存在且不是null或undefined
+        if (formattedValues[field] != null) {
+          // 数字类型保持不变，字符串类型确保是有效的数字格式
+          if (typeof formattedValues[field] === 'string' && formattedValues[field] !== '') {
+            // 确保字符串是有效的数字格式
+            if (!isNaN(parseFloat(formattedValues[field]))) {
+              formattedValues[field] = parseFloat(formattedValues[field]).toString()
+            } else {
+              // 如果不是有效数字，设为null
+              formattedValues[field] = null
+            }
+          }
+          // 对于数字类型的值，保持不变
+        }
+      })
+
+      // 处理tags模式的Select字段，确保它们的值处理正确
+      // 对于chargeMethod，如果是数组，取第一个值作为字符串（与之前的处理逻辑一致）
+      if (formattedValues.chargeMethod && Array.isArray(formattedValues.chargeMethod)) {
+        formattedValues.chargeMethod = formattedValues.chargeMethod[0] || '';
+      }
+
+      // 对于其他使用tags模式的字段，保持数组格式
+      // 后端API应该能够处理字符串数组，如果后端需要字符串，可以在这里使用join方法
+      ['changeBusiness', 'administrativeLicense', 'otherBusiness', 'insuranceTypes'].forEach(field => {
+        if (formattedValues[field] && !Array.isArray(formattedValues[field])) {
+          // 如果不是数组，转换为包含单个元素的数组
+          formattedValues[field] = [formattedValues[field]];
+        } else if (formattedValues[field] === undefined || formattedValues[field] === null) {
+          // 如果是undefined或null，设置为空数组
+          formattedValues[field] = [];
+        }
+      });
+
       // 处理合同图片 - 将对象数组转换为文件名数组
       if (formattedValues.contractImage && Array.isArray(formattedValues.contractImage)) {
         formattedValues.contractImage = formattedValues.contractImage.map(
@@ -394,11 +465,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       ) {
         // 如果proofOfCharge为undefined或null，表示已全部被删除，设置为空数组
         formattedValues.proofOfCharge = []
-      }
-
-      // 处理收费方式字段，确保它是字符串而不是数组
-      if (formattedValues.chargeMethod && Array.isArray(formattedValues.chargeMethod)) {
-        formattedValues.chargeMethod = formattedValues.chargeMethod[0] || '';
       }
 
       console.log('提交格式化后的表单数据:', formattedValues)

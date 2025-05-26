@@ -151,9 +151,12 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   }
 
   // 格式化金额为大写
-  const formatAmountToChinese = (amount: number): string => {
-    if (amount === 0) return '零元整'
-    if (!amount) return '零元整'
+  const formatAmountToChinese = (amount: number | string): string => {
+    // 确保将任何类型的值转换为数字
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
+    
+    if (numAmount === 0 || isNaN(numAmount)) return '零元整'
+    if (!numAmount) return '零元整'
     
     const cnNums = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
     const cnIntRadice = ['', '拾', '佰', '仟']
@@ -169,7 +172,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
     let zeroCount = 0
     
     // 转换为字符串
-    const amountStr = amount.toString()
+    const amountStr = numAmount.toString()
     
     if (amountStr.indexOf('.') === -1) {
       integerNum = amountStr
@@ -236,16 +239,24 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
     // 首先尝试使用新的feeItems数组（如果存在）
     if (receipt?.feeItems && receipt.feeItems.length > 0) {
       receipt.feeItems.forEach(item => {
-        if (item.name && item.amount !== undefined && item.amount !== null && item.amount > 0) {
-          details.push(`${item.name}: ¥${Number(item.amount).toFixed(2)}`);
+        if (item.name && item.amount !== undefined && item.amount !== null) {
+          // 确保将任何类型的值转换为数字
+          const numValue = typeof item.amount === 'string' ? parseFloat(item.amount) : Number(item.amount);
+          if (!isNaN(numValue) && numValue > 0) {
+            details.push(`${item.name}: ¥${numValue.toFixed(2)}`);
+          }
         }
       });
     } else {
       // 回退到旧的单独费用字段（为了向后兼容）
       // 添加安全检查，确保金额存在且是数字
-      const addFeeItem = (label: string, value?: number) => {
-        if (value !== undefined && value !== null && !isNaN(Number(value)) && value > 0) {
-          details.push(`${label}: ¥${Number(value).toFixed(2)}`);
+      const addFeeItem = (label: string, value?: number | string) => {
+        if (value !== undefined && value !== null) {
+          // 确保将任何类型的值转换为数字
+          const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+          if (!isNaN(numValue) && numValue > 0) {
+            details.push(`${label}: ¥${numValue.toFixed(2)}`);
+          }
         }
       };
       
@@ -371,7 +382,11 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
                   <td className="value-cell" colSpan={3}>
                     <div className="amount-row">
                       <span className="amount-chinese">大写：{formatAmountToChinese(receipt?.totalFee || 0)}</span>
-                      <span className="amount-digit">小写：¥{receipt?.totalFee ? Number(receipt.totalFee).toFixed(2) : '0.00'}</span>
+                      <span className="amount-digit">小写：¥{receipt?.totalFee ? 
+                        (typeof receipt.totalFee === 'string' ? 
+                          parseFloat(receipt.totalFee).toFixed(2) : 
+                          Number(receipt.totalFee).toFixed(2)
+                        ) : '0.00'}</span>
                     </div>
                   </td>
                 </tr>

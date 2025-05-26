@@ -21,16 +21,16 @@ export interface Expense {
   companyType: string
   companyLocation: string
   licenseType: string
-  licenseFee: number
-  brandFee: number
-  recordSealFee: number
-  generalSealFee: number
+  licenseFee: number | string
+  brandFee: number | string
+  recordSealFee: number | string
+  generalSealFee: number | string
   agencyType: string
-  agencyFee: number
-  accountingSoftwareFee: number
+  agencyFee: number | string
+  accountingSoftwareFee: number | string
   accountingSoftwareStartDate: string
   accountingSoftwareEndDate: string
-  addressFee: number
+  addressFee: number | string
   addressStartDate: string
   addressEndDate: string
   agencyStartDate: string
@@ -38,30 +38,30 @@ export interface Expense {
   businessType: string
   contractType: string
   contractImage: string[]
-  invoiceSoftwareFee: number
+  invoiceSoftwareFee: number | string
   invoiceSoftwareStartDate: string
   invoiceSoftwareEndDate: string
-  insuranceTypes: string
-  insuredCount: number
-  socialInsuranceAgencyFee: number
+  insuranceTypes: string | string[]
+  insuredCount: number | string
+  socialInsuranceAgencyFee: number | string
   socialInsuranceStartDate: string
   socialInsuranceEndDate: string
-  statisticalReportFee: number
+  statisticalReportFee: number | string
   statisticalStartDate: string
   statisticalEndDate: string
-  changeBusiness: string
-  changeFee: number
-  administrativeLicense: string
-  administrativeLicenseFee: number
-  otherBusiness: string
-  otherBusinessFee: number
+  changeBusiness: string | string[]
+  changeFee: number | string
+  administrativeLicense: string | string[]
+  administrativeLicenseFee: number | string
+  otherBusiness: string | string[]
+  otherBusinessFee: number | string
   proofOfCharge: string[]
-  totalFee: number
+  totalFee: number | string
   salesperson: string
   createdAt: string
   updatedAt: string
   chargeDate: string
-  chargeMethod: string
+  chargeMethod: string | string[]
   auditor?: string
   auditDate?: string
   status: ExpenseStatus
@@ -83,16 +83,16 @@ export interface CreateExpenseDto {
   companyType?: string
   companyLocation?: string
   licenseType?: string
-  licenseFee?: number
-  brandFee?: number
-  recordSealFee?: number
-  generalSealFee?: number
+  licenseFee?: number | string
+  brandFee?: number | string
+  recordSealFee?: number | string
+  generalSealFee?: number | string
   agencyType?: string
-  agencyFee?: number
-  accountingSoftwareFee?: number
+  agencyFee?: number | string
+  accountingSoftwareFee?: number | string
   accountingSoftwareStartDate?: string
   accountingSoftwareEndDate?: string
-  addressFee?: number
+  addressFee?: number | string
   addressStartDate?: string
   addressEndDate?: string
   agencyStartDate?: string
@@ -100,28 +100,28 @@ export interface CreateExpenseDto {
   businessType?: string
   contractType?: string
   contractImage?: string[]
-  invoiceSoftwareFee?: number
+  invoiceSoftwareFee?: number | string
   invoiceSoftwareStartDate?: string
   invoiceSoftwareEndDate?: string
-  insuranceTypes?: string
-  insuredCount?: number
-  socialInsuranceAgencyFee?: number
+  insuranceTypes?: string | string[]
+  insuredCount?: number | string
+  socialInsuranceAgencyFee?: number | string
   socialInsuranceStartDate?: string
   socialInsuranceEndDate?: string
-  statisticalReportFee?: number
+  statisticalReportFee?: number | string
   statisticalStartDate?: string
   statisticalEndDate?: string
-  changeBusiness?: string
-  changeFee?: number
-  administrativeLicense?: string
-  administrativeLicenseFee?: number
-  otherBusiness?: string
-  otherBusinessFee?: number
+  changeBusiness?: string | string[]
+  changeFee?: number | string
+  administrativeLicense?: string | string[]
+  administrativeLicenseFee?: number | string
+  otherBusiness?: string | string[]
+  otherBusinessFee?: number | string
   proofOfCharge?: string[]
-  totalFee?: number
+  totalFee?: number | string
   salesperson?: string
   chargeDate?: string
-  chargeMethod?: string
+  chargeMethod?: string | string[]
   receiptRemarks?: string
   internalRemarks?: string
 }
@@ -163,7 +163,7 @@ export interface CancelAuditDto {
 // 费用项目接口
 export interface FeeItem {
   name: string;
-  amount: number;
+  amount: number | string;
 }
 
 // 收据视图DTO
@@ -172,8 +172,8 @@ export interface ReceiptViewDto {
   companyName?: string
   chargeDate?: string
   receiptNo?: string
-  totalFee?: number
-  chargeMethod?: string
+  totalFee?: number | string
+  chargeMethod?: string | string[]
   remarks?: string
   salesperson?: string
   auditor?: string
@@ -182,19 +182,19 @@ export interface ReceiptViewDto {
   companyLocation?: string
   status?: ExpenseStatus
   // 旧的单独费用字段，保留向后兼容性
-  licenseFee?: number
-  brandFee?: number
-  recordSealFee?: number
-  generalSealFee?: number
-  agencyFee?: number
-  accountingSoftwareFee?: number
-  addressFee?: number
-  invoiceSoftwareFee?: number
-  socialInsuranceAgencyFee?: number
-  statisticalReportFee?: number
-  changeFee?: number
-  administrativeLicenseFee?: number
-  otherBusinessFee?: number
+  licenseFee?: number | string
+  brandFee?: number | string
+  recordSealFee?: number | string
+  generalSealFee?: number | string
+  agencyFee?: number | string
+  accountingSoftwareFee?: number | string
+  addressFee?: number | string
+  invoiceSoftwareFee?: number | string
+  socialInsuranceAgencyFee?: number | string
+  statisticalReportFee?: number | string
+  changeFee?: number | string
+  administrativeLicenseFee?: number | string
+  otherBusinessFee?: number | string
   receiptRemarks?: string
   // 新的费用明细数组
   feeItems?: FeeItem[]

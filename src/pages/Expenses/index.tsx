@@ -71,8 +71,15 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'totalFee',
     key: 'totalFee',
     width: 100,
-    render: (value: number | null | undefined) => 
-      value !== null && value !== undefined ? `¥${value.toFixed(2)}` : '¥0.00',
+    render: (value: number | string | null | undefined) => {
+      if (value === null || value === undefined) return '¥0.00';
+      
+      // 确保将任何类型的值转换为数字
+      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+      
+      // 检查是否为有效数字
+      return !isNaN(numValue) ? `¥${numValue.toFixed(2)}` : '¥0.00';
+    },
   },
   {
     title: '收费日期',
