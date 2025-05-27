@@ -165,13 +165,17 @@ export const useCustomerDetail = (id?: number | null) => {
       if (response && response.code === 0) {
         // 刷新详情和列表
         await refreshCustomerDetail()
-        await mutate((key: any) => {
-          // 确保key是字符串
-          if (typeof key !== 'string') return false
-          return key.startsWith('/customer?')
-        }, undefined, {
-          revalidate: true,
-        })
+        await mutate(
+          (key: any) => {
+            // 确保key是字符串
+            if (typeof key !== 'string') return false
+            return key.startsWith('/customer?')
+          },
+          undefined,
+          {
+            revalidate: true,
+          }
+        )
 
         return true
       } else {
@@ -194,13 +198,17 @@ export const useCustomerDetail = (id?: number | null) => {
         message.success('客户创建成功')
 
         // 刷新列表
-        await mutate((key: any) => {
-          // 确保key是字符串
-          if (typeof key !== 'string') return false
-          return key.startsWith('/customer?')
-        }, undefined, {
-          revalidate: true,
-        })
+        await mutate(
+          (key: any) => {
+            // 确保key是字符串
+            if (typeof key !== 'string') return false
+            return key.startsWith('/customer?')
+          },
+          undefined,
+          {
+            revalidate: true,
+          }
+        )
 
         return response.data
       } else {

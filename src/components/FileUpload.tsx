@@ -89,10 +89,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const getFileType = (fileName: any): string => {
     if (!fileName) return 'default'
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                        (fileName.fileName ? fileName.fileName : 
-                        (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     const extension = fileNameStr.split('.').pop()?.toLowerCase() || 'default'
     return FILE_ICONS[extension] ? extension : 'default'
   }
@@ -101,10 +106,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const checkIsImage = (fileName: any): boolean => {
     if (!fileName) return false
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                        (fileName.fileName ? fileName.fileName : 
-                        (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
     const extension = fileNameStr.split('.').pop()?.toLowerCase() || ''
     return imageExtensions.includes(extension)
@@ -291,10 +301,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const getFileExtension = (fileName: any) => {
     if (!fileName) return ''
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                        (fileName.fileName ? fileName.fileName : 
-                        (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     return fileNameStr.split('.').pop()?.toUpperCase() || ''
   }
 

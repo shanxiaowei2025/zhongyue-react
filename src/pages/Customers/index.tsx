@@ -46,7 +46,13 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
 import useSWR, { mutate } from 'swr'
-import { getCustomerDetail, getCustomerById, exportCustomerCSV, importCustomerExcel, updateCustomerExcel } from '../../api/customer'
+import {
+  getCustomerDetail,
+  getCustomerById,
+  exportCustomerCSV,
+  importCustomerExcel,
+  updateCustomerExcel,
+} from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 
 // 启用 dayjs 插件
@@ -384,27 +390,27 @@ export default function Customers() {
       message.loading('正在导出数据，请稍候...', 0)
       const response = await exportCustomerCSV()
       message.destroy()
-      
+
       // 创建Blob对象
       const blob = new Blob([response as BlobPart], { type: 'text/csv;charset=utf-8;' })
-      
+
       // 创建下载链接
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      
+
       // 设置下载文件名
       const date = new Date().toISOString().split('T')[0]
       link.download = `客户数据_${date}.csv`
-      
+
       // 触发下载
       document.body.appendChild(link)
       link.click()
-      
+
       // 清理
       window.URL.revokeObjectURL(url)
       document.body.removeChild(link)
-      
+
       message.success('导出成功')
     } catch (error) {
       message.destroy()
@@ -417,14 +423,14 @@ export default function Customers() {
   const handleImport = async (file: File) => {
     try {
       message.loading('正在导入数据，请稍候...', 0)
-      
+
       const response = await importCustomerExcel(file)
       message.destroy()
-      
+
       // 导入成功
       if (response.code === 0) {
         const { data } = response
-        
+
         if (data.success) {
           // 有失败记录需要展示
           if (data.failedRecords && data.failedRecords.length > 0) {
@@ -434,29 +440,29 @@ export default function Customers() {
               content: (
                 <div style={{ maxHeight: '400px', overflow: 'auto' }}>
                   <p>{data.message}</p>
-                  <Table 
+                  <Table
                     dataSource={data.failedRecords.map((record, index) => ({
                       ...record,
-                      key: index
+                      key: index,
                     }))}
                     columns={[
                       {
                         title: '行号',
                         dataIndex: 'row',
                         key: 'row',
-                        width: 80
+                        width: 80,
                       },
                       {
                         title: '企业名称',
                         dataIndex: 'companyName',
                         key: 'companyName',
-                        width: 200
+                        width: 200,
                       },
                       {
                         title: '统一社会信用代码',
                         dataIndex: 'unifiedSocialCreditCode',
                         key: 'unifiedSocialCreditCode',
-                        width: 200
+                        width: 200,
                       },
                       {
                         title: '失败原因',
@@ -473,8 +479,8 @@ export default function Customers() {
                             )
                           }
                           return text
-                        }
-                      }
+                        },
+                      },
                     ]}
                     pagination={false}
                     size="small"
@@ -483,13 +489,13 @@ export default function Customers() {
               ),
               width: 800,
               maskClosable: false,
-              okText: '关闭'
+              okText: '关闭',
             })
           } else {
             // 全部导入成功
             message.success(data.message)
           }
-          
+
           // 刷新客户列表
           refreshCustomers()
         } else {
@@ -509,14 +515,14 @@ export default function Customers() {
   const handleUpdateExcel = async (file: File) => {
     try {
       message.loading('正在批量替换数据，请稍候...', 0)
-      
+
       const response = await updateCustomerExcel(file)
       message.destroy()
-      
+
       // 替换成功
       if (response.code === 0) {
         const { data } = response
-        
+
         if (data.success) {
           // 有失败记录需要展示
           if (data.failedRecords && data.failedRecords.length > 0) {
@@ -526,29 +532,29 @@ export default function Customers() {
               content: (
                 <div style={{ maxHeight: '400px', overflow: 'auto' }}>
                   <p>{data.message}</p>
-                  <Table 
+                  <Table
                     dataSource={data.failedRecords.map((record, index) => ({
                       ...record,
-                      key: index
+                      key: index,
                     }))}
                     columns={[
                       {
                         title: '行号',
                         dataIndex: 'row',
                         key: 'row',
-                        width: 80
+                        width: 80,
                       },
                       {
                         title: '企业名称',
                         dataIndex: 'companyName',
                         key: 'companyName',
-                        width: 200
+                        width: 200,
                       },
                       {
                         title: '统一社会信用代码',
                         dataIndex: 'unifiedSocialCreditCode',
                         key: 'unifiedSocialCreditCode',
-                        width: 200
+                        width: 200,
                       },
                       {
                         title: '失败原因',
@@ -565,8 +571,8 @@ export default function Customers() {
                             )
                           }
                           return text
-                        }
-                      }
+                        },
+                      },
                     ]}
                     pagination={false}
                     size="small"
@@ -575,13 +581,13 @@ export default function Customers() {
               ),
               width: 800,
               maskClosable: false,
-              okText: '关闭'
+              okText: '关闭',
             })
           } else {
             // 全部替换成功
             message.success(data.message)
           }
-          
+
           // 刷新客户列表
           refreshCustomers()
         } else {
@@ -599,22 +605,23 @@ export default function Customers() {
 
   // 文件上传前校验
   const beforeUpload = (file: File) => {
-    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-                    file.type === 'application/vnd.ms-excel' ||
-                    file.name.endsWith('.xlsx') ||
-                    file.name.endsWith('.xls')
-    
+    const isExcel =
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.type === 'application/vnd.ms-excel' ||
+      file.name.endsWith('.xlsx') ||
+      file.name.endsWith('.xls')
+
     if (!isExcel) {
       message.error('只能上传Excel文件！')
       return false
     }
-    
+
     const isLt10M = file.size / 1024 / 1024 < 10
     if (!isLt10M) {
       message.error('文件大小不能超过10MB！')
       return false
     }
-    
+
     // 处理文件上传
     handleImport(file)
     return false // 阻止默认上传行为
@@ -622,22 +629,23 @@ export default function Customers() {
 
   // 批量替换前校验
   const beforeUpdate = (file: File) => {
-    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-                    file.type === 'application/vnd.ms-excel' ||
-                    file.name.endsWith('.xlsx') ||
-                    file.name.endsWith('.xls')
-    
+    const isExcel =
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.type === 'application/vnd.ms-excel' ||
+      file.name.endsWith('.xlsx') ||
+      file.name.endsWith('.xls')
+
     if (!isExcel) {
       message.error('只能上传Excel文件！')
       return false
     }
-    
+
     const isLt10M = file.size / 1024 / 1024 < 10
     if (!isLt10M) {
       message.error('文件大小不能超过10MB！')
       return false
     }
-    
+
     // 处理批量替换
     handleUpdateExcel(file)
     return false // 阻止默认上传行为
@@ -953,11 +961,7 @@ export default function Customers() {
         >
           导出
         </Button>
-        <Upload
-          showUploadList={false}
-          beforeUpload={beforeUpload}
-          accept=".xlsx,.xls"
-        >
+        <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls">
           <Button
             type="default"
             icon={<UploadOutlined />}
@@ -966,11 +970,7 @@ export default function Customers() {
             导入
           </Button>
         </Upload>
-        <Upload
-          showUploadList={false}
-          beforeUpload={beforeUpdate}
-          accept=".xlsx,.xls"
-        >
+        <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls">
           <Button
             type="default"
             icon={<FileExcelOutlined />}
@@ -1868,7 +1868,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               </div>
             </div>
           </div>
-          
+
           <div>
             <h3 className="font-medium mb-2">营业执照照片</h3>
             <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>

@@ -49,7 +49,7 @@ export const useAuthStore = create<AuthState>()(
     passwordUpdatedAt: localStorage.getItem('passwordUpdatedAt'),
     isPasswordExpired: false,
     passwordModalVisible: false,
-    
+
     setUser: user =>
       set(state => {
         state.user = user
@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
         }
         state.isAuthenticated = !!(state.token && user)
       }),
-      
+
     setToken: token =>
       set(state => {
         state.token = token
@@ -71,8 +71,8 @@ export const useAuthStore = create<AuthState>()(
         }
         state.isAuthenticated = !!(token && state.user)
       }),
-    
-    setPasswordUpdatedAt: (date) =>
+
+    setPasswordUpdatedAt: date =>
       set(state => {
         state.passwordUpdatedAt = date
         if (date) {
@@ -83,34 +83,34 @@ export const useAuthStore = create<AuthState>()(
         // 检查密码是否过期
         state.isPasswordExpired = state.checkPasswordExpiration()
       }),
-    
+
     checkPasswordExpiration: () => {
       const passwordUpdatedAt = localStorage.getItem('passwordUpdatedAt')
       if (!passwordUpdatedAt) return false
-      
+
       const lastUpdate = new Date(passwordUpdatedAt)
       const now = new Date()
-      
+
       // 计算相差的毫秒数
       const diffTime = now.getTime() - lastUpdate.getTime()
-      
+
       // 3个月的毫秒数 (大约90天)
       const threeMonths = 90 * 24 * 60 * 60 * 1000
-      
+
       // 如果超过3个月，返回true表示密码已过期
       return diffTime > threeMonths
     },
-    
+
     showPasswordModal: () =>
       set(state => {
         state.passwordModalVisible = true
       }),
-      
+
     hidePasswordModal: () =>
       set(state => {
         state.passwordModalVisible = false
       }),
-      
+
     logout: () =>
       set(state => {
         localStorage.removeItem('token')
@@ -164,6 +164,6 @@ export const useAuthStore = create<AuthState>()(
           window.clearTimeout(state.inactivityTimer)
           state.inactivityTimer = null
         }
-      })
+      }),
   }))
 )

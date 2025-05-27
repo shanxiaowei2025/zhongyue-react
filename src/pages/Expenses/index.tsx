@@ -34,10 +34,7 @@ import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import dayjs from 'dayjs'
 import './expenses.css'
-import {
-  getExpenseById,
-  exportExpenseCSV,
-} from '../../api/expense'
+import { getExpenseById, exportExpenseCSV } from '../../api/expense'
 
 const { RangePicker } = DatePicker
 
@@ -73,13 +70,13 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     key: 'totalFee',
     width: 100,
     render: (value: number | string | null | undefined) => {
-      if (value === null || value === undefined) return '¥0.00';
-      
+      if (value === null || value === undefined) return '¥0.00'
+
       // 确保将任何类型的值转换为数字
-      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
-      
+      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value)
+
       // 检查是否为有效数字
-      return !isNaN(numValue) ? `¥${numValue.toFixed(2)}` : '¥0.00';
+      return !isNaN(numValue) ? `¥${numValue.toFixed(2)}` : '¥0.00'
     },
   },
   {
@@ -87,7 +84,7 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'chargeDate',
     key: 'chargeDate',
     width: 120,
-    render: (value: string) => value ? dayjs(value).format('YYYY-MM-DD') : '-',
+    render: (value: string) => (value ? dayjs(value).format('YYYY-MM-DD') : '-'),
   },
   {
     title: '收费方式',
@@ -115,7 +112,7 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 150,
-    render: (value: string) => value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-',
+    render: (value: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-'),
   },
   {
     title: '操作',
@@ -404,11 +401,11 @@ const Expenses: React.FC = () => {
       message.error('您没有查看收据的权限')
       return
     }
-    
+
     setReceiptExpenseId(id)
     setReceiptVisible(true)
   }
-  
+
   // 处理预览收据
   const handlePreviewReceipt = (id: number) => {
     setPreviewExpenseId(id)
@@ -462,7 +459,7 @@ const Expenses: React.FC = () => {
         message.error('您没有取消审核的权限')
         return
       }
-      
+
       await cancelAuditExpense(record.id, { cancelReason: '取消审核' })
       message.success('已取消审核')
       fetchExpenses()
@@ -480,7 +477,7 @@ const Expenses: React.FC = () => {
 
       // 准备查询参数，使用当前搜索条件
       const exportParams: Partial<ExpenseQueryParams> = { ...searchParams }
-      
+
       // 处理日期范围
       if (form.getFieldValue('dateRange')) {
         const dateRange = form.getFieldValue('dateRange')
@@ -494,33 +491,33 @@ const Expenses: React.FC = () => {
       if ('page' in exportParams) {
         delete exportParams.page
       }
-      
+
       if ('pageSize' in exportParams) {
         delete exportParams.pageSize
       }
 
       const response = await exportExpenseCSV(exportParams)
-      
+
       // 创建Blob对象
       const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' })
-      
+
       // 创建下载链接
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      
+
       // 设置文件名，使用当前日期
       const date = dayjs().format('YYYYMMDD_HHmmss')
       link.download = `费用数据_${date}.csv`
-      
+
       // 添加到DOM并触发点击
       document.body.appendChild(link)
       link.click()
-      
+
       // 清理
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       // 关闭加载提示
       message.destroy()
       message.success('导出成功')
@@ -549,7 +546,7 @@ const Expenses: React.FC = () => {
             >
               预览收据
             </Button>
-            
+
             {canEditExpense && (
               <Button
                 type="link"
@@ -632,19 +629,24 @@ const Expenses: React.FC = () => {
               title={
                 <div className="reject-reason-popup">
                   <div className="reject-reason-header">
-                    <InfoCircleOutlined style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }} />
+                    <InfoCircleOutlined
+                      style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }}
+                    />
                     <span style={{ fontWeight: 'bold', fontSize: '16px' }}>退回原因</span>
                   </div>
-                  <div className="reject-reason-content" style={{ 
-                    margin: '12px 0', 
-                    padding: '10px', 
-                    background: '#f9f9f9', 
-                    border: '1px solid #f0f0f0',
-                    borderRadius: '4px',
-                    minHeight: '60px',
-                    maxHeight: '200px',
-                    overflow: 'auto'
-                  }}>
+                  <div
+                    className="reject-reason-content"
+                    style={{
+                      margin: '12px 0',
+                      padding: '10px',
+                      background: '#f9f9f9',
+                      border: '1px solid #f0f0f0',
+                      borderRadius: '4px',
+                      minHeight: '60px',
+                      maxHeight: '200px',
+                      overflow: 'auto',
+                    }}
+                  >
                     {record.rejectReason || '未提供退回原因'}
                   </div>
                 </div>
@@ -701,10 +703,10 @@ const Expenses: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between gap-4">
           {/* 左侧：搜索表单 */}
           <div className="flex-1">
-            <Form 
-              form={form} 
-              layout="inline" 
-              className="search-form" 
+            <Form
+              form={form}
+              layout="inline"
+              className="search-form"
               onFinish={handleSearch}
               onValuesChange={handleFormFieldChange}
             >
@@ -732,11 +734,16 @@ const Expenses: React.FC = () => {
                 <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
                   <Input placeholder="输入业务员" allowClear />
                 </Form.Item>
-                
-                <Form.Item name="dateRange" label="收费日期" className="m-0 w-full" style={{ gridColumn: 'span 2' }}>
-                  <RangePicker 
-                    allowClear 
-                    style={{ width: '100%' }} 
+
+                <Form.Item
+                  name="dateRange"
+                  label="收费日期"
+                  className="m-0 w-full"
+                  style={{ gridColumn: 'span 2' }}
+                >
+                  <RangePicker
+                    allowClear
+                    style={{ width: '100%' }}
                     onChange={() => {
                       // 日期变化时特殊处理，确保能正确触发搜索
                       setTimeout(handleFormFieldChange, 0)
@@ -756,7 +763,7 @@ const Expenses: React.FC = () => {
               </div>
             </Form>
           </div>
-          
+
           {/* 右侧：操作按钮区域 */}
           <div className="flex flex-col justify-center gap-2 min-w-[200px]">
             <div className="flex gap-2 justify-end">
@@ -815,7 +822,7 @@ const Expenses: React.FC = () => {
           onClose={() => setReceiptVisible(false)}
         />
       )}
-      
+
       {/* 收据预览弹窗 - 只有在需要显示时才渲染 */}
       {previewVisible && previewExpenseId && (
         <ExpenseReceipt

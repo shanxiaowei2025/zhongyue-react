@@ -20,33 +20,40 @@ interface ExpenseReceiptProps {
 type SealType = '中岳' | '雄安' | '高碑店' | '脉信' | '金盾' | '如你心意'
 
 // 定义哪些印章类型需要显示logo
-const showLogoSealTypes: SealType[] = ['中岳', '雄安', '高碑店'];
+const showLogoSealTypes: SealType[] = ['中岳', '雄安', '高碑店']
 
 const sealImages: Record<SealType, string> = {
-  '中岳': '/images/dingxing-zhang.png',
-  '雄安': '/images/xiongan-zhang.png',
-  '高碑店': '/images/gaobeidian-zhang.png',
-  '脉信': '/images/maixin-zhang.png',
-  '金盾': '/images/jindun-zhang.png',
-  '如你心意': '/images/runixinyi-zhang.png'
+  中岳: '/images/dingxing-zhang.png',
+  雄安: '/images/xiongan-zhang.png',
+  高碑店: '/images/gaobeidian-zhang.png',
+  脉信: '/images/maixin-zhang.png',
+  金盾: '/images/jindun-zhang.png',
+  如你心意: '/images/runixinyi-zhang.png',
 }
 
 // 定义不同盖章单位对应的收款方信息
 const receiverMap: Record<SealType, string> = {
-  '中岳': '定兴县中岳会计服务有限责任公司',
-  '雄安': '定兴县中岳会计服务有限责任公司河北雄安分公司',
-  '高碑店': '定兴县中岳会计服务有限责任公司高碑店分公司',
-  '脉信': '保定脉信会计服务有限公司',
-  '金盾': '定兴县金盾企业管理咨询有限公司',
-  '如你心意': '保定如你心意企业管理咨询有限公司'
+  中岳: '定兴县中岳会计服务有限责任公司',
+  雄安: '定兴县中岳会计服务有限责任公司河北雄安分公司',
+  高碑店: '定兴县中岳会计服务有限责任公司高碑店分公司',
+  脉信: '保定脉信会计服务有限公司',
+  金盾: '定兴县金盾企业管理咨询有限公司',
+  如你心意: '保定如你心意企业管理咨询有限公司',
 }
 
-const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onClose, previewMode = false }) => {
+const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
+  visible,
+  expenseId,
+  onClose,
+  previewMode = false,
+}) => {
   const { receipt, isLoading } = useExpenseReceipt(visible ? expenseId : null)
-  const { expense, updateExpense, refreshExpenseDetail } = useExpenseDetail(visible ? expenseId : null)
+  const { expense, updateExpense, refreshExpenseDetail } = useExpenseDetail(
+    visible ? expenseId : null
+  )
   const [selectedSeal, setSelectedSeal] = useState<SealType>('中岳')
   const [hasRefreshed, setHasRefreshed] = useState(false)
-  const [contractImage, setContractImage] = useState<Array<{fileName: string, url: string}>>([])
+  const [contractImage, setContractImage] = useState<Array<{ fileName: string; url: string }>>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
 
   // 在组件显示时刷新数据，但只刷新一次
@@ -54,83 +61,87 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
     // 只有当模态框打开且有ID且尚未刷新过时才刷新
     if (visible && expenseId && !hasRefreshed) {
       // 自动刷新时不显示消息提示
-      refreshReceipt(false);
-      setHasRefreshed(true);
+      refreshReceipt(false)
+      setHasRefreshed(true)
     }
-    
+
     // 当模态框关闭时重置刷新状态
     if (!visible) {
-      setHasRefreshed(false);
+      setHasRefreshed(false)
     }
-  }, [visible, expenseId, hasRefreshed]);
+  }, [visible, expenseId, hasRefreshed])
 
   // 仅在开发环境下记录日志，并添加条件以避免频繁输出
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && receipt && !isLoading && visible) {
-      console.log('收据数据加载完成:', receipt);
+      console.log('收据数据加载完成:', receipt)
       if (receipt.feeItems && receipt.feeItems.length > 0) {
-        console.log('费用明细项目:', receipt.feeItems);
+        console.log('费用明细项目:', receipt.feeItems)
       }
     }
-  }, [receipt, isLoading, visible]);
+  }, [receipt, isLoading, visible])
 
   // 在组件显示时初始化合同数据 - 从expense数据获取，而不是receipt
   useEffect(() => {
     console.log('ExpenseReceipt - 初始化电子合同数据:', {
       visible,
       expense,
-      contractImage: expense?.contractImage
-    });
-    
+      contractImage: expense?.contractImage,
+    })
+
     if (visible && expense) {
       if (expense.contractImage && expense.contractImage.length > 0) {
         // 处理contractImage数据，可能是字符串数组或单个字符串
         if (Array.isArray(expense.contractImage)) {
-          console.log('ExpenseReceipt - 处理数组格式的合同数据:', expense.contractImage);
-          setContractImage(expense.contractImage.map((fileName: string) => ({
-            fileName,
-            url: buildImageUrl(fileName)
-          })))
+          console.log('ExpenseReceipt - 处理数组格式的合同数据:', expense.contractImage)
+          setContractImage(
+            expense.contractImage.map((fileName: string) => ({
+              fileName,
+              url: buildImageUrl(fileName),
+            }))
+          )
         } else if (typeof expense.contractImage === 'string' && expense.contractImage) {
-          console.log('ExpenseReceipt - 处理字符串格式的合同数据:', expense.contractImage);
-          setContractImage([{
-            fileName: expense.contractImage,
-            url: buildImageUrl(expense.contractImage)
-          }])
+          console.log('ExpenseReceipt - 处理字符串格式的合同数据:', expense.contractImage)
+          setContractImage([
+            {
+              fileName: expense.contractImage,
+              url: buildImageUrl(expense.contractImage),
+            },
+          ])
         } else {
-          console.log('ExpenseReceipt - 合同数据格式不正确，清空合同数据');
+          console.log('ExpenseReceipt - 合同数据格式不正确，清空合同数据')
           setContractImage([])
         }
       } else {
-        console.log('ExpenseReceipt - 没有合同数据，清空合同数据');
+        console.log('ExpenseReceipt - 没有合同数据，清空合同数据')
         setContractImage([])
       }
     } else {
-      console.log('ExpenseReceipt - 模态框未显示或expense数据未加载，清空合同数据');
+      console.log('ExpenseReceipt - 模态框未显示或expense数据未加载，清空合同数据')
       setContractImage([])
     }
   }, [visible, expense])
 
   // 刷新收据数据
   const refreshReceipt = async (showMessage = true) => {
-    if (!expenseId) return;
-    
+    if (!expenseId) return
+
     try {
       if (showMessage) {
-        message.loading('正在刷新收据数据...', 0.5);
+        message.loading('正在刷新收据数据...', 0.5)
       }
-      
-      await mutate(getExpenseReceiptKey(expenseId));
+
+      await mutate(getExpenseReceiptKey(expenseId))
       // 同时刷新费用详情数据以获取最新的电子合同
-      await refreshExpenseDetail();
-      
+      await refreshExpenseDetail()
+
       if (showMessage) {
-        message.success('收据数据已刷新');
+        message.success('收据数据已刷新')
       }
     } catch (error) {
-      console.error('刷新收据数据失败:', error);
+      console.error('刷新收据数据失败:', error)
       if (showMessage) {
-        message.error('刷新收据数据失败');
+        message.error('刷新收据数据失败')
       }
     }
   }
@@ -218,65 +229,65 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
         logging: false,
         useCORS: true, // 允许加载跨域图片
         allowTaint: true,
-        onclone: (documentClone) => {
+        onclone: documentClone => {
           // 在克隆的文档中强制应用样式，确保边框正确
-          const clonedElement = documentClone.getElementById('receipt-printable');
+          const clonedElement = documentClone.getElementById('receipt-printable')
           if (clonedElement) {
-            const receiptTable = documentClone.querySelector('.receipt-table');
+            const receiptTable = documentClone.querySelector('.receipt-table')
             if (receiptTable) {
-              (receiptTable as HTMLElement).style.border = '1px solid #000';
-              (receiptTable as HTMLElement).style.borderCollapse = 'separate';
+              ;(receiptTable as HTMLElement).style.border = '1px solid #000'
+              ;(receiptTable as HTMLElement).style.borderCollapse = 'separate'
             }
-            
-            const tableCells = documentClone.querySelectorAll('.receipt-table td');
-            tableCells.forEach((cell) => {
-              (cell as HTMLElement).style.border = 'none';
-              (cell as HTMLElement).style.borderRight = '1px solid #000';
-              (cell as HTMLElement).style.borderBottom = '1px solid #000';
-            });
-            
-            const lastCells = documentClone.querySelectorAll('.receipt-table tr td:last-child');
-            lastCells.forEach((cell) => {
-              (cell as HTMLElement).style.borderRight = 'none';
-            });
+
+            const tableCells = documentClone.querySelectorAll('.receipt-table td')
+            tableCells.forEach(cell => {
+              ;(cell as HTMLElement).style.border = 'none'
+              ;(cell as HTMLElement).style.borderRight = '1px solid #000'
+              ;(cell as HTMLElement).style.borderBottom = '1px solid #000'
+            })
+
+            const lastCells = documentClone.querySelectorAll('.receipt-table tr td:last-child')
+            lastCells.forEach(cell => {
+              ;(cell as HTMLElement).style.borderRight = 'none'
+            })
           }
-        }
+        },
       })
-      .then((canvas) => {
-        // 恢复印章选择器显示
-        if (sealSelector) {
-          sealSelector.style.display = originalDisplay;
-        }
+        .then(canvas => {
+          // 恢复印章选择器显示
+          if (sealSelector) {
+            sealSelector.style.display = originalDisplay
+          }
 
-        // 移除临时样式
-        document.head.removeChild(exportStyle);
-        element.classList.remove('receipt-printable-export');
+          // 移除临时样式
+          document.head.removeChild(exportStyle)
+          element.classList.remove('receipt-printable-export')
 
-        message.destroy(); // 清除加载提示
+          message.destroy() // 清除加载提示
 
-        // 转换为图片并下载
-        const imgData = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = fileName;
-        link.href = imgData;
-        link.click();
+          // 转换为图片并下载
+          const imgData = canvas.toDataURL('image/png')
+          const link = document.createElement('a')
+          link.download = fileName
+          link.href = imgData
+          link.click()
 
-        message.success('收据图片已保存');
-      })
-      .catch((err) => {
-        console.error('生成图片错误:', err);
-        message.error('生成图片失败');
-        
-        // 恢复印章选择器显示以及移除临时样式
-        if (sealSelector) {
-          sealSelector.style.display = originalDisplay;
-        }
-        if (document.head.contains(exportStyle)) {
-          document.head.removeChild(exportStyle);
-        }
-        element.classList.remove('receipt-printable-export');
-      });
-    }, 100);
+          message.success('收据图片已保存')
+        })
+        .catch(err => {
+          console.error('生成图片错误:', err)
+          message.error('生成图片失败')
+
+          // 恢复印章选择器显示以及移除临时样式
+          if (sealSelector) {
+            sealSelector.style.display = originalDisplay
+          }
+          if (document.head.contains(exportStyle)) {
+            document.head.removeChild(exportStyle)
+          }
+          element.classList.remove('receipt-printable-export')
+        })
+    }, 100)
   }
 
   // 处理印章选择变更
@@ -285,27 +296,27 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   }
 
   // 处理电子合同变更 - 自动保存
-  const handleContractChange = async (files: Array<{fileName: string, url: string}>) => {
+  const handleContractChange = async (files: Array<{ fileName: string; url: string }>) => {
     setContractImage(files)
-    
+
     // 自动保存电子合同
-    if (!expenseId) return;
-    
+    if (!expenseId) return
+
     try {
       // 将对象数组转换为文件名数组
-      const fileNames = files.map(item => item.fileName);
-      
+      const fileNames = files.map(item => item.fileName)
+
       await updateExpense(expenseId, {
-        contractImage: fileNames
-      });
-      
-      message.success('电子合同已自动保存');
+        contractImage: fileNames,
+      })
+
+      message.success('电子合同已自动保存')
       // 刷新收据数据和费用详情数据
-      await mutate(getExpenseReceiptKey(expenseId));
-      await refreshExpenseDetail();
+      await mutate(getExpenseReceiptKey(expenseId))
+      await refreshExpenseDetail()
     } catch (error) {
-      console.error('自动保存电子合同失败:', error);
-      message.error('自动保存电子合同失败');
+      console.error('自动保存电子合同失败:', error)
+      message.error('自动保存电子合同失败')
     }
   }
 
@@ -322,27 +333,27 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   // 格式化金额为大写
   const formatAmountToChinese = (amount: number | string): string => {
     // 确保将任何类型的值转换为数字
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : Number(amount);
-    
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : Number(amount)
+
     if (numAmount === 0 || isNaN(numAmount)) return '零元整'
     if (!numAmount) return '零元整'
-    
+
     const cnNums = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
     const cnIntRadice = ['', '拾', '佰', '仟']
     const cnIntUnits = ['', '万', '亿', '兆']
     const cnDecUnits = ['角', '分', '毫', '厘']
     const cnInteger = '整'
     const cnIntLast = '元'
-    
+
     let integerNum
     let decimalNum
     let chineseStr = ''
     let parts
     let zeroCount = 0
-    
+
     // 转换为字符串
     const amountStr = numAmount.toString()
-    
+
     if (amountStr.indexOf('.') === -1) {
       integerNum = amountStr
       decimalNum = ''
@@ -351,18 +362,18 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
       integerNum = parts[0]
       decimalNum = parts[1].substr(0, 2)
     }
-    
+
     // 处理整数部分
     if (parseInt(integerNum, 10) > 0) {
       let zeroFlag = false
       const intLen = integerNum.length
-      
+
       for (let i = 0; i < intLen; i++) {
         const n = integerNum.substr(i, 1)
         const p = intLen - i - 1
         const q = Math.floor(p / 4)
         const m = p % 4
-        
+
         if (n === '0') {
           zeroCount++
         } else {
@@ -372,15 +383,15 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
           zeroCount = 0
           chineseStr += cnNums[parseInt(n)] + cnIntRadice[m]
         }
-        
+
         if (m === 0 && zeroCount < 4) {
           chineseStr += cnIntUnits[q]
         }
       }
-      
+
       chineseStr += cnIntLast
     }
-    
+
     // 处理小数部分
     if (decimalNum !== '') {
       const decLen = decimalNum.length
@@ -391,13 +402,13 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
         }
       }
     }
-    
+
     if (chineseStr === '') {
       chineseStr += cnNums[0] + cnIntLast + cnInteger
     } else if (decimalNum === '' || decimalNum === '0' || decimalNum === '00') {
       chineseStr += cnInteger
     }
-    
+
     return chineseStr
   }
 
@@ -416,95 +427,123 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
             </tr>
           </thead>
           <tbody>
-            {receipt.feeItems.map((item, index) => {
-              // 确保将任何类型的值转换为数字
-              const numValue = typeof item.amount === 'string' ? parseFloat(item.amount) : Number(item.amount);
-              
-              if (item.name && numValue !== undefined && numValue !== null && !isNaN(numValue) && numValue > 0) {
-                // 处理日期显示
-                let dateRangeText = '—';
-                if (item.startDate && item.endDate) {
-                  dateRangeText = `${dayjs(item.startDate).format('YYYY-MM-DD')} 至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`;
-                } else if (item.startDate) {
-                  dateRangeText = `从 ${dayjs(item.startDate).format('YYYY-MM-DD')} 起`;
-                } else if (item.endDate) {
-                  dateRangeText = `至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`;
+            {receipt.feeItems
+              .map((item, index) => {
+                // 确保将任何类型的值转换为数字
+                const numValue =
+                  typeof item.amount === 'string' ? parseFloat(item.amount) : Number(item.amount)
+
+                if (
+                  item.name &&
+                  numValue !== undefined &&
+                  numValue !== null &&
+                  !isNaN(numValue) &&
+                  numValue > 0
+                ) {
+                  // 处理日期显示
+                  let dateRangeText = '—'
+                  if (item.startDate && item.endDate) {
+                    dateRangeText = `${dayjs(item.startDate).format('YYYY-MM-DD')} 至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`
+                  } else if (item.startDate) {
+                    dateRangeText = `从 ${dayjs(item.startDate).format('YYYY-MM-DD')} 起`
+                  } else if (item.endDate) {
+                    dateRangeText = `至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`
+                  }
+
+                  return (
+                    <tr key={index}>
+                      <td style={{ padding: '8px 6px', textAlign: 'left' }}>{item.name}</td>
+                      <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                        ¥{numValue.toFixed(2)}
+                      </td>
+                      <td
+                        style={{
+                          padding: '8px 6px',
+                          textAlign: 'center',
+                          fontSize: '13px',
+                          color: '#666',
+                        }}
+                      >
+                        {dateRangeText}
+                      </td>
+                    </tr>
+                  )
                 }
-                
-                return (
-                  <tr key={index}>
-                    <td style={{ padding: '8px 6px', textAlign: 'left' }}>{item.name}</td>
-                    <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>¥{numValue.toFixed(2)}</td>
-                    <td style={{ padding: '8px 6px', textAlign: 'center', fontSize: '13px', color: '#666' }}>{dateRangeText}</td>
-                  </tr>
-                );
-              }
-              return null;
-            }).filter(Boolean)}
+                return null
+              })
+              .filter(Boolean)}
           </tbody>
         </table>
-      );
+      )
     } else {
       // 回退到旧的单独费用字段（为了向后兼容）
-      const details: string[] = [];
-      
+      const details: string[] = []
+
       // 添加安全检查，确保金额存在且是数字
       const addFeeItem = (label: string, value?: number | string) => {
         if (value !== undefined && value !== null) {
           // 确保将任何类型的值转换为数字
-          const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
+          const numValue = typeof value === 'string' ? parseFloat(value) : Number(value)
           if (!isNaN(numValue) && numValue > 0) {
-            details.push(`${label}: ¥${numValue.toFixed(2)}`);
+            details.push(`${label}: ¥${numValue.toFixed(2)}`)
           }
         }
-      };
-      
-      addFeeItem('办照费用', receipt?.licenseFee);
-      addFeeItem('牌子费', receipt?.brandFee);
-      addFeeItem('备案章费用', receipt?.recordSealFee);
-      addFeeItem('一般刻章费用', receipt?.generalSealFee);
-      addFeeItem('代理费', receipt?.agencyFee);
-      addFeeItem('记账软件费', receipt?.accountingSoftwareFee);
-      addFeeItem('地址费', receipt?.addressFee);
-      addFeeItem('发票软件费', receipt?.invoiceSoftwareFee);
-      addFeeItem('社保代理费', receipt?.socialInsuranceAgencyFee);
-      addFeeItem('统计报表费', receipt?.statisticalReportFee);
-      addFeeItem('变更费', receipt?.changeFee);
-      addFeeItem('行政许可费', receipt?.administrativeLicenseFee);
-      addFeeItem('其他业务费', receipt?.otherBusinessFee);
-      
-      if (details.length === 0) return '费用明细';
-      
-      return details.join('；');
+      }
+
+      addFeeItem('办照费用', receipt?.licenseFee)
+      addFeeItem('牌子费', receipt?.brandFee)
+      addFeeItem('备案章费用', receipt?.recordSealFee)
+      addFeeItem('一般刻章费用', receipt?.generalSealFee)
+      addFeeItem('代理费', receipt?.agencyFee)
+      addFeeItem('记账软件费', receipt?.accountingSoftwareFee)
+      addFeeItem('地址费', receipt?.addressFee)
+      addFeeItem('发票软件费', receipt?.invoiceSoftwareFee)
+      addFeeItem('社保代理费', receipt?.socialInsuranceAgencyFee)
+      addFeeItem('统计报表费', receipt?.statisticalReportFee)
+      addFeeItem('变更费', receipt?.changeFee)
+      addFeeItem('行政许可费', receipt?.administrativeLicenseFee)
+      addFeeItem('其他业务费', receipt?.otherBusinessFee)
+
+      if (details.length === 0) return '费用明细'
+
+      return details.join('；')
     }
   }
 
   // 判断当前选择的印章是否需要显示logo
-  const shouldShowLogo = showLogoSealTypes.includes(selectedSeal);
+  const shouldShowLogo = showLogoSealTypes.includes(selectedSeal)
 
   return (
     <Modal
-      title={previewMode ? "预览收据" : "电子收款收据"}
+      title={previewMode ? '预览收据' : '电子收款收据'}
       open={visible}
       onCancel={onClose}
       width={800}
       className="receipt-modal"
-      footer={previewMode ? [
-        <Button key="close" onClick={onClose}>关闭</Button>
-      ] : [
-        <Button key="refresh" onClick={() => refreshReceipt(true)} icon={<ReloadOutlined />}>
-          刷新数据
-        </Button>,
-        <Button key="close" onClick={onClose}>关闭</Button>,
-        <Button 
-          key="download" 
-          type="primary" 
-          icon={<DownloadOutlined />} 
-          onClick={handleSaveAsImage}
-        >
-          保存为图片
-        </Button>
-      ]}
+      footer={
+        previewMode
+          ? [
+              <Button key="close" onClick={onClose}>
+                关闭
+              </Button>,
+            ]
+          : [
+              <Button key="refresh" onClick={() => refreshReceipt(true)} icon={<ReloadOutlined />}>
+                刷新数据
+              </Button>,
+              <Button key="close" onClick={onClose}>
+                关闭
+              </Button>,
+              <Button
+                key="download"
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={handleSaveAsImage}
+              >
+                保存为图片
+              </Button>,
+            ]
+      }
     >
       {isLoading ? (
         <div className="py-20 text-center">
@@ -519,52 +558,79 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
           {shouldShowLogo ? (
             // 当显示logo时，使用三栏布局，但确保标题居中
             <div className="receipt-header" style={{ position: 'relative' }}>
-              <div className="logo-section" style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+              <div
+                className="logo-section"
+                style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}
+              >
                 <img src="/images/logo.png" alt="中岳会计" className="logo-image" />
               </div>
-              <div className="title-section" style={{ 
-                width: '100%', 
-                textAlign: 'center',
-                margin: '0 auto',
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)'
-              }}>
+              <div
+                className="title-section"
+                style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  margin: '0 auto',
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
                 <h1 className="receipt-title">电子收款收据</h1>
-                <p className="receipt-date">日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}</p>
+                <p className="receipt-date">
+                  日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}
+                </p>
               </div>
-              <div className="receipt-number" style={{ 
-                position: 'absolute',
-                right: '0',
-                top: '50%',
-                transform: 'translateY(-50%)'
-              }}>
-                <h3>NO. {receipt?.receiptNo || (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}</h3>
+              <div
+                className="receipt-number"
+                style={{
+                  position: 'absolute',
+                  right: '0',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              >
+                <h3>
+                  NO.{' '}
+                  {receipt?.receiptNo ||
+                    (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}
+                </h3>
               </div>
             </div>
           ) : (
             // 当不显示logo时，使用单栏布局，标题完全居中
             <div className="receipt-header" style={{ display: 'block', position: 'relative' }}>
-              <div className="title-section" style={{ 
-                width: '100%', 
-                textAlign: 'center',
-                margin: '0 auto',
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)'
-              }}>
+              <div
+                className="title-section"
+                style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  margin: '0 auto',
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
                 <h1 className="receipt-title">电子收款收据</h1>
-                <p className="receipt-date">日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}</p>
+                <p className="receipt-date">
+                  日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}
+                </p>
               </div>
-              <div className="receipt-number" style={{ 
-                position: 'absolute',
-                right: '0',
-                top: '50%',
-                transform: 'translateY(-50%)'
-              }}>
-                <h3>NO. {receipt?.receiptNo || (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}</h3>
+              <div
+                className="receipt-number"
+                style={{
+                  position: 'absolute',
+                  right: '0',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              >
+                <h3>
+                  NO.{' '}
+                  {receipt?.receiptNo ||
+                    (receipt?.id ? receipt.id.toString().padStart(10, '0') : '0000000000')}
+                </h3>
               </div>
             </div>
           )}
@@ -575,43 +641,52 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               <tbody>
                 <tr>
                   <td className="label-cell">付款单位</td>
-                  <td className="value-cell" colSpan={3}>{receipt?.companyName || '-'}</td>
+                  <td className="value-cell" colSpan={3}>
+                    {receipt?.companyName || '-'}
+                  </td>
                 </tr>
                 <tr>
                   <td className="label-cell">款项明细</td>
-                  <td className="value-cell fee-details-cell" colSpan={3}>{renderFeeDetails()}</td>
+                  <td className="value-cell fee-details-cell" colSpan={3}>
+                    {renderFeeDetails()}
+                  </td>
                 </tr>
                 <tr>
                   <td className="label-cell">合计金额</td>
                   <td className="value-cell" colSpan={3}>
                     <div className="amount-row">
-                      <span className="amount-chinese">大写：{formatAmountToChinese(receipt?.totalFee || 0)}</span>
-                      <span className="amount-digit">小写：¥{receipt?.totalFee ? 
-                        (typeof receipt.totalFee === 'string' ? 
-                          parseFloat(receipt.totalFee).toFixed(2) : 
-                          Number(receipt.totalFee).toFixed(2)
-                        ) : '0.00'}</span>
+                      <span className="amount-chinese">
+                        大写：{formatAmountToChinese(receipt?.totalFee || 0)}
+                      </span>
+                      <span className="amount-digit">
+                        小写：¥
+                        {receipt?.totalFee
+                          ? typeof receipt.totalFee === 'string'
+                            ? parseFloat(receipt.totalFee).toFixed(2)
+                            : Number(receipt.totalFee).toFixed(2)
+                          : '0.00'}
+                      </span>
                     </div>
                   </td>
                 </tr>
                 <tr>
                   <td className="label-cell">收款方式</td>
-                  <td className="value-cell" colSpan={3}>{receipt?.chargeMethod || '雄安中岳对公户'}</td>
+                  <td className="value-cell" colSpan={3}>
+                    {receipt?.chargeMethod || '雄安中岳对公户'}
+                  </td>
                 </tr>
                 <tr>
                   <td className="label-cell">备注</td>
-                  <td className="value-cell" colSpan={3}>{receipt?.receiptRemarks || receipt?.remarks || '无'}</td>
+                  <td className="value-cell" colSpan={3}>
+                    {receipt?.receiptRemarks || receipt?.remarks || '无'}
+                  </td>
                 </tr>
               </tbody>
             </table>
 
             {/* 添加公章覆盖在表格上 */}
             <div className="receipt-seal-overlay">
-              <img 
-                src={sealImages[selectedSeal]} 
-                alt="公章" 
-                className="seal-image-overlay" 
-              />
+              <img src={sealImages[selectedSeal]} alt="公章" className="seal-image-overlay" />
             </div>
           </div>
 
@@ -640,11 +715,16 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               </Radio.Group>
             </div>
           )}
-          
+
           {/* 电子合同上传 - 在预览模式下不显示 */}
           {!previewMode && (
-            <div className="contract-upload-section" style={{ marginTop: '20px', borderTop: '2px dashed #d9d9d9', paddingTop: '15px' }}>
-              <p style={{ marginBottom: '15px', fontWeight: '600', fontSize: '15px' }}>电子合同：</p>
+            <div
+              className="contract-upload-section"
+              style={{ marginTop: '20px', borderTop: '2px dashed #d9d9d9', paddingTop: '15px' }}
+            >
+              <p style={{ marginBottom: '15px', fontWeight: '600', fontSize: '15px' }}>
+                电子合同：
+              </p>
               <MultiFileUpload
                 label="电子合同"
                 value={contractImage}
@@ -655,13 +735,15 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
               />
             </div>
           )}
-          
+
           {/* 预览水印 */}
           {previewMode && (
             <div className="receipt-watermark">
               <div className="watermark-grid">
                 {[...Array(25)].map((_, i) => (
-                  <div key={i} className="watermark-item">预览图片，收据无效</div>
+                  <div key={i} className="watermark-item">
+                    预览图片，收据无效
+                  </div>
                 ))}
               </div>
             </div>
@@ -934,4 +1016,4 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   )
 }
 
-export default ExpenseReceipt 
+export default ExpenseReceipt

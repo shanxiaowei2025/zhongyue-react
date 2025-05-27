@@ -69,7 +69,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null)
   const [isImage, setIsImage] = useState(false)
-  
+
   // 确保value始终是一个数组
   const safeValue = Array.isArray(value) ? value : []
 
@@ -77,10 +77,15 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const getFileType = (fileName: any): string => {
     if (!fileName) return 'default'
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                       (fileName.fileName ? fileName.fileName : 
-                       (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     const extension = fileNameStr.split('.').pop()?.toLowerCase() || 'default'
     return FILE_ICONS[extension] ? extension : 'default'
   }
@@ -89,10 +94,15 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const checkIsImage = (fileName: any): boolean => {
     if (!fileName) return false
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                       (fileName.fileName ? fileName.fileName : 
-                       (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
     const extension = fileNameStr.split('.').pop()?.toLowerCase() || ''
     return imageExtensions.includes(extension)
@@ -241,10 +251,15 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const getFileExtension = (fileName: any) => {
     if (!fileName) return ''
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                       (fileName.fileName ? fileName.fileName : 
-                       (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     return fileNameStr.split('.').pop()?.toUpperCase() || ''
   }
 
@@ -252,10 +267,15 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const getFileNameWithoutExtension = (fileName: any) => {
     if (!fileName) return ''
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                       (fileName.fileName ? fileName.fileName : 
-                       (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     const lastDotIndex = fileNameStr.lastIndexOf('.')
     return lastDotIndex > 0 ? fileNameStr.substring(0, lastDotIndex) : fileNameStr
   }
@@ -264,10 +284,15 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const truncateFileName = (fileName: any, maxLength: number = 15) => {
     if (!fileName) return ''
     // 确保fileName是字符串类型
-    const fileNameStr = typeof fileName === 'string' ? fileName : 
-                       (fileName.fileName ? fileName.fileName : 
-                       (fileName.url ? fileName.url : String(fileName)))
-    
+    const fileNameStr =
+      typeof fileName === 'string'
+        ? fileName
+        : fileName.fileName
+          ? fileName.fileName
+          : fileName.url
+            ? fileName.url
+            : String(fileName)
+
     const name = getFileNameWithoutExtension(fileNameStr)
     const extension = getFileExtension(fileNameStr)
 

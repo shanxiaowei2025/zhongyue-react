@@ -60,10 +60,10 @@ interface FormDateFields {
   invoiceSoftwareEndDate?: Dayjs
   socialInsuranceStartDate?: Dayjs
   socialInsuranceEndDate?: Dayjs
-  statisticalStartDate?: Dayjs
-  statisticalEndDate?: Dayjs
   housingFundStartDate?: Dayjs
   housingFundEndDate?: Dayjs
+  statisticalStartDate?: Dayjs
+  statisticalEndDate?: Dayjs
 }
 
 // 表单数据类型
@@ -129,85 +129,98 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 共用的InputNumber解析函数
   const parseNumberInput = (value: string | number | null | undefined): number => {
-    if (value === null || value === undefined || value === '') return 0;
-    const parsed = typeof value === 'string' ? parseFloat(value) : Number(value);
-    return isNaN(parsed) ? 0 : parsed;
-  };
+    if (value === null || value === undefined || value === '') return 0
+    const parsed = typeof value === 'string' ? parseFloat(value) : Number(value)
+    return isNaN(parsed) ? 0 : parsed
+  }
 
   // 防抖函数：计算总费用和标签页费用
-  const calculateFees = useDebounce(() => {
-    if (!visible || !formMountedRef.current || !formInitializedRef.current) return
-    
-    try {
-      // 从表单获取所有费用字段的当前值
-      const values: Record<string, any> = {}
-      let hasChanges = false
-      
-      // 检查每个字段是否有变化
-      for (const field of feeFields) {
-        const currentValue = form.getFieldValue(field as any) || 0
-        values[field] = currentValue
-        
-        // 检测值是否有变化
-        if (feeFieldsCache[field] !== currentValue) {
-          hasChanges = true
-        }
-      }
-      
-      // 如果没有变化，不进行计算
-      if (!hasChanges) return
-      
-      // 更新缓存
-      setFeeFieldsCache(values)
-      
-      // 计算总费用
-      let total = 0
-      for (const field of feeFields) {
-        const value = values[field]
-        if (value) {
-          total += typeof value === 'string' ? parseFloat(value) : Number(value)
-        }
-      }
-      
-      // 更新总费用
-      const currentTotal = form.getFieldValue('totalFee')
-      if (currentTotal !== total) {
-        form.setFieldValue('totalFee', total)
-      }
-      
-      // 计算每个标签页的费用
-      const newTabFeeSums: Record<string, number> = {
-        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0,
-      }
-      
-      // 计算各标签页的费用总和
-      Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
-        let sum = 0
-        fieldsInTab.forEach(field => {
-          if (values[field]) {
-            sum += typeof values[field] === 'string' ? parseFloat(values[field]) : Number(values[field])
+  const calculateFees = useDebounce(
+    () => {
+      if (!visible || !formMountedRef.current || !formInitializedRef.current) return
+
+      try {
+        // 从表单获取所有费用字段的当前值
+        const values: Record<string, any> = {}
+        let hasChanges = false
+
+        // 检查每个字段是否有变化
+        for (const field of feeFields) {
+          const currentValue = form.getFieldValue(field as any) || 0
+          values[field] = currentValue
+
+          // 检测值是否有变化
+          if (feeFieldsCache[field] !== currentValue) {
+            hasChanges = true
           }
-        })
-        newTabFeeSums[tabKey] = sum
-      })
-      
-      // 检查是否有变化
-      let tabSumsChanged = false
-      for (const key in newTabFeeSums) {
-        if (newTabFeeSums[key] !== tabFeeSums[key]) {
-          tabSumsChanged = true
-          break
         }
+
+        // 如果没有变化，不进行计算
+        if (!hasChanges) return
+
+        // 更新缓存
+        setFeeFieldsCache(values)
+
+        // 计算总费用
+        let total = 0
+        for (const field of feeFields) {
+          const value = values[field]
+          if (value) {
+            total += typeof value === 'string' ? parseFloat(value) : Number(value)
+          }
+        }
+
+        // 更新总费用
+        const currentTotal = form.getFieldValue('totalFee')
+        if (currentTotal !== total) {
+          form.setFieldValue('totalFee', total)
+        }
+
+        // 计算每个标签页的费用
+        const newTabFeeSums: Record<string, number> = {
+          '1': 0,
+          '2': 0,
+          '3': 0,
+          '4': 0,
+          '5': 0,
+          '6': 0,
+          '7': 0,
+        }
+
+        // 计算各标签页的费用总和
+        Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
+          let sum = 0
+          fieldsInTab.forEach(field => {
+            if (values[field]) {
+              sum +=
+                typeof values[field] === 'string'
+                  ? parseFloat(values[field])
+                  : Number(values[field])
+            }
+          })
+          newTabFeeSums[tabKey] = sum
+        })
+
+        // 检查是否有变化
+        let tabSumsChanged = false
+        for (const key in newTabFeeSums) {
+          if (newTabFeeSums[key] !== tabFeeSums[key]) {
+            tabSumsChanged = true
+            break
+          }
+        }
+
+        // 只在有变化时更新状态
+        if (tabSumsChanged) {
+          setTabFeeSums(newTabFeeSums)
+        }
+      } catch (error) {
+        console.error('计算费用失败:', error)
       }
-      
-      // 只在有变化时更新状态
-      if (tabSumsChanged) {
-        setTabFeeSums(newTabFeeSums)
-      }
-    } catch (error) {
-      console.error('计算费用失败:', error)
-    }
-  }, DEBOUNCE_DELAY, [visible, form, feeFieldsCache, tabFeeSums])
+    },
+    DEBOUNCE_DELAY,
+    [visible, form, feeFieldsCache, tabFeeSums]
+  )
 
   // 监听所有费用字段的变化
   feeFields.forEach(field => {
@@ -220,6 +233,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       }
     }, [value])
   })
+
+  // 监听是否有公积金字段的变化
+  const hasHousingFund = Form.useWatch('hasHousingFund', form)
+  useEffect(() => {
+    if (formInitializedRef.current && hasHousingFund === false) {
+      // 当公积金选项为false时，清空公积金相关字段
+      form.setFieldsValue({
+        housingFundCount: undefined,
+        housingFundAgencyFee: undefined,
+        housingFundStartDate: undefined,
+        housingFundEndDate: undefined,
+      })
+
+      // 更新费用缓存，确保计算时公积金费用为0
+      setFeeFieldsCache(prev => ({
+        ...prev,
+        housingFundAgencyFee: 0,
+      }))
+
+      console.log('公积金选项已关闭，已清空相关字段')
+    }
+  }, [hasHousingFund, form])
 
   // 在组件挂载时重置表单状态
   useEffect(() => {
@@ -249,43 +284,101 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       console.log('设置编辑模式表单数据:', expense)
 
       // 处理字符串格式的数字值
-      const formData = {
+      const formData: any = {
         ...expense,
         // 处理费用字段，确保它们是数字类型
-        licenseFee: typeof expense.licenseFee === 'string' ? parseFloat(expense.licenseFee) : expense.licenseFee,
-        brandFee: typeof expense.brandFee === 'string' ? parseFloat(expense.brandFee) : expense.brandFee,
-        recordSealFee: typeof expense.recordSealFee === 'string' ? parseFloat(expense.recordSealFee) : expense.recordSealFee,
-        generalSealFee: typeof expense.generalSealFee === 'string' ? parseFloat(expense.generalSealFee) : expense.generalSealFee,
-        agencyFee: typeof expense.agencyFee === 'string' ? parseFloat(expense.agencyFee) : expense.agencyFee,
-        accountingSoftwareFee: typeof expense.accountingSoftwareFee === 'string' ? parseFloat(expense.accountingSoftwareFee) : expense.accountingSoftwareFee,
-        addressFee: typeof expense.addressFee === 'string' ? parseFloat(expense.addressFee) : expense.addressFee,
-        invoiceSoftwareFee: typeof expense.invoiceSoftwareFee === 'string' ? parseFloat(expense.invoiceSoftwareFee) : expense.invoiceSoftwareFee,
-        socialInsuranceAgencyFee: typeof expense.socialInsuranceAgencyFee === 'string' ? parseFloat(expense.socialInsuranceAgencyFee) : expense.socialInsuranceAgencyFee,
-        housingFundAgencyFee: typeof expense.housingFundAgencyFee === 'string' ? parseFloat(expense.housingFundAgencyFee) : expense.housingFundAgencyFee,
-        statisticalReportFee: typeof expense.statisticalReportFee === 'string' ? parseFloat(expense.statisticalReportFee) : expense.statisticalReportFee,
-        changeFee: typeof expense.changeFee === 'string' ? parseFloat(expense.changeFee) : expense.changeFee,
-        administrativeLicenseFee: typeof expense.administrativeLicenseFee === 'string' ? parseFloat(expense.administrativeLicenseFee) : expense.administrativeLicenseFee,
-        otherBusinessFee: typeof expense.otherBusinessFee === 'string' ? parseFloat(expense.otherBusinessFee) : expense.otherBusinessFee,
-        totalFee: typeof expense.totalFee === 'string' ? parseFloat(expense.totalFee) : expense.totalFee,
-        insuredCount: typeof expense.insuredCount === 'string' ? parseInt(expense.insuredCount) : expense.insuredCount,
-        housingFundCount: typeof expense.housingFundCount === 'string' ? parseInt(expense.housingFundCount) : expense.housingFundCount,
-        
+        licenseFee:
+          typeof expense.licenseFee === 'string'
+            ? parseFloat(expense.licenseFee)
+            : expense.licenseFee,
+        brandFee:
+          typeof expense.brandFee === 'string' ? parseFloat(expense.brandFee) : expense.brandFee,
+        recordSealFee:
+          typeof expense.recordSealFee === 'string'
+            ? parseFloat(expense.recordSealFee)
+            : expense.recordSealFee,
+        generalSealFee:
+          typeof expense.generalSealFee === 'string'
+            ? parseFloat(expense.generalSealFee)
+            : expense.generalSealFee,
+        agencyFee:
+          typeof expense.agencyFee === 'string' ? parseFloat(expense.agencyFee) : expense.agencyFee,
+        accountingSoftwareFee:
+          typeof expense.accountingSoftwareFee === 'string'
+            ? parseFloat(expense.accountingSoftwareFee)
+            : expense.accountingSoftwareFee,
+        addressFee:
+          typeof expense.addressFee === 'string'
+            ? parseFloat(expense.addressFee)
+            : expense.addressFee,
+        invoiceSoftwareFee:
+          typeof expense.invoiceSoftwareFee === 'string'
+            ? parseFloat(expense.invoiceSoftwareFee)
+            : expense.invoiceSoftwareFee,
+        socialInsuranceAgencyFee:
+          typeof expense.socialInsuranceAgencyFee === 'string'
+            ? parseFloat(expense.socialInsuranceAgencyFee)
+            : expense.socialInsuranceAgencyFee,
+        housingFundCount:
+          typeof expense.housingFundCount === 'string'
+            ? parseInt(expense.housingFundCount)
+            : expense.housingFundCount,
+        housingFundAgencyFee:
+          typeof expense.housingFundAgencyFee === 'string'
+            ? parseFloat(expense.housingFundAgencyFee)
+            : expense.housingFundAgencyFee,
+        statisticalReportFee:
+          typeof expense.statisticalReportFee === 'string'
+            ? parseFloat(expense.statisticalReportFee)
+            : expense.statisticalReportFee,
+        changeFee:
+          typeof expense.changeFee === 'string' ? parseFloat(expense.changeFee) : expense.changeFee,
+        administrativeLicenseFee:
+          typeof expense.administrativeLicenseFee === 'string'
+            ? parseFloat(expense.administrativeLicenseFee)
+            : expense.administrativeLicenseFee,
+        otherBusinessFee:
+          typeof expense.otherBusinessFee === 'string'
+            ? parseFloat(expense.otherBusinessFee)
+            : expense.otherBusinessFee,
+        totalFee:
+          typeof expense.totalFee === 'string' ? parseFloat(expense.totalFee) : expense.totalFee,
+        insuredCount:
+          typeof expense.insuredCount === 'string'
+            ? parseInt(expense.insuredCount)
+            : expense.insuredCount,
+
         // 确保使用了mode=tags的Select组件的值为数组
-        chargeMethod: expense.chargeMethod ? 
-          (Array.isArray(expense.chargeMethod) ? expense.chargeMethod : [expense.chargeMethod]) : [],
-        
-        changeBusiness: expense.changeBusiness ? 
-          (Array.isArray(expense.changeBusiness) ? expense.changeBusiness : [expense.changeBusiness]) : [],
-        
-        administrativeLicense: expense.administrativeLicense ? 
-          (Array.isArray(expense.administrativeLicense) ? expense.administrativeLicense : [expense.administrativeLicense]) : [],
-        
-        otherBusiness: expense.otherBusiness ? 
-          (Array.isArray(expense.otherBusiness) ? expense.otherBusiness : [expense.otherBusiness]) : [],
-        
-        insuranceTypes: expense.insuranceTypes ? 
-          (Array.isArray(expense.insuranceTypes) ? expense.insuranceTypes : [expense.insuranceTypes]) : [],
-        
+        chargeMethod: expense.chargeMethod
+          ? Array.isArray(expense.chargeMethod)
+            ? expense.chargeMethod
+            : [expense.chargeMethod]
+          : [],
+
+        changeBusiness: expense.changeBusiness
+          ? Array.isArray(expense.changeBusiness)
+            ? expense.changeBusiness
+            : [expense.changeBusiness]
+          : [],
+
+        administrativeLicense: expense.administrativeLicense
+          ? Array.isArray(expense.administrativeLicense)
+            ? expense.administrativeLicense
+            : [expense.administrativeLicense]
+          : [],
+
+        otherBusiness: expense.otherBusiness
+          ? Array.isArray(expense.otherBusiness)
+            ? expense.otherBusiness
+            : [expense.otherBusiness]
+          : [],
+
+        insuranceTypes: expense.insuranceTypes
+          ? Array.isArray(expense.insuranceTypes)
+            ? expense.insuranceTypes
+            : [expense.insuranceTypes]
+          : [],
+
         // 转换日期字段为dayjs对象
         chargeDate: expense.chargeDate ? dayjs(expense.chargeDate) : undefined,
         accountingSoftwareStartDate: expense.accountingSoftwareStartDate
@@ -310,17 +403,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         socialInsuranceEndDate: expense.socialInsuranceEndDate
           ? dayjs(expense.socialInsuranceEndDate)
           : undefined,
-        statisticalStartDate: expense.statisticalStartDate
-          ? dayjs(expense.statisticalStartDate)
-          : undefined,
-        statisticalEndDate: expense.statisticalEndDate
-          ? dayjs(expense.statisticalEndDate)
-          : undefined,
         housingFundStartDate: expense.housingFundStartDate
           ? dayjs(expense.housingFundStartDate)
           : undefined,
         housingFundEndDate: expense.housingFundEndDate
           ? dayjs(expense.housingFundEndDate)
+          : undefined,
+        statisticalStartDate: expense.statisticalStartDate
+          ? dayjs(expense.statisticalStartDate)
+          : undefined,
+        statisticalEndDate: expense.statisticalEndDate
+          ? dayjs(expense.statisticalEndDate)
           : undefined,
       }
 
@@ -332,14 +425,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           formData.contractImage = expense.contractImage.map(fileName => ({
             fileName,
             url: buildImageUrl(fileName), // 使用buildImageUrl构建完整URL
-          }));
+          }))
         } else {
           // 兼容旧数据，单个字符串转换为数组
+          const contractImageStr = expense.contractImage as unknown as string
           // @ts-ignore - 类型忽略，实际运行时会正确处理
-          formData.contractImage = [{
-            fileName: expense.contractImage,
-            url: buildImageUrl(expense.contractImage), // 使用buildImageUrl构建完整URL
-          }];
+          formData.contractImage = [
+            {
+              fileName: contractImageStr,
+              url: buildImageUrl(contractImageStr), // 使用buildImageUrl构建完整URL
+            },
+          ]
         }
       }
 
@@ -355,7 +451,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 设置表单值
       form.setFieldsValue(formData)
       setPrevFormValues(formData)
-      
+
       // 初始化费用字段缓存
       const initialFeeValues: Record<string, any> = {}
       feeFields.forEach(field => {
@@ -365,24 +461,30 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 立即计算并设置初始标签页费用
       const newTabFeeSums: Record<string, number> = {
-        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0,
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0,
+        '5': 0,
+        '6': 0,
+        '7': 0,
       }
-      
+
       // 计算各标签页的费用总和
       Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
         let sum = 0
         fieldsInTab.forEach(field => {
-          const value = initialFeeValues[field];
+          const value = initialFeeValues[field]
           if (value) {
             sum += typeof value === 'string' ? parseFloat(value) : Number(value)
           }
         })
         newTabFeeSums[tabKey] = sum
       })
-      
+
       // 直接设置费用合计状态
       setTabFeeSums(newTabFeeSums)
-      
+
       // 最后设置初始化完成标志
       formInitializedRef.current = true
     } else {
@@ -406,7 +508,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 新建模式下重置所有标签页费用为0
       setTabFeeSums({
-        '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0,
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0,
+        '5': 0,
+        '6': 0,
+        '7': 0,
       })
 
       formInitializedRef.current = true
@@ -429,12 +537,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 跟踪新上传的附件
   const [uploadedFiles, setUploadedFiles] = useState<{
-    contractImage?: string[];
-    proofOfCharge?: string[];
+    contractImage?: string[]
+    proofOfCharge?: string[]
   }>({
     contractImage: [],
-    proofOfCharge: []
-  });
+    proofOfCharge: [],
+  })
 
   // 上传合同图片的处理函数
   const handleContractUpload = (info: any) => {
@@ -470,10 +578,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         'invoiceSoftwareEndDate',
         'socialInsuranceStartDate',
         'socialInsuranceEndDate',
-        'statisticalStartDate',
-        'statisticalEndDate',
         'housingFundStartDate',
         'housingFundEndDate',
+        'statisticalStartDate',
+        'statisticalEndDate',
       ].forEach(field => {
         if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
           formattedValues[field] = formattedValues[field].format('YYYY-MM-DD')
@@ -498,23 +606,35 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         }
       })
 
+      // 处理公积金相关字段的特殊逻辑
+      if (formattedValues.hasHousingFund === false) {
+        // 当公积金选项为false时，确保相关字段被设置为null
+        formattedValues.housingFundCount = null
+        formattedValues.housingFundAgencyFee = null
+        formattedValues.housingFundStartDate = null
+        formattedValues.housingFundEndDate = null
+        console.log('公积金选项为false，已将相关字段设置为null')
+      }
+
       // 处理tags模式的Select字段，确保它们的值处理正确
       // 对于chargeMethod，如果是数组，取第一个值作为字符串（与之前的处理逻辑一致）
       if (formattedValues.chargeMethod && Array.isArray(formattedValues.chargeMethod)) {
-        formattedValues.chargeMethod = formattedValues.chargeMethod[0] || '';
+        formattedValues.chargeMethod = formattedValues.chargeMethod[0] || ''
       }
 
       // 对于其他使用tags模式的字段，保持数组格式
       // 后端API应该能够处理字符串数组，如果后端需要字符串，可以在这里使用join方法
-      ['changeBusiness', 'administrativeLicense', 'otherBusiness', 'insuranceTypes'].forEach(field => {
-        if (formattedValues[field] && !Array.isArray(formattedValues[field])) {
-          // 如果不是数组，转换为包含单个元素的数组
-          formattedValues[field] = [formattedValues[field]];
-        } else if (formattedValues[field] === undefined || formattedValues[field] === null) {
-          // 如果是undefined或null，设置为空数组
-          formattedValues[field] = [];
+      ;['changeBusiness', 'administrativeLicense', 'otherBusiness', 'insuranceTypes'].forEach(
+        field => {
+          if (formattedValues[field] && !Array.isArray(formattedValues[field])) {
+            // 如果不是数组，转换为包含单个元素的数组
+            formattedValues[field] = [formattedValues[field]]
+          } else if (formattedValues[field] === undefined || formattedValues[field] === null) {
+            // 如果是undefined或null，设置为空数组
+            formattedValues[field] = []
+          }
         }
-      });
+      )
 
       // 处理合同图片 - 将对象数组转换为文件名数组
       if (formattedValues.contractImage && Array.isArray(formattedValues.contractImage)) {
@@ -553,7 +673,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           formattedValues.status = ExpenseStatus.Pending
           formattedValues.rejectReason = ''
         }
-        
+
         await updateExpense(expense.id, formattedValues)
         message.success('费用更新成功')
       }
@@ -576,57 +696,57 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 删除已上传的合同图片
         if (uploadedFiles.contractImage && uploadedFiles.contractImage.length > 0) {
           for (const fileName of uploadedFiles.contractImage) {
-            await deleteFile(fileName);
-            console.log('已删除未保存的合同图片:', fileName);
+            await deleteFile(fileName)
+            console.log('已删除未保存的合同图片:', fileName)
           }
         }
-        
+
         // 删除已上传的收费凭证
         if (uploadedFiles.proofOfCharge && uploadedFiles.proofOfCharge.length > 0) {
           for (const fileName of uploadedFiles.proofOfCharge) {
-            await deleteFile(fileName);
-            console.log('已删除未保存的收费凭证:', fileName);
+            await deleteFile(fileName)
+            console.log('已删除未保存的收费凭证:', fileName)
           }
         }
       } catch (error) {
-        console.error('删除未保存文件失败:', error);
+        console.error('删除未保存文件失败:', error)
       }
     }
-    
-    form.resetFields();
-    onCancel();
+
+    form.resetFields()
+    onCancel()
   }
 
   // 跟踪新上传的合同图片
   const handleContractFileUpload = useCallback((fileName: string) => {
     setUploadedFiles(prev => ({
       ...prev,
-      contractImage: [...(prev.contractImage || []), fileName]
-    }));
-  }, []);
+      contractImage: [...(prev.contractImage || []), fileName],
+    }))
+  }, [])
 
   // 跟踪新上传的收费凭证
   const handleProofFileUpload = useCallback((fileName: string) => {
     setUploadedFiles(prev => ({
       ...prev,
-      proofOfCharge: [...(prev.proofOfCharge || []), fileName]
-    }));
-  }, []);
+      proofOfCharge: [...(prev.proofOfCharge || []), fileName],
+    }))
+  }, [])
 
   // 从跟踪列表中移除已删除的文件
   const handleContractFileRemove = useCallback((fileName: string) => {
     setUploadedFiles(prev => ({
       ...prev,
-      contractImage: prev.contractImage?.filter(name => name !== fileName) || []
-    }));
-  }, []);
+      contractImage: prev.contractImage?.filter(name => name !== fileName) || [],
+    }))
+  }, [])
 
   const handleProofFileRemove = useCallback((fileName: string) => {
     setUploadedFiles(prev => ({
       ...prev,
-      proofOfCharge: prev.proofOfCharge?.filter(name => name !== fileName) || []
-    }));
-  }, []);
+      proofOfCharge: prev.proofOfCharge?.filter(name => name !== fileName) || [],
+    }))
+  }, [])
 
   return (
     <Modal
@@ -640,10 +760,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     >
       {visible && ( // 只有在modal可见时才渲染表单，避免React警告
         <>
-          <Form
-            form={form}
-            layout="vertical"
-          >
+          <Form form={form} layout="vertical">
             {/* 固定在顶部的状态栏 */}
             <div
               style={{
@@ -727,10 +844,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   <Input placeholder="请输入企业名称" />
                 </Form.Item>
 
-                <Form.Item
-                  name="unifiedSocialCreditCode"
-                  label="统一社会信用代码"
-                >
+                <Form.Item name="unifiedSocialCreditCode" label="统一社会信用代码">
                   <Input placeholder="请输入统一社会信用代码" />
                 </Form.Item>
 
@@ -765,8 +879,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 </Form.Item>
 
                 <Form.Item name="chargeMethod" label="收费方式">
-                  <Select 
-                    placeholder="请选择收费方式" 
+                  <Select
+                    placeholder="请选择收费方式"
                     allowClear
                     showSearch
                     optionFilterProp="children"
@@ -774,11 +888,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     tokenSeparators={[]}
                     maxTagCount={1}
                     style={{ width: '100%' }}
-                    onChange={(value) => {
+                    onChange={value => {
                       // 如果是数组且长度大于1，只保留最后一个值
                       if (Array.isArray(value) && value.length > 1) {
-                        const lastValue = value[value.length - 1];
-                        form.setFieldValue('chargeMethod', [lastValue]);
+                        const lastValue = value[value.length - 1]
+                        form.setFieldValue('chargeMethod', [lastValue])
                       }
                     }}
                   >
@@ -802,9 +916,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <Form.Item 
-                  name="proofOfCharge" 
-                  label="收据凭证" 
+                <Form.Item
+                  name="proofOfCharge"
+                  label="收据凭证"
                   tooltip="上传收款收据、发票等凭证"
                   rules={[
                     {
@@ -812,9 +926,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                       message: '请至少上传一个收据凭证',
                       validator: (_, value) => {
                         if (value && Array.isArray(value) && value.length > 0) {
-                          return Promise.resolve();
+                          return Promise.resolve()
                         }
-                        return Promise.reject(new Error('请至少上传一个收据凭证'));
+                        return Promise.reject(new Error('请至少上传一个收据凭证'))
                       },
                     },
                   ]}
@@ -825,7 +939,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     onSuccess={isAutoSave => {
                       // 在编辑模式下自动保存，新建模式不自动保存
                       if (isAutoSave && mode === 'edit') {
-                        handleSubmit(true);
+                        handleSubmit(true)
                       }
                     }}
                     onFileUpload={handleProofFileUpload}
@@ -840,7 +954,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     onSuccess={isAutoSave => {
                       // 在编辑模式下自动保存，新建模式不自动保存
                       if (isAutoSave && mode === 'edit') {
-                        handleSubmit(true);
+                        handleSubmit(true)
                       }
                     }}
                     onFileUpload={handleContractFileUpload}
@@ -1003,10 +1117,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             style={{ width: '100%' }}
                             min={0}
                             precision={0}
-                            parser={(value) => {
-                              if (value === null || value === undefined || value === '') return 0;
-                              const parsed = parseInt(value as string, 10);
-                              return isNaN(parsed) ? 0 : parsed;
+                            parser={value => {
+                              if (value === null || value === undefined || value === '') return 0
+                              const parsed = parseInt(value as string, 10)
+                              return isNaN(parsed) ? 0 : parsed
                             }}
                           />
                         </Form.Item>
@@ -1034,81 +1148,73 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           </Space>
                         </Form.Item>
 
-                        {/* 公积金分割线 */}
-                        <div style={{ gridColumn: 'span 3', borderTop: '1px solid #f0f0f0', margin: '16px 0', paddingTop: '16px' }}>
-                          <h4 style={{ margin: 0, color: '#666', fontSize: '14px', fontWeight: '600' }}>公积金代理</h4>
-                        </div>
-
-                        <Form.Item name="hasHousingFund" label="是否有公积金" valuePropName="checked">
-                          <Checkbox>有公积金</Checkbox>
+                        <Form.Item
+                          name="hasHousingFund"
+                          valuePropName="checked"
+                          style={{ gridColumn: 'span 3' }}
+                        >
+                          <Checkbox>是否有公积金</Checkbox>
                         </Form.Item>
 
-                        <Form.Item name="housingFundCount" label="公积金人数">
-                          <Form.Item dependencies={['hasHousingFund']} noStyle>
-                            {({ getFieldValue }) => {
-                              const hasHousingFund = getFieldValue('hasHousingFund')
-                              return (
-                                <InputNumber
-                                  placeholder="请输入公积金人数"
-                                  style={{ width: '100%' }}
-                                  min={0}
-                                  precision={0}
-                                  disabled={!hasHousingFund}
-                                  parser={(value) => {
-                                    if (value === null || value === undefined || value === '') return 0;
-                                    const parsed = parseInt(value as string, 10);
-                                    return isNaN(parsed) ? 0 : parsed;
-                                  }}
-                                />
-                              )
-                            }}
-                          </Form.Item>
-                        </Form.Item>
+                        <Form.Item
+                          dependencies={['hasHousingFund']}
+                          style={{ gridColumn: 'span 3' }}
+                        >
+                          {({ getFieldValue }) =>
+                            getFieldValue('hasHousingFund') ? (
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(3, 1fr)',
+                                  gap: '16px',
+                                }}
+                              >
+                                <Form.Item name="housingFundCount" label="公积金人数">
+                                  <InputNumber
+                                    placeholder="请输入公积金人数"
+                                    style={{ width: '100%' }}
+                                    min={0}
+                                    precision={0}
+                                    parser={value => {
+                                      if (value === null || value === undefined || value === '')
+                                        return 0
+                                      const parsed = parseInt(value as string, 10)
+                                      return isNaN(parsed) ? 0 : parsed
+                                    }}
+                                  />
+                                </Form.Item>
 
-                        <Form.Item name="housingFundAgencyFee" label="公积金代理费">
-                          <Form.Item dependencies={['hasHousingFund']} noStyle>
-                            {({ getFieldValue }) => {
-                              const hasHousingFund = getFieldValue('hasHousingFund')
-                              return (
-                                <InputNumber
-                                  placeholder="请输入公积金代理费"
-                                  style={{ width: '100%' }}
-                                  min={0}
-                                  precision={2}
-                                  addonBefore="¥"
-                                  disabled={!hasHousingFund}
-                                  parser={parseNumberInput}
-                                />
-                              )
-                            }}
-                          </Form.Item>
-                        </Form.Item>
+                                <Form.Item name="housingFundAgencyFee" label="公积金代理费">
+                                  <InputNumber
+                                    placeholder="请输入公积金代理费"
+                                    style={{ width: '100%' }}
+                                    min={0}
+                                    precision={2}
+                                    addonBefore="¥"
+                                    parser={parseNumberInput}
+                                  />
+                                </Form.Item>
 
-                        <Form.Item label="公积金日期" style={{ gridColumn: 'span 2' }}>
-                          <Form.Item dependencies={['hasHousingFund']} noStyle>
-                            {({ getFieldValue }) => {
-                              const hasHousingFund = getFieldValue('hasHousingFund')
-                              return (
-                                <Space style={{ width: '100%' }}>
-                                  <Form.Item name="housingFundStartDate" noStyle>
-                                    <DatePicker 
-                                      placeholder="开始日期" 
-                                      style={{ width: '100%' }} 
-                                      disabled={!hasHousingFund}
-                                    />
-                                  </Form.Item>
-                                  <span>至</span>
-                                  <Form.Item name="housingFundEndDate" noStyle>
-                                    <DatePicker 
-                                      placeholder="结束日期" 
-                                      style={{ width: '100%' }} 
-                                      disabled={!hasHousingFund}
-                                    />
-                                  </Form.Item>
-                                </Space>
-                              )
-                            }}
-                          </Form.Item>
+                                <Form.Item label="公积金日期" style={{ gridColumn: 'span 2' }}>
+                                  <Space style={{ width: '100%' }}>
+                                    <Form.Item name="housingFundStartDate" noStyle>
+                                      <DatePicker
+                                        placeholder="开始日期"
+                                        style={{ width: '100%' }}
+                                      />
+                                    </Form.Item>
+                                    <span>至</span>
+                                    <Form.Item name="housingFundEndDate" noStyle>
+                                      <DatePicker
+                                        placeholder="结束日期"
+                                        style={{ width: '100%' }}
+                                      />
+                                    </Form.Item>
+                                  </Space>
+                                </Form.Item>
+                              </div>
+                            ) : null
+                          }
                         </Form.Item>
                       </div>
                     ),

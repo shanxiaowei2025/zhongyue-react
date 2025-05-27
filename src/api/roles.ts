@@ -28,5 +28,7 @@ export const deleteRole = (id: number) => {
 
 // 更新角色权限
 export const updateRolePermissions = (id: number, permissionIds: number[]) => {
-  return request.patch<ApiResponse<Role>>(`/roles/${id}/permissions`, { permission_ids: permissionIds })
-} 
+  return request.patch<ApiResponse<Role>>(`/roles/${id}/permissions`, {
+    permission_ids: permissionIds,
+  })
+}

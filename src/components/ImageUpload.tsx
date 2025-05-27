@@ -140,9 +140,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             uid: '-1',
             name: value.fileName || '图片',
             status: 'done',
-            url: retryCount > 0
-              ? `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
-              : value.fileName ? buildImageUrl(value.fileName) : value.url,
+            url:
+              retryCount > 0
+                ? `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
+                : value.fileName
+                  ? buildImageUrl(value.fileName)
+                  : value.url,
           },
         ]
       : []
@@ -163,7 +166,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       retryTimeoutRef.current = setTimeout(() => {
         setRetryCount(prev => prev + 1)
         // 通过添加时间戳参数避免浏览器缓存
-        setPreviewImage(`${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`)
+        setPreviewImage(
+          `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
+        )
       }, retryDelay)
     } else {
       // 超过最大重试次数，显示错误状态
@@ -227,7 +232,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             alt={label}
             src={
               previewImage ||
-              (value?.url ? value.fileName ? buildImageUrl(value.fileName) : value.url : '')
+              (value?.url ? (value.fileName ? buildImageUrl(value.fileName) : value.url) : '')
             }
             style={{ maxWidth: '100%' }}
             preview={false}

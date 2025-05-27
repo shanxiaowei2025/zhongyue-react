@@ -90,11 +90,11 @@ export const expenseDetailFetcher = async (url: string) => {
   try {
     const response = await getExpenseById(Number(url.split('/').pop()))
     console.log('费用详情API响应:', response)
-    
+
     // 从响应中提取data部分（与receipt fetcher保持一致的处理方式）
     const expenseData = response.data
     console.log('费用详情数据提取:', expenseData)
-    
+
     return expenseData
   } catch (error) {
     console.error('获取费用详情失败:', error)
@@ -121,13 +121,13 @@ export const expenseReceiptFetcher = async (url: string) => {
     }
 
     const response = await getExpenseReceipt(id)
-    
+
     // 从响应中提取data部分
     const receiptData = response.data
-    
+
     // 仅在开发环境且只有首次获取时记录详细日志
     if (process.env.NODE_ENV === 'development') {
-      console.log(`获取费用收据#${id}成功`);
+      console.log(`获取费用收据#${id}成功`)
     }
 
     // 确保返回有效的对象，即使API返回不完整数据

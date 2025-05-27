@@ -15,7 +15,7 @@ export const AuthorizedRoute = ({ children, requiredRoles }: AuthorizedRouteProp
     if (isAuthenticated) {
       resetTimer()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
 
   if (!isAuthenticated) {

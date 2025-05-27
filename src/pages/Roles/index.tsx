@@ -65,7 +65,7 @@ const Roles = () => {
           console.error('删除失败:', error)
           message.error('删除失败')
         }
-      }
+      },
     })
   }
 
@@ -142,17 +142,15 @@ const Roles = () => {
             <Tag color={count > 0 ? 'blue' : 'gray'}>{count}</Tag>
           </Tooltip>
         )
-      }
+      },
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (status) => (
-        <Tag color={status === 1 ? 'green' : 'red'}>
-          {status === 1 ? '启用' : '禁用'}
-        </Tag>
+      render: status => (
+        <Tag color={status === 1 ? 'green' : 'red'}>{status === 1 ? '启用' : '禁用'}</Tag>
       ),
     },
     {
@@ -166,14 +164,14 @@ const Roles = () => {
       dataIndex: 'create_time',
       key: 'create_time',
       width: 180,
-      render: (time) => formatTime(time),
+      render: time => formatTime(time),
     },
     {
       title: '更新时间',
       dataIndex: 'update_time',
       key: 'update_time',
       width: 180,
-      render: (time) => formatTime(time),
+      render: time => formatTime(time),
     },
     {
       title: '操作',
@@ -182,18 +180,18 @@ const Roles = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="primary" 
-            size="small" 
-            icon={<EditOutlined />} 
+          <Button
+            type="primary"
+            size="small"
+            icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           >
             编辑
           </Button>
-          <Button 
-            danger 
-            size="small" 
-            icon={<DeleteOutlined />} 
+          <Button
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
             onClick={() => handleDelete(record.id)}
             disabled={record.code === 'super_admin'} // 禁止删除超级管理员
           >
@@ -206,31 +204,24 @@ const Roles = () => {
 
   // 排序和过滤查询结果
   const filteredRoles = roles
-    .filter(role => 
-      searchText ? 
-        role.name.toLowerCase().includes(searchText.toLowerCase()) || 
-        role.code.toLowerCase().includes(searchText.toLowerCase()) || 
-        (role.remark && role.remark.toLowerCase().includes(searchText.toLowerCase())) : 
-        true
+    .filter(role =>
+      searchText
+        ? role.name.toLowerCase().includes(searchText.toLowerCase()) ||
+          role.code.toLowerCase().includes(searchText.toLowerCase()) ||
+          (role.remark && role.remark.toLowerCase().includes(searchText.toLowerCase()))
+        : true
     )
-    .sort((a, b) => a.id - b.id)  // 按ID升序排序
+    .sort((a, b) => a.id - b.id) // 按ID升序排序
 
   return (
     <div>
       <Card bordered={false}>
         <div style={{ marginBottom: 16 }}>
           <Space>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              onClick={handleAdd}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               新增角色
             </Button>
-            <Button 
-              icon={<ReloadOutlined />} 
-              onClick={fetchRoles}
-            >
+            <Button icon={<ReloadOutlined />} onClick={fetchRoles}>
               刷新
             </Button>
             <Search
@@ -257,8 +248,8 @@ const Roles = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
-            position: ['bottomCenter']
+            showTotal: total => `共 ${total} 条`,
+            position: ['bottomCenter'],
           }}
         />
 
@@ -304,10 +295,7 @@ const Roles = () => {
               </Select>
             </Form.Item>
 
-            <Form.Item
-              name="remark"
-              label="备注"
-            >
+            <Form.Item name="remark" label="备注">
               <Input.TextArea rows={4} placeholder="请输入备注" />
             </Form.Item>
           </Form>

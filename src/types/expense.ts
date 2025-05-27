@@ -46,12 +46,11 @@ export interface Expense {
   socialInsuranceAgencyFee: number | string
   socialInsuranceStartDate: string
   socialInsuranceEndDate: string
-  // 公积金相关字段
-  hasHousingFund?: boolean
-  housingFundCount?: number
-  housingFundAgencyFee?: number | string
-  housingFundStartDate?: string
-  housingFundEndDate?: string
+  hasHousingFund: boolean
+  housingFundCount: number | string
+  housingFundAgencyFee: number | string
+  housingFundStartDate: string
+  housingFundEndDate: string
   statisticalReportFee: number | string
   statisticalStartDate: string
   statisticalEndDate: string
@@ -114,7 +113,6 @@ export interface CreateExpenseDto {
   socialInsuranceAgencyFee?: number | string
   socialInsuranceStartDate?: string
   socialInsuranceEndDate?: string
-  // 公积金相关字段
   hasHousingFund?: boolean
   housingFundCount?: number | string
   housingFundAgencyFee?: number | string
@@ -174,10 +172,10 @@ export interface CancelAuditDto {
 
 // 费用项目接口
 export interface FeeItem {
-  name: string;
-  amount: number | string;
-  startDate?: string;  // 费用开始日期
-  endDate?: string;    // 费用结束日期
+  name: string
+  amount: number | string
+  startDate?: string // 费用开始日期
+  endDate?: string // 费用结束日期
 }
 
 // 收据视图DTO

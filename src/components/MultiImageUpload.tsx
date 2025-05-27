@@ -70,7 +70,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   const imageList: ImageItem[] = Object.entries(value || {}).map(([key, imageData]) => ({
     key,
     fileName: imageData.fileName || key,
-    url: imageData.fileName ? buildImageUrl(imageData.fileName) : (imageData.url || ''),
+    url: imageData.fileName ? buildImageUrl(imageData.fileName) : imageData.url || '',
   }))
 
   const beforeUpload = (file: File) => {
@@ -111,12 +111,12 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     try {
       const result = await uploadFile(selectedFile)
       if (result) {
-        const newValue = { 
-          ...value, 
-          [newImageLabel]: { 
-            fileName: result.fileName, 
-            url: result.url 
-          } 
+        const newValue = {
+          ...value,
+          [newImageLabel]: {
+            fileName: result.fileName,
+            url: result.url,
+          },
         }
         onChange?.(newValue)
         message.success('上传成功')
@@ -241,7 +241,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
           const timestamp = new Date().getTime()
           const imageItem = value[key]
           const fileName = imageItem.fileName || ''
-          const originalUrl = fileName ? buildImageUrl(fileName) : (imageItem.url || '')
+          const originalUrl = fileName ? buildImageUrl(fileName) : imageItem.url || ''
           const updatedUrl = originalUrl.includes('?')
             ? originalUrl.split('?')[0] + `?t=${timestamp}`
             : originalUrl + `?t=${timestamp}`
@@ -291,9 +291,10 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             {imageList.map(item => {
               // 添加时间戳到URL以避免缓存
               const hasRetried = retryCount[item.key] > 0
-              const imgUrl = hasRetried && item.url
-                ? `${item.url}${item.url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`
-                : item.url
+              const imgUrl =
+                hasRetried && item.url
+                  ? `${item.url}${item.url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`
+                  : item.url
 
               return (
                 <Card

@@ -42,4 +42,4 @@ export function useDebounce<T extends (...args: any[]) => any>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [delay, ...deps]
   )
-} 
+}

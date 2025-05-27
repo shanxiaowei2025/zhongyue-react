@@ -79,7 +79,7 @@ instance.interceptors.response.use(
     if (response.config.responseType === 'blob') {
       return response
     }
-    
+
     // 添加响应日志
     console.log('API响应原始数据:', response.data)
 
@@ -158,7 +158,7 @@ instance.interceptors.response.use(
       // 处理403错误，显示后端返回的错误消息
       const errorMessage = error.response?.data?.message || '权限不足，无法执行此操作'
       message.error(errorMessage)
-      
+
       // 可以根据需要跳转到403页面，但不要阻止显示错误消息
       // 已经注释掉以下代码，因为我们希望用户看到确切的错误消息
       // setTimeout(() => {
@@ -184,9 +184,8 @@ const request = {
   },
   post<T>(url: string, data?: object): Promise<T> {
     // 检查是否为FormData类型，如果是FormData则设置正确的Content-Type
-    const config = data instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } } 
-      : {};
+    const config =
+      data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
     return instance.post(url, data, config).then(res => res.data)
   },
   put<T>(url: string, data?: object): Promise<T> {

@@ -42,9 +42,9 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
           processedOtherIdImages[key] = value as ImageType
         } else if (typeof value === 'string') {
           // 字符串URL格式，转换为ImageType
-          processedOtherIdImages[key] = { 
+          processedOtherIdImages[key] = {
             fileName: extractFileNameFromUrl(value as string),
-            url: value as string 
+            url: value as string,
           }
         }
       })
@@ -69,9 +69,9 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
           processedSupplementaryImages[key] = value as ImageType
         } else if (typeof value === 'string') {
           // 字符串URL格式，转换为ImageType
-          processedSupplementaryImages[key] = { 
+          processedSupplementaryImages[key] = {
             fileName: extractFileNameFromUrl(value as string),
-            url: value as string 
+            url: value as string,
           }
         }
       })
@@ -86,21 +86,22 @@ export const processCustomerImages = (formData: any): Partial<Customer> => {
 // 从URL中提取文件名
 function extractFileNameFromUrl(url: string): string {
   if (!url) return ''
-  
+
   try {
     // 检查是否已经是使用MinIO拼接的URL，解析出文件名
-    const minioEndpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
+    const minioEndpoint =
+      import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
     if (url.startsWith(minioEndpoint)) {
       // 从URL中提取路径的最后一部分作为文件名
       const parts = url.split('/')
       return parts[parts.length - 1].split('?')[0] // 移除查询参数
     }
-    
+
     // 从URL路径中提取文件名
     const urlParts = url.split('/')
     const fileNameWithParams = urlParts[urlParts.length - 1]
     const fileName = fileNameWithParams.split('?')[0] // 移除查询参数
-    
+
     return fileName
   } catch (e) {
     console.error('提取文件名错误:', e)

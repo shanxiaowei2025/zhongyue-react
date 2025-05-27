@@ -263,22 +263,22 @@ export interface ImageType {
 }
 
 export interface PaidInCapitalItem {
-  name: string;
-  contributionDate: string | null; // 后端是Date类型或null，前端用string或null存储
-  amount: number;
-  images: Record<string, ImageType>;
+  name: string
+  contributionDate: string | null // 后端是Date类型或null，前端用string或null存储
+  amount: number
+  images: Record<string, ImageType>
 }
 
 export interface AdministrativeLicenseItem {
-  licenseType: string;
-  startDate: string | null; // 后端是Date类型或null，前端用string或null存储
-  expiryDate: string | null; // 后端是Date类型或null，前端用string或null存储
-  images: Record<string, ImageType>;
+  licenseType: string
+  startDate: string | null // 后端是Date类型或null，前端用string或null存储
+  expiryDate: string | null // 后端是Date类型或null，前端用string或null存储
+  images: Record<string, ImageType>
 }
 
 export interface ActualResponsibleItem {
-  name: string;
-  phone: string;
+  name: string
+  phone: string
 }
 
 export type RoleType = 'super_admin' | 'admin' | 'register_specialist' | string

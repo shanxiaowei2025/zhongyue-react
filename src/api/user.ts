@@ -1,5 +1,12 @@
 import request from './request'
-import type { User, LoginForm, RegisterForm, PaginationParams, PaginatedResponse, ApiResponse } from '../types'
+import type {
+  User,
+  LoginForm,
+  RegisterForm,
+  PaginationParams,
+  PaginatedResponse,
+  ApiResponse,
+} from '../types'
 
 // 登录
 export const login = (data: LoginForm) => {

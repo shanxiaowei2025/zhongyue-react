@@ -193,7 +193,9 @@ const Permissions = () => {
 
     return (
       <Table
-        rowKey={record => `${record.role.id || 'role'}_${record.role.name || 'unknown'}_${pageName}`}
+        rowKey={record =>
+          `${record.role.id || 'role'}_${record.role.name || 'unknown'}_${pageName}`
+        }
         columns={columns}
         dataSource={rolePermissions}
         pagination={false}

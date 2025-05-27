@@ -135,11 +135,16 @@ export const deleteFile = async (fileName: string): Promise<boolean> => {
 export const buildImageUrl = (fileName: string | any): string => {
   // 如果fileName为空或不是字符串，返回空字符串
   if (!fileName) return ''
-  
+
   // 确保fileName是字符串类型
-  const fileNameStr = typeof fileName === 'string' ? fileName : 
-                     (fileName.fileName ? fileName.fileName : 
-                     (fileName.url ? fileName.url : String(fileName)))
+  const fileNameStr =
+    typeof fileName === 'string'
+      ? fileName
+      : fileName.fileName
+        ? fileName.fileName
+        : fileName.url
+          ? fileName.url
+          : String(fileName)
 
   // 从环境变量获取MinIO配置
   const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'

@@ -26,32 +26,21 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
   }
 
   return (
-    <Modal
-      title="费用审核"
-      open={visible}
-      onCancel={handleCancel}
-      footer={null}
-      width={600}
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ status: ExpenseStatus.Approved }}
-      >
+    <Modal title="费用审核" open={visible} onCancel={handleCancel} footer={null} width={600}>
+      <Form form={form} layout="vertical" initialValues={{ status: ExpenseStatus.Approved }}>
         <div className="text-center mb-6">
           <Form.Item name="status" className="mb-8">
-            <Radio.Group buttonStyle="solid" size="large" className="audit-button-group" optionType="button">
-              <Radio.Button 
-                value={ExpenseStatus.Approved} 
-                className="audit-button-approved"
-              >
+            <Radio.Group
+              buttonStyle="solid"
+              size="large"
+              className="audit-button-group"
+              optionType="button"
+            >
+              <Radio.Button value={ExpenseStatus.Approved} className="audit-button-approved">
                 <CheckOutlined style={{ marginRight: '8px' }} />
                 审核通过
               </Radio.Button>
-              <Radio.Button 
-                value={ExpenseStatus.Rejected} 
-                className="audit-button-rejected"
-              >
+              <Radio.Button value={ExpenseStatus.Rejected} className="audit-button-rejected">
                 <CloseOutlined style={{ marginRight: '8px' }} />
                 审核退回
               </Radio.Button>
@@ -63,7 +52,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
           noStyle
           shouldUpdate={(prevValues, currentValues) => prevValues.status !== currentValues.status}
         >
-          {({ getFieldValue }) => (
+          {({ getFieldValue }) =>
             getFieldValue('status') === ExpenseStatus.Rejected && (
               <Form.Item
                 name="reason"
@@ -73,7 +62,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
                 <Input.TextArea rows={4} placeholder="请输入退回原因" />
               </Form.Item>
             )
-          )}
+          }
         </Form.Item>
 
         <Form.Item className="text-right mb-0 mt-6">
@@ -89,4 +78,4 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, onClose, onConfirm }) 
   )
 }
 
-export default AuditModal 
+export default AuditModal

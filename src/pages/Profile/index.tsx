@@ -101,7 +101,7 @@ const Profile = () => {
       message.error('两次输入的新密码不一致')
       return
     }
-    
+
     // 验证新密码不能与旧密码相同
     if (values.oldPassword === values.newPassword) {
       message.error('新密码不能与当前密码相同')
@@ -118,7 +118,7 @@ const Profile = () => {
       if (response && response.code === 0) {
         message.success('密码修改成功')
         passwordForm.resetFields()
-        
+
         // 更新密码修改时间
         const now = new Date().toISOString()
         useAuthStore.getState().setPasswordUpdatedAt(now)

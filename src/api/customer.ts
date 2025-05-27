@@ -139,28 +139,28 @@ export const exportCustomerCSV = () => {
 export const importCustomerExcel = async (file: File) => {
   const formData = new FormData()
   formData.append('file', file)
-  
+
   try {
     const response = await request.post<
       ApiResponse<{
-        success: boolean;
-        message: string;
-        count: number;
+        success: boolean
+        message: string
+        count: number
         failedRecords?: Array<{
-          index: number;
-          row: number;
-          companyName: string;
-          unifiedSocialCreditCode: string;
-          errors?: string[];
-          reason: string;
-        }>;
+          index: number
+          row: number
+          companyName: string
+          unifiedSocialCreditCode: string
+          errors?: string[]
+          reason: string
+        }>
       }>
-    >('/customer/import-excel', formData);
-    
-    return response;
+    >('/customer/import-excel', formData)
+
+    return response
   } catch (error) {
-    console.error('导入客户Excel文件出错:', error);
-    throw error;
+    console.error('导入客户Excel文件出错:', error)
+    throw error
   }
 }
 
@@ -168,27 +168,27 @@ export const importCustomerExcel = async (file: File) => {
 export const updateCustomerExcel = async (file: File) => {
   const formData = new FormData()
   formData.append('file', file)
-  
+
   try {
     const response = await request.post<
       ApiResponse<{
-        success: boolean;
-        message: string;
-        count: number;
+        success: boolean
+        message: string
+        count: number
         failedRecords?: Array<{
-          index: number;
-          row: number;
-          companyName: string;
-          unifiedSocialCreditCode: string;
-          errors?: string[];
-          reason: string;
-        }>;
+          index: number
+          row: number
+          companyName: string
+          unifiedSocialCreditCode: string
+          errors?: string[]
+          reason: string
+        }>
       }>
-    >('/customer/update-excel', formData);
-    
-    return response;
+    >('/customer/update-excel', formData)
+
+    return response
   } catch (error) {
-    console.error('批量替换客户Excel文件出错:', error);
-    throw error;
+    console.error('批量替换客户Excel文件出错:', error)
+    throw error
   }
 }
