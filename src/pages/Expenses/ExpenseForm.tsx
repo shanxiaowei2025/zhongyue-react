@@ -17,10 +17,11 @@ import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import {
   Expense,
-  CreateExpenseDto,
-  ExpenseStatus,
   ExpenseFormData,
+  CreateExpenseDto,
+  UpdateExpenseDto,
   FileItem,
+  ExpenseStatus,
 } from '../../types/expense'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
@@ -533,6 +534,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         await createExpense(formattedValues)
         message.success('费用创建成功')
       } else if (mode === 'edit' && expense) {
+        // 如果是编辑被退回的费用，重新提交后设置状态为待审核并清空退回原因
+        if (expense.status === ExpenseStatus.Rejected) {
+          formattedValues.status = ExpenseStatus.Pending
+          formattedValues.rejectReason = ''
+        }
+        
         await updateExpense(expense.id, formattedValues)
         message.success('费用更新成功')
       }

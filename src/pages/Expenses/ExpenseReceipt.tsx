@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Spin, Button, Flex, Radio } from 'antd'
-import { useExpenseReceipt, getExpenseReceiptKey } from '../../hooks/useExpense'
-import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons'
+import { useExpenseReceipt, getExpenseReceiptKey, useExpenseDetail } from '../../hooks/useExpense'
+import { DownloadOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import html2canvas from 'html2canvas'
 import { message } from 'antd'
 import { mutate } from 'swr'
+import MultiFileUpload from '../../components/MultiFileUpload'
+import { buildImageUrl } from '../../utils/upload'
 
 interface ExpenseReceiptProps {
   visible: boolean
@@ -41,8 +43,12 @@ const receiverMap: Record<SealType, string> = {
 
 const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onClose, previewMode = false }) => {
   const { receipt, isLoading } = useExpenseReceipt(visible ? expenseId : null)
+  const { expense, updateExpense, refreshExpenseDetail } = useExpenseDetail(visible ? expenseId : null)
   const [selectedSeal, setSelectedSeal] = useState<SealType>('中岳')
   const [hasRefreshed, setHasRefreshed] = useState(false)
+  const [contractImage, setContractImage] = useState<Array<{fileName: string, url: string}>>([])
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
 
   // 在组件显示时刷新数据，但只刷新一次
   useEffect(() => {
@@ -69,6 +75,28 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
     }
   }, [receipt, isLoading, visible]);
 
+  // 在组件显示时初始化合同数据 - 从expense数据获取，而不是receipt
+  useEffect(() => {
+    if (visible && expense?.contractImage) {
+      // 处理contractImage数据，可能是字符串数组或单个字符串
+      if (Array.isArray(expense.contractImage)) {
+        setContractImage(expense.contractImage.map((fileName: string) => ({
+          fileName,
+          url: buildImageUrl(fileName)
+        })))
+      } else if (typeof expense.contractImage === 'string' && expense.contractImage) {
+        setContractImage([{
+          fileName: expense.contractImage,
+          url: buildImageUrl(expense.contractImage)
+        }])
+      } else {
+        setContractImage([])
+      }
+    } else {
+      setContractImage([])
+    }
+  }, [visible, expense])
+
   // 刷新收据数据
   const refreshReceipt = async (showMessage = true) => {
     if (!expenseId) return;
@@ -79,6 +107,8 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
       }
       
       await mutate(getExpenseReceiptKey(expenseId));
+      // 同时刷新费用详情数据以获取最新的电子合同
+      await refreshExpenseDetail();
       
       if (showMessage) {
         message.success('收据数据已刷新');
@@ -238,6 +268,46 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   // 处理印章选择变更
   const handleSealChange = (e: any) => {
     setSelectedSeal(e.target.value)
+  }
+
+  // 处理电子合同变更
+  const handleContractChange = (files: Array<{fileName: string, url: string}>) => {
+    setContractImage(files)
+  }
+
+  // 处理文件上传成功
+  const handleFileUpload = (fileName: string) => {
+    setUploadedFiles(prev => [...prev, fileName])
+  }
+
+  // 处理文件删除
+  const handleFileRemove = (fileName: string) => {
+    setUploadedFiles(prev => prev.filter(name => name !== fileName))
+  }
+
+  // 保存电子合同到费用记录
+  const handleSaveContract = async () => {
+    if (!expenseId) return;
+    
+    try {
+      setIsSaving(true);
+      // 将对象数组转换为文件名数组
+      const fileNames = contractImage.map(item => item.fileName);
+      
+      await updateExpense(expenseId, {
+        contractImage: fileNames
+      });
+      
+      message.success('电子合同已保存');
+      // 刷新收据数据和费用详情数据
+      await mutate(getExpenseReceiptKey(expenseId));
+      await refreshExpenseDetail();
+    } catch (error) {
+      console.error('保存电子合同失败:', error);
+      message.error('保存电子合同失败');
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   // 格式化金额为大写
@@ -559,6 +629,32 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
                 <Radio.Button value="金盾">金盾</Radio.Button>
                 <Radio.Button value="如你心意">如你心意</Radio.Button>
               </Radio.Group>
+            </div>
+          )}
+          
+          {/* 电子合同上传 - 在预览模式下不显示 */}
+          {!previewMode && (
+            <div className="contract-upload-section" style={{ marginTop: '20px', borderTop: '2px dashed #d9d9d9', paddingTop: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p>电子合同：</p>
+                <Button 
+                  type="primary" 
+                  icon={<SaveOutlined />} 
+                  onClick={handleSaveContract}
+                  loading={isSaving}
+                  disabled={contractImage.length === 0}
+                >
+                  保存电子合同
+                </Button>
+              </div>
+              <MultiFileUpload
+                label="电子合同"
+                value={contractImage}
+                onChange={handleContractChange}
+                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                onFileUpload={handleFileUpload}
+                onFileRemove={handleFileRemove}
+              />
             </div>
           )}
           

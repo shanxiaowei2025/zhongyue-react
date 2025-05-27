@@ -198,6 +198,6 @@ export interface ReceiptViewDto {
   administrativeLicenseFee?: number | string
   otherBusinessFee?: number | string
   receiptRemarks?: string
-  // 新的费用明细数组
+  contractImage?: string | string[] // 电子合同
   feeItems?: FeeItem[]
 }
