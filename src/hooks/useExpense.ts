@@ -89,8 +89,13 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
 export const expenseDetailFetcher = async (url: string) => {
   try {
     const response = await getExpenseById(Number(url.split('/').pop()))
-    console.log('费用详情数据获取成功:', response)
-    return response
+    console.log('费用详情API响应:', response)
+    
+    // 从响应中提取data部分（与receipt fetcher保持一致的处理方式）
+    const expenseData = response.data
+    console.log('费用详情数据提取:', expenseData)
+    
+    return expenseData
   } catch (error) {
     console.error('获取费用详情失败:', error)
     throw error

@@ -77,22 +77,37 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
 
   // 在组件显示时初始化合同数据 - 从expense数据获取，而不是receipt
   useEffect(() => {
-    if (visible && expense?.contractImage) {
-      // 处理contractImage数据，可能是字符串数组或单个字符串
-      if (Array.isArray(expense.contractImage)) {
-        setContractImage(expense.contractImage.map((fileName: string) => ({
-          fileName,
-          url: buildImageUrl(fileName)
-        })))
-      } else if (typeof expense.contractImage === 'string' && expense.contractImage) {
-        setContractImage([{
-          fileName: expense.contractImage,
-          url: buildImageUrl(expense.contractImage)
-        }])
+    console.log('ExpenseReceipt - 初始化电子合同数据:', {
+      visible,
+      expense,
+      contractImage: expense?.contractImage
+    });
+    
+    if (visible && expense) {
+      if (expense.contractImage && expense.contractImage.length > 0) {
+        // 处理contractImage数据，可能是字符串数组或单个字符串
+        if (Array.isArray(expense.contractImage)) {
+          console.log('ExpenseReceipt - 处理数组格式的合同数据:', expense.contractImage);
+          setContractImage(expense.contractImage.map((fileName: string) => ({
+            fileName,
+            url: buildImageUrl(fileName)
+          })))
+        } else if (typeof expense.contractImage === 'string' && expense.contractImage) {
+          console.log('ExpenseReceipt - 处理字符串格式的合同数据:', expense.contractImage);
+          setContractImage([{
+            fileName: expense.contractImage,
+            url: buildImageUrl(expense.contractImage)
+          }])
+        } else {
+          console.log('ExpenseReceipt - 合同数据格式不正确，清空合同数据');
+          setContractImage([])
+        }
       } else {
+        console.log('ExpenseReceipt - 没有合同数据，清空合同数据');
         setContractImage([])
       }
     } else {
+      console.log('ExpenseReceipt - 模态框未显示或expense数据未加载，清空合同数据');
       setContractImage([])
     }
   }, [visible, expense])
