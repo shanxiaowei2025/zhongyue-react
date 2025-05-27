@@ -17,6 +17,7 @@ const Departments = lazy(() => import('../pages/Departments'))
 const Profile = lazy(() => import('../pages/Profile'))
 const Customers = lazy(() => import('../pages/Customers'))
 const Expenses = lazy(() => import('../pages/Expenses'))
+const Contracts = lazy(() => import('../pages/Contracts'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -82,6 +83,10 @@ const routes: RouteObject[] = [
       {
         path: 'expenses',
         element: <Expenses />,
+      },
+      {
+        path: 'contracts',
+        element: <Contracts />,
       },
       {
         path: 'profile',
