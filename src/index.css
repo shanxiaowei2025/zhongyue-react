@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 嵌入 SimSun 字体 */
+@font-face {
+  font-family: 'SimSun';
+  src: url('/fonts/simsun.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* 优化字体加载性能 */
+}
+
+/* 正式文档字体样式 */
+.formal-document-font {
+  font-family: 'SimSun', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+/* 收据专用字体样式 */
+.receipt-document {
+  font-family: 'SimSun', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -719,7 +738,7 @@ body.ant-modal-open {
   .customer-table {
     margin-top: 12px;
   }
-  
+
   .customer-table .ant-table-cell {
     padding: 8px 6px !important;
     font-size: 13px;
@@ -745,40 +764,40 @@ body.ant-modal-open {
   .customer-images-section {
     gap: 8px;
   }
-  
+
   /* 移动端详情页调整 */
   .customer-detail-container {
     margin: -12px;
   }
-  
+
   .customer-detail-scroll-container {
     padding-bottom: 60px;
   }
-  
+
   .customer-detail-tabs .ant-tabs-nav {
     margin-bottom: 8px;
     padding: 0 8px;
   }
-  
+
   .customer-detail-tabs .ant-descriptions-header {
     padding: 8px;
   }
-  
+
   .customer-detail-tabs .ant-descriptions-view {
     padding: 0;
   }
-  
-  .customer-detail-tabs .ant-descriptions-item-label, 
+
+  .customer-detail-tabs .ant-descriptions-item-label,
   .customer-detail-tabs .ant-descriptions-item-content {
     padding: 6px 8px;
     font-size: 13px;
   }
-  
+
   .customer-detail-footer {
     height: 52px;
     padding: 10px 12px;
   }
-  
+
   /* Drawer内部详情页调整 */
   .ant-drawer-body .customer-detail-container {
     margin: 0;
@@ -833,4 +852,116 @@ body.ant-modal-open {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* 费用收据模态框样式 */
+.receipt-modal .ant-modal-body {
+  overflow-x: auto;
+  padding: 24px;
+}
+
+.receipt-modal .receipt-container {
+  min-width: 1000px;
+  max-width: none;
+  overflow-x: auto;
+}
+
+.receipt-modal .receipt-table {
+  min-width: 800px;
+  width: 100%;
+}
+
+/* 确保在较小屏幕上能够横向滚动 */
+@media (max-width: 1600px) {
+  .receipt-modal .ant-modal-body {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+  
+  .receipt-modal .receipt-container {
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+}
+
+/* 合同管理相关样式 */
+.contract-search-form .ant-form-item {
+  margin-bottom: 8px !important;
+}
+
+.contract-search-form .ant-form-item-label {
+  width: auto !important;
+  min-width: 80px;
+  text-align: left !important;
+  padding-right: 8px !important;
+}
+
+.contract-search-form .ant-form-item-label > label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.contract-search-form .ant-input,
+.contract-search-form .ant-select-selector {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+
+.contract-search-form .ant-input:hover,
+.contract-search-form .ant-select-selector:hover {
+  border-color: #3b82f6;
+}
+
+.contract-search-form .ant-input:focus,
+.contract-search-form .ant-select-focused .ant-select-selector {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.contract-search-form .ant-picker {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+
+.contract-search-form .ant-picker:hover {
+  border-color: #3b82f6;
+}
+
+.contract-search-form .ant-picker.ant-picker-focused {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.contract-table {
+  /* 合同表格特定样式 */
+}
+
+@media (max-width: 768px) {
+  .contract-search-form .grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .contract-search-form .ant-form-item-label {
+    min-width: 60px;
+  }
+
+  .contract-search-form .ant-input,
+  .contract-search-form .ant-select-selector {
+    width: 100% !important;
+  }
+
+  /* 移动端按钮布局调整 */
+  .contract-search-form .flex.justify-between {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .contract-search-form .flex.justify-between .ant-space {
+    justify-content: center;
+  }
 }

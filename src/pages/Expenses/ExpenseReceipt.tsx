@@ -159,11 +159,18 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
     const receiptId = receipt?.id || 'unknown'
     const fileName = `${companyName.trim()}-收据-${receiptId}.png`
 
-    // 隐藏印章选择器，以便截图不包含它
+    // 隐藏印章选择器和电子合同上传部分，以便截图不包含它们
     const sealSelector = element.querySelector('.seal-selector') as HTMLElement
-    const originalDisplay = sealSelector ? sealSelector.style.display : ''
+    const contractUploadSection = element.querySelector('.contract-upload-section') as HTMLElement
+
+    const originalSealDisplay = sealSelector ? sealSelector.style.display : ''
+    const originalContractDisplay = contractUploadSection ? contractUploadSection.style.display : ''
+
     if (sealSelector) {
       sealSelector.style.display = 'none'
+    }
+    if (contractUploadSection) {
+      contractUploadSection.style.display = 'none'
     }
 
     // 在导出前临时添加样式修复表格边框
@@ -254,9 +261,12 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
         },
       })
         .then(canvas => {
-          // 恢复印章选择器显示
+          // 恢复印章选择器和电子合同上传部分显示
           if (sealSelector) {
-            sealSelector.style.display = originalDisplay
+            sealSelector.style.display = originalSealDisplay
+          }
+          if (contractUploadSection) {
+            contractUploadSection.style.display = originalContractDisplay
           }
 
           // 移除临时样式
@@ -278,9 +288,12 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
           console.error('生成图片错误:', err)
           message.error('生成图片失败')
 
-          // 恢复印章选择器显示以及移除临时样式
+          // 恢复印章选择器和电子合同上传部分显示以及移除临时样式
           if (sealSelector) {
-            sealSelector.style.display = originalDisplay
+            sealSelector.style.display = originalSealDisplay
+          }
+          if (contractUploadSection) {
+            contractUploadSection.style.display = originalContractDisplay
           }
           if (document.head.contains(exportStyle)) {
             document.head.removeChild(exportStyle)
@@ -460,8 +473,6 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
                         style={{
                           padding: '8px 6px',
                           textAlign: 'center',
-                          fontSize: '13px',
-                          color: '#666',
                         }}
                       >
                         {dateRangeText}
@@ -518,7 +529,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       title={previewMode ? '预览收据' : '电子收款收据'}
       open={visible}
       onCancel={onClose}
-      width={800}
+      width={1200}
       className="receipt-modal"
       footer={
         previewMode
@@ -551,7 +562,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
         </div>
       ) : receipt ? (
         <div
-          className={`bg-white receipt-container${previewMode ? ' preview-mode' : ''}`}
+          className={`bg-white receipt-container receipt-document${previewMode ? ' preview-mode' : ''}`}
           id="receipt-printable"
         >
           {/* 收据头部 - 根据是否显示logo使用不同的布局方式 */}
@@ -757,7 +768,6 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
               border: 2px solid #d9d9d9;
               border-radius: 8px;
               box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-              font-family: 'SimSun', serif;
               background-color: #fff;
             }
             
@@ -828,8 +838,8 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
             .receipt-table td {
               border: 1px solid #000;
               padding: 12px 15px;
-              font-size: 15px;
-              line-height: 1.5;
+              font-size: 13px;
+              line-height: 1;
             }
             
             .label-cell {
