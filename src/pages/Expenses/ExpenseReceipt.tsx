@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Spin, Button, Flex, Radio } from 'antd'
 import { useExpenseReceipt, getExpenseReceiptKey, useExpenseDetail } from '../../hooks/useExpense'
-import { DownloadOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons'
+import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import html2canvas from 'html2canvas'
 import { message } from 'antd'
@@ -48,7 +48,6 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   const [hasRefreshed, setHasRefreshed] = useState(false)
   const [contractImage, setContractImage] = useState<Array<{fileName: string, url: string}>>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
-  const [isSaving, setIsSaving] = useState(false)
 
   // 在组件显示时刷新数据，但只刷新一次
   useEffect(() => {
@@ -285,9 +284,29 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
     setSelectedSeal(e.target.value)
   }
 
-  // 处理电子合同变更
-  const handleContractChange = (files: Array<{fileName: string, url: string}>) => {
+  // 处理电子合同变更 - 自动保存
+  const handleContractChange = async (files: Array<{fileName: string, url: string}>) => {
     setContractImage(files)
+    
+    // 自动保存电子合同
+    if (!expenseId) return;
+    
+    try {
+      // 将对象数组转换为文件名数组
+      const fileNames = files.map(item => item.fileName);
+      
+      await updateExpense(expenseId, {
+        contractImage: fileNames
+      });
+      
+      message.success('电子合同已自动保存');
+      // 刷新收据数据和费用详情数据
+      await mutate(getExpenseReceiptKey(expenseId));
+      await refreshExpenseDetail();
+    } catch (error) {
+      console.error('自动保存电子合同失败:', error);
+      message.error('自动保存电子合同失败');
+    }
   }
 
   // 处理文件上传成功
@@ -298,31 +317,6 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
   // 处理文件删除
   const handleFileRemove = (fileName: string) => {
     setUploadedFiles(prev => prev.filter(name => name !== fileName))
-  }
-
-  // 保存电子合同到费用记录
-  const handleSaveContract = async () => {
-    if (!expenseId) return;
-    
-    try {
-      setIsSaving(true);
-      // 将对象数组转换为文件名数组
-      const fileNames = contractImage.map(item => item.fileName);
-      
-      await updateExpense(expenseId, {
-        contractImage: fileNames
-      });
-      
-      message.success('电子合同已保存');
-      // 刷新收据数据和费用详情数据
-      await mutate(getExpenseReceiptKey(expenseId));
-      await refreshExpenseDetail();
-    } catch (error) {
-      console.error('保存电子合同失败:', error);
-      message.error('保存电子合同失败');
-    } finally {
-      setIsSaving(false);
-    }
   }
 
   // 格式化金额为大写
@@ -650,18 +644,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({ visible, expenseId, onC
           {/* 电子合同上传 - 在预览模式下不显示 */}
           {!previewMode && (
             <div className="contract-upload-section" style={{ marginTop: '20px', borderTop: '2px dashed #d9d9d9', paddingTop: '15px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p>电子合同：</p>
-                <Button 
-                  type="primary" 
-                  icon={<SaveOutlined />} 
-                  onClick={handleSaveContract}
-                  loading={isSaving}
-                  disabled={contractImage.length === 0}
-                >
-                  保存电子合同
-                </Button>
-              </div>
+              <p style={{ marginBottom: '15px', fontWeight: '600', fontSize: '15px' }}>电子合同：</p>
               <MultiFileUpload
                 label="电子合同"
                 value={contractImage}
