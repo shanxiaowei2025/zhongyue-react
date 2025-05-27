@@ -965,3 +965,38 @@ body.ant-modal-open {
     justify-content: center;
   }
 }
+
+/* 合同表格样式 */
+.contract-table .ant-table-thead > tr > th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  font-weight: 600;
+}
+
+/* 发起合同模态框样式 */
+.contract-create-modal .ant-steps {
+  margin-bottom: 32px;
+}
+
+.contract-create-modal .ant-radio-wrapper {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.contract-create-modal .ant-radio-wrapper:hover {
+  background-color: #f0f9ff;
+  border-color: #91caff;
+}
+
+.contract-create-modal .ant-radio-wrapper-checked {
+  background-color: #e6f7ff;
+  border-color: #1890ff;
+}
+
+.contract-create-modal .ant-radio-wrapper-checked:hover {
+  background-color: #d1f2eb;
+  border-color: #52c41a;
+}

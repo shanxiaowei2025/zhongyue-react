@@ -18,6 +18,9 @@ const Profile = lazy(() => import('../pages/Profile'))
 const Customers = lazy(() => import('../pages/Customers'))
 const Expenses = lazy(() => import('../pages/Expenses'))
 const Contracts = lazy(() => import('../pages/Contracts'))
+const CreateContract = lazy(() => import('../pages/Contracts/CreateContract'))
+const ContractDetail = lazy(() => import('../pages/Contracts/ContractDetail'))
+const EditContract = lazy(() => import('../pages/Contracts/EditContract'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -87,6 +90,18 @@ const routes: RouteObject[] = [
       {
         path: 'contracts',
         element: <Contracts />,
+      },
+      {
+        path: 'contracts/create',
+        element: <CreateContract />,
+      },
+      {
+        path: 'contracts/detail/:id',
+        element: <ContractDetail />,
+      },
+      {
+        path: 'contracts/edit/:id',
+        element: <EditContract />,
       },
       {
         path: 'profile',

@@ -14,6 +14,8 @@ import {
   Tooltip,
   Row,
   Col,
+  Steps,
+  Radio,
 } from 'antd'
 import {
   PlusOutlined,
@@ -26,12 +28,46 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import dayjs from 'dayjs'
+import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useContractList } from '../../hooks/useContract'
 import type { Contract, ContractQueryParams, ContractStatus } from '../../types/contract'
 
 const { RangePicker } = DatePicker
 const { Option } = Select
+const { Step } = Steps
+
+// 签署方选项
+const SIGNATORY_OPTIONS = [
+  '定兴县中岳会计服务有限公司',
+  '定兴县中岳会计服务有限公司河北雄安分公司',
+  '定兴县中岳会计服务有限公司高碑店分公司',
+  '保定脉信会计服务有限公司',
+  '定兴县金盾企业管理咨询有限公司',
+  '保定如你心意企业管理咨询有限公司',
+]
+
+// 合同类型选项映射
+const CONTRACT_TYPE_OPTIONS = {
+  // 前4个签署方的合同类型
+  group1: ['产品服务协议', '代理记账合同'],
+  // 后2个签署方的合同类型
+  group2: ['单项服务合同'],
+}
+
+// 获取签署方对应的合同类型选项
+const getContractTypeOptions = (signatory: string) => {
+  const group1Signatories = [
+    '定兴县中岳会计服务有限公司',
+    '定兴县中岳会计服务有限公司河北雄安分公司',
+    '定兴县中岳会计服务有限公司高碑店分公司',
+    '保定脉信会计服务有限公司',
+  ]
+  
+  return group1Signatories.includes(signatory) 
+    ? CONTRACT_TYPE_OPTIONS.group1 
+    : CONTRACT_TYPE_OPTIONS.group2
+}
 
 // 合同状态选项
 const CONTRACT_STATUS_OPTIONS = [
@@ -57,6 +93,13 @@ const getStatusTag = (status?: ContractStatus) => {
 
 const Contracts: React.FC = () => {
   const [form] = Form.useForm()
+  const navigate = useNavigate()
+
+  // 发起合同模态框状态
+  const [createModalVisible, setCreateModalVisible] = useState(false)
+  const [createStep, setCreateStep] = useState(0)
+  const [selectedSignatory, setSelectedSignatory] = useState<string>('')
+  const [selectedContractType, setSelectedContractType] = useState<string>('')
 
   // 页面状态持久化
   const [searchParams, setSearchParams] = usePageStates<
@@ -162,22 +205,63 @@ const Contracts: React.FC = () => {
     })
   }
 
-  // 新增合同
+  // 新增合同 - 打开模态框
   const handleAdd = () => {
-    // TODO: 实现新增合同功能
-    message.info('新增合同功能正在开发中')
+    setCreateModalVisible(true)
+    setCreateStep(0)
+    setSelectedSignatory('')
+    setSelectedContractType('')
+  }
+
+  // 关闭发起合同模态框
+  const handleCreateModalCancel = () => {
+    setCreateModalVisible(false)
+    setCreateStep(0)
+    setSelectedSignatory('')
+    setSelectedContractType('')
+  }
+
+  // 下一步
+  const handleNextStep = () => {
+    if (createStep === 0 && selectedSignatory) {
+      setCreateStep(1)
+      setSelectedContractType('') // 重置合同类型选择
+    }
+  }
+
+  // 上一步
+  const handlePrevStep = () => {
+    if (createStep === 1) {
+      setCreateStep(0)
+    }
+  }
+
+  // 确认创建合同
+  const handleConfirmCreate = () => {
+    if (selectedSignatory && selectedContractType) {
+      // 跳转到合同创建页面，传递选择的参数
+      navigate('/contracts/create', {
+        state: {
+          signatory: selectedSignatory,
+          contractType: selectedContractType,
+        },
+      })
+      
+      // 关闭模态框
+      handleCreateModalCancel()
+    }
   }
 
   // 查看合同详情
   const handleView = (record: Contract) => {
-    // TODO: 实现查看合同详情功能
-    message.info('查看合同详情功能正在开发中')
+    // TODO: 跳转到合同详情页面
+    navigate(`/contracts/detail/${record.id}`)
   }
 
   // 编辑合同
   const handleEdit = (record: Contract) => {
-    // TODO: 实现编辑合同功能
-    message.info('编辑合同功能正在开发中')
+    // TODO: 跳转到合同编辑页面
+    navigate(`/contracts/edit/${record.id}`)
   }
 
   // 删除合同
@@ -231,6 +315,11 @@ const Contracts: React.FC = () => {
     if (!dateString) return '-'
     return dayjs(dateString).format('YYYY-MM-DD HH:mm')
   }
+
+  // 获取当前步骤的合同类型选项
+  const currentContractTypeOptions = selectedSignatory 
+    ? getContractTypeOptions(selectedSignatory)
+    : []
 
   // 表格列定义
   const columns: ColumnsType<Contract> = [
@@ -460,6 +549,96 @@ const Contracts: React.FC = () => {
           className="contract-table"
         />
       </div>
+
+      {/* 发起合同模态框 */}
+      <Modal
+        title="发起合同"
+        open={createModalVisible}
+        onCancel={handleCreateModalCancel}
+        footer={null}
+        width={600}
+        destroyOnClose
+        className="contract-create-modal"
+      >
+        <div className="py-4">
+          {/* 步骤指示器 */}
+          <Steps current={createStep} className="mb-6">
+            <Step title="选择签署方" />
+            <Step title="选择合同类型" />
+          </Steps>
+
+          {/* 第一步：选择签署方 */}
+          {createStep === 0 && (
+            <div>
+              <div className="mb-4">
+                <h4 className="text-base font-medium mb-3">请选择签署方：</h4>
+                <Radio.Group
+                  value={selectedSignatory}
+                  onChange={(e) => setSelectedSignatory(e.target.value)}
+                  className="w-full"
+                >
+                  <div className="space-y-2">
+                    {SIGNATORY_OPTIONS.map((signatory) => (
+                      <Radio key={signatory} value={signatory} className="w-full block">
+                        <span className="ml-2">{signatory}</span>
+                      </Radio>
+                    ))}
+                  </div>
+                </Radio.Group>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button onClick={handleCreateModalCancel}>取消</Button>
+                <Button 
+                  type="primary" 
+                  onClick={handleNextStep}
+                  disabled={!selectedSignatory}
+                >
+                  下一步
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* 第二步：选择合同类型 */}
+          {createStep === 1 && (
+            <div>
+              <div className="mb-4">
+                <div className="mb-3">
+                  <span className="text-gray-600">已选择签署方：</span>
+                  <span className="font-medium text-blue-600">{selectedSignatory}</span>
+                </div>
+                <h4 className="text-base font-medium mb-3">请选择合同类型：</h4>
+                <Radio.Group
+                  value={selectedContractType}
+                  onChange={(e) => setSelectedContractType(e.target.value)}
+                  className="w-full"
+                >
+                  <div className="space-y-2">
+                    {currentContractTypeOptions.map((contractType) => (
+                      <Radio key={contractType} value={contractType} className="w-full block">
+                        <span className="ml-2">{contractType}</span>
+                      </Radio>
+                    ))}
+                  </div>
+                </Radio.Group>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button onClick={handlePrevStep}>上一步</Button>
+                <Button onClick={handleCreateModalCancel}>取消</Button>
+                <Button 
+                  type="primary" 
+                  onClick={handleConfirmCreate}
+                  disabled={!selectedContractType}
+                >
+                  开始填写合同
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }
