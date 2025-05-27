@@ -12,6 +12,7 @@ import {
   message,
   Space,
   Tag,
+  Checkbox,
 } from 'antd'
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { useExpenseDetail } from '../../hooks/useExpense'
@@ -61,6 +62,8 @@ interface FormDateFields {
   socialInsuranceEndDate?: Dayjs
   statisticalStartDate?: Dayjs
   statisticalEndDate?: Dayjs
+  housingFundStartDate?: Dayjs
+  housingFundEndDate?: Dayjs
 }
 
 // 表单数据类型
@@ -100,6 +103,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     'addressFee',
     'invoiceSoftwareFee',
     'socialInsuranceAgencyFee',
+    'housingFundAgencyFee',
     'statisticalReportFee',
     'changeFee',
     'administrativeLicenseFee',
@@ -109,7 +113,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 定义每个标签页包含的费用字段映射
   const tabFeeFieldsMap: Record<string, string[]> = {
     '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee'], // 代理记账
-    '2': ['socialInsuranceAgencyFee'], // 社保代理
+    '2': ['socialInsuranceAgencyFee', 'housingFundAgencyFee'], // 社保代理
     '3': ['statisticalReportFee'], // 统计报表
     '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee', 'addressFee'], // 新办执照
     '5': ['changeFee'], // 变更业务
@@ -257,12 +261,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         addressFee: typeof expense.addressFee === 'string' ? parseFloat(expense.addressFee) : expense.addressFee,
         invoiceSoftwareFee: typeof expense.invoiceSoftwareFee === 'string' ? parseFloat(expense.invoiceSoftwareFee) : expense.invoiceSoftwareFee,
         socialInsuranceAgencyFee: typeof expense.socialInsuranceAgencyFee === 'string' ? parseFloat(expense.socialInsuranceAgencyFee) : expense.socialInsuranceAgencyFee,
+        housingFundAgencyFee: typeof expense.housingFundAgencyFee === 'string' ? parseFloat(expense.housingFundAgencyFee) : expense.housingFundAgencyFee,
         statisticalReportFee: typeof expense.statisticalReportFee === 'string' ? parseFloat(expense.statisticalReportFee) : expense.statisticalReportFee,
         changeFee: typeof expense.changeFee === 'string' ? parseFloat(expense.changeFee) : expense.changeFee,
         administrativeLicenseFee: typeof expense.administrativeLicenseFee === 'string' ? parseFloat(expense.administrativeLicenseFee) : expense.administrativeLicenseFee,
         otherBusinessFee: typeof expense.otherBusinessFee === 'string' ? parseFloat(expense.otherBusinessFee) : expense.otherBusinessFee,
         totalFee: typeof expense.totalFee === 'string' ? parseFloat(expense.totalFee) : expense.totalFee,
         insuredCount: typeof expense.insuredCount === 'string' ? parseInt(expense.insuredCount) : expense.insuredCount,
+        housingFundCount: typeof expense.housingFundCount === 'string' ? parseInt(expense.housingFundCount) : expense.housingFundCount,
         
         // 确保使用了mode=tags的Select组件的值为数组
         chargeMethod: expense.chargeMethod ? 
@@ -309,6 +315,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           : undefined,
         statisticalEndDate: expense.statisticalEndDate
           ? dayjs(expense.statisticalEndDate)
+          : undefined,
+        housingFundStartDate: expense.housingFundStartDate
+          ? dayjs(expense.housingFundStartDate)
+          : undefined,
+        housingFundEndDate: expense.housingFundEndDate
+          ? dayjs(expense.housingFundEndDate)
           : undefined,
       }
 
@@ -460,6 +472,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         'socialInsuranceEndDate',
         'statisticalStartDate',
         'statisticalEndDate',
+        'housingFundStartDate',
+        'housingFundEndDate',
       ].forEach(field => {
         if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
           formattedValues[field] = formattedValues[field].format('YYYY-MM-DD')
@@ -1018,6 +1032,83 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <DatePicker placeholder="结束日期" style={{ width: '100%' }} />
                             </Form.Item>
                           </Space>
+                        </Form.Item>
+
+                        {/* 公积金分割线 */}
+                        <div style={{ gridColumn: 'span 3', borderTop: '1px solid #f0f0f0', margin: '16px 0', paddingTop: '16px' }}>
+                          <h4 style={{ margin: 0, color: '#666', fontSize: '14px', fontWeight: '600' }}>公积金代理</h4>
+                        </div>
+
+                        <Form.Item name="hasHousingFund" label="是否有公积金" valuePropName="checked">
+                          <Checkbox>有公积金</Checkbox>
+                        </Form.Item>
+
+                        <Form.Item name="housingFundCount" label="公积金人数">
+                          <Form.Item dependencies={['hasHousingFund']} noStyle>
+                            {({ getFieldValue }) => {
+                              const hasHousingFund = getFieldValue('hasHousingFund')
+                              return (
+                                <InputNumber
+                                  placeholder="请输入公积金人数"
+                                  style={{ width: '100%' }}
+                                  min={0}
+                                  precision={0}
+                                  disabled={!hasHousingFund}
+                                  parser={(value) => {
+                                    if (value === null || value === undefined || value === '') return 0;
+                                    const parsed = parseInt(value as string, 10);
+                                    return isNaN(parsed) ? 0 : parsed;
+                                  }}
+                                />
+                              )
+                            }}
+                          </Form.Item>
+                        </Form.Item>
+
+                        <Form.Item name="housingFundAgencyFee" label="公积金代理费">
+                          <Form.Item dependencies={['hasHousingFund']} noStyle>
+                            {({ getFieldValue }) => {
+                              const hasHousingFund = getFieldValue('hasHousingFund')
+                              return (
+                                <InputNumber
+                                  placeholder="请输入公积金代理费"
+                                  style={{ width: '100%' }}
+                                  min={0}
+                                  precision={2}
+                                  addonBefore="¥"
+                                  disabled={!hasHousingFund}
+                                  parser={parseNumberInput}
+                                />
+                              )
+                            }}
+                          </Form.Item>
+                        </Form.Item>
+
+                        <Form.Item label="公积金日期" style={{ gridColumn: 'span 2' }}>
+                          <Form.Item dependencies={['hasHousingFund']} noStyle>
+                            {({ getFieldValue }) => {
+                              const hasHousingFund = getFieldValue('hasHousingFund')
+                              return (
+                                <Space style={{ width: '100%' }}>
+                                  <Form.Item name="housingFundStartDate" noStyle>
+                                    <DatePicker 
+                                      placeholder="开始日期" 
+                                      style={{ width: '100%' }} 
+                                      disabled={!hasHousingFund}
+                                    />
+                                  </Form.Item>
+                                  <span>至</span>
+                                  <Form.Item name="housingFundEndDate" noStyle>
+                                    <DatePicker 
+                                      placeholder="结束日期" 
+                                      style={{ width: '100%' }} 
+                                      disabled={!hasHousingFund}
+                                    />
+                                  </Form.Item>
+                                </Space>
+                              )
+                            }}
+                          </Form.Item>
                         </Form.Item>
                       </div>
                     ),

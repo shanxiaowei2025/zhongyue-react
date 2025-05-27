@@ -46,6 +46,12 @@ export interface Expense {
   socialInsuranceAgencyFee: number | string
   socialInsuranceStartDate: string
   socialInsuranceEndDate: string
+  // 公积金相关字段
+  hasHousingFund?: boolean
+  housingFundCount?: number
+  housingFundAgencyFee?: number | string
+  housingFundStartDate?: string
+  housingFundEndDate?: string
   statisticalReportFee: number | string
   statisticalStartDate: string
   statisticalEndDate: string
@@ -108,6 +114,12 @@ export interface CreateExpenseDto {
   socialInsuranceAgencyFee?: number | string
   socialInsuranceStartDate?: string
   socialInsuranceEndDate?: string
+  // 公积金相关字段
+  hasHousingFund?: boolean
+  housingFundCount?: number | string
+  housingFundAgencyFee?: number | string
+  housingFundStartDate?: string
+  housingFundEndDate?: string
   statisticalReportFee?: number | string
   statisticalStartDate?: string
   statisticalEndDate?: string
