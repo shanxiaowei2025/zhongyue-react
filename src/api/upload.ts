@@ -1,27 +1,28 @@
 import request from './request'
 
-interface UploadUrlResponse {
+interface UploadResponse {
   success: boolean
   data: {
-    url: string // 预签名上传 URL
+    url: string // 文件访问 URL
     path: string // 对象存储路径
-    file_url: string // 完整的文件访问 URL
-    expires_in: number // URL 过期时间(秒)
   }
   message?: string
 }
 
 /**
- * 获取文件上传预签名 URL
- * @param filename 文件名
+ * 上传文件到服务器
+ * @param file 文件对象
  * @param directory 目录
  */
-export const getUploadUrl = async (
-  filename: string,
+export const uploadFile = async (
+  file: File,
   directory: string = ''
-): Promise<UploadUrlResponse> => {
-  return request.post<UploadUrlResponse>('/upload/url', {
-    filename,
-    directory,
-  })
+): Promise<UploadResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (directory) {
+    formData.append('directory', directory);
+  }
+  
+  return request.post<UploadResponse>('/storage/upload', formData);
 }

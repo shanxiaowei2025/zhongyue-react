@@ -523,7 +523,21 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         <div className="signature-row">
           <div className="signature-item">
             <span>（甲方盖章）：</span>
-            <div className="signature-area"></div>
+            <div className="signature-area">
+              {contractData.partyAStampImage && (
+                <img 
+                  src={contractData.partyAStampImage} 
+                  alt="甲方盖章" 
+                  className="stamp-image"
+                  style={{ 
+                    maxWidth: '150px', 
+                    maxHeight: '80px', 
+                    display: 'block',
+                    margin: '10px 0'
+                  }}
+                />
+              )}
+            </div>
           </div>
           <div className="signature-item">
             <span>（乙方盖章）：</span>

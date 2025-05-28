@@ -1,10 +1,12 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { Checkbox, Input, DatePicker, message } from 'antd'
+import { Checkbox, Input, DatePicker, message, Button, Upload } from 'antd'
 import type { CheckboxProps } from 'antd'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
 import './ProductServiceAgreement.css'
+import { UploadOutlined } from '@ant-design/icons'
+import { uploadFile } from '../../api/upload'
 
 // 签署方配置
 const SIGNATORY_CONFIG = {
@@ -1015,7 +1017,78 @@ const ProductServiceAgreement = forwardRef<ProductServiceAgreementRef, ProductSe
         <div className="signature-row">
           <div className="signature-item">
             <span>（甲方盖章）：</span>
-            <div className="signature-area"></div>
+            <div className="signature-area">
+              {mode === 'edit' && (
+                <div className="signature-upload">
+                  {formData.partyAStampImage ? (
+                    <div className="stamp-preview">
+                      <img 
+                        src={formData.partyAStampImage} 
+                        alt="甲方盖章" 
+                        className="stamp-image"
+                        style={{ 
+                          maxWidth: '150px', 
+                          maxHeight: '80px', 
+                          display: 'block',
+                          margin: '10px 0'
+                        }}
+                      />
+                      <Button 
+                        size="small" 
+                        danger 
+                        onClick={() => handleFormChange('partyAStampImage', '')}
+                        style={{ marginTop: '5px' }}
+                      >
+                        移除
+                      </Button>
+                    </div>
+                  ) : (
+                    <Upload.Dragger
+                      name="file"
+                      accept="image/*"
+                      showUploadList={false}
+                      customRequest={async ({ file, onSuccess, onError }) => {
+                        try {
+                          // 类型转换
+                          const imageFile = file as File;
+                          
+                          // 直接上传文件
+                          const timestamp = new Date().getTime();
+                          const filename = `stamp_${timestamp}_${imageFile.name}`;
+                          const fileObj = new File([imageFile], filename, { type: imageFile.type });
+                          
+                          const uploadResponse = await uploadFile(fileObj, 'contracts/stamps');
+                          
+                          if (!uploadResponse.success || !uploadResponse.data) {
+                            throw new Error('上传图片失败');
+                          }
+                          
+                          // 设置盖章图片URL
+                          handleFormChange('partyAStampImage', uploadResponse.data.url);
+                          
+                          if (onSuccess) onSuccess('上传成功');
+                        } catch (error) {
+                          console.error('上传失败:', error);
+                          message.error('上传盖章图片失败');
+                          if (onError) onError(new Error('上传失败'));
+                        }
+                      }}
+                      style={{ 
+                        width: '100%', 
+                        maxWidth: '200px',
+                        padding: '10px'
+                      }}
+                    >
+                      <p className="ant-upload-drag-icon">
+                        <UploadOutlined />
+                      </p>
+                      <p className="ant-upload-text">点击或拖拽上传</p>
+                      <p className="ant-upload-hint">请上传甲方盖章图片</p>
+                    </Upload.Dragger>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className="signature-item">
             <span>（乙方盖章）：</span>

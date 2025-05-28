@@ -160,13 +160,15 @@ const ContractDetail: React.FC = () => {
             <h2 className="text-xl font-semibold m-0">合同详情</h2>
           </div>
           <Space>
-            <Button 
-              icon={<EditOutlined />} 
-              onClick={handleEdit}
-              disabled={!contractData || contractData.contractType !== '产品服务协议'}
-            >
-              编辑合同
-            </Button>
+            {contractData && contractData.contractStatus === '0' && (
+              <Button 
+                icon={<EditOutlined />} 
+                onClick={handleEdit}
+                disabled={contractData.contractType !== '产品服务协议'}
+              >
+                编辑合同
+              </Button>
+            )}
           </Space>
         </div>
       </div>

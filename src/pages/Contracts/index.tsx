@@ -32,6 +32,15 @@ import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useContractList } from '../../hooks/useContract'
 import type { Contract, ContractQueryParams, ContractStatus } from '../../types/contract'
+import {
+  getContractList,
+  getContractById,
+  createContract as createContractApi,
+  updateContract as updateContractApi,
+  deleteContract as deleteContractApi,
+  signContract as signContractApi,
+} from '../../api/contract'
+import SignatureCanvas from '../../components/contracts/SignatureCanvas'
 
 const { RangePicker } = DatePicker
 const { Option } = Select
@@ -280,28 +289,60 @@ const Contracts: React.FC = () => {
 
   // 签署合同
   const handleSign = (record: Contract) => {
+    let signatureImageUrl = '';
+    
     Modal.confirm({
       title: '签署合同',
+      icon: null,
+      width: 650,
+      className: 'signature-modal',
       content: (
-        <div>
-          <p>
-            确认签署合同 <strong>{record.contractNumber}</strong> 吗？
+        <div className="signature-modal-content">
+          <p className="mb-4">
+            您正在签署合同 <strong>{record.contractNumber || `#${record.id}`}</strong>
           </p>
-          <p>签署后合同状态将变为"已签署"。</p>
+          
+          {/* 使用直接导入的SignatureCanvas组件 */}
+          <div className="signature-area">
+            <SignatureCanvas
+              onSave={(url: string) => {
+                signatureImageUrl = url;
+                // 自动点击确认按钮
+                document.querySelector('.signature-modal .ant-btn-primary')?.dispatchEvent(
+                  new MouseEvent('click', { bubbles: true })
+                );
+              }}
+            />
+          </div>
         </div>
       ),
       okText: '确认签署',
       cancelText: '取消',
       onOk: async () => {
+        if (!signatureImageUrl) {
+          message.error('请先完成签名');
+          return Promise.reject('未完成签名');
+        }
+        
         try {
-          // 使用简单的签名内容，实际应用中可能需要更复杂的签名逻辑
-          const signature = `${new Date().toISOString()}_${record.id}`
-          await doSignContract(record.id, { signature })
+          // 1. 更新合同的签章图片
+          await updateContractApi(record.id, {
+            partyAStampImage: signatureImageUrl
+          });
+          
+          // 2. 签署合同
+          const signature = `${new Date().toISOString()}_${record.id}`;
+          await doSignContract(record.id, { signature });
+          
+          message.success('合同签署成功');
+          return Promise.resolve();
         } catch (error) {
-          console.error('签署失败:', error)
+          console.error('签署失败:', error);
+          message.error('签署失败，请重试');
+          return Promise.reject(error);
         }
       },
-    })
+    });
   }
 
   // 格式化日期
@@ -429,6 +470,7 @@ const Contracts: React.FC = () => {
               className="action-btn view-btn"
             />
           </Tooltip>
+          {record.contractStatus === '0' && (
           <Tooltip title="编辑">
             <Button
               type="text"
@@ -438,6 +480,7 @@ const Contracts: React.FC = () => {
               className="action-btn edit-btn"
             />
           </Tooltip>
+          )}
           {record.contractStatus === '0' && (
             <Tooltip title="签署合同">
               <Button
