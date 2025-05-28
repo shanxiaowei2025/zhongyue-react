@@ -55,12 +55,6 @@ const CreateContract: React.FC = () => {
     }
   }
 
-  // 保存合同（暂时未实现）
-  const handleSave = () => {
-    // TODO: 实现保存草稿逻辑
-    message.info('保存草稿功能开发中...')
-  }
-
   // 面包屑导航配置
   const breadcrumbItems = [
     {
@@ -164,9 +158,6 @@ const CreateContract: React.FC = () => {
             <h2 className="text-xl font-semibold m-0">创建合同</h2>
           </div>
           <Space>
-            <Button onClick={handleSave} disabled={isSubmitting}>
-              保存草稿
-            </Button>
             <Button 
               type="primary" 
               loading={isSubmitting}

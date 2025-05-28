@@ -1,6 +1,7 @@
-import React, { useState, useImperativeHandle, forwardRef } from 'react'
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
 import { Checkbox, Input, DatePicker, message } from 'antd'
 import type { CheckboxProps } from 'antd'
+import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
 import './ProductServiceAgreement.css'
@@ -41,7 +42,9 @@ interface ProductServiceAgreementProps {
   signatory: string
   contractData?: Record<string, any>
   onSubmit?: (data: CreateContractDto) => void
+  onUpdate?: (data: CreateContractDto) => void
   isSubmitting?: boolean
+  mode?: 'create' | 'edit'
 }
 
 // 暴露给父组件的方法接口
@@ -54,7 +57,9 @@ const ProductServiceAgreement = forwardRef<ProductServiceAgreementRef, ProductSe
   signatory,
   contractData = {},
   onSubmit,
-  isSubmitting = false
+  onUpdate,
+  isSubmitting = false,
+  mode = 'create'
 }, ref) => {
   // 状态管理
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({})
@@ -66,6 +71,49 @@ const ProductServiceAgreement = forwardRef<ProductServiceAgreementRef, ProductSe
   })
   
   const { createContractData } = useContractDetail()
+  
+  // 当contractData变化时，更新表单数据和勾选状态
+  useEffect(() => {
+    if (contractData && Object.keys(contractData).length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        signatory,
+        contractType: '产品服务协议',
+        ...contractData
+      }))
+      
+      // 根据contractData中的服务项目数据初始化勾选状态和金额
+      const newCheckedItems: Record<string, boolean> = {}
+      const newItemAmounts: Record<string, string> = {}
+      
+      // 处理各类服务项目数据
+      const serviceArrays = [
+        contractData.businessEstablishment,
+        contractData.businessChange, 
+        contractData.businessCancellation,
+        contractData.businessOther,
+        contractData.businessMaterials,
+        contractData.taxMatters,
+        contractData.bankMatters,
+        contractData.socialSecurity,
+        contractData.licenseBusiness
+      ]
+      
+      serviceArrays.forEach(serviceArray => {
+        if (Array.isArray(serviceArray)) {
+          serviceArray.forEach(item => {
+            if (item.itemKey) {
+              newCheckedItems[item.itemKey] = true
+              newItemAmounts[item.itemKey] = String(item.amount || '')
+            }
+          })
+        }
+      })
+      
+      setCheckedItems(newCheckedItems)
+      setItemAmounts(newItemAmounts)
+    }
+  }, [contractData, signatory])
   
   const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
   
@@ -330,11 +378,16 @@ const ProductServiceAgreement = forwardRef<ProductServiceAgreementRef, ProductSe
         ...serviceData
       }
       
-      if (onSubmit) {
+      if (mode === 'edit' && onUpdate) {
+        await onUpdate(submitData)
+      } else if (mode === 'create' && onSubmit) {
         await onSubmit(submitData)
-      } else {
+      } else if (mode === 'create') {
+        // 默认创建行为
         await createContractData(submitData)
         message.success('合同创建成功')
+      } else {
+        throw new Error('未配置相应的提交处理方法')
       }
     } catch (error) {
       console.error('提交合同失败:', error)
@@ -976,6 +1029,7 @@ const ProductServiceAgreement = forwardRef<ProductServiceAgreementRef, ProductSe
             <DatePicker 
               placeholder="选择日期" 
               format="YYYY年MM月DD日"
+              value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
               onChange={(date) => handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))}
             />
           </div>
@@ -984,6 +1038,7 @@ const ProductServiceAgreement = forwardRef<ProductServiceAgreementRef, ProductSe
             <DatePicker 
               placeholder="选择日期" 
               format="YYYY年MM月DD日"
+              value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
               onChange={(date) => handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))}
             />
           </div>

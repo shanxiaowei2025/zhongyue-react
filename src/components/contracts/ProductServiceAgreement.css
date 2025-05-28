@@ -781,4 +781,65 @@
 
 .submit-button:active {
   transform: translateY(0);
+}
+
+/* 只读组件样式 - 统一使用黑色 */
+.product-service-agreement .service-content {
+  margin: 8px 0;
+}
+
+.product-service-agreement .party-company-name {
+  font-weight: 500;
+  color: #000;
+}
+
+.product-service-agreement .detail-value {
+  color: #000;
+}
+
+.product-service-agreement .contact-value {
+  color: #000;
+}
+
+.product-service-agreement .location-value {
+  color: #000;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.product-service-agreement .remark-value {
+  color: #000;
+  font-style: italic;
+}
+
+.product-service-agreement .fee-value {
+  color: #000;
+  font-weight: 600;
+}
+
+.product-service-agreement .amount-value {
+  color: #000;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.product-service-agreement .amount-text-value {
+  color: #000;
+  font-weight: 500;
+}
+
+.product-service-agreement .date-value {
+  color: #000;
+  font-weight: 500;
+}
+
+/* Tag组件统一黑色样式 */
+.product-service-agreement .ant-tag {
+  color: #000 !important;
+  border-color: #000 !important;
+  background-color: transparent !important;
+}
+
+.product-service-agreement .text-gray-400 {
+  color: #000 !important;
 } 
