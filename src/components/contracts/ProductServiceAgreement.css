@@ -1,0 +1,784 @@
+/* 产品服务协议样式 - A4纸格式 */
+.product-service-agreement {
+  width: 210mm; /* A4纸宽度 */
+  min-height: 297mm; /* A4纸高度 */
+  padding: 20mm; /* A4纸标准边距 */
+  margin: 0 auto;
+  background: white;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #000;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* 合同头部 */
+.contract-header {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 20px;
+}
+
+.logo-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.company-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.company-info {
+  flex: 1;
+  padding-left: 30px;
+  border-left: 1px solid #ddd;
+}
+
+.company-name {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.company-name-en {
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  color: #666;
+  font-style: italic;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.contact-info {
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.company-registration {
+  font-size: 12px;
+  margin: 0;
+  color: #666;
+  font-weight: normal;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同标题 */
+.contract-title {
+  text-align: center;
+  margin: 30px 0 40px 0;
+}
+
+.contract-title h1 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同双方信息 */
+.contract-parties {
+  margin-bottom: 30px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同方信息块 */
+.party-block {
+  margin-bottom: 20px;
+}
+
+.party-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.party-label {
+  font-weight: bold;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.party-company-input {
+  flex: 1;
+  max-width: 300px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.party-company-name {
+  font-weight: bold;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.party-details {
+  padding-left: 10px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.detail-label {
+  font-weight: normal;
+  min-width: 80px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.detail-input {
+  flex: 1;
+  max-width: 350px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.detail-value {
+  font-size: 12px;
+  color: #333;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.contact-row {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contact-label {
+  font-weight: normal;
+  white-space: nowrap;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.contact-input {
+  width: 80px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.phone-input {
+  width: 120px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+/* 服务项目部分 */
+.service-section {
+  margin-bottom: 30px;
+}
+
+.service-section h3 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 0 20px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.service-category {
+  margin-bottom: 20px;
+}
+
+.service-category h4 {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.service-item {
+  margin-bottom: 15px;
+  padding-left: 20px;
+}
+
+.service-item span {
+  font-weight: normal;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.checkbox-group {
+  margin: 8px 0 8px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.checkbox-group .ant-checkbox-wrapper {
+  font-size: 12px;
+  margin: 0;
+  white-space: nowrap;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.checkbox-group .ant-checkbox-wrapper span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.service-description {
+  margin: 8px 0 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.service-description span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.location-input {
+  width: 150px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.address-hosting {
+  margin: 8px 0 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.address-hosting span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.service-remark {
+  margin: 10px 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.service-remark span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.remark-input {
+  width: 200px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.fee-input {
+  width: 100px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+/* 费用总计 */
+.total-cost {
+  margin-top: 20px;
+  padding: 15px 0;
+  border-top: 1px solid #ddd;
+}
+
+.cost-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.cost-row span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.amount-input {
+  width: 120px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.amount-label {
+  margin-left: 20px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.amount-text-input {
+  width: 200px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.cost-remark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cost-remark span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.remark-long-input {
+  width: 400px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+/* 付款方式、权利义务等各部分 */
+.payment-section,
+.rights-obligations-section,
+.termination-section,
+.liability-section,
+.other-section {
+  margin-bottom: 30px;
+}
+
+.payment-section h3,
+.rights-obligations-section h3,
+.termination-section h3,
+.liability-section h3,
+.other-section h3 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.payment-section p,
+.obligation-item p,
+.termination-item p,
+.liability-item p,
+.other-item p {
+  font-size: 12px;
+  margin: 0 0 10px 0;
+  text-align: justify;
+  line-height: 1.8;
+  text-indent: 0;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.obligation-item,
+.termination-item,
+.liability-item,
+.other-item {
+  margin-bottom: 15px;
+}
+
+.sub-item {
+  margin-left: 20px;
+  margin-bottom: 8px;
+}
+
+.sub-item p {
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 签署区域 */
+.signature-section {
+  margin: 50px 0 30px 0;
+  page-break-inside: avoid;
+}
+
+.signature-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+
+.signature-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.signature-item span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.signature-area {
+  width: 120px;
+  height: 60px;
+  border: 1px dashed #999;
+  background: #fafafa;
+}
+
+.date-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-item .ant-picker {
+  width: 160px;
+  height: 32px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.date-item span {
+  margin-right: 10px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 页脚 */
+.contract-footer {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+.footer-info p {
+  font-size: 11px;
+  margin: 5px 0;
+  color: #666;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 错误信息 */
+.error-message {
+  color: #ff4d4f;
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 输入框样式重置 */
+.product-service-agreement .ant-input {
+  border-radius: 0;
+  box-shadow: none;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.product-service-agreement .ant-input:focus,
+.product-service-agreement .ant-input-focused {
+  border-color: #1890ff;
+  box-shadow: none;
+}
+
+.product-service-agreement .ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.product-service-agreement .ant-checkbox:hover .ant-checkbox-inner,
+.product-service-agreement .ant-checkbox-input:focus + .ant-checkbox-inner {
+  border-color: #1890ff;
+}
+
+.product-service-agreement .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1890ff;
+  border-color: #1890ff;
+}
+
+.product-service-agreement .ant-picker {
+  border-radius: 0;
+  box-shadow: none;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.product-service-agreement .ant-picker:hover,
+.product-service-agreement .ant-picker-focused {
+  border-color: #1890ff;
+  box-shadow: none;
+}
+
+/* 打印样式 */
+@media print {
+  .product-service-agreement {
+    box-shadow: none;
+    margin: 0;
+    padding: 15mm;
+  }
+  
+  .contract-header {
+    page-break-inside: avoid;
+  }
+  
+  .signature-section {
+    page-break-inside: avoid;
+  }
+  
+  .service-category {
+    page-break-inside: avoid;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+  .product-service-agreement {
+    width: 100%;
+    max-width: 210mm;
+    padding: 15mm;
+  }
+  
+  .party-block {
+    margin-bottom: 15px;
+  }
+  
+  .party-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .party-company-input {
+    max-width: 100%;
+  }
+  
+  .detail-input {
+    max-width: 100%;
+  }
+  
+  .contact-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .checkbox-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .cost-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .signature-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .date-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-service-agreement {
+    padding: 10mm;
+    font-size: 11px;
+  }
+  
+  .company-name {
+    font-size: 12px;
+  }
+  
+  .logo-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .company-logo {
+    margin: 0 auto;
+  }
+  
+  .party-label {
+    min-width: auto;
+    font-size: 11px;
+  }
+  
+  .detail-label {
+    min-width: auto;
+    font-size: 11px;
+  }
+  
+  .contact-label {
+    font-size: 11px;
+  }
+  
+  .service-section h3 {
+    font-size: 12px;
+  }
+  
+  .service-category h4 {
+    font-size: 11px;
+  }
+  
+  .payment-section h3,
+  .rights-obligations-section h3,
+  .termination-section h3,
+  .liability-section h3,
+  .other-section h3 {
+    font-size: 12px;
+  }
+}
+
+/* 带金额输入框的复选框容器 */
+.checkbox-with-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 15px;
+  margin-bottom: 8px;
+}
+
+/* 金额输入框组 */
+.amount-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 内联金额输入框 */
+.amount-inline-input {
+  width: 80px !important;
+  height: 24px !important;
+  border: none !important;
+  border-bottom: 1px solid #000 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 2px 4px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  font-size: 11px !important;
+  box-shadow: none !important;
+}
+
+.amount-inline-input:focus {
+  border-bottom-color: #1890ff !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.amount-inline-input.ant-input-sm {
+  height: 24px !important;
+  padding: 2px 4px !important;
+}
+
+/* 金额单位样式 */
+.amount-unit {
+  font-size: 11px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  color: #000;
+  margin-left: 2px;
+}
+
+/* 必填输入框样式 */
+.fee-input.required,
+.amount-input.required,
+.amount-text-input.required {
+  border-bottom-color: #ff4d4f;
+}
+
+.fee-input.required::placeholder,
+.amount-input.required::placeholder,
+.amount-text-input.required::placeholder {
+  color: #ff4d4f;
+  font-weight: 500;
+}
+
+/* 提交区域 */
+.submit-section {
+  margin: 40px 0 30px 0;
+  text-align: center;
+  padding: 20px 0;
+  border-top: 2px solid #1890ff;
+}
+
+.submit-button {
+  height: 48px;
+  padding: 0 40px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+} 

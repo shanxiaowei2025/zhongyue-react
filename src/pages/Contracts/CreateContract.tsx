@@ -1,7 +1,10 @@
-import React, { useEffect } from 'react'
-import { Card, Button, Space, Breadcrumb, Divider, Alert } from 'antd'
+import React, { useEffect, useState, useRef } from 'react'
+import { Card, Button, Space, Breadcrumb, Divider, Alert, message } from 'antd'
 import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useContractDetail } from '../../hooks/useContract'
+import type { CreateContractDto } from '../../types/contract'
+import ProductServiceAgreement, { type ProductServiceAgreementRef } from '../../components/contracts/ProductServiceAgreement'
 
 interface LocationState {
   signatory: string
@@ -12,6 +15,10 @@ const CreateContract: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as LocationState
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const contractRef = useRef<ProductServiceAgreementRef>(null)
+  
+  const { createContractData } = useContractDetail()
 
   // 如果没有传递必要的状态信息，返回到合同列表
   useEffect(() => {
@@ -25,22 +32,117 @@ const CreateContract: React.FC = () => {
     navigate('/contracts')
   }
 
-  // 保存合同（暂时未实现）
-  const handleSave = () => {
-    // TODO: 实现保存合同逻辑
-    console.log('保存合同', {
-      signatory: state.signatory,
-      contractType: state.contractType,
-    })
+  // 处理合同提交 - 通过ref调用
+  const handleContractSubmit = async () => {
+    if (!contractRef.current) {
+      message.error('合同组件未准备就绪')
+      return
+    }
+    
+    try {
+      setIsSubmitting(true)
+      await contractRef.current.handleSubmit()
+      message.success('合同创建成功！')
+      // 提交成功后返回合同列表
+      setTimeout(() => {
+        navigate('/contracts')
+      }, 1500)
+    } catch (error) {
+      console.error('提交合同失败:', error)
+      message.error('提交合同失败，请检查填写内容后重试')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  // 提交合同（暂时未实现）
-  const handleSubmit = () => {
-    // TODO: 实现提交合同逻辑
-    console.log('提交合同', {
-      signatory: state.signatory,
-      contractType: state.contractType,
-    })
+  // 保存合同（暂时未实现）
+  const handleSave = () => {
+    // TODO: 实现保存草稿逻辑
+    message.info('保存草稿功能开发中...')
+  }
+
+  // 面包屑导航配置
+  const breadcrumbItems = [
+    {
+      title: (
+        <span>
+          <HomeOutlined />
+          <span className="ml-1">首页</span>
+        </span>
+      ),
+    },
+    {
+      title: (
+        <span>
+          <FileTextOutlined />
+          <span className="ml-1">合同管理</span>
+        </span>
+      ),
+    },
+    {
+      title: '创建合同',
+    },
+  ]
+
+  // 渲染合同内容
+  const renderContractContent = () => {
+    if (!state?.contractType) {
+      return (
+        <div className="text-center py-8">
+          <Alert message="未选择合同类型" type="warning" />
+        </div>
+      )
+    }
+
+    switch (state.contractType) {
+      case '产品服务协议':
+        return (
+          <ProductServiceAgreement
+            signatory={state.signatory}
+            contractData={{
+              // 这里可以传入已有的合同数据
+            }}
+            onSubmit={async (contractData) => {
+              await createContractData(contractData)
+            }}
+            isSubmitting={isSubmitting}
+            ref={contractRef}
+          />
+        )
+      case '代理记账合同':
+        return (
+          <div className="text-center py-8">
+            <Alert
+              message="代理记账合同功能开发中"
+              description="该合同类型的模板正在开发中，敬请期待。"
+              type="info"
+              showIcon
+            />
+          </div>
+        )
+      case '单项服务合同':
+        return (
+          <div className="text-center py-8">
+            <Alert
+              message="单项服务合同功能开发中"
+              description="该合同类型的模板正在开发中，敬请期待。"
+              type="info"
+              showIcon
+            />
+          </div>
+        )
+      default:
+        return (
+          <div className="text-center py-8">
+            <Alert
+              message="不支持的合同类型"
+              description={`暂不支持 "${state.contractType}" 类型的合同。`}
+              type="error"
+              showIcon
+            />
+          </div>
+        )
+    }
   }
 
   if (!state?.signatory || !state?.contractType) {
@@ -50,17 +152,7 @@ const CreateContract: React.FC = () => {
   return (
     <div className="p-4">
       {/* 面包屑导航 */}
-      <Breadcrumb className="mb-4">
-        <Breadcrumb.Item>
-          <HomeOutlined />
-          <span className="ml-1">首页</span>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <FileTextOutlined />
-          <span className="ml-1">合同管理</span>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>创建合同</Breadcrumb.Item>
-      </Breadcrumb>
+      <Breadcrumb className="mb-4" items={breadcrumbItems} />
 
       {/* 头部操作区域 */}
       <div className="mb-4">
@@ -72,9 +164,16 @@ const CreateContract: React.FC = () => {
             <h2 className="text-xl font-semibold m-0">创建合同</h2>
           </div>
           <Space>
-            <Button onClick={handleSave}>保存草稿</Button>
-            <Button type="primary" onClick={handleSubmit}>
-              提交合同
+            <Button onClick={handleSave} disabled={isSubmitting}>
+              保存草稿
+            </Button>
+            <Button 
+              type="primary" 
+              loading={isSubmitting}
+              disabled={!state?.contractType || state.contractType !== '产品服务协议'}
+              onClick={handleContractSubmit}
+            >
+              {isSubmitting ? '提交中...' : '提交合同'}
             </Button>
           </Space>
         </div>
@@ -97,53 +196,9 @@ const CreateContract: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <Card
-        title={`${state.contractType} - 合同内容`}
-        className="mb-4"
-        extra={
-          <Alert
-            message="合同内容编辑功能正在开发中"
-            type="info"
-            showIcon
-            className="inline-block"
-          />
-        }
-      >
-        <div className="min-h-96 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <FileTextOutlined className="text-6xl text-gray-300" />
-            <div className="text-gray-500 space-y-2">
-              <p className="text-lg">合同内容填写区域</p>
-              <p className="text-sm">此区域将根据选择的合同类型展示相应的表单内容</p>
-              <div className="text-xs text-gray-400 space-y-1">
-                <p>• 产品服务协议：包含服务内容、服务期限、费用等信息</p>
-                <p>• 代理记账合同：包含记账服务范围、服务标准、收费标准等</p>
-                <p>• 单项服务合同：包含具体服务事项、完成时间、服务费用等</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* 底部操作栏 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 shadow-lg">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-            返回列表
-          </Button>
-          <Space>
-            <Button size="large" onClick={handleSave}>
-              保存草稿
-            </Button>
-            <Button type="primary" size="large" onClick={handleSubmit}>
-              提交合同
-            </Button>
-          </Space>
-        </div>
+      <div className="contract-content-wrapper" style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}>
+        {renderContractContent()}
       </div>
-
-      {/* 为底部固定栏预留空间 */}
-      <div className="h-20"></div>
     </div>
   )
 }

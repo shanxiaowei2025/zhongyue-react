@@ -11,6 +11,23 @@
   font-display: swap; /* 优化字体加载性能 */
 }
 
+/* 嵌入 SourceHanSerifCN 字体 */
+@font-face {
+  font-family: 'SourceHanSerifCN';
+  src: url('/fonts/SourceHanSerifCN-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SourceHanSerifCN';
+  src: url('/fonts/SourceHanSerifCN-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 正式文档字体样式 */
 .formal-document-font {
   font-family: 'SimSun', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
@@ -19,6 +36,11 @@
 /* 收据专用字体样式 */
 .receipt-document {
   font-family: 'SimSun', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+/* 合同文档字体样式 */
+.contract-document {
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 :root {

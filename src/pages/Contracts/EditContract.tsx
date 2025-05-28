@@ -29,20 +29,33 @@ const EditContract: React.FC = () => {
     console.log('提交合同', { id })
   }
 
+  // 面包屑导航配置
+  const breadcrumbItems = [
+    {
+      title: (
+        <span>
+          <HomeOutlined />
+          <span className="ml-1">首页</span>
+        </span>
+      ),
+    },
+    {
+      title: (
+        <span>
+          <FileTextOutlined />
+          <span className="ml-1">合同管理</span>
+        </span>
+      ),
+    },
+    {
+      title: '编辑合同',
+    },
+  ]
+
   return (
     <div className="p-4">
       {/* 面包屑导航 */}
-      <Breadcrumb className="mb-4">
-        <Breadcrumb.Item>
-          <HomeOutlined />
-          <span className="ml-1">首页</span>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>
-          <FileTextOutlined />
-          <span className="ml-1">合同管理</span>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>编辑合同</Breadcrumb.Item>
-      </Breadcrumb>
+      <Breadcrumb className="mb-4" items={breadcrumbItems} />
 
       {/* 头部操作区域 */}
       <div className="mb-4">
