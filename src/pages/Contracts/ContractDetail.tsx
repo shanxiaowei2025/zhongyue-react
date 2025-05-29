@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { Card, Button, Space, Breadcrumb, Alert, Spin, Divider, Typography } from 'antd'
-import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined, EditOutlined } from '@ant-design/icons'
+import React, { useEffect, useState, useRef } from 'react'
+import { Card, Button, Space, Breadcrumb, Alert, Spin, Divider, Typography, message } from 'antd'
+import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined, EditOutlined, DownloadOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
+import html2canvas from 'html2canvas'
 import { useContractDetail } from '../../hooks/useContract'
 import ProductServiceAgreementView from '../../components/contracts/ProductServiceAgreementView'
 
@@ -11,6 +12,8 @@ const ContractDetail: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const contractId = parseInt(id || '0', 10)
+  const contractContentRef = useRef<HTMLDivElement>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   // 获取合同详情数据
   const { data: contractData, isLoading, error } = useContractDetail(contractId)
@@ -30,6 +33,73 @@ const ContractDetail: React.FC = () => {
   // 编辑合同
   const handleEdit = () => {
     navigate(`/contracts/edit/${id}`)
+  }
+
+  // 下载合同图片
+  const handleDownloadContract = async () => {
+    if (!contractContentRef.current || !contractData) {
+      message.error('无法获取合同内容，请稍后重试')
+      return
+    }
+
+    setIsExporting(true)
+    
+    try {
+      // 配置html2canvas选项
+      const canvas = await html2canvas(contractContentRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // 提高清晰度
+        useCORS: true,
+        allowTaint: true,
+        scrollX: 0,
+        scrollY: 0,
+        width: contractContentRef.current.scrollWidth,
+        height: contractContentRef.current.scrollHeight,
+        onclone: (clonedDoc) => {
+          // 在克隆的文档中应用打印样式
+          const clonedElement = clonedDoc.querySelector('.contract-content-wrapper') as HTMLElement
+          if (clonedElement) {
+            clonedElement.style.background = '#ffffff'
+            clonedElement.style.padding = '20px'
+            clonedElement.style.borderRadius = '0'
+            clonedElement.style.boxShadow = 'none'
+            clonedElement.style.display = 'flex'
+            clonedElement.style.justifyContent = 'center'
+            clonedElement.style.alignItems = 'flex-start'
+          }
+          
+          // 确保合同组件本身也居中
+          const contractElement = clonedDoc.querySelector('.product-service-agreement') as HTMLElement
+          if (contractElement) {
+            contractElement.style.margin = '0 auto'
+            contractElement.style.display = 'block'
+          }
+        }
+      })
+
+      // 转换为Blob并下载
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = `合同_${contractData.contractNumber || contractData.id}_${new Date().toLocaleDateString()}.png`
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+          message.success('合同图片下载成功')
+        } else {
+          message.error('生成图片失败，请重试')
+        }
+      }, 'image/png', 0.9)
+      
+    } catch (error) {
+      console.error('导出合同图片失败:', error)
+      message.error('导出合同图片失败，请重试')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   // 面包屑导航配置
@@ -169,6 +239,17 @@ const ContractDetail: React.FC = () => {
                 编辑合同
               </Button>
             )}
+            {contractData && contractData.contractStatus === '1' && (
+              <Button 
+                type="primary"
+                icon={<DownloadOutlined />} 
+                onClick={handleDownloadContract}
+                loading={isExporting}
+                disabled={contractData.contractType !== '产品服务协议'}
+              >
+                {isExporting ? '导出中...' : '下载合同'}
+              </Button>
+            )}
           </Space>
         </div>
       </div>
@@ -223,7 +304,10 @@ const ContractDetail: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <div className="contract-content-wrapper" style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}>
+      <div 
+        ref={contractContentRef}
+        className="contract-content-wrapper"
+      >
         {renderContractContent()}
       </div>
     </div>

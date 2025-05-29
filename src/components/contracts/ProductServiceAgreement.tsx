@@ -4,7 +4,7 @@ import type { CheckboxProps } from 'antd'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
-import { numberToChinese } from '../../utils/numberToChinese'
+import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
 import './ProductServiceAgreement.css'
 
 // 签署方配置
@@ -84,6 +84,16 @@ const ProductServiceAgreement = forwardRef<
       ...contractData,
     })
 
+    // 金额字段的字符串状态（用于输入显示）
+    const [amountDisplayValues, setAmountDisplayValues] = useState<Record<string, string>>({
+      businessServiceFee: '',
+      taxServiceFee: '',
+      bankServiceFee: '',
+      socialSecurityServiceFee: '',
+      licenseServiceFee: '',
+      totalCost: '',
+    })
+
     const { createContractData } = useContractDetail()
 
     // 当contractData变化时，更新表单数据和勾选状态
@@ -95,6 +105,17 @@ const ProductServiceAgreement = forwardRef<
           contractType: '产品服务协议',
           ...contractData,
         }))
+
+        // 初始化金额显示值
+        const newAmountDisplayValues: Record<string, string> = {
+          businessServiceFee: contractData.businessServiceFee ? String(contractData.businessServiceFee) : '',
+          taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
+          bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
+          socialSecurityServiceFee: contractData.socialSecurityServiceFee ? String(contractData.socialSecurityServiceFee) : '',
+          licenseServiceFee: contractData.licenseServiceFee ? String(contractData.licenseServiceFee) : '',
+          totalCost: contractData.totalCost ? String(contractData.totalCost) : '',
+        }
+        setAmountDisplayValues(newAmountDisplayValues)
 
         // 根据contractData中的服务项目数据初始化勾选状态和金额
         const newCheckedItems: Record<string, boolean> = {}
@@ -129,20 +150,12 @@ const ProductServiceAgreement = forwardRef<
       }
     }, [contractData, signatory])
 
-    // 自动更新大写金额
-    useEffect(() => {
+    // 计算大写金额（避免useEffect无限循环）
+    const totalCostInWords = React.useMemo(() => {
       if (formData.totalCost && formData.totalCost > 0) {
-        const chineseAmount = numberToChinese(formData.totalCost)
-        setFormData(prev => ({
-          ...prev,
-          totalCostInWords: chineseAmount,
-        }))
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          totalCostInWords: '',
-        }))
+        return numberToChinese(formData.totalCost)
       }
+      return ''
     }, [formData.totalCost])
 
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
@@ -177,9 +190,34 @@ const ProductServiceAgreement = forwardRef<
 
     // 处理金额输入变化
     const handleAmountChange = (itemKey: string, value: string) => {
+      // 格式化金额输入，确保最多两位小数
+      const formattedValue = formatAmount(value)
       setItemAmounts(prev => ({
         ...prev,
-        [itemKey]: value,
+        [itemKey]: formattedValue,
+      }))
+    }
+
+    // 处理表单金额字段变化
+    const handleFormAmountChange = (field: string, value: string) => {
+      // 格式化金额输入，确保最多两位小数
+      const formattedValue = formatAmount(value)
+      
+      // 更新显示值（用户看到的）
+      setAmountDisplayValues(prev => ({
+        ...prev,
+        [field]: formattedValue,
+      }))
+    }
+
+    // 处理表单金额字段失焦
+    const handleFormAmountBlur = (field: string, value: string) => {
+      const numericValue = parseAmount(value)
+      
+      // 更新数值（用于计算和提交）
+      setFormData(prev => ({
+        ...prev,
+        [field]: numericValue,
       }))
     }
 
@@ -193,7 +231,7 @@ const ProductServiceAgreement = forwardRef<
         .map(key => ({
           itemKey: key,
           itemName: getItemName(key),
-          amount: parseFloat(itemAmounts[key] || '0') || 0,
+          amount: parseAmount(itemAmounts[key] || '0'),
         }))
 
       if (businessItems.length > 0) {
@@ -218,7 +256,7 @@ const ProductServiceAgreement = forwardRef<
         .map(key => ({
           itemKey: key,
           itemName: getItemName(key),
-          amount: parseFloat(itemAmounts[key] || '0') || 0,
+          amount: parseAmount(itemAmounts[key] || '0'),
         }))
 
       if (taxItems.length > 0) {
@@ -231,7 +269,7 @@ const ProductServiceAgreement = forwardRef<
         .map(key => ({
           itemKey: key,
           itemName: getItemName(key),
-          amount: parseFloat(itemAmounts[key] || '0') || 0,
+          amount: parseAmount(itemAmounts[key] || '0'),
         }))
 
       if (bankItems.length > 0) {
@@ -247,7 +285,7 @@ const ProductServiceAgreement = forwardRef<
         .map(key => ({
           itemKey: key,
           itemName: getItemName(key),
-          amount: parseFloat(itemAmounts[key] || '0') || 0,
+          amount: parseAmount(itemAmounts[key] || '0'),
         }))
 
       if (socialItems.length > 0) {
@@ -260,7 +298,7 @@ const ProductServiceAgreement = forwardRef<
         .map(key => ({
           itemKey: key,
           itemName: getItemName(key),
-          amount: parseFloat(itemAmounts[key] || '0') || 0,
+          amount: parseAmount(itemAmounts[key] || '0'),
         }))
 
       if (licenseItems.length > 0) {
@@ -782,10 +820,9 @@ const ProductServiceAgreement = forwardRef<
                     ? '必填'
                     : '费用'
                 }
-                value={formData.businessServiceFee || ''}
-                onChange={e =>
-                  handleFormChange('businessServiceFee', parseFloat(e.target.value) || 0)
-                }
+                value={amountDisplayValues.businessServiceFee || ''}
+                onChange={e => handleFormAmountChange('businessServiceFee', e.target.value)}
+                onBlur={(e) => handleFormAmountBlur('businessServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -848,8 +885,9 @@ const ProductServiceAgreement = forwardRef<
                     ? '必填'
                     : '费用'
                 }
-                value={formData.taxServiceFee || ''}
-                onChange={e => handleFormChange('taxServiceFee', parseFloat(e.target.value) || 0)}
+                value={amountDisplayValues.taxServiceFee || ''}
+                onChange={e => handleFormAmountChange('taxServiceFee', e.target.value)}
+                onBlur={(e) => handleFormAmountBlur('taxServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -903,8 +941,9 @@ const ProductServiceAgreement = forwardRef<
                     ? '必填'
                     : '费用'
                 }
-                value={formData.bankServiceFee || ''}
-                onChange={e => handleFormChange('bankServiceFee', parseFloat(e.target.value) || 0)}
+                value={amountDisplayValues.bankServiceFee || ''}
+                onChange={e => handleFormAmountChange('bankServiceFee', e.target.value)}
+                onBlur={(e) => handleFormAmountBlur('bankServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -954,10 +993,9 @@ const ProductServiceAgreement = forwardRef<
                     ? '必填'
                     : '费用'
                 }
-                value={formData.socialSecurityServiceFee || ''}
-                onChange={e =>
-                  handleFormChange('socialSecurityServiceFee', parseFloat(e.target.value) || 0)
-                }
+                value={amountDisplayValues.socialSecurityServiceFee || ''}
+                onChange={e => handleFormAmountChange('socialSecurityServiceFee', e.target.value)}
+                onBlur={(e) => handleFormAmountBlur('socialSecurityServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -1011,10 +1049,9 @@ const ProductServiceAgreement = forwardRef<
                     ? '必填'
                     : '费用'
                 }
-                value={formData.licenseServiceFee || ''}
-                onChange={e =>
-                  handleFormChange('licenseServiceFee', parseFloat(e.target.value) || 0)
-                }
+                value={amountDisplayValues.licenseServiceFee || ''}
+                onChange={e => handleFormAmountChange('licenseServiceFee', e.target.value)}
+                onBlur={(e) => handleFormAmountBlur('licenseServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -1027,15 +1064,16 @@ const ProductServiceAgreement = forwardRef<
               <Input
                 className="amount-input required"
                 placeholder="必填"
-                value={formData.totalCost || ''}
-                onChange={e => handleFormChange('totalCost', parseFloat(e.target.value) || 0)}
+                value={amountDisplayValues.totalCost || ''}
+                onChange={e => handleFormAmountChange('totalCost', e.target.value)}
+                onBlur={(e) => handleFormAmountBlur('totalCost', e.target.value)}
               />
               <span>元</span>
               <span className="amount-label">大写金额（人民币）：</span>
               <Input
                 className="amount-text-input"
                 placeholder="自动根据费用总计生成"
-                value={formData.totalCostInWords || ''}
+                value={totalCostInWords}
                 readOnly
                 style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
               />
