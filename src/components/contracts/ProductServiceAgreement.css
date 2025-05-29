@@ -11,6 +11,8 @@
   color: #000;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   position: relative;
+  pointer-event: none;
+  user-select: none;
 }
 
 /* 合同头部 */
@@ -463,7 +465,15 @@
 .signature-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 40px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.signature-column {
+  display: flex;
+  flex-direction: column;
+  width: 48%;
+  gap: 45px;
 }
 
 .signature-item {
@@ -494,11 +504,6 @@
 .signature-area.unsigned {
   background: #fafafa;
   border: 1px dashed #999;
-}
-
-.date-row {
-  display: flex;
-  justify-content: space-between;
 }
 
 .date-item {
@@ -650,9 +655,8 @@
     gap: 20px;
   }
 
-  .date-row {
-    flex-direction: column;
-    gap: 20px;
+  .signature-column {
+    width: 100%;
   }
 }
 
@@ -850,6 +854,7 @@
   color: #000 !important;
   border: none !important;
   background-color: transparent !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .product-service-agreement .text-gray-400 {
@@ -859,6 +864,8 @@
 /* 盖章区域样式 */
 .stamp-preview {
   background: transparent;
+  pointer-events: none;
+  user-select: none;
 }
 
 .stamp-preview img {
