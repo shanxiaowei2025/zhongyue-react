@@ -78,12 +78,12 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
       // 添加详细的日志来调试
       console.log('上传响应:', uploadResponse);
       console.log('响应类型:', typeof uploadResponse);
-      console.log('success字段:', uploadResponse.success, '类型:', typeof uploadResponse.success);
+      console.log('code字段:', uploadResponse.code, '类型:', typeof uploadResponse.code);
       console.log('data字段:', uploadResponse.data);
       
-      if (!uploadResponse.success || !uploadResponse.data) {
+      if (uploadResponse.code !== 0 || !uploadResponse.data) {
         console.error('上传失败检查:', {
-          success: uploadResponse.success,
+          code: uploadResponse.code,
           hasData: !!uploadResponse.data,
           fullResponse: uploadResponse
         });
@@ -103,34 +103,30 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   };
 
   return (
-    <div className="signature-canvas-container">
-      <Title level={5} className="mb-2">请在下方框内签名</Title>
+    <div className="signature-modal-content-container w-full">
+      <Title level={5} className="text-base font-medium text-gray-800 mb-3">
+        请在下方框内签名
+      </Title>
       
-      <div 
-        style={{ 
-          border: '1px solid #d9d9d9', 
-          borderRadius: '4px',
-          background: '#fff',
-          marginBottom: '16px'
-        }}
-      >
+      <div className="signature-canvas-wrapper w-full mb-4 border border-gray-300 rounded bg-white">
         <SignaturePad
           ref={sigCanvas}
           canvasProps={{
             width,
             height,
-            className: 'signature-canvas',
+            className: 'signature-modal-canvas block w-full',
             style: { width: '100%', height: `${height}px` },
           }}
-          backgroundColor="rgba(255, 255, 255, 0)"
+          backgroundColor="rgba(255, 255, 255, 1)"
           onEnd={checkIfEmpty}
         />
       </div>
       
-      <Space>
+      <div className="signature-modal-actions flex gap-3 justify-center">
         <Button 
           icon={<ClearOutlined />} 
           onClick={handleClear}
+          className="signature-modal-clear-btn"
         >
           清除
         </Button>
@@ -140,10 +136,11 @@ const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
           onClick={handleSave}
           disabled={isEmpty}
           loading={uploading}
+          className="signature-modal-save-btn"
         >
           保存签名
         </Button>
-      </Space>
+      </div>
     </div>
   );
 };

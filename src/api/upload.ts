@@ -1,12 +1,13 @@
 import request from './request'
 
 interface UploadResponse {
-  success: boolean
+  code: number // 状态码，0表示成功
   data: {
+    fileName: string // 文件名
     url: string // 文件访问 URL
-    path: string // 对象存储路径
   }
-  message?: string
+  message: string // 响应消息
+  timestamp: number // 时间戳
 }
 
 /**

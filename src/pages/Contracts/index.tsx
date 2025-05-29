@@ -42,6 +42,46 @@ import {
 } from '../../api/contract'
 import SignatureCanvas from '../../components/contracts/SignatureCanvas'
 
+// 添加样式来隔离签署模态框
+const modalStyle = `
+  .contract-signature-modal .contract-signature-modal-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  }
+  
+  .contract-signature-modal .signature-modal-content-container {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  
+  .contract-signature-modal .signature-canvas-wrapper {
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: white !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .contract-signature-modal .signature-modal-canvas {
+    display: block !important;
+    width: 100% !important;
+    background: white !important;
+  }
+  
+  .contract-signature-modal .signature-modal-actions {
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: center !important;
+    margin-top: 16px !important;
+  }
+  
+  .contract-signature-modal .ant-typography {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    color: #374151 !important;
+  }
+`
+
 const { RangePicker } = DatePicker
 const { Option } = Select
 const { Step } = Steps
@@ -72,9 +112,9 @@ const getContractTypeOptions = (signatory: string) => {
     '定兴县中岳会计服务有限公司高碑店分公司',
     '保定脉信会计服务有限公司',
   ]
-  
-  return group1Signatories.includes(signatory) 
-    ? CONTRACT_TYPE_OPTIONS.group1 
+
+  return group1Signatories.includes(signatory)
+    ? CONTRACT_TYPE_OPTIONS.group1
     : CONTRACT_TYPE_OPTIONS.group2
 }
 
@@ -109,6 +149,25 @@ const Contracts: React.FC = () => {
   const [createStep, setCreateStep] = useState(0)
   const [selectedSignatory, setSelectedSignatory] = useState<string>('')
   const [selectedContractType, setSelectedContractType] = useState<string>('')
+
+  // 添加样式隔离
+  useEffect(() => {
+    const styleElement = document.getElementById('contract-signature-modal-styles')
+    if (!styleElement) {
+      const style = document.createElement('style')
+      style.id = 'contract-signature-modal-styles'
+      style.textContent = modalStyle
+      document.head.appendChild(style)
+    }
+
+    // 清理函数，组件卸载时移除样式
+    return () => {
+      const element = document.getElementById('contract-signature-modal-styles')
+      if (element) {
+        element.remove()
+      }
+    }
+  }, [])
 
   // 页面状态持久化
   const [searchParams, setSearchParams] = usePageStates<
@@ -255,7 +314,7 @@ const Contracts: React.FC = () => {
           contractType: selectedContractType,
         },
       })
-      
+
       // 关闭模态框
       handleCreateModalCancel()
     }
@@ -289,28 +348,36 @@ const Contracts: React.FC = () => {
 
   // 签署合同
   const handleSign = (record: Contract) => {
-    let signatureImageUrl = '';
-    
+    let signatureImageUrl = ''
+
     Modal.confirm({
       title: '签署合同',
       icon: null,
-      width: 650,
-      className: 'signature-modal',
+      width: 700,
+      className: 'contract-signature-modal',
+      wrapClassName: 'contract-signature-modal-wrap',
+      mask: true,
+      maskClosable: true,
       content: (
-        <div className="signature-modal-content">
-          <p className="mb-4">
-            您正在签署合同 <strong>{record.contractNumber || `#${record.id}`}</strong>
-          </p>
-          
+        <div className="contract-signature-modal-content bg-white p-4 rounded">
+          <div className="mb-6 text-center">
+            <p className="text-base text-gray-700">
+              您正在签署合同{' '}
+              <span className="font-semibold text-blue-600">
+                {record.contractNumber || `#${record.id}`}
+              </span>
+            </p>
+          </div>
+
           {/* 使用直接导入的SignatureCanvas组件 */}
-          <div className="signature-area">
+          <div className="contract-signature-area bg-gray-50 p-4 rounded-lg">
             <SignatureCanvas
               onSave={(url: string) => {
-                signatureImageUrl = url;
+                signatureImageUrl = url
                 // 自动点击确认按钮
-                document.querySelector('.signature-modal .ant-btn-primary')?.dispatchEvent(
-                  new MouseEvent('click', { bubbles: true })
-                );
+                document
+                  .querySelector('.contract-signature-modal .ant-btn-primary')
+                  ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
               }}
             />
           </div>
@@ -320,29 +387,43 @@ const Contracts: React.FC = () => {
       cancelText: '取消',
       onOk: async () => {
         if (!signatureImageUrl) {
-          message.error('请先完成签名');
-          return Promise.reject('未完成签名');
+          message.error('请先完成签名')
+          return Promise.reject('未完成签名')
         }
-        
+
         try {
-          // 1. 更新合同的签章图片
-          await updateContractApi(record.id, {
-            partyAStampImage: signatureImageUrl
-          });
-          
+          // 准备更新数据：签章图片 + 自动设置签名日期（如果为空）
+          const currentDate = dayjs().format('YYYY-MM-DD')
+          const updateData: any = {
+            partyAStampImage: signatureImageUrl,
+          }
+
+          // 如果甲方签订日期为空，自动设置为当前日期
+          if (!record.partyASignDate) {
+            updateData.partyASignDate = currentDate
+          }
+
+          // 如果乙方签订日期为空，自动设置为当前日期
+          if (!record.partyBSignDate) {
+            updateData.partyBSignDate = currentDate
+          }
+
+          // 1. 更新合同的签章图片和日期
+          await updateContractApi(record.id, updateData)
+
           // 2. 签署合同
-          const signature = `${new Date().toISOString()}_${record.id}`;
-          await doSignContract(record.id, { signature });
-          
-          message.success('合同签署成功');
-          return Promise.resolve();
+          const signature = `${new Date().toISOString()}_${record.id}`
+          await doSignContract(record.id, { signature })
+
+          message.success('合同签署成功')
+          return Promise.resolve()
         } catch (error) {
-          console.error('签署失败:', error);
-          message.error('签署失败，请重试');
-          return Promise.reject(error);
+          console.error('签署失败:', error)
+          message.error('签署失败，请重试')
+          return Promise.reject(error)
         }
       },
-    });
+    })
   }
 
   // 格式化日期
@@ -358,7 +439,7 @@ const Contracts: React.FC = () => {
   }
 
   // 获取当前步骤的合同类型选项
-  const currentContractTypeOptions = selectedSignatory 
+  const currentContractTypeOptions = selectedSignatory
     ? getContractTypeOptions(selectedSignatory)
     : []
 
@@ -471,15 +552,15 @@ const Contracts: React.FC = () => {
             />
           </Tooltip>
           {record.contractStatus === '0' && (
-          <Tooltip title="编辑">
-            <Button
-              type="text"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-              className="action-btn edit-btn"
-            />
-          </Tooltip>
+            <Tooltip title="编辑">
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+                className="action-btn edit-btn"
+              />
+            </Tooltip>
           )}
           {record.contractStatus === '0' && (
             <Tooltip title="签署合同">
@@ -617,11 +698,11 @@ const Contracts: React.FC = () => {
                 <h4 className="text-base font-medium mb-3">请选择签署方：</h4>
                 <Radio.Group
                   value={selectedSignatory}
-                  onChange={(e) => setSelectedSignatory(e.target.value)}
+                  onChange={e => setSelectedSignatory(e.target.value)}
                   className="w-full"
                 >
                   <div className="space-y-2">
-                    {SIGNATORY_OPTIONS.map((signatory) => (
+                    {SIGNATORY_OPTIONS.map(signatory => (
                       <Radio key={signatory} value={signatory} className="w-full block">
                         <span className="ml-2">{signatory}</span>
                       </Radio>
@@ -632,11 +713,7 @@ const Contracts: React.FC = () => {
 
               <div className="flex justify-end space-x-2">
                 <Button onClick={handleCreateModalCancel}>取消</Button>
-                <Button 
-                  type="primary" 
-                  onClick={handleNextStep}
-                  disabled={!selectedSignatory}
-                >
+                <Button type="primary" onClick={handleNextStep} disabled={!selectedSignatory}>
                   下一步
                 </Button>
               </div>
@@ -654,11 +731,11 @@ const Contracts: React.FC = () => {
                 <h4 className="text-base font-medium mb-3">请选择合同类型：</h4>
                 <Radio.Group
                   value={selectedContractType}
-                  onChange={(e) => setSelectedContractType(e.target.value)}
+                  onChange={e => setSelectedContractType(e.target.value)}
                   className="w-full"
                 >
                   <div className="space-y-2">
-                    {currentContractTypeOptions.map((contractType) => (
+                    {currentContractTypeOptions.map(contractType => (
                       <Radio key={contractType} value={contractType} className="w-full block">
                         <span className="ml-2">{contractType}</span>
                       </Radio>
@@ -670,8 +747,8 @@ const Contracts: React.FC = () => {
               <div className="flex justify-end space-x-2">
                 <Button onClick={handlePrevStep}>上一步</Button>
                 <Button onClick={handleCreateModalCancel}>取消</Button>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   onClick={handleConfirmCreate}
                   disabled={!selectedContractType}
                 >
@@ -687,4 +764,3 @@ const Contracts: React.FC = () => {
 }
 
 export default Contracts
- 
