@@ -108,11 +108,17 @@ const ProductServiceAgreement = forwardRef<
 
         // 初始化金额显示值
         const newAmountDisplayValues: Record<string, string> = {
-          businessServiceFee: contractData.businessServiceFee ? String(contractData.businessServiceFee) : '',
+          businessServiceFee: contractData.businessServiceFee
+            ? String(contractData.businessServiceFee)
+            : '',
           taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
           bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
-          socialSecurityServiceFee: contractData.socialSecurityServiceFee ? String(contractData.socialSecurityServiceFee) : '',
-          licenseServiceFee: contractData.licenseServiceFee ? String(contractData.licenseServiceFee) : '',
+          socialSecurityServiceFee: contractData.socialSecurityServiceFee
+            ? String(contractData.socialSecurityServiceFee)
+            : '',
+          licenseServiceFee: contractData.licenseServiceFee
+            ? String(contractData.licenseServiceFee)
+            : '',
           totalCost: contractData.totalCost ? String(contractData.totalCost) : '',
         }
         setAmountDisplayValues(newAmountDisplayValues)
@@ -202,7 +208,7 @@ const ProductServiceAgreement = forwardRef<
     const handleFormAmountChange = (field: string, value: string) => {
       // 格式化金额输入，确保最多两位小数
       const formattedValue = formatAmount(value)
-      
+
       // 更新显示值（用户看到的）
       setAmountDisplayValues(prev => ({
         ...prev,
@@ -213,7 +219,7 @@ const ProductServiceAgreement = forwardRef<
     // 处理表单金额字段失焦
     const handleFormAmountBlur = (field: string, value: string) => {
       const numericValue = parseAmount(value)
-      
+
       // 更新数值（用于计算和提交）
       setFormData(prev => ({
         ...prev,
@@ -822,7 +828,7 @@ const ProductServiceAgreement = forwardRef<
                 }
                 value={amountDisplayValues.businessServiceFee || ''}
                 onChange={e => handleFormAmountChange('businessServiceFee', e.target.value)}
-                onBlur={(e) => handleFormAmountBlur('businessServiceFee', e.target.value)}
+                onBlur={e => handleFormAmountBlur('businessServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -887,7 +893,7 @@ const ProductServiceAgreement = forwardRef<
                 }
                 value={amountDisplayValues.taxServiceFee || ''}
                 onChange={e => handleFormAmountChange('taxServiceFee', e.target.value)}
-                onBlur={(e) => handleFormAmountBlur('taxServiceFee', e.target.value)}
+                onBlur={e => handleFormAmountBlur('taxServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -943,7 +949,7 @@ const ProductServiceAgreement = forwardRef<
                 }
                 value={amountDisplayValues.bankServiceFee || ''}
                 onChange={e => handleFormAmountChange('bankServiceFee', e.target.value)}
-                onBlur={(e) => handleFormAmountBlur('bankServiceFee', e.target.value)}
+                onBlur={e => handleFormAmountBlur('bankServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -995,7 +1001,7 @@ const ProductServiceAgreement = forwardRef<
                 }
                 value={amountDisplayValues.socialSecurityServiceFee || ''}
                 onChange={e => handleFormAmountChange('socialSecurityServiceFee', e.target.value)}
-                onBlur={(e) => handleFormAmountBlur('socialSecurityServiceFee', e.target.value)}
+                onBlur={e => handleFormAmountBlur('socialSecurityServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -1051,7 +1057,7 @@ const ProductServiceAgreement = forwardRef<
                 }
                 value={amountDisplayValues.licenseServiceFee || ''}
                 onChange={e => handleFormAmountChange('licenseServiceFee', e.target.value)}
-                onBlur={(e) => handleFormAmountBlur('licenseServiceFee', e.target.value)}
+                onBlur={e => handleFormAmountBlur('licenseServiceFee', e.target.value)}
               />
               <span>。</span>
             </div>
@@ -1066,7 +1072,7 @@ const ProductServiceAgreement = forwardRef<
                 placeholder="必填"
                 value={amountDisplayValues.totalCost || ''}
                 onChange={e => handleFormAmountChange('totalCost', e.target.value)}
-                onBlur={(e) => handleFormAmountBlur('totalCost', e.target.value)}
+                onBlur={e => handleFormAmountBlur('totalCost', e.target.value)}
               />
               <span>元</span>
               <span className="amount-label">大写金额（人民币）：</span>

@@ -49,11 +49,11 @@ export function numberToChinese(num: number): string {
   const money = roundedNum.toFixed(2)
   parts = money.split('.')
   integerNum = parseInt(parts[0], 10)
-  
+
   // 处理小数部分，只取角分两位
   const decimalStr = parts[1] || '00'
   const jiao = parseInt(decimalStr.charAt(0), 10) // 角
-  const fen = parseInt(decimalStr.charAt(1), 10)  // 分
+  const fen = parseInt(decimalStr.charAt(1), 10) // 分
 
   // 获取整型部分转换
   if (integerNum > 0) {
@@ -85,12 +85,12 @@ export function numberToChinese(num: number): string {
 
   // 处理小数部分（角分）
   let hasDecimal = false
-  
+
   if (jiao > 0) {
     chineseStr += cnNums[jiao] + cnDecUnits[0] // 角
     hasDecimal = true
   }
-  
+
   if (fen > 0) {
     // 如果有角但角为0，需要加"零"
     if (jiao === 0 && integerNum > 0) {
@@ -119,23 +119,23 @@ export function numberToChinese(num: number): string {
  */
 export function formatAmount(value: string | number): string {
   if (!value && value !== 0) return ''
-  
+
   const str = value.toString()
-  
+
   // 移除非数字和小数点的字符
   const cleaned = str.replace(/[^\d.]/g, '')
-  
+
   // 处理多个小数点的情况
   const parts = cleaned.split('.')
   if (parts.length > 2) {
     return parts[0] + '.' + parts.slice(1).join('')
   }
-  
+
   // 限制小数点后最多两位
   if (parts.length === 2) {
     return parts[0] + '.' + parts[1].substring(0, 2)
   }
-  
+
   return cleaned
 }
 
@@ -146,10 +146,10 @@ export function formatAmount(value: string | number): string {
  */
 export function parseAmount(value: string | number): number {
   if (!value && value !== 0) return 0
-  
+
   const num = parseFloat(value.toString())
   if (isNaN(num)) return 0
-  
+
   // 四舍五入到两位小数
   return Math.round(num * 100) / 100
 }
@@ -161,7 +161,7 @@ export function parseAmount(value: string | number): number {
  */
 export function isValidAmount(value: string): boolean {
   if (!value.trim()) return true // 空值认为有效
-  
+
   // 正则表达式：允许整数或最多两位小数的数字
   const regex = /^\d+(\.\d{1,2})?$/
   return regex.test(value.trim())

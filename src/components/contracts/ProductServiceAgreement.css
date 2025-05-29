@@ -966,24 +966,19 @@
   }
   
   /* 隐藏编辑模式的输入框边框 */
-  .contract-content-wrapper .ant-input {
+  /* .contract-content-wrapper .ant-input {
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
     background: transparent !important;
-  }
-  
-  /* 隐藏复选框 */
-  .contract-content-wrapper .ant-checkbox {
-    display: none !important;
-  }
+  } */
   
   /* 隐藏日期选择器的边框 */
-  .contract-content-wrapper .ant-picker {
+  /* .contract-content-wrapper .ant-picker {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
-  }
+  } */
 }
 
 /* 合同内容容器样式 - 确保居中 */

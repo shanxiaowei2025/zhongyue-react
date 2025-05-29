@@ -1,10 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Card, Button, Space, Breadcrumb, Alert, Spin, Divider, Typography, message } from 'antd'
-import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined, EditOutlined, DownloadOutlined } from '@ant-design/icons'
+import {
+  ArrowLeftOutlined,
+  HomeOutlined,
+  FileTextOutlined,
+  EditOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import { useContractDetail } from '../../hooks/useContract'
 import ProductServiceAgreementView from '../../components/contracts/ProductServiceAgreementView'
+import AgencyAccountingAgreementView from '../../components/contracts/AgencyAccountingAgreementView'
 
 const { Title, Text } = Typography
 
@@ -43,7 +50,7 @@ const ContractDetail: React.FC = () => {
     }
 
     setIsExporting(true)
-    
+
     try {
       // 配置html2canvas选项
       const canvas = await html2canvas(contractContentRef.current, {
@@ -55,7 +62,7 @@ const ContractDetail: React.FC = () => {
         scrollY: 0,
         width: contractContentRef.current.scrollWidth,
         height: contractContentRef.current.scrollHeight,
-        onclone: (clonedDoc) => {
+        onclone: clonedDoc => {
           // 在克隆的文档中应用打印样式
           const clonedElement = clonedDoc.querySelector('.contract-content-wrapper') as HTMLElement
           if (clonedElement) {
@@ -67,33 +74,43 @@ const ContractDetail: React.FC = () => {
             clonedElement.style.justifyContent = 'center'
             clonedElement.style.alignItems = 'flex-start'
           }
-          
+
           // 确保合同组件本身也居中
-          const contractElement = clonedDoc.querySelector('.product-service-agreement') as HTMLElement
-          if (contractElement) {
-            contractElement.style.margin = '0 auto'
-            contractElement.style.display = 'block'
+          const agreementElement = clonedDoc.querySelector('.product-service-agreement')
+          const accountingElement = clonedDoc.querySelector('.agency-accounting-agreement-view')
+          
+          if (agreementElement instanceof HTMLElement) {
+            agreementElement.style.margin = '0 auto'
+            agreementElement.style.display = 'block'
           }
-        }
+          
+          if (accountingElement instanceof HTMLElement) {
+            accountingElement.style.margin = '0 auto'
+            accountingElement.style.display = 'block'
+          }
+        },
       })
 
       // 转换为Blob并下载
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `合同_${contractData.contractNumber || contractData.id}_${new Date().toLocaleDateString()}.png`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          URL.revokeObjectURL(url)
-          message.success('合同图片下载成功')
-        } else {
-          message.error('生成图片失败，请重试')
-        }
-      }, 'image/png', 0.9)
-      
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `合同_${contractData.contractNumber || contractData.id}_${new Date().toLocaleDateString()}.png`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(url)
+            message.success('合同图片下载成功')
+          } else {
+            message.error('生成图片失败，请重试')
+          }
+        },
+        'image/png',
+        0.9
+      )
     } catch (error) {
       console.error('导出合同图片失败:', error)
       message.error('导出合同图片失败，请重试')
@@ -175,16 +192,7 @@ const ContractDetail: React.FC = () => {
       case '产品服务协议':
         return <ProductServiceAgreementView contractData={contractData} />
       case '代理记账合同':
-        return (
-          <div className="text-center py-8">
-            <Alert
-              message="代理记账合同详情展示功能开发中"
-              description="该合同类型的详情展示功能正在开发中，敬请期待。"
-              type="info"
-              showIcon
-            />
-          </div>
-        )
+        return <AgencyAccountingAgreementView contractData={contractData} />
       case '单项服务合同':
         return (
           <div className="text-center py-8">
@@ -231,25 +239,22 @@ const ContractDetail: React.FC = () => {
           </div>
           <Space>
             {contractData && contractData.contractStatus === '0' && (
-              <Button 
-                icon={<EditOutlined />} 
+              <Button
+                icon={<EditOutlined />}
                 onClick={handleEdit}
-                disabled={contractData.contractType !== '产品服务协议'}
+                disabled={contractData.contractType !== '产品服务协议' && contractData.contractType !== '代理记账合同'}
               >
                 编辑合同
               </Button>
             )}
-            {contractData && contractData.contractStatus === '1' && (
-              <Button 
-                type="primary"
-                icon={<DownloadOutlined />} 
-                onClick={handleDownloadContract}
-                loading={isExporting}
-                disabled={contractData.contractType !== '产品服务协议'}
-              >
-                {isExporting ? '导出中...' : '下载合同'}
-              </Button>
-            )}
+            <Button
+              icon={<DownloadOutlined />}
+              loading={isExporting}
+              onClick={handleDownloadContract}
+              disabled={!contractData || (contractData.contractType !== '产品服务协议' && contractData.contractType !== '代理记账合同')}
+            >
+              {isExporting ? '导出中...' : '下载合同'}
+            </Button>
           </Space>
         </div>
       </div>
@@ -260,7 +265,9 @@ const ContractDetail: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center">
               <span className="text-gray-600 w-24">合同编号：</span>
-              <span className="font-medium text-blue-600">{contractData.contractNumber || '未生成'}</span>
+              <span className="font-medium text-blue-600">
+                {contractData.contractNumber || '未生成'}
+              </span>
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-24">签署方：</span>
@@ -272,10 +279,9 @@ const ContractDetail: React.FC = () => {
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-24">合同状态：</span>
-              <span className={`font-medium ${
-                contractData.contractStatus === '1' ? 'text-green-600' : 
-                contractData.contractStatus === '2' ? 'text-red-600' : 'text-orange-600'
-              }`}>
+              <span
+                className={`font-medium text-${getContractStatusDisplay(contractData.contractStatus).color}-600`}
+              >
                 {getContractStatusDisplay(contractData.contractStatus).text}
               </span>
             </div>
@@ -295,8 +301,22 @@ const ContractDetail: React.FC = () => {
             </div>
             <div className="flex items-center">
               <span className="text-gray-600 w-24">创建时间：</span>
-              <span className="font-medium">{contractData.createTime ? new Date(contractData.createTime).toLocaleString() : '-'}</span>
+              <span className="font-medium">
+                {contractData.createTime
+                  ? new Date(contractData.createTime).toLocaleString()
+                  : '未知'}
+              </span>
             </div>
+            {contractData.contractStatus === '1' && (
+              <div className="flex items-center">
+                <span className="text-gray-600 w-24">签署时间：</span>
+                <span className="font-medium">
+                  {contractData.updateTime
+                    ? new Date(contractData.updateTime).toLocaleString()
+                    : '未知'}
+                </span>
+              </div>
+            )}
           </div>
         </Card>
       )}
@@ -304,9 +324,10 @@ const ContractDetail: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <div 
-        ref={contractContentRef}
+      <div
         className="contract-content-wrapper"
+        style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}
+        ref={contractContentRef}
       >
         {renderContractContent()}
       </div>
@@ -314,4 +335,4 @@ const ContractDetail: React.FC = () => {
   )
 }
 
-export default ContractDetail 
+export default ContractDetail

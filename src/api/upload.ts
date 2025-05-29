@@ -15,15 +15,12 @@ interface UploadResponse {
  * @param file 文件对象
  * @param directory 目录
  */
-export const uploadFile = async (
-  file: File,
-  directory: string = ''
-): Promise<UploadResponse> => {
-  const formData = new FormData();
-  formData.append('file', file);
+export const uploadFile = async (file: File, directory: string = ''): Promise<UploadResponse> => {
+  const formData = new FormData()
+  formData.append('file', file)
   if (directory) {
-    formData.append('directory', directory);
+    formData.append('directory', directory)
   }
-  
-  return request.post<UploadResponse>('/storage/upload', formData);
+
+  return request.post<UploadResponse>('/storage/upload', formData)
 }

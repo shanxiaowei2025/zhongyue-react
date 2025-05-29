@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
 import ProductServiceAgreement, { type ProductServiceAgreementRef } from '../../components/contracts/ProductServiceAgreement'
+import AgencyAccountingAgreement, { type AgencyAccountingAgreementRef } from '../../components/contracts/AgencyAccountingAgreement'
 
 interface LocationState {
   signatory: string
@@ -16,7 +17,8 @@ const CreateContract: React.FC = () => {
   const location = useLocation()
   const state = location.state as LocationState
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const contractRef = useRef<ProductServiceAgreementRef>(null)
+  const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
+  const agencyAccountingAgreementRef = useRef<AgencyAccountingAgreementRef>(null)
   
   const { createContractData } = useContractDetail()
 
@@ -34,14 +36,26 @@ const CreateContract: React.FC = () => {
 
   // 处理合同提交 - 通过ref调用
   const handleContractSubmit = async () => {
-    if (!contractRef.current) {
-      message.error('合同组件未准备就绪')
-      return
-    }
-    
     try {
       setIsSubmitting(true)
-      await contractRef.current.handleSubmit()
+
+      if (state?.contractType === '产品服务协议') {
+        if (!productServiceAgreementRef.current) {
+          message.error('合同组件未准备就绪')
+          return
+        }
+        await productServiceAgreementRef.current.handleSubmit()
+      } else if (state?.contractType === '代理记账合同') {
+        if (!agencyAccountingAgreementRef.current) {
+          message.error('合同组件未准备就绪')
+          return
+        }
+        await agencyAccountingAgreementRef.current.handleSubmit()
+      } else {
+        message.error('不支持的合同类型')
+        return
+      }
+
       message.success('合同创建成功！')
       // 提交成功后返回合同列表
       setTimeout(() => {
@@ -100,19 +114,22 @@ const CreateContract: React.FC = () => {
               await createContractData(contractData)
             }}
             isSubmitting={isSubmitting}
-            ref={contractRef}
+            ref={productServiceAgreementRef}
           />
         )
       case '代理记账合同':
         return (
-          <div className="text-center py-8">
-            <Alert
-              message="代理记账合同功能开发中"
-              description="该合同类型的模板正在开发中，敬请期待。"
-              type="info"
-              showIcon
-            />
-          </div>
+          <AgencyAccountingAgreement
+            signatory={state.signatory}
+            contractData={{
+              // 这里可以传入已有的合同数据
+            }}
+            onSubmit={async (contractData) => {
+              await createContractData(contractData)
+            }}
+            isSubmitting={isSubmitting}
+            ref={agencyAccountingAgreementRef}
+          />
         )
       case '单项服务合同':
         return (
@@ -161,7 +178,7 @@ const CreateContract: React.FC = () => {
             <Button 
               type="primary" 
               loading={isSubmitting}
-              disabled={!state?.contractType || state.contractType !== '产品服务协议'}
+              disabled={!state?.contractType || (state.contractType !== '产品服务协议' && state.contractType !== '代理记账合同')}
               onClick={handleContractSubmit}
             >
               {isSubmitting ? '提交中...' : '提交合同'}
