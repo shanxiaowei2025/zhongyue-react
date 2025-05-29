@@ -12,6 +12,7 @@ import html2canvas from 'html2canvas'
 import { useContractDetail } from '../../hooks/useContract'
 import ProductServiceAgreementView from '../../components/contracts/ProductServiceAgreementView'
 import AgencyAccountingAgreementView from '../../components/contracts/AgencyAccountingAgreementView'
+import SingleServiceAgreementView from '../../components/contracts/SingleServiceAgreementView'
 
 const { Title, Text } = Typography
 
@@ -194,16 +195,7 @@ const ContractDetail: React.FC = () => {
       case '代理记账合同':
         return <AgencyAccountingAgreementView contractData={contractData} />
       case '单项服务合同':
-        return (
-          <div className="text-center py-8">
-            <Alert
-              message="单项服务合同详情展示功能开发中"
-              description="该合同类型的详情展示功能正在开发中，敬请期待。"
-              type="info"
-              showIcon
-            />
-          </div>
-        )
+        return <SingleServiceAgreementView contractData={contractData} />
       default:
         return (
           <div className="text-center py-8">

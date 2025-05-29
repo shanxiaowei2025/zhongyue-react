@@ -6,6 +6,7 @@ import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
 import ProductServiceAgreement, { type ProductServiceAgreementRef } from '../../components/contracts/ProductServiceAgreement'
 import AgencyAccountingAgreement, { type AgencyAccountingAgreementRef } from '../../components/contracts/AgencyAccountingAgreement'
+import SingleServiceAgreement, { type SingleServiceAgreementRef } from '../../components/contracts/SingleServiceAgreement'
 
 interface LocationState {
   signatory: string
@@ -19,6 +20,7 @@ const CreateContract: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
   const agencyAccountingAgreementRef = useRef<AgencyAccountingAgreementRef>(null)
+  const singleServiceAgreementRef = useRef<SingleServiceAgreementRef>(null)
   
   const { createContractData } = useContractDetail()
 
@@ -51,6 +53,12 @@ const CreateContract: React.FC = () => {
           return
         }
         await agencyAccountingAgreementRef.current.handleSubmit()
+      } else if (state?.contractType === '单项服务合同') {
+        if (!singleServiceAgreementRef.current) {
+          message.error('合同组件未准备就绪')
+          return
+        }
+        await singleServiceAgreementRef.current.handleSubmit()
       } else {
         message.error('不支持的合同类型')
         return
@@ -133,14 +141,17 @@ const CreateContract: React.FC = () => {
         )
       case '单项服务合同':
         return (
-          <div className="text-center py-8">
-            <Alert
-              message="单项服务合同功能开发中"
-              description="该合同类型的模板正在开发中，敬请期待。"
-              type="info"
-              showIcon
-            />
-          </div>
+          <SingleServiceAgreement
+            signatory={state.signatory}
+            contractData={{
+              // 这里可以传入已有的合同数据
+            }}
+            onSubmit={async (contractData) => {
+              await createContractData(contractData)
+            }}
+            isSubmitting={isSubmitting}
+            ref={singleServiceAgreementRef}
+          />
         )
       default:
         return (
@@ -178,7 +189,7 @@ const CreateContract: React.FC = () => {
             <Button 
               type="primary" 
               loading={isSubmitting}
-              disabled={!state?.contractType || (state.contractType !== '产品服务协议' && state.contractType !== '代理记账合同')}
+              disabled={!state?.contractType || (state.contractType !== '产品服务协议' && state.contractType !== '代理记账合同' && state.contractType !== '单项服务合同')}
               onClick={handleContractSubmit}
             >
               {isSubmitting ? '提交中...' : '提交合同'}
