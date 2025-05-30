@@ -129,14 +129,15 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
     }
 
     return (
-      <div className="flex flex-wrap gap-2">
+      <span className={styles.serviceItemsText}>
         {items.map((item, index) => (
-          <Tag key={index} color="default">
+          <span key={index}>
             {getItemName(item.itemKey) || item.itemName}
-            {item.amount ? ` (${item.amount}元)` : ''}
-          </Tag>
+            {item.amount ? `(${item.amount}元)` : ''}
+            {index < items.length - 1 ? '，' : ''}
+          </span>
         ))}
-      </div>
+      </span>
     )
   }
 
@@ -330,21 +331,19 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           <div className={styles.feeRow}>
             <span className={styles.feeLabel}>费用总计（人民币）：</span>
             <span className={styles.feeAmount}>
-              {contractData.totalCost ? `${contractData.totalCost}元` : '-'}
+              <strong>{contractData.totalCost ? `${contractData.totalCost}元` : '-'}</strong>
             </span>
-            <span>大写金额（人民币）：</span>
+            <span className={styles.feeLabel}>大写金额（人民币）：</span>
             <span className={styles.feeWords}>
-              {contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
+              <strong>{contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}</strong>
             </span>
           </div>
 
           {/* 备注 */}
-          {contractData.remarks && (
-            <div className={styles.remarkRow}>
-              <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.remarks}</span>
-            </div>
-          )}
+          <div className={styles.remarkRow}>
+            <span className={styles.remarkLabel} style={{ fontWeight: 'bold' }}>备注：</span>
+            <span className={styles.remarkContent} style={{ fontWeight: 'bold' }}>{contractData.remarks || '-'}</span>
+          </div>
         </div>
       </div>
 
@@ -388,6 +387,146 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           </div>
         </div>
 
+        {/* 乙方权利与义务 */}
+        <div className={styles.termSection}>
+          <div className={styles.termTitle}>（四）&nbsp;&nbsp;乙方的权利与义务</div>
+          <div className={styles.termContent}>
+            <p className={styles.termItem}>
+              1、
+              乙方通过书面或电子邮件等方式为甲方提供服务解决方案、所需条件、资料文件并及时向甲方报告委托事项的进展。
+            </p>
+            <p className={styles.termItem}>
+              2、
+              乙方服务时限自甲方完整提供全部信息、资料、文件时起算，因甲方确认需求、提供资料、签署文件缺失或由于甲方原因导致服务与咨询时间延长不计入服务时限；甲方更改需求后，服务时限重新计算；若因不可抗力因素（包括但不限于自然灾害、社会变动、战争影响、行政机关或服务机构系统网络故障、
+              法律修订、政策变动或被行政机关抽査检査等导致产品失效）导致服务或咨询时限暂停期间不计入服务时限，但乙方应及时将进度等情况告知甲方。
+            </p>
+            <p className={styles.termItem}>
+              3、
+              乙方可委托关联服务机构共同为甲方委托事宜提供服务，关联服务机构的费用由乙方代收代付并全部包含于本合同的总费用中，但本合同另有约定的除外。
+            </p>
+            <p className={styles.termItem}>
+              4、
+              为保障服务时限与质量,乙方确认甲方满足本协议服务或咨询条件时，可通知甲方推进该服务，甲方自收到乙方通知（包括但不限于邮件、微信及短信方式）的
+              30
+              日内无正当理由拒绝提供所需信息、资料、文件，视为放弃该项服务或咨询，乙方不再就该项服务或咨询负有相关义务，因此产生延误、行政处罚、失信公示等后果，乙方不承担相应责任。
+            </p>
+            <p className={styles.termItem}>
+              5、乙方对甲方提供的证件和资料负有妥善保管和保密责任，乙方不得将证件和资料提供给与新企业开业登记无关的其他第三者。
+            </p>
+            <p className={styles.termItem}>
+              6、 协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
+            </p>
+          </div>
+        </div>
+
+        {/* 合同解除条款 */}
+        <div className={styles.termSection}>
+          <div className={styles.termTitle}>（五）&nbsp;&nbsp;合同的解除、终止履行</div>
+          <div className={styles.termContent}>
+            <p className={styles.termItem}>
+              1、 若甲方出现下列情形，且经乙方有效通知后 30
+              个自然日内无法达成合意，乙方有权单方终止本协议，不再承担相应义务：
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （1）
+              甲方无正当理由要求解除本服务协议；甲方的资料、文件未完全披露或含有虚假内容；甲方无正当理由拒绝向行政机关或第三方服务机构缴纳相关费用。
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （2）
+              乙方通知（包括但不限于邮件、短信、微信方式）甲方补充文件、资料，但甲方在合理时间（不少于
+              2 个工作日）内无回应或因甲方原因导致服务协议自签署之日起 12
+              个自然月内服务或咨询项目仍未正常推进或完结。
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （3）
+              甲方无法按法律、行政法规、规章以及行政机关政策、程序向乙方提供所需资料、文件或无法提供有效联系人、相应经营条件以满足行政机关核査要求等影响服务或咨询推进：甲方的需求因法律、行政法规、规章以及行政机关政策、程序调整而无法实现。
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （4）
+              甲方自有办公场所不符合商事服务条件，且无法更换有效办公场所；甲方投资人、法定代表人或高管人员因信用瑕疵无法投资或任职，且无法更换其他自然人或组织。
+            </p>
+            <p className={styles.termItem}>
+              2、 若乙方出现下列情形，且经甲方有效通知后 10
+              个自然日内无法达成合意，甲方有权单方终止本协议，不再承担相应义务：
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （1） 乙方及其关联方未按协议约定提供咨询与服务。
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （2） 乙方提供第三方服务商产品无法完成本协议服务事项，且无其他可替代产品。
+            </p>
+            <p className={styles.termItem}>
+              3、
+              甲方提出书面或邮件退款申请且乙方无异议，视为对本服务协议的解除，双方不再承担本协议项下权利与义务，乙方于本服务中出具的服务费用收据将自动失效且乙方将于十个工作日内按以下内容确定退款金额，完成退款：
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （1） 已向行政机关/银行、会计师事务所、报社等服务机构缴纳的官费不予退还；
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （2）
+              因甲方原因终止服务，已占用企业办公场所等产品资源导致第三方服务商扣除全部或部分产品使用费用，该费用不予退还：
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （3） 协议解除前己发生服务或咨询项目所需必要的服务费用不予退还；
+            </p>
+            <p className={styles.termItem} style={{ paddingLeft: '20px' }}>
+              （4） 因本协议第（五）条第 1
+              款原因导致协议终止，乙方有权扣除甲方己缴费用中除上述三项外剩余服务费用的
+              30%作为违约金。
+            </p>
+          </div>
+        </div>
+
+        {/* 违约责任 */}
+        <div className={styles.termSection}>
+          <div className={styles.termTitle}>（六）&nbsp;&nbsp;违约责任</div>
+          <div className={styles.termContent}>
+            <p className={styles.termItem}>
+              1、
+              除由法律规定的连带责任以外，本协议任何一方均不对因协议内容履行不当而导致他方的间接损失承担责任，包括但不限于由本协议引起或与其相关的任何违约或导致一方利润、业务、收益、商誉损失，不论过错方是否已知晓该种损失的可能性。
+            </p>
+            <p className={styles.termItem}>
+              2、
+              乙方在提供商事服务或法律咨询过程中，因不可抗力或各方原因导致服务或咨询无法继续履行，一方应立即将客观情形有效告知对方，并应在十五个工作日内，提供详情及协议内容不能履行、部分不能履行或者需要延期履行理由的有效证明文件；双方依客观情形对履行协议权力义务的程度，协商决定是否解除本协议，或部分免除履行协议责任，或延期履行本协议。
+            </p>
+            <p className={styles.termItem}>
+              3、
+              因不可抗力因素（包括但不限于自然灾害、社会变动、战争影响、网络故障、法律修订、政策变动）导致服务或咨询无法继续，本协议确认解除的，乙方应根据第（五）条第
+              3 款内容退还甲方所付服务费用。
+            </p>
+          </div>
+        </div>
+
+        {/* 其他条款 */}
+        <div className={styles.termSection}>
+          <div className={styles.termTitle}>（七）&nbsp;&nbsp;其他</div>
+          <div className={styles.termContent}>
+            <p className={styles.termItem}>
+              1、
+              协议生效后各方应认真自觉遵守，在协议履行过程中发生的争议，各方应协商解决，若协商不成，任何一方应向乙方所在地人民法院提起诉讼。
+            </p>
+            <p className={styles.termItem}>
+              2、
+              本协议签订的前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
+            </p>
+            <p className={styles.termItem}>
+              3、
+              本合同为中文版本，并适用中国大陆地区法律，本合同自双方盖章且甲方按约定完成付款之日起生效。
+            </p>
+            <p className={styles.termItem}>
+              4、
+              本协议补充条款经甲乙双方确认后，属于对本协议的有效补充，具有法律效力，乙方员工口头承诺内容未经本协议记载，均不发生法律效力。
+            </p>
+            <p className={styles.termItem}>
+              5、
+              本协议各方所提供的资料、文件均属商业机密，各方不得以任何理由在与本协议服务或咨询无关的场合或其他目的进行披露，政府行政机构依法获得及批准除外。
+            </p>
+            <p className={styles.termItem}>
+              6、本合同一式二份，协议各方各执一份。各份协议文本具有同等法律效力。
+            </p>
+          </div>
+        </div>
+
         {/* 合同签章 */}
         <div className={styles.contractSignatures}>
           <div className={styles.signatureRow}>
@@ -419,7 +558,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             <div className={styles.signatureColumn}>
               <div className={styles.signatureItem}>
                 <span className={styles.signatureTitle}>（乙方盖章）：</span>
-                <div className={styles.signatureArea}>
+                <div className={styles.signatureArea} style={{ border: 'none', background: 'transparent' }}>
                   <img
                     src={getPartyBStampImage(contractData.signatory || '')}
                     alt="乙方盖章"

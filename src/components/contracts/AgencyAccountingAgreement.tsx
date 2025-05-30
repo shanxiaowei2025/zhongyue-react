@@ -260,6 +260,7 @@ const AgencyAccountingAgreement = forwardRef<
           ...formData,
           contractType: '代理记账合同',
           signatory,
+          remarks: formData.remarks,
         }
 
         if (mode === 'create' && onSubmit) {

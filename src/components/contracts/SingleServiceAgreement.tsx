@@ -436,6 +436,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           partyAPhone: formData.partyAPhone,
           partyBContact: formData.partyBContact,
           partyBPhone: formData.partyBPhone,
+          businessEstablishmentAddress: formData.businessEstablishmentAddress,
           businessRemark: formData.businessRemark,
           businessServiceFee: formData.businessServiceFee,
           taxRemark: formData.taxRemark,
@@ -451,6 +452,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           totalCost: formData.totalCost,
           partyASignDate: formData.partyASignDate,
           partyBSignDate: formData.partyBSignDate,
+          remarks: formData.remarks,
           ...serviceData,
         }
 
@@ -669,13 +671,13 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.mb5}>①设立：</div>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('business_establish_limited', '有限责任公司')}
-                    {renderCheckboxWithAmount('business_establish_branch', '有限责任公司分支机构')}
-                    {renderCheckboxWithAmount('business_establish_individual', '个人独资企业')}
-                    {renderCheckboxWithAmount('business_establish_partnership', '合伙企业')}
-                    {renderCheckboxWithAmount('business_establish_nonprofit', '民办非企业')}
-                    {renderCheckboxWithAmount('business_establish_joint_stock', '股份有限公司')}
-                    {renderCheckboxWithAmount('business_establish_self_employed', '个体工商户')}
+                  {renderCheckboxWithAmount('business_establish_limited', '有限责任公司')}
+                  {renderCheckboxWithAmount('business_establish_branch', '有限责任公司分支机构')}
+                  {renderCheckboxWithAmount('business_establish_individual', '个人独资企业')}
+                  {renderCheckboxWithAmount('business_establish_partnership', '合伙企业')}
+                  {renderCheckboxWithAmount('business_establish_nonprofit', '民办非企业')}
+                  {renderCheckboxWithAmount('business_establish_joint_stock', '股份有限公司')}
+                  {renderCheckboxWithAmount('business_establish_self_employed', '个体工商户')}
                   </div>
                 </div>
 
@@ -694,49 +696,49 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.mb5}>②变更：</div>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('business_change_legal_person', '法定代表人')}
-                    {renderCheckboxWithAmount('business_change_shareholder', '股东股权')}
-                    {renderCheckboxWithAmount('business_change_capital', '注册资金')}
-                    {renderCheckboxWithAmount('business_change_name', '公司名称')}
-                    {renderCheckboxWithAmount('business_change_scope', '经营范围')}
-                    {renderCheckboxWithAmount('business_change_address', '注册地址')}
-                    {renderCheckboxWithAmount('business_change_manager', '分公司负责人')}
-                    {renderCheckboxWithAmount('business_change_directors', '董事/监事人员')}
+                  {renderCheckboxWithAmount('business_change_legal_person', '法定代表人')}
+                  {renderCheckboxWithAmount('business_change_shareholder', '股东股权')}
+                  {renderCheckboxWithAmount('business_change_capital', '注册资金')}
+                  {renderCheckboxWithAmount('business_change_name', '公司名称')}
+                  {renderCheckboxWithAmount('business_change_scope', '经营范围')}
+                  {renderCheckboxWithAmount('business_change_address', '注册地址')}
+                  {renderCheckboxWithAmount('business_change_manager', '分公司负责人')}
+                  {renderCheckboxWithAmount('business_change_directors', '董事/监事人员')}
                   </div>
                 </div>
 
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.mb5}>③注销：</div>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('business_cancel_limited', '有限责任公司')}
-                    {renderCheckboxWithAmount('business_cancel_branch', '有限责任公司分支机构')}
-                    {renderCheckboxWithAmount('business_cancel_individual', '个人独资企业')}
-                    {renderCheckboxWithAmount('business_cancel_partnership', '合伙企业')}
-                    {renderCheckboxWithAmount('business_cancel_foreign', '外商投资企业')}
-                    {renderCheckboxWithAmount('business_cancel_joint_stock', '股份有限公司')}
-                    {renderCheckboxWithAmount('business_cancel_self_employed', '个体工商户')}
+                  {renderCheckboxWithAmount('business_cancel_limited', '有限责任公司')}
+                  {renderCheckboxWithAmount('business_cancel_branch', '有限责任公司分支机构')}
+                  {renderCheckboxWithAmount('business_cancel_individual', '个人独资企业')}
+                  {renderCheckboxWithAmount('business_cancel_partnership', '合伙企业')}
+                  {renderCheckboxWithAmount('business_cancel_foreign', '外商投资企业')}
+                  {renderCheckboxWithAmount('business_cancel_joint_stock', '股份有限公司')}
+                  {renderCheckboxWithAmount('business_cancel_self_employed', '个体工商户')}
                   </div>
                 </div>
 
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.mb5}>④其他：</div>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('business_other_annual_report', '年报公示')}
-                    {renderCheckboxWithAmount('business_other_remove_exception', '解除异常')}
-                    {renderCheckboxWithAmount('business_other_info_repair', '信息修复')}
-                    {renderCheckboxWithAmount('business_other_file_retrieval', '档案调取')}
-                    {renderCheckboxWithAmount('business_other_license_annual', '许可证年检')}
+                  {renderCheckboxWithAmount('business_other_annual_report', '年报公示')}
+                  {renderCheckboxWithAmount('business_other_remove_exception', '解除异常')}
+                  {renderCheckboxWithAmount('business_other_info_repair', '信息修复')}
+                  {renderCheckboxWithAmount('business_other_file_retrieval', '档案调取')}
+                  {renderCheckboxWithAmount('business_other_license_annual', '许可证年检')}
                   </div>
                 </div>
 
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.mb5}>⑤物料:</div>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('business_material_seal', '备案章')}
-                    {renderCheckboxWithAmount('business_material_rubber', '胶皮章')}
-                    {renderCheckboxWithAmount('business_material_crystal', '水晶章')}
-                    {renderCheckboxWithAmount('business_material_kt_board', 'KT板牌子')}
-                    {renderCheckboxWithAmount('business_material_copper', '铜牌')}
+                  {renderCheckboxWithAmount('business_material_seal', '备案章')}
+                  {renderCheckboxWithAmount('business_material_rubber', '胶皮章')}
+                  {renderCheckboxWithAmount('business_material_crystal', '水晶章')}
+                  {renderCheckboxWithAmount('business_material_kt_board', 'KT板牌子')}
+                  {renderCheckboxWithAmount('business_material_copper', '铜牌')}
                   </div>
                 </div>
               </div>
@@ -773,13 +775,13 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
               <div className={styles.serviceItems}>
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('bank_general_account', '一般账户设立')}
-                    {renderCheckboxWithAmount('bank_basic_account', '基本账户设立')}
-                    {renderCheckboxWithAmount('bank_foreign_account', '外币账户设立')}
-                    {renderCheckboxWithAmount('bank_info_change', '信息变更')}
-                    {renderCheckboxWithAmount('bank_cancel', '银行账户注销')}
-                    {renderCheckboxWithAmount('bank_financing', '融资业务（开通平台手续）')}
-                    {renderCheckboxWithAmount('bank_loan', '贷款服务')}
+                  {renderCheckboxWithAmount('bank_general_account', '一般账户设立')}
+                  {renderCheckboxWithAmount('bank_basic_account', '基本账户设立')}
+                  {renderCheckboxWithAmount('bank_foreign_account', '外币账户设立')}
+                  {renderCheckboxWithAmount('bank_info_change', '信息变更')}
+                  {renderCheckboxWithAmount('bank_cancel', '银行账户注销')}
+                  {renderCheckboxWithAmount('bank_financing', '融资业务（开通平台手续）')}
+                  {renderCheckboxWithAmount('bank_loan', '贷款服务')}
                   </div>
                 </div>
               </div>
@@ -816,13 +818,13 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
               <div className={styles.serviceItems}>
                 <div className={styles.serviceItemGroup}>
                   <div className={styles.serviceItems}>
-                    {renderCheckboxWithAmount('license_food', '食品经营许可证')}
-                    {renderCheckboxWithAmount('license_health', '卫生许可证')}
-                    {renderCheckboxWithAmount('license_catering', '餐饮许可证')}
-                    {renderCheckboxWithAmount('license_transport', '道路运输许可证')}
-                    {renderCheckboxWithAmount('license_medical', '二类医疗器械备案')}
-                    {renderCheckboxWithAmount('license_other', '其他许可证')}
-                    {renderCheckboxWithAmount('license_prepackaged', '预包装食品备案')}
+                  {renderCheckboxWithAmount('license_food', '食品经营许可证')}
+                  {renderCheckboxWithAmount('license_health', '卫生许可证')}
+                  {renderCheckboxWithAmount('license_catering', '餐饮许可证')}
+                  {renderCheckboxWithAmount('license_transport', '道路运输许可证')}
+                  {renderCheckboxWithAmount('license_medical', '二类医疗器械备案')}
+                  {renderCheckboxWithAmount('license_other', '其他许可证')}
+                  {renderCheckboxWithAmount('license_prepackaged', '预包装食品备案')}
                   </div>
                 </div>
               </div>
@@ -1105,35 +1107,35 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
               <div className={styles.signatureItem}>
                 <span className={styles.signatureTitle}>（甲方盖章）：</span>
                 <div className={styles.signatureArea}>
-                  {formData.partyAStampImage && (
+              {formData.partyAStampImage && (
                     <img
                       src={formData.partyAStampImage}
                       alt="甲方盖章"
                       className={styles.stampImage}
                     />
-                  )}
-                </div>
+              )}
+            </div>
               </div>
               <div className={styles.signatureDateRow}>
                 <span className={styles.dateLabel}>日期：</span>
                 <div className={styles.dateField}>
-                  <DatePicker
-                    format="YYYY年MM月DD日"
-                    placeholder="选择日期"
-                    value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
-                    onChange={date =>
+                <DatePicker
+                  format="YYYY年MM月DD日"
+                  placeholder="选择日期"
+                  value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
+                  onChange={date =>
                       handleFormChange(
                         'partyASignDate',
                         date ? date.format('YYYY-MM-DD') : undefined
                       )
-                    }
-                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #000' }}
-                    bordered={false}
-                    suffixIcon={null}
-                  />
-                </div>
+                  }
+                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #000' }}
+                  bordered={false}
+                  suffixIcon={null}
+                />
               </div>
             </div>
+          </div>
 
             <div className={styles.signatureColumn}>
               <div className={styles.signatureItem}>
@@ -1150,25 +1152,25 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                       margin: '-25px 0 -10px 0',
                     }}
                   />
-                </div>
+            </div>
               </div>
               <div className={styles.signatureDateRow}>
                 <span className={styles.dateLabel}>日期：</span>
                 <div className={styles.dateField}>
-                  <DatePicker
-                    format="YYYY年MM月DD日"
-                    placeholder="选择日期"
-                    value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
-                    onChange={date =>
+                <DatePicker
+                  format="YYYY年MM月DD日"
+                  placeholder="选择日期"
+                  value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
+                  onChange={date =>
                       handleFormChange(
                         'partyBSignDate',
                         date ? date.format('YYYY-MM-DD') : undefined
                       )
-                    }
-                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #000' }}
-                    bordered={false}
-                    suffixIcon={null}
-                  />
+                  }
+                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #000' }}
+                  bordered={false}
+                  suffixIcon={null}
+                />
                 </div>
               </div>
             </div>

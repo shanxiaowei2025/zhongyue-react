@@ -292,11 +292,11 @@
 .signatureArea {
   width: 120px;
   height: 60px;
-  border: 1px dashed #999;
-  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
+  border: none;
 }
 
 .signatureArea.signed {
@@ -515,4 +515,10 @@
   .termTitle {
     font-size: 12px;
   }
+}
+
+.serviceItemsText {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  line-height: 1.6;
 } 

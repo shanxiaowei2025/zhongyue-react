@@ -483,6 +483,7 @@ const ProductServiceAgreement = forwardRef<
           totalCost: formData.totalCost,
           partyASignDate: formData.partyASignDate,
           partyBSignDate: formData.partyBSignDate,
+          remarks: formData.remarks,
           ...serviceData,
         }
 
