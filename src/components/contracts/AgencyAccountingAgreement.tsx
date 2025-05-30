@@ -5,7 +5,7 @@ import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
 import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
-import './AgencyAccountingAgreement.css'
+import styles from './AgencyAccountingAgreement.module.css'
 
 const { TextArea } = Input
 const { Option } = Select
@@ -166,7 +166,7 @@ const AgencyAccountingAgreement = forwardRef<
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
     if (!config) {
-      return <div className="error-message">不支持的签署方: {signatory}</div>
+      return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
     }
 
     // 处理表单数据变化
@@ -286,134 +286,134 @@ const AgencyAccountingAgreement = forwardRef<
     }))
 
     return (
-      <div className="agency-accounting-agreement">
-        <div className="agreement-header">
-          <h1 className="agreement-title">代理记账业务委托合同</h1>
+      <div className={styles.agencyAccountingAgreement}>
+        <div className={styles.agreementHeader}>
+          <h1 className={styles.agreementTitle}>代理记账业务委托合同</h1>
         </div>
 
-        <div className="agreement-parties">
-          <div className="party-section">
-            <div className="party-label">甲方：</div>
-            <div className="party-content">
+        <div className={styles.agreementParties}>
+          <div className={styles.partySection}>
+            <div className={styles.partyLabel}>甲方：</div>
+            <div className={styles.partyContent}>
               <Input
-                placeholder="请填写甲方公司名称"
+                className={styles.companyInput}
                 value={formData.partyACompany || ''}
                 onChange={e => handleFormChange('partyACompany', e.target.value)}
-                className="company-input"
+                placeholder="请输入甲方公司名称"
               />
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">统一社会信用代码：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>统一社会信用代码：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写甲方统一社会信用代码"
                 value={formData.partyACreditCode || ''}
                 onChange={e => handleFormChange('partyACreditCode', e.target.value)}
-                className="credit-code-input"
+                className={styles.creditCodeInput}
               />
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">地址：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>地址：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写甲方地址"
                 value={formData.partyAAddress || ''}
                 onChange={e => handleFormChange('partyAAddress', e.target.value)}
-                className="address-input"
+                className={styles.addressInput}
               />
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">电话：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>电话：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写甲方电话"
                 value={formData.partyAPhone || ''}
                 onChange={e => handleFormChange('partyAPhone', e.target.value)}
-                className="phone-input"
+                className={styles.phoneInput}
               />
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">联系人：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>联系人：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写甲方联系人"
                 value={formData.partyAContact || ''}
                 onChange={e => handleFormChange('partyAContact', e.target.value)}
-                className="contact-input"
+                className={styles.contactInput}
               />
             </div>
           </div>
 
-          <div className="party-section">
-            <div className="party-label">乙方：</div>
-            <div className="party-content">
-              <div className="party-b-name">{config.title}</div>
+          <div className={styles.partySection}>
+            <div className={styles.partyLabel}>乙方：</div>
+            <div className={styles.partyContent}>
+              <div className={styles.partyBName}>{config.title}</div>
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">统一社会信用代码：</div>
-            <div className="party-content">
-              <div className="party-b-credit-code">{config.creditCode}</div>
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>统一社会信用代码：</div>
+            <div className={styles.partyContent}>
+              <div className={styles.partyBCreditCode}>{config.creditCode}</div>
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">地址：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>地址：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写乙方地址"
                 value={formData.partyBAddress || config.address}
                 onChange={e => handleFormChange('partyBAddress', e.target.value)}
-                className="address-input"
+                className={styles.addressInput}
               />
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">电话：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>电话：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写乙方电话"
                 value={formData.partyBPhone || config.phone}
                 onChange={e => handleFormChange('partyBPhone', e.target.value)}
-                className="phone-input"
+                className={styles.phoneInput}
               />
             </div>
           </div>
 
-          <div className="party-field">
-            <div className="party-label">业务人：</div>
-            <div className="party-content">
+          <div className={styles.partyField}>
+            <div className={styles.partyLabel}>业务人：</div>
+            <div className={styles.partyContent}>
               <Input
                 placeholder="请填写乙方业务人"
                 value={formData.partyBContact || ''}
                 onChange={e => handleFormChange('partyBContact', e.target.value)}
-                className="business-person-input"
+                className={styles.businessPersonInput}
               />
             </div>
           </div>
         </div>
 
-        <div className="agreement-preamble">
+        <div className={styles.agreementPreamble}>
           甲方因经营管理需要委托乙方代理发票开具、记账纳税申报。为了维护双方
           合法权益根据《中华人民共和国民法典》及《代理记账管理办法》等法律、法规
           的规定经双方代表友好协商，达成以下协议：
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">一、委托业务范围</div>
-          <div className="section-content">
-            <div className="entrustment-period">
-              <div className="entrustment-text">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>一、委托业务范围</div>
+          <div className={styles.sectionContent}>
+            <div className={styles.entrustmentPeriod}>
+              <div className={styles.entrustmentText}>
                 乙方接受甲方委托，对甲方
                 <DatePicker
                   placeholder="开始日期"
@@ -426,7 +426,7 @@ const AgencyAccountingAgreement = forwardRef<
                       date ? date.format('YYYY-MM-DD') : null
                     )
                   }
-                  className="date-picker"
+                  className={styles.datePicker}
                 />
                 日至
                 <DatePicker
@@ -435,15 +435,15 @@ const AgencyAccountingAgreement = forwardRef<
                   onChange={date =>
                     handleFormChange('entrustmentEndDate', date ? date.format('YYYY-MM-DD') : null)
                   }
-                  className="date-picker"
+                  className={styles.datePicker}
                 />
                 日期间内的经济业务进行代理记账。
               </div>
             </div>
 
-            <div className="tax-services">
+            <div className={styles.taxServices}>
               <div>(同时为甲方提供代理纳税申报服务，包括：</div>
-              <div className="service-checkboxes">
+              <div className={styles.serviceCheckboxes}>
                 {DECLARATION_SERVICE_OPTIONS.map(option => (
                   <Checkbox
                     key={option.value}
@@ -464,22 +464,22 @@ const AgencyAccountingAgreement = forwardRef<
                   </Checkbox>
                 ))}
               </div>
-              <div className="other-business">
-                <div className="other-business-label">其他业务：</div>
+              <div className={styles.otherBusiness}>
+                <div className={styles.otherBusinessLabel}>其他业务：</div>
                 <Input
                   placeholder="请填写其他业务"
                   value={otherBusiness}
                   onChange={handleOtherBusinessChange}
-                  className="other-business-input"
+                  className={styles.otherBusinessInput}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">二、甲方的责任和义务</div>
-          <div className="section-content party-a-obligations">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>二、甲方的责任和义务</div>
+          <div className={styles.sectionContent + ' ' + styles.partyAObligations}>
             <p>(一)甲方的每项经济业务，必须填制或者取得符合国家统一会计制度规定的原始凭证。</p>
             <p>
               (二)甲方应归集和整理有关经济业务的原始凭证和其他资料，并于每月 15
@@ -512,9 +512,9 @@ const AgencyAccountingAgreement = forwardRef<
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">三、乙方的责任和义务</div>
-          <div className="section-content party-b-obligations">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>三、乙方的责任和义务</div>
+          <div className={styles.sectionContent + ' ' + styles.partyBObligations}>
             <p>
               (一)乙方根据甲方所提供的原始凭证和其他资料，按照国家统一会计制度的规定进行会计核算，包括审核原始凭证、填制记账凭证、登记会计账簿、设计编制和提供财务会计报告。
             </p>
@@ -543,9 +543,9 @@ const AgencyAccountingAgreement = forwardRef<
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">四、责任划分</div>
-          <div className="section-content responsibility-division">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>四、责任划分</div>
+          <div className={styles.sectionContent + ' ' + styles.responsibilityDivision}>
             <p>
               (一)乙方是在甲方提供相关资料的基础上进行会计核算，因甲方提供的记账依据不实、未按协议约定及时提供记账依据或其他过错导致委托事项出现差错或未能按时完成委托事项，由此造成的后果，由甲方承担。
             </p>
@@ -555,17 +555,17 @@ const AgencyAccountingAgreement = forwardRef<
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">五、协议的终止</div>
-          <div className="section-content agreement-termination">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>五、协议的终止</div>
+          <div className={styles.sectionContent + ' ' + styles.agreementTermination}>
             <p>(一)协议期满，本协议自然终止，双方如续续约，须另定协议。</p>
             <p>(二)经双方协商一致后，可提前终止协议。</p>
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">六、代理记账服务费</div>
-          <div className="section-content agency-fee-content">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>六、代理记账服务费</div>
+          <div className={styles.sectionContent + ' ' + styles.agencyFeeContent}>
             <p>
               经协商，乙方代理记账收费标准为：人民币每年
               <Input
@@ -573,7 +573,7 @@ const AgencyAccountingAgreement = forwardRef<
                 value={amountDisplayValues.totalAgencyAccountingFee}
                 onChange={e => handleFormAmountChange('totalAgencyAccountingFee', e.target.value)}
                 onBlur={e => handleFormAmountBlur('totalAgencyAccountingFee', e.target.value)}
-                className="inline-fee-input"
+                className={styles.inlineFeeInput}
               />
               元（代理记账费
               <Input
@@ -581,7 +581,7 @@ const AgencyAccountingAgreement = forwardRef<
                 value={amountDisplayValues.agencyAccountingFee}
                 onChange={e => handleFormAmountChange('agencyAccountingFee', e.target.value)}
                 onBlur={e => handleFormAmountBlur('agencyAccountingFee', e.target.value)}
-                className="inline-fee-input"
+                className={styles.inlineFeeInput}
               />
               /年，记账软件服务费
               <Input
@@ -589,7 +589,7 @@ const AgencyAccountingAgreement = forwardRef<
                 value={amountDisplayValues.accountingSoftwareFee}
                 onChange={e => handleFormAmountChange('accountingSoftwareFee', e.target.value)}
                 onBlur={e => handleFormAmountBlur('accountingSoftwareFee', e.target.value)}
-                className="inline-fee-input"
+                className={styles.inlineFeeInput}
               />
               /年，开票软件服务费
               <Input
@@ -597,7 +597,7 @@ const AgencyAccountingAgreement = forwardRef<
                 value={amountDisplayValues.invoicingSoftwareFee}
                 onChange={e => handleFormAmountChange('invoicingSoftwareFee', e.target.value)}
                 onBlur={e => handleFormAmountBlur('invoicingSoftwareFee', e.target.value)}
-                className="inline-fee-input"
+                className={styles.inlineFeeInput}
               />
               /年），甲方按年度提前30日支付，不足一个月的按一个月计算。如甲方业务量增加，乙方根据甲方业务增量调整增加代理费用。
             </p>
@@ -609,7 +609,7 @@ const AgencyAccountingAgreement = forwardRef<
                 value={amountDisplayValues.accountBookFee}
                 onChange={e => handleFormAmountChange('accountBookFee', e.target.value)}
                 onBlur={e => handleFormAmountBlur('accountBookFee', e.target.value)}
-                className="inline-fee-input"
+                className={styles.inlineFeeInput}
               />
               元。其中包括凭证、账簿、差旅费报销单、费用粘贴单、工资表、财务报表、纳税申报表等。（以上费用以实际到账执行）
             </p>
@@ -619,7 +619,7 @@ const AgencyAccountingAgreement = forwardRef<
               <Radio.Group
                 value={formData.paymentMethod || '对公'}
                 onChange={e => handleFormChange('paymentMethod', e.target.value)}
-                className="inline-payment-method"
+                className={styles.inlinePaymentMethod}
               >
                 <Radio value="对公">对公</Radio>
                 <Radio value="现金">现金</Radio>
@@ -630,9 +630,9 @@ const AgencyAccountingAgreement = forwardRef<
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">七、违约责任</div>
-          <div className="section-content breach-responsibility">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>七、违约责任</div>
+          <div className={styles.sectionContent + ' ' + styles.breachResponsibility}>
             <p>
               (一)甲方未能履行其责任，未向乙方提供真实、合法、准确、完整的原始凭证，导致税收方面的责任由甲方承担；
             </p>
@@ -651,9 +651,9 @@ const AgencyAccountingAgreement = forwardRef<
           </div>
         </div>
 
-        <div className="agreement-section">
-          <div className="section-title">八、其他约定</div>
-          <div className="section-content other-agreements">
+        <div className={styles.agreementSection}>
+          <div className={styles.sectionTitle}>八、其他约定</div>
+          <div className={styles.sectionContent + ' ' + styles.otherAgreements}>
             <p>
               (一)本协议的补充条款、附件及补充协议均为本协议不可分割的部分。本协议补充条款、补充协议与本协议不一致的，以补充条款、补充协议为准。
             </p>
@@ -667,19 +667,19 @@ const AgencyAccountingAgreement = forwardRef<
           </div>
         </div>
 
-        <div className="agreement-signatures">
-          <div className="signature-container">
-            <div className="signature-row">
-              <div className="signature-column">
-                <div className="signature-title">委托方：{formData.partyACompany || ''}</div>
-                <div className="signature-stamp-space">
+        <div className={styles.agreementSignatures}>
+          <div className={styles.signatureContainer}>
+            <div className={styles.signatureRow}>
+              <div className={styles.signatureColumn}>
+                <div className={styles.signatureTitle}>委托方：{formData.partyACompany || ''}</div>
+                <div className={styles.signatureStampSpace}>
                   {/* 甲方签字区域 - 参考产品服务协议的实现 */}
                   {formData.partyAStampImage ? (
-                    <div className="stamp-preview">
+                    <div className={styles.stampPreview}>
                       <img
                         src={formData.partyAStampImage}
                         alt="甲方签字"
-                        className="stamp-image"
+                        className={styles.stampImage}
                         style={{
                           maxWidth: '150px',
                           maxHeight: '80px',
@@ -687,16 +687,16 @@ const AgencyAccountingAgreement = forwardRef<
                           margin: '10px 0',
                         }}
                       />
-                      <p className="signed-note">签名图片已通过签署功能自动生成</p>
+                      <p className={styles.signedNote}>签名图片已通过"签署合同"功能自动生成</p>
                     </div>
                   ) : (
-                    <div className="stamp-placeholder">
-                      <p className="text-sm text-gray-400">请通过"签署合同"功能生成甲方签字</p>
+                    <div className={styles.stampPlaceholder}>
+                      <p className={styles.textSm + ' ' + styles.textGray400}>请通过"签署合同"功能生成甲方签字</p>
                     </div>
                   )}
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">法定代表人：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>法定代表人：</div>
                   <Input
                     placeholder="请输入法定代表人"
                     value={formData.partyALegalPerson || ''}
@@ -704,8 +704,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '150px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">联系人：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>联系人：</div>
                   <Input
                     placeholder="请输入联系人"
                     value={formData.partyAContact || ''}
@@ -713,8 +713,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '150px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">地址：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>地址：</div>
                   <Input
                     placeholder="请输入地址"
                     value={formData.partyAAddress || ''}
@@ -722,8 +722,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '200px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">邮编：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>邮编：</div>
                   <Input
                     placeholder="请输入邮编"
                     value={formData.partyAPostalCode || ''}
@@ -731,8 +731,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '120px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">电话：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>电话：</div>
                   <Input
                     placeholder="请输入电话"
                     value={formData.partyAPhone || ''}
@@ -740,8 +740,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '150px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">签约日期：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>签约日期：</div>
                   <DatePicker
                     placeholder="请选择日期"
                     format="YYYY年MM月DD日"
@@ -753,20 +753,20 @@ const AgencyAccountingAgreement = forwardRef<
                   />
                 </div>
               </div>
-              <div className="signature-column">
-                <div className="signature-title">受托方：{config.title}</div>
-                <div className="signature-stamp-space">
+              <div className={styles.signatureColumn}>
+                <div className={styles.signatureTitle}>受托方：{config.title}</div>
+                <div className={styles.signatureStampSpace}>
                   {/* 乙方盖章区域 - 显示公章图片 */}
                   {getPartyBStampImage(signatory) && (
                     <img
                       src={getPartyBStampImage(signatory)}
                       alt="乙方盖章"
-                      className="party-b-stamp"
+                      className={styles.partyBSign}
                     />
                   )}
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">法定代表人：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>法定代表人：</div>
                   <Input
                     placeholder="请输入法定代表人"
                     value={formData.partyBLegalPerson || '刘菲'}
@@ -774,8 +774,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '150px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">联系人：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>联系人：</div>
                   <Input
                     placeholder="请输入联系人"
                     value={formData.partyBContact || ''}
@@ -783,8 +783,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '150px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">地址：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>地址：</div>
                   <Input
                     placeholder="请输入地址"
                     value={formData.partyBAddress || config.address}
@@ -792,8 +792,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '200px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">邮编：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>邮编：</div>
                   <Input
                     placeholder="请输入邮编"
                     value={formData.partyBPostalCode || ''}
@@ -801,8 +801,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '120px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">电话：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>电话：</div>
                   <Input
                     placeholder="请输入电话"
                     value={formData.partyBPhone || config.phone}
@@ -810,8 +810,8 @@ const AgencyAccountingAgreement = forwardRef<
                     style={{ width: '150px', fontSize: '12px' }}
                   />
                 </div>
-                <div className="signature-field">
-                  <div className="signature-label">签约日期：</div>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>签约日期：</div>
                   <DatePicker
                     placeholder="请选择日期"
                     format="YYYY年MM月DD日"

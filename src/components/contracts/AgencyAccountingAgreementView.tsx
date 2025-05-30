@@ -3,8 +3,7 @@ import { Tag, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { numberToChinese } from '../../utils/numberToChinese'
 import type { Contract, ContractStatus } from '../../types/contract'
-import './AgencyAccountingAgreement.css'
-import './AgencyAccountingAgreementView.css'
+import styles from './AgencyAccountingAgreementView.module.css'
 
 const { Title, Text } = Typography
 
@@ -153,7 +152,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
   const config = signatory ? SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG] : null
 
   if (!config) {
-    return <div className="error-message">不支持的签署方: {signatory}</div>
+    return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
   }
 
   // 获取申报服务选项
@@ -163,15 +162,15 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       !Array.isArray(declarationService) ||
       declarationService.length === 0
     ) {
-      return <div className="service-item-empty">未选择</div>
+      return <div className={styles.serviceItemEmpty}>未选择</div>
     }
 
     return (
-      <div className="service-checkboxes view-mode">
+      <div className={`${styles.serviceCheckboxes} ${styles.viewMode}`}>
         {declarationService.map((service, index) => (
-          <div key={index} className="service-item">
-            <span className="service-checkbox-indicator">✓</span>
-            <span className="service-label">
+          <div key={index} className={styles.serviceItem}>
+            <span className={styles.serviceCheckboxIndicator}>✓</span>
+            <span className={styles.serviceLabel}>
               {DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === service.value)?.label ||
                 service.label}
             </span>
@@ -182,120 +181,120 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
   }
 
   return (
-    <div className="agency-accounting-agreement-view">
-      <div className="agreement-header">
-        <h1 className="agreement-title">代理记账业务委托合同</h1>
+    <div className={styles.agencyAccountingAgreementView}>
+      <div className={styles.agreementHeader}>
+        <h1 className={styles.agreementTitle}>代理记账业务委托合同</h1>
       </div>
 
-      <div className="agreement-parties">
-        <div className="party-section">
-          <div className="party-label">甲方：</div>
-          <div className="party-content">
-            <div className="party-value">{partyACompany || '-'}</div>
+      <div className={styles.agreementParties}>
+        <div className={styles.partySection}>
+          <div className={styles.partyLabel}>甲方：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyACompany || '-'}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">统一社会信用代码：</div>
-          <div className="party-content">
-            <div className="party-value">{partyACreditCode || '-'}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>统一社会信用代码：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyACreditCode || '-'}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">地址：</div>
-          <div className="party-content">
-            <div className="party-value">{partyAAddress || '-'}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>地址：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyAAddress || '-'}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">电话：</div>
-          <div className="party-content">
-            <div className="party-value">{partyAPhone || '-'}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>电话：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyAPhone || '-'}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">联系人：</div>
-          <div className="party-content">
-            <div className="party-value">{partyAContact || '-'}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>联系人：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyAContact || '-'}</div>
           </div>
         </div>
 
-        <div className="party-section">
-          <div className="party-label">乙方：</div>
-          <div className="party-content">
-            <div className="party-b-name">{config.title}</div>
+        <div className={styles.partySection}>
+          <div className={styles.partyLabel}>乙方：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyBName}>{config.title}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">统一社会信用代码：</div>
-          <div className="party-content">
-            <div className="party-b-credit-code">{config.creditCode}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>统一社会信用代码：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyBCreditCode}>{config.creditCode}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">地址：</div>
-          <div className="party-content">
-            <div className="party-value">{partyBAddress || config.address}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>地址：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyBAddress || config.address}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">电话：</div>
-          <div className="party-content">
-            <div className="party-value">{partyBPhone || config.phone}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>电话：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyBPhone || config.phone}</div>
           </div>
         </div>
 
-        <div className="party-field">
-          <div className="party-label">业务人：</div>
-          <div className="party-content">
-            <div className="party-value">{partyBContact || '-'}</div>
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>业务人：</div>
+          <div className={styles.partyContent}>
+            <div className={styles.partyValue}>{partyBContact || '-'}</div>
           </div>
         </div>
       </div>
 
-      <div className="agreement-preamble">
+      <div className={styles.agreementPreamble}>
         甲方因经营管理需要委托乙方代理发票开具、记账纳税申报。为了维护双方
         合法权益根据《中华人民共和国民法典》及《代理记账管理办法》等法律、法规
         的规定经双方代表友好协商，达成以下协议：
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">一、委托业务范围</div>
-        <div className="section-content">
-          <div className="entrustment-period">
-            <div className="entrustment-text">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>一、委托业务范围</div>
+        <div className={styles.sectionContent}>
+          <div className={styles.entrustmentPeriod}>
+            <div className={styles.entrustmentText}>
               乙方接受甲方委托，对甲方
-              <span className="date-value">
+              <span className={styles.dateValue}>
                 {entrustmentStartDate ? dayjs(entrustmentStartDate).format('YYYY-MM-DD') : '___'}
               </span>
               日至
-              <span className="date-value">
+              <span className={styles.dateValue}>
                 {entrustmentEndDate ? dayjs(entrustmentEndDate).format('YYYY-MM-DD') : '___'}
               </span>
               日期间内的经济业务进行代理记账。
             </div>
           </div>
 
-          <div className="tax-services">
+          <div className={styles.taxServices}>
             <div>(同时为甲方提供代理纳税申报服务，包括：</div>
             {getSelectedServices()}
-            <div className="other-business">
-              <div className="other-business-label">其他业务：</div>
-              <div className="other-business-value">{otherBusiness || '-'}</div>
+            <div className={styles.otherBusiness}>
+              <div className={styles.otherBusinessLabel}>其他业务：</div>
+              <div className={styles.otherBusinessValue}>{otherBusiness || '-'}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">二、甲方的责任和义务</div>
-        <div className="section-content party-a-obligations">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>二、甲方的责任和义务</div>
+        <div className={styles.sectionContent + ' ' + styles.partyAObligations}>
           <p>(一)甲方的每项经济业务，必须填制或者取得符合国家统一会计制度规定的原始凭证。</p>
           <p>
             (二)甲方应归集和整理有关经济业务的原始凭证和其他资料，并于每月 15
@@ -328,9 +327,9 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">三、乙方的责任和义务</div>
-        <div className="section-content party-b-obligations">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>三、乙方的责任和义务</div>
+        <div className={styles.sectionContent + ' ' + styles.partyBObligations}>
           <p>
             (一)乙方根据甲方所提供的原始凭证和其他资料，按照国家统一会计制度的规定进行会计核算，包括审核原始凭证、填制记账凭证、登记会计账簿、设计编制和提供财务会计报告。
           </p>
@@ -357,9 +356,9 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">四、责任划分</div>
-        <div className="section-content responsibility-division">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>四、责任划分</div>
+        <div className={styles.sectionContent + ' ' + styles.responsibilityDivision}>
           <p>
             (一)乙方是在甲方提供相关资料的基础上进行会计核算，因甲方提供的记账依据不实、未按协议约定及时提供记账依据或其他过错导致委托事项出现差错或未能按时完成委托事项，由此造成的后果，由甲方承担。
           </p>
@@ -369,47 +368,47 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">五、协议的终止</div>
-        <div className="section-content agreement-termination">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>五、协议的终止</div>
+        <div className={styles.sectionContent + ' ' + styles.agreementTermination}>
           <p>(一)协议期满，本协议自然终止，双方如续续约，须另定协议。</p>
           <p>(二)经双方协商一致后，可提前终止协议。</p>
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">六、代理记账服务费</div>
-        <div className="section-content agency-fee-content">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>六、代理记账服务费</div>
+        <div className={styles.sectionContent + ' ' + styles.agencyFeeContent}>
           <p>
             经协商，乙方代理记账收费标准为：人民币每年
-            <span className="fee-value">{formatCurrency(totalAgencyAccountingFee)}</span>
+            <span className={styles.feeValue}>{formatCurrency(totalAgencyAccountingFee)}</span>
             元（代理记账费
-            <span className="fee-value">{formatCurrency(agencyAccountingFee)}</span>
+            <span className={styles.feeValue}>{formatCurrency(agencyAccountingFee)}</span>
             /年，记账软件服务费
-            <span className="fee-value">{formatCurrency(accountingSoftwareFee)}</span>
+            <span className={styles.feeValue}>{formatCurrency(accountingSoftwareFee)}</span>
             /年，开票软件服务费
-            <span className="fee-value">{formatCurrency(invoicingSoftwareFee)}</span>
+            <span className={styles.feeValue}>{formatCurrency(invoicingSoftwareFee)}</span>
             /年），甲方按年度提前30日支付，不足一个月的按一个月计算。如甲方业务量增加，乙方根据甲方业务增量调整增加代理费用。
           </p>
 
           <p>
             全年凭证、账簿费用为
-            <span className="fee-value">{formatCurrency(accountBookFee)}</span>
+            <span className={styles.feeValue}>{formatCurrency(accountBookFee)}</span>
             元。其中包括凭证、账簿、差旅费报销单、费用粘贴单、工资表、财务报表、纳税申报表等。（以上费用以实际到账执行）
           </p>
 
           <div>
             代理记账服务费支付方式：
-            <span className="payment-method">{paymentMethod || '对公'}</span>
+            <span className={styles.paymentMethod}>{paymentMethod || '对公'}</span>
           </div>
 
           <p>于合同生效日起 3 日内一次付清。</p>
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">七、违约责任</div>
-        <div className="section-content breach-responsibility">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>七、违约责任</div>
+        <div className={styles.sectionContent + ' ' + styles.breachResponsibility}>
           <p>
             (一)甲方未能履行其责任，未向乙方提供真实、合法、准确、完整的原始凭证，导致税收方面的责任由甲方承担；
           </p>
@@ -428,9 +427,9 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         </div>
       </div>
 
-      <div className="agreement-section">
-        <div className="section-title">八、其他约定</div>
-        <div className="section-content other-agreements">
+      <div className={styles.agreementSection}>
+        <div className={styles.sectionTitle}>八、其他约定</div>
+        <div className={styles.sectionContent + ' ' + styles.otherAgreements}>
           <p>
             (一)本协议的补充条款、附件及补充协议均为本协议不可分割的部分。本协议补充条款、补充协议与本协议不一致的，以补充条款、补充协议为准。
           </p>
@@ -445,30 +444,30 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       </div>
 
       {contractSignature && (
-        <div className="contract-signature">
-          <div className="signature-title">电子签名</div>
-          <div className="signature-image">
+        <div className={styles.contractSignature}>
+          <div className={styles.signatureTitle}>电子签名</div>
+          <div className={styles.signatureImage}>
             <img src={contractSignature} alt="电子签名" />
           </div>
-          <div className="signature-status">
+          <div className={styles.signatureStatus}>
             <Tag color="success">已签署</Tag>
           </div>
         </div>
       )}
 
-      <div className="agreement-signatures">
-        <div className="signature-container">
-          <div className="signature-row">
-            <div className="signature-column">
-              <div className="signature-title">委托方：{partyACompany || ''}</div>
-              <div className="signature-stamp-space">
+      <div className={styles.agreementSignatures}>
+        <div className={styles.signatureContainer}>
+          <div className={styles.signatureRow}>
+            <div className={styles.signatureColumn}>
+              <div className={styles.signatureTitle}>委托方：{partyACompany || ''}</div>
+              <div className={styles.signatureStampSpace}>
                 {/* 甲方签字区域 */}
                 {contractData.partyAStampImage ? (
-                  <div className="stamp-preview">
+                  <div className={styles.stampPreview}>
                     <img
                       src={contractData.partyAStampImage}
                       alt="甲方签字"
-                      className="stamp-image"
+                      className={styles.stampImage}
                       style={{
                         maxWidth: '150px',
                         maxHeight: '80px',
@@ -478,70 +477,70 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
                     />
                   </div>
                 ) : (
-                  <div className="stamp-placeholder">
-                    <span className="text-sm text-gray-400">暂无签字</span>
+                  <div className={styles.stampPlaceholder}>
+                    <span className={styles.textSm + ' ' + styles.textGray400}>暂无签字</span>
                   </div>
                 )}
               </div>
-              <div className="signature-field">
-                <div className="signature-label">法定代表人：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>法定代表人：</div>
                 <span>{partyALegalPerson || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">联系人：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>联系人：</div>
                 <span>{partyAContact || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">地址：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>地址：</div>
                 <span>{partyAAddress || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">邮编：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>邮编：</div>
                 <span>{partyAPostalCode || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">电话：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>电话：</div>
                 <span>{partyAPhone || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">签约日期：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>签约日期：</div>
                 <span>{partyASignDate ? dayjs(partyASignDate).format('YYYY年MM月DD日') : '-'}</span>
               </div>
             </div>
-            <div className="signature-column">
-              <div className="signature-title">受托方：{config.title}</div>
-              <div className="signature-stamp-space">
+            <div className={styles.signatureColumn}>
+              <div className={styles.signatureTitle}>受托方：{config.title}</div>
+              <div className={styles.signatureStampSpace}>
                 {/* 乙方盖章区域 */}
                 {signatory && getPartyBStampImage(signatory) && (
                   <img
                     src={getPartyBStampImage(signatory)}
                     alt="乙方盖章"
-                    className="party-b-stamp"
+                    className={styles.partyBSign}
                   />
                 )}
               </div>
-              <div className="signature-field">
-                <div className="signature-label">法定代表人：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>法定代表人：</div>
                 <span>{partyBLegalPerson || '刘菲'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">联系人：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>联系人：</div>
                 <span>{partyBContact || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">地址：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>地址：</div>
                 <span>{partyBAddress || config.address}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">邮编：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>邮编：</div>
                 <span>{partyBPostalCode || '-'}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">电话：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>电话：</div>
                 <span>{partyBPhone || config.phone}</span>
               </div>
-              <div className="signature-field">
-                <div className="signature-label">签约日期：</div>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>签约日期：</div>
                 <span>{partyBSignDate ? dayjs(partyBSignDate).format('YYYY年MM月DD日') : '-'}</span>
               </div>
             </div>
