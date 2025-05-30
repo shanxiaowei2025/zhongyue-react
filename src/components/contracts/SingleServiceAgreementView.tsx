@@ -3,7 +3,7 @@ import { Tag } from 'antd'
 import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
-import './SingleServiceAgreement.css'
+import styles from './SingleServiceAgreementView.module.css'
 
 // 签署方配置
 const SIGNATORY_CONFIG = {
@@ -44,7 +44,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
   const config = SIGNATORY_CONFIG[contractData.signatory as keyof typeof SIGNATORY_CONFIG]
 
   if (!config) {
-    return <div className="error-message">不支持的签署方: {contractData.signatory}</div>
+    return <div className={styles.errorMessage}>不支持的签署方: {contractData.signatory}</div>
   }
 
   // 获取项目名称
@@ -154,248 +154,302 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
   }
 
   return (
-    <div className="single-service-agreement">
+    <div className={styles.singleServiceAgreement}>
       {/* 合同头部 */}
-      <div className="contract-header">
-        <div className="company-info">
-          <h2 className="company-name">{config.title}</h2>
-          {config.englishTitle && <p className="company-name-en">{config.englishTitle}</p>}
-          <p className="contact-info">咨询电话：{config.phone}</p>
+      <div className={styles.contractHeader}>
+        <div className={styles.companyInfo}>
+          <h2 className={styles.companyName}>{config.title}</h2>
+          {config.englishTitle && <p className={styles.companyNameEn}>{config.englishTitle}</p>}
+          <p className={styles.contactInfo}>咨询电话：{config.phone}</p>
         </div>
       </div>
 
       {/* 合同标题 */}
-      <div className="contract-title">
-        <h1>{contractData.signatory === '保定如你心意企业管理咨询有限公司' ? '如你心意产品服务协议' : '金盾产品服务协议'}</h1>
+      <div className={styles.contractTitle}>
+        <h1>
+          {contractData.signatory === '保定如你心意企业管理咨询有限公司'
+            ? '如你心意产品服务协议'
+            : '金盾产品服务协议'}
+        </h1>
       </div>
 
       {/* 合同双方信息 */}
-      <div className="contract-parties">
+      <div className={styles.contractParties}>
         {/* 委托方信息块 */}
-        <div className="party-block">
-          <div className="party-header">
-            <span className="party-label">【委托方】（甲方）：</span>
-            <span className="party-company-name">{contractData.partyACompany || '-'}</span>
+        <div className={styles.partyBlock}>
+          <div className={styles.partyHeader}>
+            <span className={styles.partyLabel}>【委托方】（甲方）：</span>
+            <span className={styles.partyCompanyName}>{contractData.partyACompany || '-'}</span>
           </div>
 
-          <div className="party-details">
-            <div className="detail-row">
-              <span className="detail-label">通讯地址：</span>
-              <span className="detail-value">{contractData.partyAAddress || '-'}</span>
+          <div className={styles.partyDetails}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>通讯地址：</span>
+              <span className={styles.detailValue}>{contractData.partyAAddress || '-'}</span>
             </div>
-            <div className="detail-row">
-              <span className="detail-label">联系人：</span>
-              <span className="detail-value" style={{ width: '200px' }}>{contractData.partyAContact || '-'}</span>
-              <span className="detail-label" style={{ marginLeft: '20px' }}>联系电话：</span>
-              <span className="detail-value">{contractData.partyAPhone || '-'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>联系人：</span>
+              <span className={styles.detailValue} style={{ width: '200px' }}>
+                {contractData.partyAContact || '-'}
+              </span>
+              <span className={styles.detailLabel} style={{ marginLeft: '20px' }}>
+                联系电话：
+              </span>
+              <span className={styles.detailValue}>{contractData.partyAPhone || '-'}</span>
             </div>
           </div>
         </div>
 
         {/* 受托方信息块 */}
-        <div className="party-block">
-          <div className="party-header">
-            <span className="party-label">【受托方】（乙方）：</span>
-            <span className="party-company-name">{config.title}</span>
+        <div className={styles.partyBlock}>
+          <div className={styles.partyHeader}>
+            <span className={styles.partyLabel}>【受托方】（乙方）：</span>
+            <span className={styles.partyCompanyName}>{config.title}</span>
           </div>
 
-          <div className="party-details">
-            <div className="detail-row">
-              <span className="detail-label">通讯地址：</span>
-              <span className="detail-value">{config.address}</span>
+          <div className={styles.partyDetails}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>通讯地址：</span>
+              <span className={styles.detailValue}>{config.address}</span>
             </div>
-            <div className="detail-row">
-              <span className="detail-label">联系人：</span>
-              <span className="detail-value" style={{ width: '200px' }}>{contractData.partyBContact || '-'}</span>
-              <span className="detail-label" style={{ marginLeft: '20px' }}>联系电话：</span>
-              <span className="detail-value">{contractData.partyBPhone || '-'}</span>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>联系人：</span>
+              <span className={styles.detailValue} style={{ width: '200px' }}>
+                {contractData.partyBContact || '-'}
+              </span>
+              <span className={styles.detailLabel} style={{ marginLeft: '20px' }}>
+                联系电话：
+              </span>
+              <span className={styles.detailValue}>{contractData.partyBPhone || '-'}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* 委托服务项目及费用 */}
-      <div className="contract-section">
-        <div className="section-title">（一）&nbsp;&nbsp;委托服务项目及费用：</div>
-        <div className="section-content">
+      <div className={styles.contractSection}>
+        <div className={styles.sectionTitle}>（一）&nbsp;&nbsp;委托服务项目及费用：</div>
+        <div className={styles.sectionContent}>
           {/* 工商服务 */}
-          <div className="service-category">
-            <div className="category-title">1、工商：</div>
-            
+          <div className={styles.serviceCategory}>
+            <div className={styles.categoryTitle}>1、工商：</div>
+
             {/* 设立 */}
-            <div className="mb-10">
-              <div className="mb-5">①设立：</div>
+            <div className={styles.mb10}>
+              <div className={styles.mb5}>①设立：</div>
               {renderServiceItems(contractData.businessEstablishment || [])}
             </div>
-            
+
             {contractData.businessEstablishmentAddress && (
-              <div className="mb-10">
+              <div className={styles.mb10}>
                 <span>在 {contractData.businessEstablishmentAddress} 为甲方代办工商营业执照。</span>
               </div>
             )}
 
             {/* 变更 */}
-            <div className="mb-10">
-              <div className="mb-5">②变更：</div>
+            <div className={styles.mb10}>
+              <div className={styles.mb5}>②变更：</div>
               {renderServiceItems(contractData.businessChange || [])}
             </div>
 
             {/* 注销 */}
-            <div className="mb-10">
-              <div className="mb-5">③注销：</div>
+            <div className={styles.mb10}>
+              <div className={styles.mb5}>③注销：</div>
               {renderServiceItems(contractData.businessCancellation || [])}
             </div>
 
             {/* 其他 */}
-            <div className="mb-10">
-              <div className="mb-5">④其他：</div>
+            <div className={styles.mb10}>
+              <div className={styles.mb5}>④其他：</div>
               {renderServiceItems(contractData.businessOther || [])}
             </div>
 
             {/* 物料 */}
-            <div className="mb-10">
-              <div className="mb-5">⑤物料:</div>
+            <div className={styles.mb10}>
+              <div className={styles.mb5}>⑤物料:</div>
               {renderServiceItems(contractData.businessMaterials || [])}
             </div>
 
-            <div className="remark-row">
-              <span className="remark-label">备注：</span>
-              <span className="remark-content">{contractData.businessRemark || '-'}</span>
-              <span className="remark-label">服务费用：</span>
-              <span className="remark-content" style={{ width: '150px' }}>
+            <div className={styles.remarkRow}>
+              <span className={styles.remarkLabel}>备注：</span>
+              <span className={styles.remarkContent}>{contractData.businessRemark || '-'}</span>
+              <span className={styles.remarkLabel}>服务费用：</span>
+              <span className={styles.remarkContent}>
                 {contractData.businessServiceFee ? `${contractData.businessServiceFee}元` : '-'}
               </span>
             </div>
           </div>
 
           {/* 银行服务 */}
-          <div className="service-category">
-            <div className="category-title">2、银行：</div>
-            <div className="mb-10">
-              {renderServiceItems(contractData.bankMatters || [])}
-            </div>
+          <div className={styles.serviceCategory}>
+            <div className={styles.categoryTitle}>2、银行：</div>
+            <div className={styles.mb10}>{renderServiceItems(contractData.bankMatters || [])}</div>
 
-            <div className="remark-row">
-              <span className="remark-label">备注：</span>
-              <span className="remark-content">{contractData.bankRemark || '-'}</span>
-              <span className="remark-label">服务费用：</span>
-              <span className="remark-content" style={{ width: '150px' }}>
+            <div className={styles.remarkRow}>
+              <span className={styles.remarkLabel}>备注：</span>
+              <span className={styles.remarkContent}>{contractData.bankRemark || '-'}</span>
+              <span className={styles.remarkLabel}>服务费用：</span>
+              <span className={styles.remarkContent}>
                 {contractData.bankServiceFee ? `${contractData.bankServiceFee}元` : '-'}
               </span>
             </div>
           </div>
 
           {/* 许可业务 */}
-          <div className="service-category">
-            <div className="category-title">3、许可业务：</div>
-            <div className="mb-10">
+          <div className={styles.serviceCategory}>
+            <div className={styles.categoryTitle}>3、许可业务：</div>
+            <div className={styles.mb10}>
               {renderServiceItems(contractData.licenseBusiness || [])}
             </div>
 
-            <div className="remark-row">
-              <span className="remark-label">备注：</span>
-              <span className="remark-content">{contractData.licenseRemark || '-'}</span>
-              <span className="remark-label">服务费用：</span>
-              <span className="remark-content" style={{ width: '150px' }}>
+            <div className={styles.remarkRow}>
+              <span className={styles.remarkLabel}>备注：</span>
+              <span className={styles.remarkContent}>{contractData.licenseRemark || '-'}</span>
+              <span className={styles.remarkLabel}>服务费用：</span>
+              <span className={styles.remarkContent}>
                 {contractData.licenseServiceFee ? `${contractData.licenseServiceFee}元` : '-'}
               </span>
             </div>
           </div>
 
           {/* 其他服务事项 */}
-          <div className="service-category">
-            <div className="category-title">其他服务事项</div>
+          <div className={styles.serviceCategory}>
+            <div className={styles.categoryTitle}>其他服务事项</div>
 
-            <div className="remark-row">
-              <span className="remark-label">备注：</span>
-              <span className="remark-content">{contractData.otherRemark || '-'}</span>
-              <span className="remark-label">服务费用：</span>
-              <span className="remark-content" style={{ width: '150px' }}>
+            <div className={styles.remarkRow}>
+              <span className={styles.remarkLabel}>备注：</span>
+              <span className={styles.remarkContent}>{contractData.otherRemark || '-'}</span>
+              <span className={styles.remarkLabel}>服务费用：</span>
+              <span className={styles.remarkContent}>
                 {contractData.otherServiceFee ? `${contractData.otherServiceFee}元` : '-'}
               </span>
             </div>
           </div>
 
           {/* 费用总计 */}
-          <div className="fee-row">
-            <span className="fee-label">费用总计（人民币）：</span>
-            <span className="fee-amount">{contractData.totalCost ? `${contractData.totalCost}元` : '-'}</span>
+          <div className={styles.feeRow}>
+            <span className={styles.feeLabel}>费用总计（人民币）：</span>
+            <span className={styles.feeAmount}>
+              {contractData.totalCost ? `${contractData.totalCost}元` : '-'}
+            </span>
             <span>大写金额（人民币）：</span>
-            <span className="fee-words">
+            <span className={styles.feeWords}>
               {contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
             </span>
           </div>
 
           {/* 备注 */}
           {contractData.remarks && (
-            <div className="remark-row">
-              <span className="remark-label">备注：</span>
-              <span className="remark-content">{contractData.remarks}</span>
+            <div className={styles.remarkRow}>
+              <span className={styles.remarkLabel}>备注：</span>
+              <span className={styles.remarkContent}>{contractData.remarks}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* 付款方式 */}
-      <div className="contract-section">
-        <div className="section-title">（二）&nbsp;&nbsp;付款方式</div>
-        <div className="section-content">
-          <p>请务必及时将详细的付款信息及公司名称、服务协议编号提供于我司，以便我司及时查收款项。 本合同签订后，超过 3 个工作日未支付本合同自动失效。</p>
+      <div className={styles.contractSection}>
+        <div className={styles.sectionTitle}>（二）&nbsp;&nbsp;付款方式</div>
+        <div className={styles.sectionContent}>
+          <p>
+            请务必及时将详细的付款信息及公司名称、服务协议编号提供于我司，以便我司及时查收款项。
+            本合同签订后，超过 3 个工作日未支付本合同自动失效。
+          </p>
         </div>
       </div>
 
       {/* 合同条款 */}
-      <div className="contract-terms">
+      <div className={styles.contractTerms}>
         {/* 甲方权利与义务 */}
-        <div className="term-section">
-          <div className="term-title">（三）&nbsp;&nbsp;甲方的权利与义务</div>
-          <div className="term-content">
-            <p className="term-item">1、 甲方应按照约定向乙方提供按现行法律、法规、规章报批项目所需资料、文件。甲方所提供资料文件必须真实、合法、完整、准确，否则造成的全部损失均由甲方承担。</p>
-            <p className="term-item">2、 本协议签署后甲方应当在当日内向乙方一次性支付全部服务费用。若因实际情况甲方提出修改要求，则需另行支付费用：300 元（人民币）/次。</p>
-            <p className="term-item">3、 本协议的签署表示甲方同意委托乙方及关联服务机构或其他具有资质的合作服务商共同为其提供商事服务：如有必要，甲方应按照乙方安排与乙方关联服务机构或其他具有资质的合作服务商签署服务或咨询合同。</p>
-            <p className="term-item">4、甲方取得代办证照及材料应当用于合法经营，如利用代办证照及材料从事违法及非法经营活动，所产生的一切责任由甲方承担。</p>
-            <p className="term-item">5、 本协议履行完毕后，甲方应依法开展民事活动，因甲方非法经营、失联、违约等所产生的法律后果与乙方无关。</p>
+        <div className={styles.termSection}>
+          <div className={styles.termTitle}>（三）&nbsp;&nbsp;甲方的权利与义务</div>
+          <div className={styles.termContent}>
+            <p className={styles.termItem}>
+              1、
+              甲方应按照约定向乙方提供按现行法律、法规、规章报批项目所需资料、文件。甲方所提供资料文件必须真实、合法、完整、准确，否则造成的全部损失均由甲方承担。
+            </p>
+            <p className={styles.termItem}>
+              2、
+              本协议签署后甲方应当在当日内向乙方一次性支付全部服务费用。若因实际情况甲方提出修改要求，则需另行支付费用：300
+              元（人民币）/次。
+            </p>
+            <p className={styles.termItem}>
+              3、
+              本协议的签署表示甲方同意委托乙方及关联服务机构或其他具有资质的合作服务商共同为其提供商事服务：如有必要，甲方应按照乙方安排与乙方关联服务机构或其他具有资质的合作服务商签署服务或咨询合同。
+            </p>
+            <p className={styles.termItem}>
+              4、甲方取得代办证照及材料应当用于合法经营，如利用代办证照及材料从事违法及非法经营活动，所产生的一切责任由甲方承担。
+            </p>
+            <p className={styles.termItem}>
+              5、
+              本协议履行完毕后，甲方应依法开展民事活动，因甲方非法经营、失联、违约等所产生的法律后果与乙方无关。
+            </p>
           </div>
         </div>
 
         {/* 合同签章 */}
-        <div className="contract-signatures">
-          <div className="signature-block">
-            <div className="signature-title">（甲方盖章）：</div>
-            <div className="signature-content">
-              {contractData.partyAStampImage && (
-                <img src={contractData.partyAStampImage} alt="甲方盖章" className="stamp-image" />
-              )}
-            </div>
-            <div className="signature-date">
-              <div className="date-label">日期：</div>
-              <div className="date-field">
-                {contractData.partyASignDate ? getFormattedDate(contractData.partyASignDate) : '-'}
+        <div className={styles.contractSignatures}>
+          <div className={styles.signatureRow}>
+            <div className={styles.signatureColumn}>
+              <div
+                className={`${styles.signatureItem} ${contractData.partyAStampImage ? styles.signed : styles.unsigned}`}
+              >
+                <span className={styles.signatureTitle}>（甲方盖章）：</span>
+                <div className={styles.signatureArea}>
+                  {contractData.partyAStampImage && (
+                    <img
+                      src={contractData.partyAStampImage}
+                      alt="甲方盖章"
+                      className={styles.stampImage}
+                    />
+                  )}
+                </div>
+              </div>
+              <div className={styles.signatureDateRow}>
+                <span className={styles.dateLabel}>日期：</span>
+                <span className={styles.dateValue}>
+                  {contractData.partyASignDate
+                    ? getFormattedDate(contractData.partyASignDate)
+                    : '-'}
+                </span>
               </div>
             </div>
-          </div>
 
-          <div className="signature-block">
-            <div className="signature-title">（乙方盖章）：</div>
-            <div className="signature-content">
-              <img src={getPartyBStampImage(contractData.signatory || '')} alt="乙方盖章" className="stamp-image" />
-            </div>
-            <div className="signature-date">
-              <div className="date-label">日期：</div>
-              <div className="date-field">
-                {contractData.partyBSignDate ? getFormattedDate(contractData.partyBSignDate) : '-'}
+            <div className={styles.signatureColumn}>
+              <div className={styles.signatureItem}>
+                <span className={styles.signatureTitle}>（乙方盖章）：</span>
+                <div className={styles.signatureArea}>
+                  <img
+                    src={getPartyBStampImage(contractData.signatory || '')}
+                    alt="乙方盖章"
+                    className={styles.stampImage}
+                    style={{
+                      maxWidth: '130px',
+                      maxHeight: '130px',
+                    }}
+                  />
+                </div>
+              </div>
+              <div className={styles.signatureDateRow}>
+                <span className={styles.dateLabel}>日期：</span>
+                <span className={styles.dateValue}>
+                  {contractData.partyBSignDate
+                    ? getFormattedDate(contractData.partyBSignDate)
+                    : '-'}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* 合同页脚 */}
-        <div className="contract-footer">
-          {config.footer}
+        <div className={styles.contractFooter}>
+          <p>{config.footer}</p>
         </div>
       </div>
     </div>
   )
 }
 
-export default SingleServiceAgreementView 
+export default SingleServiceAgreementView

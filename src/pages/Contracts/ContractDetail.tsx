@@ -79,12 +79,12 @@ const ContractDetail: React.FC = () => {
           // 确保合同组件本身也居中
           const agreementElement = clonedDoc.querySelector('.product-service-agreement')
           const accountingElement = clonedDoc.querySelector('.agency-accounting-agreement-view')
-          
+
           if (agreementElement instanceof HTMLElement) {
             agreementElement.style.margin = '0 auto'
             agreementElement.style.display = 'block'
           }
-          
+
           if (accountingElement instanceof HTMLElement) {
             accountingElement.style.margin = '0 auto'
             accountingElement.style.display = 'block'
@@ -234,19 +234,19 @@ const ContractDetail: React.FC = () => {
               <Button
                 icon={<EditOutlined />}
                 onClick={handleEdit}
-                disabled={contractData.contractType !== '产品服务协议' && contractData.contractType !== '代理记账合同'}
               >
                 编辑合同
               </Button>
             )}
-            <Button
-              icon={<DownloadOutlined />}
-              loading={isExporting}
-              onClick={handleDownloadContract}
-              disabled={!contractData || (contractData.contractType !== '产品服务协议' && contractData.contractType !== '代理记账合同')}
-            >
-              {isExporting ? '导出中...' : '下载合同'}
-            </Button>
+            {contractData && contractData.contractStatus !== '0' && (
+              <Button
+                icon={<DownloadOutlined />}
+                loading={isExporting}
+                onClick={handleDownloadContract}
+              >
+                {isExporting ? '导出中...' : '下载合同'}
+              </Button>
+            )}
           </Space>
         </div>
       </div>

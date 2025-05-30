@@ -102,7 +102,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
     contractStatus,
     contractSignature,
     partyASignDate,
-    partyBSignDate
+    partyBSignDate,
   } = contractData
 
   // 合同状态标签
@@ -158,7 +158,11 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
 
   // 获取申报服务选项
   const getSelectedServices = () => {
-    if (!declarationService || !Array.isArray(declarationService) || declarationService.length === 0) {
+    if (
+      !declarationService ||
+      !Array.isArray(declarationService) ||
+      declarationService.length === 0
+    ) {
       return <div className="service-item-empty">未选择</div>
     }
 
@@ -168,7 +172,8 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
           <div key={index} className="service-item">
             <span className="service-checkbox-indicator">✓</span>
             <span className="service-label">
-              {DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === service.value)?.label || service.label}
+              {DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === service.value)?.label ||
+                service.label}
             </span>
           </div>
         ))}
@@ -335,9 +340,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
           <p>
             (三)涉及存货核算的，根据甲方提供的存货入库凭证、出库凭证、每月各类存货的收发存明细表，乙方进行成本结转。
           </p>
-          <p>
-            (四)乙方应协助甲方完善内部控制，加强内部管理，针对内部控制薄弱环节提出合理的建议。
-          </p>
+          <p>(四)乙方应协助甲方完善内部控制，加强内部管理，针对内部控制薄弱环节提出合理的建议。</p>
           <p>
             (五)乙方应协助甲方制定合理的会计资料传递程序，积极配合甲方做好会计资料的签收手续。在代理记账过程中，应妥善
             保管会计资料。
@@ -502,11 +505,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
               </div>
               <div className="signature-field">
                 <div className="signature-label">签约日期：</div>
-                <span>
-                  {partyASignDate
-                    ? dayjs(partyASignDate).format('YYYY年MM月DD日')
-                    : '-'}
-                </span>
+                <span>{partyASignDate ? dayjs(partyASignDate).format('YYYY年MM月DD日') : '-'}</span>
               </div>
             </div>
             <div className="signature-column">
@@ -543,11 +542,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
               </div>
               <div className="signature-field">
                 <div className="signature-label">签约日期：</div>
-                <span>
-                  {partyBSignDate
-                    ? dayjs(partyBSignDate).format('YYYY年MM月DD日')
-                    : '-'}
-                </span>
+                <span>{partyBSignDate ? dayjs(partyBSignDate).format('YYYY年MM月DD日') : '-'}</span>
               </div>
             </div>
           </div>

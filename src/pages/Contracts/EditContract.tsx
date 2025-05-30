@@ -10,6 +10,9 @@ import ProductServiceAgreement, {
 import AgencyAccountingAgreement, {
   type AgencyAccountingAgreementRef,
 } from '../../components/contracts/AgencyAccountingAgreement'
+import SingleServiceAgreement, {
+  type SingleServiceAgreementRef,
+} from '../../components/contracts/SingleServiceAgreement'
 
 const EditContract: React.FC = () => {
   const navigate = useNavigate()
@@ -18,6 +21,7 @@ const EditContract: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
   const agencyAccountingAgreementRef = useRef<AgencyAccountingAgreementRef>(null)
+  const singleServiceAgreementRef = useRef<SingleServiceAgreementRef>(null)
 
   // 获取合同详情数据
   const { data: contractData, isLoading, error, updateContractData } = useContractDetail(contractId)
@@ -62,6 +66,12 @@ const EditContract: React.FC = () => {
           return
         }
         await agencyAccountingAgreementRef.current.handleSubmit()
+      } else if (contractData?.contractType === '单项服务合同') {
+        if (!singleServiceAgreementRef.current) {
+          message.error('合同组件未准备就绪')
+          return
+        }
+        await singleServiceAgreementRef.current.handleSubmit()
       } else {
         message.error('不支持的合同类型')
         return
@@ -165,14 +175,16 @@ const EditContract: React.FC = () => {
         )
       case '单项服务合同':
         return (
-          <div className="text-center py-8">
-            <Alert
-              message="单项服务合同编辑功能开发中"
-              description="该合同类型的编辑功能正在开发中，敬请期待。"
-              type="info"
-              showIcon
-            />
-          </div>
+          <SingleServiceAgreement
+            signatory={contractData.signatory || ''}
+            contractData={contractData}
+            mode="edit"
+            onUpdate={async updateData => {
+              await updateContractData(contractId, updateData)
+            }}
+            isSubmitting={isSubmitting}
+            ref={singleServiceAgreementRef}
+          />
         )
       default:
         return (
@@ -214,7 +226,12 @@ const EditContract: React.FC = () => {
             <Button
               type="primary"
               loading={isSubmitting}
-              disabled={!contractData || (contractData.contractType !== '产品服务协议' && contractData.contractType !== '代理记账合同')}
+              disabled={
+                !contractData ||
+                (contractData.contractType !== '产品服务协议' &&
+                  contractData.contractType !== '代理记账合同' &&
+                  contractData.contractType !== '单项服务合同')
+              }
               onClick={handleContractUpdate}
             >
               {isSubmitting ? '更新中...' : '保存修改'}
@@ -266,7 +283,10 @@ const EditContract: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <div className="contract-content-wrapper" style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}>
+      <div
+        className="contract-content-wrapper"
+        style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}
+      >
         {renderContractContent()}
       </div>
     </div>

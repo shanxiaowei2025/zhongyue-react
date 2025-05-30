@@ -4,9 +4,15 @@ import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/i
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
-import ProductServiceAgreement, { type ProductServiceAgreementRef } from '../../components/contracts/ProductServiceAgreement'
-import AgencyAccountingAgreement, { type AgencyAccountingAgreementRef } from '../../components/contracts/AgencyAccountingAgreement'
-import SingleServiceAgreement, { type SingleServiceAgreementRef } from '../../components/contracts/SingleServiceAgreement'
+import ProductServiceAgreement, {
+  type ProductServiceAgreementRef,
+} from '../../components/contracts/ProductServiceAgreement'
+import AgencyAccountingAgreement, {
+  type AgencyAccountingAgreementRef,
+} from '../../components/contracts/AgencyAccountingAgreement'
+import SingleServiceAgreement, {
+  type SingleServiceAgreementRef,
+} from '../../components/contracts/SingleServiceAgreement'
 
 interface LocationState {
   signatory: string
@@ -21,7 +27,7 @@ const CreateContract: React.FC = () => {
   const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
   const agencyAccountingAgreementRef = useRef<AgencyAccountingAgreementRef>(null)
   const singleServiceAgreementRef = useRef<SingleServiceAgreementRef>(null)
-  
+
   const { createContractData } = useContractDetail()
 
   // 如果没有传递必要的状态信息，返回到合同列表
@@ -115,10 +121,12 @@ const CreateContract: React.FC = () => {
         return (
           <ProductServiceAgreement
             signatory={state.signatory}
-            contractData={{
-              // 这里可以传入已有的合同数据
-            }}
-            onSubmit={async (contractData) => {
+            contractData={
+              {
+                // 这里可以传入已有的合同数据
+              }
+            }
+            onSubmit={async contractData => {
               await createContractData(contractData)
             }}
             isSubmitting={isSubmitting}
@@ -129,10 +137,12 @@ const CreateContract: React.FC = () => {
         return (
           <AgencyAccountingAgreement
             signatory={state.signatory}
-            contractData={{
-              // 这里可以传入已有的合同数据
-            }}
-            onSubmit={async (contractData) => {
+            contractData={
+              {
+                // 这里可以传入已有的合同数据
+              }
+            }
+            onSubmit={async contractData => {
               await createContractData(contractData)
             }}
             isSubmitting={isSubmitting}
@@ -143,10 +153,12 @@ const CreateContract: React.FC = () => {
         return (
           <SingleServiceAgreement
             signatory={state.signatory}
-            contractData={{
-              // 这里可以传入已有的合同数据
-            }}
-            onSubmit={async (contractData) => {
+            contractData={
+              {
+                // 这里可以传入已有的合同数据
+              }
+            }
+            onSubmit={async contractData => {
               await createContractData(contractData)
             }}
             isSubmitting={isSubmitting}
@@ -186,10 +198,15 @@ const CreateContract: React.FC = () => {
             <h2 className="text-xl font-semibold m-0">创建合同</h2>
           </div>
           <Space>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               loading={isSubmitting}
-              disabled={!state?.contractType || (state.contractType !== '产品服务协议' && state.contractType !== '代理记账合同' && state.contractType !== '单项服务合同')}
+              disabled={
+                !state?.contractType ||
+                (state.contractType !== '产品服务协议' &&
+                  state.contractType !== '代理记账合同' &&
+                  state.contractType !== '单项服务合同')
+              }
               onClick={handleContractSubmit}
             >
               {isSubmitting ? '提交中...' : '提交合同'}
@@ -215,11 +232,14 @@ const CreateContract: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <div className="contract-content-wrapper" style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}>
+      <div
+        className="contract-content-wrapper"
+        style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}
+      >
         {renderContractContent()}
       </div>
     </div>
   )
 }
 
-export default CreateContract 
+export default CreateContract

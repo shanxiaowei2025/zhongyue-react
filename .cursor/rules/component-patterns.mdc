@@ -3,3 +3,60 @@ description:
 globs:
 alwaysApply: false
 ---
+Description: React组件编写模式和最佳实践
+Globs: src/components/**/*.tsx, src/pages/**/*.tsx
+
+# React组件编写模式
+
+本项目使用React函数组件和Hooks进行开发，遵循以下模式：
+
+## 组件结构
+
+- 使用函数组件（不使用类组件）
+- 使用TypeScript接口明确定义组件props
+- 组件命名采用PascalCase
+- 组件文件名与组件名保持一致
+
+## 常用组件模式
+
+- 使用Ant Design组件库构建UI
+- 结合Tailwind CSS进行样式定制
+- 使用React.memo()优化渲染性能
+- 使用React.useCallback()优化回调函数
+- 使用React.useMemo()优化计算值
+
+## 组件示例
+
+```tsx
+import React, { useState, useCallback } from 'react';
+import { Button } from 'antd';
+
+interface ExampleProps {
+  initialCount: number;
+  onCountChange?: (count: number) => void;
+}
+
+const ExampleComponent: React.FC<ExampleProps> = ({ 
+  initialCount = 0, 
+  onCountChange 
+}) => {
+  const [count, setCount] = useState(initialCount);
+  
+  const handleIncrement = useCallback(() => {
+    const newCount = count + 1;
+    setCount(newCount);
+    onCountChange?.(newCount);
+  }, [count, onCountChange]);
+  
+  return (
+    <div className="p-4 border rounded">
+      <p className="mb-2">Count: {count}</p>
+      <Button type="primary" onClick={handleIncrement}>
+        Increment
+      </Button>
+    </div>
+  );
+};
+
+export default React.memo(ExampleComponent);
+```

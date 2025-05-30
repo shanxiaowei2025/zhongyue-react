@@ -3,3 +3,82 @@ description:
 globs:
 alwaysApply: false
 ---
+Description: 自定义Hooks编写和使用指南
+Globs: src/hooks/**/*.ts, src/hooks/**/*.tsx
+
+# 自定义Hooks指南
+
+本项目中的自定义Hooks遵循以下规范：
+
+## 命名规范
+
+- 所有自定义Hook必须以`use`开头
+- 使用驼峰命名法（如：usePageStates, useFetchData）
+- Hook文件名应与Hook名称一致
+
+## 编写规范
+
+- 确保Hook符合React Hooks的规则（不在条件语句中调用Hooks）
+- 使用TypeScript为Hooks提供类型定义
+- 为复杂Hooks添加详细的JSDoc注释
+- 返回值应为一个明确类型的数组或对象
+
+## 常用模式
+
+- 数据获取Hooks：使用SWR进行远程数据获取
+- 状态持久化Hooks：使用Zustand进行状态管理
+- 页面状态Hooks：管理页面的搜索条件、分页参数、Tab状态等
+- 表单处理Hooks：结合Formik和Yup进行表单处理
+
+## 示例
+
+```tsx
+import { useState, useEffect } from 'react';
+import { useRequest } from 'swr';
+import { apiEndpoint } from '../api/endpoints';
+
+/**
+ * 获取和管理分页数据的Hook
+ * @param url 数据接口URL
+ * @param initialParams 初始查询参数
+ * @returns 分页数据和分页控制函数
+ */
+export function usePaginatedData<T>(
+  url: string, 
+  initialParams: Record<string, any> = {}
+) {
+  const [params, setParams] = useState(initialParams);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  const { data, error, isLoading, mutate } = useRequest(
+    `${apiEndpoint}${url}?page=${page}&pageSize=${pageSize}&${new URLSearchParams(params)}`
+  );
+  
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+  
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1); // 重置到第一页
+  };
+  
+  const handleParamsChange = (newParams: Record<string, any>) => {
+    setParams(newParams);
+    setPage(1); // 重置到第一页
+  };
+  
+  return {
+    data: data?.data as T[],
+    total: data?.total || 0,
+    page,
+    pageSize,
+    isLoading,
+    error,
+    handlePageChange,
+    handlePageSizeChange,
+    handleParamsChange,
+    refresh: mutate
+  };
+}

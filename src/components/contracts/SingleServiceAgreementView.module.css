@@ -1,0 +1,518 @@
+/* 单项服务合同查看样式 - A4纸格式 */
+.singleServiceAgreement {
+  width: 210mm; /* A4纸宽度 */
+  min-height: 297mm; /* A4纸高度 */
+  padding: 20mm; /* A4纸标准边距 */
+  margin: 0 auto; /* 水平居中 */
+  background: white;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #000;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  pointer-event: none;
+  user-select: none;
+  /* 确保在任何容器中都能居中 */
+  display: block;
+  max-width: 100%;
+}
+
+/* 合同头部 */
+.contractHeader {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 20px;
+}
+
+.companyInfo {
+  border-left: none;
+  padding-left: 0;
+}
+
+.companyName {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.companyNameEn {
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  color: #666;
+  font-style: italic;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.contactInfo {
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同标题 */
+.contractTitle {
+  text-align: center;
+  margin: 30px 0 40px 0;
+}
+
+.contractTitle h1 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同双方信息 */
+.contractParties {
+  margin-bottom: 30px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同方信息块 */
+.partyBlock {
+  margin-bottom: 20px;
+}
+
+.partyHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.partyLabel {
+  font-weight: bold;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.partyCompanyName {
+  font-weight: bold;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.partyDetails {
+  margin-left: 20px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.detailLabel {
+  font-weight: normal;
+  min-width: 80px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.detailValue {
+  flex: 1;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同条款部分 */
+.contractSection {
+  margin-bottom: 30px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.sectionContent {
+  margin-left: 20px;
+}
+
+/* 服务类别 */
+.serviceCategory {
+  margin-bottom: 20px;
+}
+
+.categoryTitle {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 服务项目 */
+.serviceItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.serviceItemRow {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.serviceItemLabel {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 备注行 */
+.remarkRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.remarkLabel {
+  font-weight: normal;
+  min-width: 80px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.remarkContent {
+  flex: 1;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 费用行 */
+.feeRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.feeLabel {
+  font-weight: bold;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.feeAmount {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.feeWords {
+  margin-left: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 合同条款 */
+.contractTerms {
+  margin-bottom: 30px;
+}
+
+.termSection {
+  margin-bottom: 25px;
+}
+
+.termTitle {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.termContent {
+  margin-left: 20px;
+}
+
+.termItem {
+  margin-bottom: 8px;
+  text-align: justify;
+  line-height: 1.8;
+  text-indent: 0;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.termItem p {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 签署区域 */
+.contractSignatures {
+  margin: 50px 0 30px 0;
+  page-break-inside: avoid;
+}
+
+.signatureRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.signatureColumn {
+  display: flex;
+  flex-direction: column;
+  width: 48%;
+  gap: 45px;
+}
+
+.signatureItem {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.signatureTitle {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.signatureArea {
+  width: 120px;
+  height: 60px;
+  border: 1px dashed #999;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signatureArea.signed {
+  border: none;
+  background: transparent;
+}
+
+.signatureArea.unsigned {
+  background: #fafafa;
+  border: 1px dashed #999;
+}
+
+.stampImage {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.signatureDateRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dateLabel {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  margin-right: 10px;
+}
+
+.dateValue {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  border-bottom: 1px solid #000;
+  padding: 4px 8px;
+  background: transparent;
+}
+
+/* 合同页脚 */
+.contractFooter {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+.contractFooter p {
+  font-size: 11px;
+  margin: 5px 0;
+  color: #666;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 通用样式 */
+.textBold {
+  font-weight: bold;
+}
+
+.textCenter {
+  text-align: center;
+}
+
+.textRight {
+  text-align: right;
+}
+
+.borderBottom {
+  border-bottom: 1px solid #000;
+}
+
+/* 服务项目组 */
+.serviceItemGroup {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 地址字段 */
+.addressField {
+  margin: 15px 0;
+}
+
+.addressValue {
+  border-bottom: 1px solid #000;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+  background: transparent;
+  min-width: 300px;
+  display: inline-block;
+}
+
+/* 间距类 */
+.mb5 {
+  margin-bottom: 5px;
+}
+
+.mb10 {
+  margin-bottom: 10px;
+}
+
+.mb20 {
+  margin-bottom: 20px;
+}
+
+.mt10 {
+  margin-top: 10px;
+}
+
+.mt20 {
+  margin-top: 20px;
+}
+
+/* 错误信息 */
+.errorMessage {
+  color: #ff4d4f;
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 打印样式 */
+@media print {
+  .singleServiceAgreement {
+    box-shadow: none;
+    margin: 0;
+    padding: 15mm;
+  }
+
+  .contractHeader {
+    page-break-inside: avoid;
+  }
+
+  .contractSignatures {
+    page-break-inside: avoid;
+  }
+
+  .serviceCategory {
+    page-break-inside: avoid;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 1024px) {
+  .singleServiceAgreement {
+    width: 100%;
+    max-width: 210mm;
+    padding: 15mm;
+    margin: 0 auto;
+  }
+
+  .partyBlock {
+    margin-bottom: 15px;
+  }
+
+  .partyHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .serviceItems {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .feeRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .contractSignatures {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .singleServiceAgreement {
+    padding: 10mm;
+    font-size: 11px;
+  }
+
+  .companyName {
+    font-size: 12px;
+  }
+
+  .partyLabel {
+    min-width: auto;
+    font-size: 11px;
+  }
+
+  .detailLabel {
+    min-width: auto;
+    font-size: 11px;
+  }
+
+  .sectionTitle {
+    font-size: 12px;
+  }
+
+  .categoryTitle {
+    font-size: 11px;
+  }
+
+  .termTitle {
+    font-size: 12px;
+  }
+} 
