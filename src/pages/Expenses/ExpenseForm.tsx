@@ -13,8 +13,10 @@ import {
   Space,
   Tag,
   Checkbox,
+  AutoComplete,
+  Spin,
 } from 'antd'
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import {
   Expense,
@@ -32,6 +34,7 @@ import { useBranchOffices } from '../../hooks/useDepartments'
 import { BUSINESS_STATUS_MAP } from '../../constants'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import { useDebounce } from '../../hooks/useDebounce'
+import { getContractList } from '../../api/contract'
 
 // 定义状态标签映射
 const STATUS_LABELS = {
@@ -81,6 +84,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     '6': 0, // 行政许可
     '7': 0, // 其他业务
   })
+
+  // 关联合同搜索状态
+  const [contractOptions, setContractOptions] = useState<{ value: string; id: number }[]>([])
+  const [contractSearchLoading, setContractSearchLoading] = useState(false)
+  const [relatedContracts, setRelatedContracts] = useState<
+    { id: number; contractNumber: string }[]
+  >([])
 
   // 获取分公司/归属地数据
   const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
@@ -271,258 +281,125 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 加载数据时初始化
   useEffect(() => {
-    // 只有在表单已挂载且visible为true时才初始化表单
-    if (!formMountedRef.current || !visible) {
-      return
-    }
+    if (visible) {
+      formMountedRef.current = true
 
-    // 重置表单，清除之前的数据
-    form.resetFields()
+      // 初始化表单数据
+      if (mode === 'edit' && expense) {
+        // 克隆对象以避免修改原始数据
+        const formData: any = { ...expense }
 
-    // 如果是编辑模式且有费用数据，则设置表单初始值
-    if (mode === 'edit' && expense) {
-      console.log('设置编辑模式表单数据:', expense)
-
-      // 处理字符串格式的数字值
-      const formData: any = {
-        ...expense,
-        // 处理费用字段，确保它们是数字类型
-        licenseFee:
-          typeof expense.licenseFee === 'string'
-            ? parseFloat(expense.licenseFee)
-            : expense.licenseFee,
-        brandFee:
-          typeof expense.brandFee === 'string' ? parseFloat(expense.brandFee) : expense.brandFee,
-        recordSealFee:
-          typeof expense.recordSealFee === 'string'
-            ? parseFloat(expense.recordSealFee)
-            : expense.recordSealFee,
-        generalSealFee:
-          typeof expense.generalSealFee === 'string'
-            ? parseFloat(expense.generalSealFee)
-            : expense.generalSealFee,
-        agencyFee:
-          typeof expense.agencyFee === 'string' ? parseFloat(expense.agencyFee) : expense.agencyFee,
-        accountingSoftwareFee:
-          typeof expense.accountingSoftwareFee === 'string'
-            ? parseFloat(expense.accountingSoftwareFee)
-            : expense.accountingSoftwareFee,
-        addressFee:
-          typeof expense.addressFee === 'string'
-            ? parseFloat(expense.addressFee)
-            : expense.addressFee,
-        invoiceSoftwareFee:
-          typeof expense.invoiceSoftwareFee === 'string'
-            ? parseFloat(expense.invoiceSoftwareFee)
-            : expense.invoiceSoftwareFee,
-        socialInsuranceAgencyFee:
-          typeof expense.socialInsuranceAgencyFee === 'string'
-            ? parseFloat(expense.socialInsuranceAgencyFee)
-            : expense.socialInsuranceAgencyFee,
-        housingFundCount:
-          typeof expense.housingFundCount === 'string'
-            ? parseInt(expense.housingFundCount)
-            : expense.housingFundCount,
-        housingFundAgencyFee:
-          typeof expense.housingFundAgencyFee === 'string'
-            ? parseFloat(expense.housingFundAgencyFee)
-            : expense.housingFundAgencyFee,
-        statisticalReportFee:
-          typeof expense.statisticalReportFee === 'string'
-            ? parseFloat(expense.statisticalReportFee)
-            : expense.statisticalReportFee,
-        changeFee:
-          typeof expense.changeFee === 'string' ? parseFloat(expense.changeFee) : expense.changeFee,
-        administrativeLicenseFee:
-          typeof expense.administrativeLicenseFee === 'string'
-            ? parseFloat(expense.administrativeLicenseFee)
-            : expense.administrativeLicenseFee,
-        otherBusinessFee:
-          typeof expense.otherBusinessFee === 'string'
-            ? parseFloat(expense.otherBusinessFee)
-            : expense.otherBusinessFee,
-        totalFee:
-          typeof expense.totalFee === 'string' ? parseFloat(expense.totalFee) : expense.totalFee,
-        insuredCount:
-          typeof expense.insuredCount === 'string'
-            ? parseInt(expense.insuredCount)
-            : expense.insuredCount,
-
-        // 确保使用了mode=tags的Select组件的值为数组
-        chargeMethod: expense.chargeMethod
-          ? Array.isArray(expense.chargeMethod)
-            ? expense.chargeMethod
-            : [expense.chargeMethod]
-          : [],
-
-        changeBusiness: expense.changeBusiness
-          ? Array.isArray(expense.changeBusiness)
-            ? expense.changeBusiness
-            : [expense.changeBusiness]
-          : [],
-
-        administrativeLicense: expense.administrativeLicense
-          ? Array.isArray(expense.administrativeLicense)
-            ? expense.administrativeLicense
-            : [expense.administrativeLicense]
-          : [],
-
-        otherBusiness: expense.otherBusiness
-          ? Array.isArray(expense.otherBusiness)
-            ? expense.otherBusiness
-            : [expense.otherBusiness]
-          : [],
-
-        insuranceTypes: expense.insuranceTypes
-          ? Array.isArray(expense.insuranceTypes)
-            ? expense.insuranceTypes
-            : [expense.insuranceTypes]
-          : [],
-
-        // 转换日期字段为dayjs对象
-        chargeDate: expense.chargeDate ? dayjs(expense.chargeDate) : undefined,
-        accountingSoftwareStartDate: expense.accountingSoftwareStartDate
-          ? dayjs(expense.accountingSoftwareStartDate)
-          : undefined,
-        accountingSoftwareEndDate: expense.accountingSoftwareEndDate
-          ? dayjs(expense.accountingSoftwareEndDate)
-          : undefined,
-        addressStartDate: expense.addressStartDate ? dayjs(expense.addressStartDate) : undefined,
-        addressEndDate: expense.addressEndDate ? dayjs(expense.addressEndDate) : undefined,
-        agencyStartDate: expense.agencyStartDate ? dayjs(expense.agencyStartDate) : undefined,
-        agencyEndDate: expense.agencyEndDate ? dayjs(expense.agencyEndDate) : undefined,
-        invoiceSoftwareStartDate: expense.invoiceSoftwareStartDate
-          ? dayjs(expense.invoiceSoftwareStartDate)
-          : undefined,
-        invoiceSoftwareEndDate: expense.invoiceSoftwareEndDate
-          ? dayjs(expense.invoiceSoftwareEndDate)
-          : undefined,
-        socialInsuranceStartDate: expense.socialInsuranceStartDate
-          ? dayjs(expense.socialInsuranceStartDate)
-          : undefined,
-        socialInsuranceEndDate: expense.socialInsuranceEndDate
-          ? dayjs(expense.socialInsuranceEndDate)
-          : undefined,
-        housingFundStartDate: expense.housingFundStartDate
-          ? dayjs(expense.housingFundStartDate)
-          : undefined,
-        housingFundEndDate: expense.housingFundEndDate
-          ? dayjs(expense.housingFundEndDate)
-          : undefined,
-        statisticalStartDate: expense.statisticalStartDate
-          ? dayjs(expense.statisticalStartDate)
-          : undefined,
-        statisticalEndDate: expense.statisticalEndDate
-          ? dayjs(expense.statisticalEndDate)
-          : undefined,
-      }
-
-      // 处理contractImage
-      if (expense.contractImage) {
-        // 将单个字符串或字符串数组转换为FileItem数组
-        if (Array.isArray(expense.contractImage)) {
-          // @ts-ignore - 类型忽略，实际运行时会正确处理
-          formData.contractImage = expense.contractImage.map(fileName => ({
-            fileName,
-            url: buildImageUrl(fileName), // 使用buildImageUrl构建完整URL
-          }))
-        } else {
-          // 兼容旧数据，单个字符串转换为数组
-          const contractImageStr = expense.contractImage as unknown as string
-          // @ts-ignore - 类型忽略，实际运行时会正确处理
-          formData.contractImage = [
-            {
-              fileName: contractImageStr,
-              url: buildImageUrl(contractImageStr), // 使用buildImageUrl构建完整URL
-            },
-          ]
-        }
-      }
-
-      // 处理proofOfCharge
-      if (expense.proofOfCharge && expense.proofOfCharge.length > 0) {
-        // @ts-ignore - 类型忽略，实际运行时会正确处理
-        formData.proofOfCharge = expense.proofOfCharge.map(fileName => ({
-          fileName,
-          url: buildImageUrl(fileName), // 使用buildImageUrl构建完整URL
-        }))
-      }
-
-      // 设置表单值
-      form.setFieldsValue(formData)
-      setPrevFormValues(formData)
-
-      // 初始化费用字段缓存
-      const initialFeeValues: Record<string, any> = {}
-      feeFields.forEach(field => {
-        initialFeeValues[field] = formData[field as keyof typeof formData] || 0
-      })
-      setFeeFieldsCache(initialFeeValues)
-
-      // 立即计算并设置初始标签页费用
-      const newTabFeeSums: Record<string, number> = {
-        '1': 0,
-        '2': 0,
-        '3': 0,
-        '4': 0,
-        '5': 0,
-        '6': 0,
-        '7': 0,
-      }
-
-      // 计算各标签页的费用总和
-      Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
-        let sum = 0
-        fieldsInTab.forEach(field => {
-          const value = initialFeeValues[field]
-          if (value) {
-            sum += typeof value === 'string' ? parseFloat(value) : Number(value)
+        // 将日期字符串转换为 Dayjs 实例
+        ;[
+          'chargeDate',
+          'accountingSoftwareStartDate',
+          'accountingSoftwareEndDate',
+          'addressStartDate',
+          'addressEndDate',
+          'agencyStartDate',
+          'agencyEndDate',
+          'invoiceSoftwareStartDate',
+          'invoiceSoftwareEndDate',
+          'socialInsuranceStartDate',
+          'socialInsuranceEndDate',
+          'housingFundStartDate',
+          'housingFundEndDate',
+          'statisticalStartDate',
+          'statisticalEndDate',
+        ].forEach(dateField => {
+          if (formData[dateField]) {
+            formData[dateField] = dayjs(formData[dateField])
           }
         })
-        newTabFeeSums[tabKey] = sum
-      })
 
-      // 直接设置费用合计状态
-      setTabFeeSums(newTabFeeSums)
+        // 处理contractImage
+        if (expense.contractImage) {
+          // 检查类型
+          if (Array.isArray(expense.contractImage)) {
+            // 是数组，转换成对象数组
+            formData.contractImage = expense.contractImage.map(fileName => ({
+              fileName,
+              url: buildImageUrl(fileName), // 使用buildImageUrl构建完整URL
+            }))
+          } else {
+            // 不是数组，单个字符串，转为数组
+            const contractImageStr = expense.contractImage as unknown as string
+            // 转换为对象数组，便于FileUpload组件使用
+            formData.contractImage = [
+              {
+                fileName: contractImageStr,
+                url: buildImageUrl(contractImageStr), // 使用buildImageUrl构建完整URL
+              },
+            ]
+          }
+        }
 
-      // 最后设置初始化完成标志
-      formInitializedRef.current = true
-    } else {
-      // 添加模式，设置默认值
-      const today = dayjs()
-      form.setFieldsValue({
-        chargeDate: today,
-        totalFee: 0,
-      })
-      setPrevFormValues({
-        chargeDate: today,
-        totalFee: 0,
-      })
+        // 处理proofOfCharge
+        if (expense.proofOfCharge) {
+          // 检查类型
+          if (Array.isArray(expense.proofOfCharge)) {
+            formData.proofOfCharge = expense.proofOfCharge.map(fileName => ({
+              fileName,
+              url: buildImageUrl(fileName),
+            }))
+          } else {
+            const proofStr = expense.proofOfCharge as unknown as string
+            formData.proofOfCharge = [
+              {
+                fileName: proofStr,
+                url: buildImageUrl(proofStr),
+              },
+            ]
+          }
+        }
 
-      // 初始化费用字段缓存为0
-      const initialFeeValues: Record<string, any> = {}
-      feeFields.forEach(field => {
-        initialFeeValues[field] = 0
-      })
-      setFeeFieldsCache(initialFeeValues)
+        // 处理关联合同
+        if (expense.relatedContract && Array.isArray(expense.relatedContract)) {
+          setRelatedContracts(expense.relatedContract)
+        }
 
-      // 新建模式下重置所有标签页费用为0
-      setTabFeeSums({
-        '1': 0,
-        '2': 0,
-        '3': 0,
-        '4': 0,
-        '5': 0,
-        '6': 0,
-        '7': 0,
-      })
+        // 设置表单初始值
+        form.setFieldsValue(formData)
 
-      formInitializedRef.current = true
+        // 重新计算费用总额
+        calculateFees()
+      } else {
+        // 添加模式，设置默认值
+        const today = dayjs()
+        form.setFieldsValue({
+          chargeDate: today,
+          totalFee: 0,
+        })
+        setPrevFormValues({
+          chargeDate: today,
+          totalFee: 0,
+        })
+
+        // 初始化费用字段缓存为0
+        const initialFeeValues: Record<string, any> = {}
+        feeFields.forEach(field => {
+          initialFeeValues[field] = 0
+        })
+        setFeeFieldsCache(initialFeeValues)
+
+        // 新建模式下重置所有标签页费用为0
+        setTabFeeSums({
+          '1': 0,
+          '2': 0,
+          '3': 0,
+          '4': 0,
+          '5': 0,
+          '6': 0,
+          '7': 0,
+        })
+
+        formInitializedRef.current = true
+      }
+
+      // 设置默认选项卡
+      setActiveTab('1')
     }
-
-    // 设置默认选项卡
-    setActiveTab('1')
-  }, [visible, expense, mode, form]) // 移除不必要的依赖，feeFields和tabFeeFieldsMap是常量
+  }, [visible, expense, mode, form])
 
   // 优化初始化后的计算逻辑
   useEffect(() => {
@@ -662,6 +539,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formattedValues.proofOfCharge = []
       }
 
+      // 处理关联合同
+      if (!formattedValues.relatedContract) {
+        formattedValues.relatedContract = []
+      } else if (typeof formattedValues.relatedContract === 'string') {
+        // 如果是字符串，尝试解析JSON
+        try {
+          formattedValues.relatedContract = JSON.parse(formattedValues.relatedContract)
+        } catch (e) {
+          formattedValues.relatedContract = []
+        }
+      }
+
       console.log('提交格式化后的表单数据:', formattedValues)
 
       if (mode === 'add') {
@@ -747,6 +636,78 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       proofOfCharge: prev.proofOfCharge?.filter(name => name !== fileName) || [],
     }))
   }, [])
+
+  // 搜索合同函数
+  const searchContract = async (value: string) => {
+    if (!value || value.length < 2) {
+      setContractOptions([])
+      return
+    }
+
+    setContractSearchLoading(true)
+    try {
+      const response = await getContractList({
+        page: 1,
+        pageSize: 10,
+        contractNumber: value,
+      })
+
+      if (response.data && response.data.list) {
+        const contracts = response.data.list
+          .map(contract => ({
+            value: contract.contractNumber || '',
+            id: contract.id,
+          }))
+          .filter(item => item.value)
+
+        setContractOptions(contracts)
+      } else {
+        setContractOptions([])
+      }
+    } catch (error) {
+      console.error('搜索合同错误:', error)
+      setContractOptions([])
+    } finally {
+      setContractSearchLoading(false)
+    }
+  }
+
+  // 添加关联合同
+  const handleAddRelatedContract = (value: string, option: any) => {
+    if (!value || !option || !option.id) return
+
+    // 检查是否已存在
+    const existingContract = relatedContracts.find(c => c.id === option.id)
+    if (existingContract) {
+      message.warning('该合同已添加')
+      return
+    }
+
+    // 添加新合同
+    const newContract = {
+      id: option.id,
+      contractNumber: value,
+    }
+
+    const updatedContracts = [...relatedContracts, newContract]
+    setRelatedContracts(updatedContracts)
+    form.setFieldValue('relatedContract', updatedContracts)
+
+    // 清空搜索字段 - 这里不直接修改表单，而是在UI中处理
+    setTimeout(() => {
+      const searchInput = document.querySelector('input[id="contractSearch"]') as HTMLInputElement
+      if (searchInput) {
+        searchInput.value = ''
+      }
+    }, 0)
+  }
+
+  // 删除关联合同
+  const handleRemoveRelatedContract = (id: number) => {
+    const updatedContracts = relatedContracts.filter(c => c.id !== id)
+    setRelatedContracts(updatedContracts)
+    form.setFieldValue('relatedContract', updatedContracts)
+  }
 
   return (
     <Modal
@@ -960,6 +921,66 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     onFileUpload={handleContractFileUpload}
                     onFileRemove={handleContractFileRemove}
                   />
+                </Form.Item>
+
+                {/* 关联合同字段 */}
+                <Form.Item
+                  label="关联合同"
+                  tooltip="输入合同编号关联现有合同"
+                  name="relatedContract"
+                  style={{ display: 'none' }} // 隐藏真实字段，仅用于存储数据
+                >
+                  <Input />
+                </Form.Item>
+
+                <Form.Item label="关联合同" tooltip="输入合同编号关联现有合同">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <AutoComplete
+                        id="contractSearch"
+                        style={{ width: '100%' }}
+                        placeholder="输入合同编号搜索"
+                        onSearch={searchContract}
+                        onSelect={handleAddRelatedContract}
+                        options={contractOptions}
+                        notFoundContent={
+                          contractSearchLoading ? (
+                            <div className="text-center py-2">
+                              <Spin size="small" />
+                            </div>
+                          ) : null
+                        }
+                      />
+                      <Button
+                        type="primary"
+                        icon={<SearchOutlined />}
+                        loading={contractSearchLoading}
+                        onClick={() => {
+                          const input = document.querySelector(
+                            'input[id="contractSearch"]'
+                          ) as HTMLInputElement
+                          if (input && input.value) {
+                            searchContract(input.value)
+                          }
+                        }}
+                      >
+                        搜索
+                      </Button>
+                    </div>
+                    {relatedContracts.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {relatedContracts.map(contract => (
+                          <Tag
+                            key={contract.id}
+                            closable
+                            onClose={() => handleRemoveRelatedContract(contract.id)}
+                          >
+                            {contract.contractNumber}
+                          </Tag>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </Form.Item>
               </div>
 

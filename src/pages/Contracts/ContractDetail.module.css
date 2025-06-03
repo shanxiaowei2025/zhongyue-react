@@ -5,6 +5,8 @@
   overflow-x: auto;
   overflow-y: visible;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .contractContentInner {
@@ -13,9 +15,22 @@
   background: #ffffff;
   padding: 0;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   height: auto;
   overflow: visible;
+  margin: 0 auto;
+}
+
+/* 移动设备适配 */
+@media (max-width: 768px) {
+  .contractContentWrapper {
+    padding: 10px;
+  }
+
+  .contractContentInner {
+    min-width: auto;
+    width: 100%;
+  }
 }
 
 /* 在大屏幕上居中显示 */
@@ -32,4 +47,4 @@
     margin-left: 0;
     margin-right: 0;
   }
-} 
+}

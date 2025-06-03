@@ -23,7 +23,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
   const [generating, setGenerating] = useState(false)
   const [signUrl, setSignUrl] = useState<string>('')
   const contractContentRef = useRef<HTMLDivElement>(null)
-  
+
   // 获取合同详情
   const { data: contractData, isLoading, error } = useContractDetail(contractId)
 
@@ -46,7 +46,18 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
     try {
       // 准备html2canvas配置
       const contentElement = contractContentRef.current
-      
+
+      // 获取实际内容高度，确保能捕获完整内容
+      const actualHeight = contentElement.scrollHeight
+      console.log('合同内容实际高度:', actualHeight, 'px')
+
+      // 显示生成进度提示
+      message.loading({
+        content: '正在生成合同图片，请稍候...',
+        key: 'contractImageGen',
+        duration: 0,
+      })
+
       // 1. 使用html2canvas生成合同图片
       const canvas = await html2canvas(contentElement, {
         backgroundColor: '#ffffff',
@@ -56,9 +67,9 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
         scrollX: -window.scrollX,
         scrollY: -window.scrollY,
         width: contentElement.scrollWidth,
-        height: contentElement.scrollHeight,
+        height: Math.min(10000, contentElement.scrollHeight), // 支持最大10000px高度
         windowWidth: contentElement.scrollWidth,
-        windowHeight: contentElement.scrollHeight,
+        windowHeight: Math.min(10000, contentElement.scrollHeight), // 同样支持最大10000px高度
         // 关键：捕获完整内容
         onclone: clonedDoc => {
           // 获取克隆的内容元素
@@ -69,58 +80,97 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
             clonedElement.style.width = '210mm'
             clonedElement.style.minWidth = '210mm'
             clonedElement.style.height = 'auto'
-            clonedElement.style.minHeight = contentElement.scrollHeight + 'px'
+            clonedElement.style.minHeight = Math.min(10000, contentElement.scrollHeight) + 'px'
             clonedElement.style.padding = '0'
             clonedElement.style.margin = '0 auto'
             clonedElement.style.background = '#ffffff'
             clonedElement.style.boxShadow = 'none'
             clonedElement.style.borderRadius = '0'
-            
+            clonedElement.style.maxHeight = 'none' // 移除最大高度限制
+
             // 处理所有子元素，确保没有溢出隐藏
             const allElements = clonedElement.querySelectorAll('*')
             allElements.forEach(el => {
               if (el instanceof HTMLElement) {
                 // 保留原始margin和padding，不要覆盖为0
                 el.style.overflow = 'visible'
+                el.style.maxHeight = 'none' // 移除最大高度限制
               }
             })
-            
+
             // 特别处理协议组件
-            const agreementElement = clonedElement.querySelector('.product-service-agreement') as HTMLElement
+            const agreementElement = clonedElement.querySelector(
+              '.product-service-agreement'
+            ) as HTMLElement
             if (agreementElement) {
               agreementElement.style.margin = '0 auto'
               agreementElement.style.display = 'block'
               agreementElement.style.pageBreakInside = 'avoid'
+              agreementElement.style.maxHeight = 'none' // 移除最大高度限制
             }
-            
+
             // 特别处理代理记账合同组件
-            const accountingElement = clonedElement.querySelector('.agency-accounting-agreement-view') as HTMLElement
+            const accountingElement = clonedElement.querySelector(
+              '.agency-accounting-agreement-view'
+            ) as HTMLElement
             if (accountingElement) {
               accountingElement.style.margin = '0 auto'
               accountingElement.style.display = 'block'
               accountingElement.style.pageBreakInside = 'avoid'
+              accountingElement.style.maxHeight = 'none' // 移除最大高度限制
             }
-            
+
             // 特别处理单项服务合同组件
-            const serviceElement = clonedElement.querySelector('.single-service-agreement-view') as HTMLElement
+            const serviceElement = clonedElement.querySelector(
+              '.single-service-agreement-view'
+            ) as HTMLElement
             if (serviceElement) {
               serviceElement.style.margin = '0 auto'
               serviceElement.style.display = 'block'
               serviceElement.style.pageBreakInside = 'avoid'
+              serviceElement.style.maxHeight = 'none' // 移除最大高度限制
             }
+          }
+
+          // 确保document和body也没有高度限制
+          const docElement = clonedDoc.documentElement
+          const bodyElement = clonedDoc.body
+
+          if (docElement) {
+            docElement.style.height = 'auto'
+            docElement.style.maxHeight = 'none'
+            docElement.style.overflow = 'visible'
+          }
+
+          if (bodyElement) {
+            bodyElement.style.height = 'auto'
+            bodyElement.style.maxHeight = 'none'
+            bodyElement.style.overflow = 'visible'
           }
         },
       })
 
+      // 输出画布尺寸信息
+      console.log('生成的Canvas尺寸:', {
+        width: canvas.width,
+        height: canvas.height,
+        originalWidth: contentElement.scrollWidth,
+        originalHeight: contentElement.scrollHeight,
+      })
+
       // 2. 将canvas转为blob
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(blob => {
-          if (blob) {
-            resolve(blob)
-          } else {
-            reject(new Error('生成图片失败'))
-          }
-        }, 'image/png', 0.95) // 增加质量参数
+        canvas.toBlob(
+          blob => {
+            if (blob) {
+              resolve(blob)
+            } else {
+              reject(new Error('生成图片失败'))
+            }
+          },
+          'image/png',
+          0.95
+        ) // 增加质量参数
       })
 
       // 3. 创建File对象
@@ -134,33 +184,37 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
       // 5. 检查并设置合同签署日期
       const currentDate = new Date().toISOString().split('T')[0] // 当前日期，格式为 YYYY-MM-DD
       const updateData: any = { contractImage: imageUrl }
-      
+
       // 如果甲方签署日期为空，设置为当前日期
       if (!contractData.partyASignDate) {
         updateData.partyASignDate = currentDate
         console.log('设置甲方签署日期为当前日期:', currentDate)
       }
-      
+
       // 如果乙方签署日期为空，设置为当前日期
       if (!contractData.partyBSignDate) {
         updateData.partyBSignDate = currentDate
         console.log('设置乙方签署日期为当前日期:', currentDate)
       }
-      
+
       // 更新合同信息
       await updateContract(contractId, updateData)
 
       // 6. 生成签署链接
-      const tokenResponse = await generateContractToken(contractId) as any
+      const tokenResponse = (await generateContractToken(contractId)) as any
       const { token } = tokenResponse.data
-      
+
       // 7. 生成签署页面链接
       const url = `${window.location.origin}/contract-sign/${token}`
       setSignUrl(url)
 
+      // 关闭loading提示并显示成功消息
+      message.destroy('contractImageGen')
       message.success('签署链接生成成功')
     } catch (error) {
       console.error('生成签署链接失败:', error)
+      // 关闭loading提示
+      message.destroy('contractImageGen')
       message.error('生成签署链接失败，请重试')
     } finally {
       setGenerating(false)
@@ -169,7 +223,8 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
 
   // 复制链接到剪贴板
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(signUrl)
+    navigator.clipboard
+      .writeText(signUrl)
       .then(() => message.success('链接已复制到剪贴板'))
       .catch(() => message.error('复制失败，请手动复制'))
   }
@@ -224,7 +279,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
       open={visible}
       onCancel={onClose}
       footer={null}
-      width={1000}
+      width={1200}
       centered
       maskClosable={false}
       bodyStyle={{ maxHeight: '80vh', overflowY: 'auto', padding: '20px' }}
@@ -234,17 +289,21 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
         {!signUrl ? (
           <>
             {/* 合同预览 */}
-            <div 
-              className="contract-preview-wrapper mb-4" 
-              style={{ 
+            <div
+              className="contract-preview-wrapper mb-4"
+              style={{
                 width: '100%',
                 overflowX: 'auto',
+                overflowY: 'auto',
                 padding: '10px',
                 backgroundColor: '#f5f5f5',
-                borderRadius: '8px'
+                borderRadius: '8px',
+                display: 'flex',
+                justifyContent: 'center',
+                maxHeight: '70vh', // 设置最大高度以适应屏幕
               }}
             >
-              <div 
+              <div
                 className="contract-preview-content"
                 style={{
                   width: '210mm',
@@ -255,7 +314,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                   margin: '0 auto',
                   overflow: 'visible',
-                  height: 'auto'
+                  height: 'auto',
                 }}
                 ref={contractContentRef}
               >
@@ -265,7 +324,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
 
             {/* 操作按钮 */}
             <div className="flex justify-center">
-              <Button 
+              <Button
                 type="primary"
                 size="large"
                 loading={generating}
@@ -286,20 +345,13 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                 请将以下链接发送给甲方进行签署（链接30分钟内有效）：
               </p>
             </div>
-            
+
             <div className="bg-gray-50 p-3 rounded border">
-              <Input.TextArea
-                value={signUrl}
-                readOnly
-                rows={3}
-                style={{ fontSize: '12px' }}
-              />
+              <Input.TextArea value={signUrl} readOnly rows={3} style={{ fontSize: '12px' }} />
             </div>
-            
+
             <div className="mt-4 flex justify-center space-x-4">
-              <Button onClick={onClose}>
-                关闭
-              </Button>
+              <Button onClick={onClose}>关闭</Button>
               <Button type="primary" onClick={handleCopyLink}>
                 复制链接
               </Button>
@@ -311,4 +363,4 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
   )
 }
 
-export default ContractPreviewModal 
+export default ContractPreviewModal
