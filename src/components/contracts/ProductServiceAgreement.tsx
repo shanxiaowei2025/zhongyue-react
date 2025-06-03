@@ -166,6 +166,10 @@ const ProductServiceAgreement = forwardRef<
 
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
+    // 检查是否是脉信公司的产品服务协议
+    const isMaixinProductService = signatory === '保定脉信会计服务有限公司' && 
+                                 formData.contractType === '产品服务协议'
+
     if (!config) {
       return <div className="error-message">不支持的签署方: {signatory}</div>
     }
@@ -570,8 +574,10 @@ const ProductServiceAgreement = forwardRef<
         {/* 合同头部 */}
         <div className="contract-header">
           <div className="logo-section">
-            <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
-            <div className="company-info">
+            {isMaixinProductService ? null : (
+              <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
+            )}
+            <div className="company-info" style={isMaixinProductService ? {paddingLeft: 0, borderLeft: 'none'} : {}}>
               <h2 className="company-name">{config.title}</h2>
               {config.englishTitle && <p className="company-name-en">{config.englishTitle}</p>}
               <p className="contact-info">咨询电话：{config.phone}</p>
@@ -582,7 +588,7 @@ const ProductServiceAgreement = forwardRef<
 
         {/* 合同标题 */}
         <div className="contract-title">
-          <h1>中岳产品服务协议</h1>
+          <h1>{isMaixinProductService ? '产品服务协议' : '中岳产品服务协议'}</h1>
         </div>
 
         {/* 合同双方信息 */}

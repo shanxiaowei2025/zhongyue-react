@@ -8,7 +8,7 @@
   background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   margin: 0 auto;
-  padding: 20px;
+  padding: 20mm;
 }
 
 /* 费用部分查看样式 */
@@ -348,6 +348,12 @@
 .signatureField span {
   flex: 1;
   font-size: 12px;
+}
+
+/* 确保签约日期显示使用正确的字体大小 */
+.signatureInfoRow:last-child .signatureField span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .agencyAccountingAgreementView :global(.ant-descriptions-item-label),

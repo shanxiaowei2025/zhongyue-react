@@ -25,7 +25,7 @@ const SIGNATORY_CONFIG = {
 
 // 章图片映射配置
 const STAMP_IMAGE_MAP = {
-  保定如你心意企业管理咨询有限公司: '/images/runixy-zhang.png',
+  保定如你心意企业管理咨询有限公司: '/images/runixinyi-zhang.png',
   定兴县金盾企业管理咨询有限公司: '/images/jindun-zhang.png',
 }
 

@@ -63,6 +63,10 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
     return <div className="error-message">不支持的签署方: {contractData.signatory}</div>
   }
 
+  // 检查是否是脉信公司的产品服务协议
+  const isMaixinProductService = contractData.signatory === '保定脉信会计服务有限公司' && 
+                                contractData.contractType === '产品服务协议'
+
   // 获取项目名称
   const getItemName = (itemKey: string): string => {
     const itemNameMap: Record<string, string> = {
@@ -169,8 +173,10 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
       {/* 合同头部 */}
       <div className="contract-header">
         <div className="logo-section">
-          <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
-          <div className="company-info">
+          {!isMaixinProductService && (
+            <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
+          )}
+          <div className="company-info" style={isMaixinProductService ? {paddingLeft: 0, borderLeft: 'none'} : {}}>
             <h2 className="company-name">{config.title}</h2>
             {config.englishTitle && <p className="company-name-en">{config.englishTitle}</p>}
             <p className="contact-info">咨询电话：{config.phone}</p>
@@ -181,7 +187,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
 
       {/* 合同标题 */}
       <div className="contract-title">
-        <h1>中岳产品服务协议</h1>
+        <h1>{isMaixinProductService ? '产品服务协议' : '中岳产品服务协议'}</h1>
       </div>
 
       {/* 合同双方信息 */}

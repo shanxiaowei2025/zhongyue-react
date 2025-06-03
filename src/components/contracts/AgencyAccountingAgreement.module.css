@@ -391,6 +391,34 @@
   padding: 2px 0;
 }
 
+.signatureField :global(.ant-picker-input > input) {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.signatureField :global(.ant-picker-suffix) {
+  font-size: 12px;
+}
+
+.signatureField :global(.ant-picker-clear) {
+  font-size: 12px;
+}
+
+/* 设置日期格式的文本大小 */
+.signatureField :global(.ant-picker-input) {
+  font-size: 12px;
+}
+
+/* DatePicker弹出面板样式 */
+.agencyAccountingAgreement :global(.ant-picker-dropdown) {
+  font-size: 12px;
+}
+
+.agencyAccountingAgreement :global(.ant-picker-content th),
+.agencyAccountingAgreement :global(.ant-picker-content td) {
+  font-size: 12px;
+}
+
 /* 媒体查询 */
 @media (max-width: 768px) {
   .agencyAccountingAgreement {
