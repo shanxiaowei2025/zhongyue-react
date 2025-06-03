@@ -24,7 +24,6 @@
   font-weight: bold;
   margin: 0;
   padding: 15px 0;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 合同双方信息区域 */
@@ -35,23 +34,28 @@
 .partySection {
   display: flex;
   margin-bottom: 8px;
+  align-items: center;
 }
 
 .partyField {
   display: flex;
   margin-bottom: 8px;
+  align-items: center;
 }
 
 .partyLabel {
   min-width: 110px;
   font-weight: bold;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  display: flex;
+  align-items: center;
+  height: 28px;
 }
 
 .partyContent {
   flex: 1;
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .partyBName,
@@ -59,26 +63,28 @@
 .partyBAddress,
 .partyBPhone {
   padding: 3px 0;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  display: flex;
+  align-items: center;
+  height: 28px;
 }
 
-/* 输入框样式 */
+/* 输入框样式 - 修改为底部黑色下划线，无圆角 */
 .companyInput,
 .creditCodeInput,
 .addressInput,
 .phoneInput,
 .contactInput,
-.businessPersonInput {
+.businessPersonInput,
+.otherBusinessInput {
   width: 100%;
   border: none;
   border-bottom: 1px solid #000;
   border-radius: 0;
   height: 28px;
+  font-size: 12px;
   background-color: transparent;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
-  padding: 4px 8px;
+  padding: 2px 0;
 }
 
 /* 合同前言 */
@@ -87,7 +93,6 @@
   margin: 15px 0;
   line-height: 1.8;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 合同章节 */
@@ -99,15 +104,12 @@
   font-size: 13px;
   font-weight: bold;
   margin-bottom: 8px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  color: #000;
 }
 
 .sectionContent {
   margin-left: 2em;
   line-height: 1.8;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 委托期限 */
@@ -119,27 +121,32 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .datePicker {
   width: 130px;
   margin: 0 5px;
   height: 28px;
+  font-size: 12px;
   border: none;
   border-bottom: 1px solid #000;
   border-radius: 0;
   background-color: transparent;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 确保日期选择器中的文本也是12px */
+.datePicker :global(.ant-picker-input > input) {
   font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 税务服务 */
 .taxServices {
   margin: 12px 0;
+  font-size: 12px;
 }
 
+/* 服务复选框样式 - Word风格 */
 .serviceCheckboxes {
   margin: 8px 0;
   display: flex;
@@ -153,10 +160,45 @@
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
   font-size: 12px;
   line-height: 1.8;
+  display: flex;
+  align-items: center;
 }
 
+/* 隐藏默认的复选框 */
 .serviceCheckboxes :global(.ant-checkbox) {
   margin-right: 8px;
+}
+
+.serviceCheckboxes :global(.ant-checkbox-inner) {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #000;
+  border-radius: 0;
+  background-color: #fff;
+}
+
+.serviceCheckboxes :global(.ant-checkbox-checked .ant-checkbox-inner) {
+  background-color: #fff;
+  border-color: #000;
+}
+
+.serviceCheckboxes :global(.ant-checkbox-checked .ant-checkbox-inner::after) {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  border: none;
+  background: none;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  transform: none;
+}
+
+.serviceCheckboxes :global(.ant-checkbox:hover .ant-checkbox-inner) {
+  border-color: #000;
 }
 
 .serviceCheckboxes :global(.ant-checkbox + span) {
@@ -174,20 +216,6 @@
 .otherBusinessLabel {
   min-width: 80px;
   margin-right: 8px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-}
-
-.otherBusinessInput {
-  flex: 1;
-  height: 28px;
-  border: none;
-  border-bottom: 1px solid #000;
-  border-radius: 0;
-  background-color: transparent;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
-  padding: 4px 8px;
 }
 
 /* 甲方和乙方责任 */
@@ -200,15 +228,13 @@
   margin-bottom: 6px;
   text-indent: 0;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  line-height: 1.8;
-  text-align: justify;
 }
 
 /* 支付方式样式 */
 .agencyAccountingAgreement .agencyFeeContent > div {
   margin: 1em 0;
   line-height: 1.6;
+  font-size: 12px;
 }
 
 .agencyAccountingAgreement .inlinePaymentMethod {
@@ -219,9 +245,10 @@
 
 .agencyAccountingAgreement .inlinePaymentMethod :global(.ant-radio-wrapper) {
   margin-right: 12px;
+  font-size: 12px;
 }
 
-/* 签名区域 */
+/* 签名区域 - 表格式布局 */
 .agreementSignatures {
   margin-top: 30px;
 }
@@ -230,71 +257,50 @@
   width: 100%;
 }
 
-.signatureRow {
+/* 签名标题行 */
+.signatureTitleRow {
   display: flex;
-  justify-content: space-between;
 }
 
-.signatureColumn {
-  width: 48%;
-  display: flex;
-  flex-direction: column;
-  gap: 45px;
+.signatureTitleColumn {
+  width: 50%;
+  padding-right: 10px;
+}
+
+.signatureTitleColumn:last-child {
+  padding-right: 0;
+  padding-left: 10px;
 }
 
 .signatureTitle {
   font-weight: bold;
-  margin-bottom: 12px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 13px;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+/* 盖章空间行 */
+.signatureStampRow {
+  display: flex;
+  margin-bottom: 15px;
+  align-items: flex-start;
+}
+
+.signatureStampColumn {
+  width: 50%;
+  padding-right: 10px;
+  position: relative;
+}
+
+.signatureStampColumn:last-child {
+  padding-right: 0;
+  padding-left: 10px;
 }
 
 .signatureStampSpace {
   height: 90px;
   position: relative;
   margin-bottom: 12px;
-}
-
-.partyBStamp {
-  position: absolute;
-  top: 0;
-  right: 0;
-  max-width: 140px;
-  max-height: 140px;
-}
-
-.signatureField {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.signatureLabel {
-  min-width: 50px;
-  margin-right: 8px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-}
-
-.signatureField :global(.ant-input) {
-  flex: 1;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
-  border: none;
-  border-bottom: 1px solid #000;
-  border-radius: 0;
-  background-color: transparent;
-  padding: 4px 8px;
-}
-
-.signatureField :global(.ant-picker) {
-  flex: 1;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
-  border: none;
-  border-bottom: 1px solid #000;
-  border-radius: 0;
-  background-color: transparent;
 }
 
 .stampPlaceholder {
@@ -320,18 +326,88 @@
   margin-top: 5px;
 }
 
+/* 乙方公章图片样式优化 */
+.partyBSign {
+  width: 130px;
+  height: auto;
+  position: absolute;
+  top: -30px;
+  left: 100px;
+  z-index: 2;
+}
+
+/* 签名信息行 - 每一行都对齐 */
+.signatureInfoRow {
+  display: flex;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+
+.signatureInfoColumn {
+  width: 50%;
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.signatureInfoColumn:last-child {
+  padding-right: 0;
+  padding-left: 10px;
+}
+
+.signatureField {
+  display: flex;
+  width: 100%;
+}
+
+.signatureLabel {
+  min-width: 80px;
+  margin-right: 8px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.signatureField :global(.ant-input) {
+  flex: 1;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+  border: none;
+  border-bottom: 1px solid #000;
+  border-radius: 0;
+  background-color: transparent;
+  height: 28px;
+  padding: 2px 0;
+}
+
+.signatureField :global(.ant-picker) {
+  flex: 1;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+  border: none;
+  border-bottom: 1px solid #000;
+  border-radius: 0;
+  background-color: transparent;
+  height: 28px;
+  padding: 2px 0;
+}
+
 /* 媒体查询 */
 @media (max-width: 768px) {
   .agencyAccountingAgreement {
     padding: 10px;
   }
 
-  .signatureRow {
+  .signatureTitleRow,
+  .signatureStampRow,
+  .signatureInfoRow {
     flex-direction: column;
   }
 
-  .signatureColumn {
+  .signatureTitleColumn,
+  .signatureStampColumn,
+  .signatureInfoColumn {
     width: 100%;
+    padding: 0;
     margin-bottom: 20px;
   }
 }
@@ -345,8 +421,8 @@
   border-radius: 0;
   box-shadow: none;
   padding: 2px 8px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
   font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .agencyAccountingAgreement :global(.ant-picker) {
@@ -356,8 +432,8 @@
   border-width: 0 0 1px 0;
   border-radius: 0;
   box-shadow: none;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
   font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .agencyAccountingAgreement :global(.ant-form-item) {
@@ -404,12 +480,12 @@
 
 .agencyAccountingAgreement .inlineFeeInput:focus {
   outline: none;
-  border-color: #40a9ff;
+  border-color: #1890ff;
   box-shadow: none;
 }
 
 .agencyAccountingAgreement .inlineFeeInput::placeholder {
-  color: #d9d9d9;
+  color: #999;
   font-size: 12px;
 }
 
@@ -448,4 +524,4 @@
   font-weight: bold;
   padding: 20px;
   text-align: center;
-} 
+}

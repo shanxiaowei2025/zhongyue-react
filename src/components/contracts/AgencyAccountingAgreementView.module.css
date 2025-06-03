@@ -20,7 +20,6 @@
   margin-bottom: 6px;
   text-indent: 0;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 合同状态与编号 */
@@ -40,8 +39,6 @@
 .agencyAccountingAgreementView .statusLabel {
   font-weight: bold;
   width: 80px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 合同标题 */
@@ -54,7 +51,6 @@
   font-size: 18px;
   font-weight: bold;
   margin: 0;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 甲乙方信息 */
@@ -75,21 +71,15 @@
 .partyLabel {
   min-width: 150px;
   font-weight: bold;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .partyValue {
   flex: 1;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .partyBName,
 .partyBCreditCode {
   font-weight: normal;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 合同前言 */
@@ -98,8 +88,6 @@
   text-align: justify;
   text-indent: 2em;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  line-height: 1.8;
 }
 
 /* 合同章节 */
@@ -111,23 +99,18 @@
   font-weight: bold;
   margin-bottom: 10px;
   font-size: 13px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  color: #000;
 }
 
 .sectionContent {
   margin-left: 1em;
   text-align: justify;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .sectionContent p {
   margin: 0.8em 0;
   text-indent: 2em;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  line-height: 1.8;
 }
 
 /* 委托期限 */
@@ -139,16 +122,15 @@
   display: inline-block;
   min-width: 100px;
   text-align: center;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid #ccc;
   padding: 0 5px;
   margin: 0 5px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 申报服务 */
 .taxServices {
   margin: 15px 0;
+  font-size: 12px;
 }
 
 .serviceCheckboxes.viewMode {
@@ -162,26 +144,28 @@
   margin: 5px 0;
   display: flex;
   align-items: center;
+  font-size: 12px;
 }
 
 .serviceCheckboxIndicator {
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  line-height: 16px;
+  width: 14px;
+  height: 14px;
+  line-height: 12px;
   text-align: center;
-  border: 1px solid #1890ff;
-  border-radius: 2px;
-  color: #fff;
-  background-color: #1890ff;
+  border: 1px solid #000;
+  border-radius: 0;
+  color: #000;
+  background-color: #fff;
   margin-right: 8px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .serviceItemEmpty {
   margin: 10px 0 10px 2em;
   color: #999;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .otherBusiness {
@@ -192,13 +176,11 @@
 .otherBusinessLabel {
   min-width: 80px;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .otherBusinessValue {
   flex: 1;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 代理记账服务费 */
@@ -207,15 +189,11 @@
   margin: 0 5px;
   border-bottom: 1px solid #333;
   padding: 0 3px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .paymentMethod {
   font-weight: bold;
   margin-left: 5px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 /* 电子签名 */
@@ -230,8 +208,7 @@
 .signatureTitle {
   font-weight: bold;
   margin-bottom: 10px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 13px;
 }
 
 .signatureImage {
@@ -247,7 +224,7 @@
   margin-top: 10px;
 }
 
-/* 签名区域 */
+/* 签名区域 - 表格式布局 */
 .agreementSignatures {
   margin-top: 30px;
 }
@@ -256,23 +233,44 @@
   width: 100%;
 }
 
-.signatureRow {
+/* 签名标题行 */
+.signatureTitleRow {
   display: flex;
-  justify-content: space-between;
 }
 
-.signatureColumn {
-  width: 48%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.signatureTitleColumn {
+  width: 50%;
+  padding-right: 10px;
+}
+
+.signatureTitleColumn:last-child {
+  padding-right: 0;
+  padding-left: 10px;
 }
 
 .signatureTitle {
   font-weight: bold;
   margin-bottom: 12px;
   font-size: 13px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  position: relative;
+}
+
+/* 盖章空间行 */
+.signatureStampRow {
+  display: flex;
+  margin-bottom: 15px;
+  align-items: flex-start;
+}
+
+.signatureStampColumn {
+  width: 50%;
+  padding-right: 10px;
+  position: relative;
+}
+
+.signatureStampColumn:last-child {
+  padding-right: 0;
+  padding-left: 10px;
 }
 
 .signatureStampSpace {
@@ -287,6 +285,16 @@
   right: 0;
   max-width: 140px;
   max-height: 140px;
+}
+
+/* 乙方公章图片样式优化 */
+.partyBSign {
+  width: 130px;
+  height: auto;
+  position: absolute;
+  top: -20px;
+  left: 100px;
+  z-index: 2;
 }
 
 .stampPreview {
@@ -305,23 +313,41 @@
   color: #999;
 }
 
-.signatureField {
+/* 签名信息行 - 每一行都对齐 */
+.signatureInfoRow {
+  display: flex;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+
+.signatureInfoColumn {
+  width: 50%;
+  padding-right: 10px;
   display: flex;
   align-items: center;
+}
+
+.signatureInfoColumn:last-child {
+  padding-right: 0;
+  padding-left: 10px;
+}
+
+.signatureField {
+  display: flex;
   margin-bottom: 8px;
+  width: 100%;
 }
 
 .signatureLabel {
-  min-width: 50px;
+  min-width: 80px;
   margin-right: 8px;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  flex-shrink: 0;
 }
 
 .signatureField span {
   flex: 1;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .agencyAccountingAgreementView :global(.ant-descriptions-item-label),
@@ -333,7 +359,7 @@
 
 .agencyAccountingAgreementView :global(.ant-descriptions-title) {
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: bold;
 }
 
@@ -349,12 +375,17 @@
     padding: 10px;
   }
 
-  .signatureRow {
+  .signatureTitleRow,
+  .signatureStampRow,
+  .signatureInfoRow {
     flex-direction: column;
   }
 
-  .signatureColumn {
+  .signatureTitleColumn,
+  .signatureStampColumn,
+  .signatureInfoColumn {
     width: 100%;
+    padding: 0;
     margin-bottom: 20px;
   }
 }
@@ -375,8 +406,6 @@
 .statusLabel {
   font-weight: bold;
   width: 80px;
-  font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .agencyFeeContent {
@@ -387,7 +416,6 @@
   margin-bottom: 6px;
   text-indent: 0;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
 .errorMessage {
@@ -395,4 +423,4 @@
   font-weight: bold;
   padding: 20px;
   text-align: center;
-} 
+}

@@ -457,9 +457,19 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
 
       <div className={styles.agreementSignatures}>
         <div className={styles.signatureContainer}>
-          <div className={styles.signatureRow}>
-            <div className={styles.signatureColumn}>
+          {/* 签名标题行 */}
+          <div className={styles.signatureTitleRow}>
+            <div className={styles.signatureTitleColumn}>
               <div className={styles.signatureTitle}>委托方：{partyACompany || ''}</div>
+            </div>
+            <div className={styles.signatureTitleColumn}>
+              <div className={styles.signatureTitle}>受托方：{config.title}</div>
+            </div>
+          </div>
+
+          {/* 盖章空间行 */}
+          <div className={styles.signatureStampRow}>
+            <div className={styles.signatureStampColumn}>
               <div className={styles.signatureStampSpace}>
                 {/* 甲方签字区域 */}
                 {contractData.partyAStampImage ? (
@@ -478,37 +488,12 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
                   </div>
                 ) : (
                   <div className={styles.stampPlaceholder}>
-                    <span className={styles.textSm + ' ' + styles.textGray400}>暂无签字</span>
+                    <span>暂无签字</span>
                   </div>
                 )}
               </div>
-              <div className={styles.signatureField}>
-                <div className={styles.signatureLabel}>法定代表人：</div>
-                <span>{partyALegalPerson || '-'}</span>
-              </div>
-              <div className={styles.signatureField}>
-                <div className={styles.signatureLabel}>联系人：</div>
-                <span>{partyAContact || '-'}</span>
-              </div>
-              <div className={styles.signatureField}>
-                <div className={styles.signatureLabel}>地址：</div>
-                <span>{partyAAddress || '-'}</span>
-              </div>
-              <div className={styles.signatureField}>
-                <div className={styles.signatureLabel}>邮编：</div>
-                <span>{partyAPostalCode || '-'}</span>
-              </div>
-              <div className={styles.signatureField}>
-                <div className={styles.signatureLabel}>电话：</div>
-                <span>{partyAPhone || '-'}</span>
-              </div>
-              <div className={styles.signatureField}>
-                <div className={styles.signatureLabel}>签约日期：</div>
-                <span>{partyASignDate ? dayjs(partyASignDate).format('YYYY年MM月DD日') : '-'}</span>
-              </div>
             </div>
-            <div className={styles.signatureColumn}>
-              <div className={styles.signatureTitle}>受托方：{config.title}</div>
+            <div className={styles.signatureStampColumn}>
               <div className={styles.signatureStampSpace}>
                 {/* 乙方盖章区域 */}
                 {signatory && getPartyBStampImage(signatory) && (
@@ -519,26 +504,98 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
                   />
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* 法定代表人信息行 */}
+          <div className={styles.signatureInfoRow}>
+            <div className={styles.signatureInfoColumn}>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>法定代表人：</div>
+                <span>{partyALegalPerson || '-'}</span>
+              </div>
+            </div>
+            <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>法定代表人：</div>
                 <span>{partyBLegalPerson || '刘菲'}</span>
               </div>
+            </div>
+          </div>
+
+          {/* 联系人信息行 */}
+          <div className={styles.signatureInfoRow}>
+            <div className={styles.signatureInfoColumn}>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>联系人：</div>
+                <span>{partyAContact || '-'}</span>
+              </div>
+            </div>
+            <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>联系人：</div>
                 <span>{partyBContact || '-'}</span>
               </div>
+            </div>
+          </div>
+
+          {/* 地址信息行 */}
+          <div className={styles.signatureInfoRow}>
+            <div className={styles.signatureInfoColumn}>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>地址：</div>
+                <span>{partyAAddress || '-'}</span>
+              </div>
+            </div>
+            <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>地址：</div>
                 <span>{partyBAddress || config.address}</span>
               </div>
+            </div>
+          </div>
+
+          {/* 邮编信息行 */}
+          <div className={styles.signatureInfoRow}>
+            <div className={styles.signatureInfoColumn}>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>邮编：</div>
+                <span>{partyAPostalCode || '-'}</span>
+              </div>
+            </div>
+            <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>邮编：</div>
                 <span>{partyBPostalCode || '-'}</span>
               </div>
+            </div>
+          </div>
+
+          {/* 电话信息行 */}
+          <div className={styles.signatureInfoRow}>
+            <div className={styles.signatureInfoColumn}>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>电话：</div>
+                <span>{partyAPhone || '-'}</span>
+              </div>
+            </div>
+            <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>电话：</div>
                 <span>{partyBPhone || config.phone}</span>
               </div>
+            </div>
+          </div>
+
+          {/* 签约日期信息行 */}
+          <div className={styles.signatureInfoRow}>
+            <div className={styles.signatureInfoColumn}>
+              <div className={styles.signatureField}>
+                <div className={styles.signatureLabel}>签约日期：</div>
+                <span>{partyASignDate ? dayjs(partyASignDate).format('YYYY年MM月DD日') : '-'}</span>
+              </div>
+            </div>
+            <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>签约日期：</div>
                 <span>{partyBSignDate ? dayjs(partyBSignDate).format('YYYY年MM月DD日') : '-'}</span>

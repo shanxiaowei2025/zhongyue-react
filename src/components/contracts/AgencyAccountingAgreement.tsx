@@ -255,9 +255,30 @@ const AgencyAccountingAgreement = forwardRef<
       }
 
       try {
+        // 定义不允许更新的字段
+        const excludeFields = [
+          'id',
+          'contractNumber',
+          'contractSignature',
+          'createTime',
+          'updateTime',
+          'submitter',
+        ]
+
+        // 过滤掉不允许更新的字段
+        const filteredFormData = Object.keys(formData).reduce(
+          (acc, key) => {
+            if (!excludeFields.includes(key)) {
+              acc[key] = formData[key]
+            }
+            return acc
+          },
+          {} as Record<string, any>
+        )
+
         // 构建最终提交的合同数据
         const contractSubmitData: CreateContractDto = {
-          ...formData,
+          ...filteredFormData,
           contractType: '代理记账合同',
           signatory,
           remarks: formData.remarks,
@@ -669,11 +690,21 @@ const AgencyAccountingAgreement = forwardRef<
 
         <div className={styles.agreementSignatures}>
           <div className={styles.signatureContainer}>
-            <div className={styles.signatureRow}>
-              <div className={styles.signatureColumn}>
+            {/* 签名标题行 */}
+            <div className={styles.signatureTitleRow}>
+              <div className={styles.signatureTitleColumn}>
                 <div className={styles.signatureTitle}>委托方：{formData.partyACompany || ''}</div>
+              </div>
+              <div className={styles.signatureTitleColumn}>
+                <div className={styles.signatureTitle}>受托方：{config.title}</div>
+              </div>
+            </div>
+
+            {/* 盖章空间行 */}
+            <div className={styles.signatureStampRow}>
+              <div className={styles.signatureStampColumn}>
                 <div className={styles.signatureStampSpace}>
-                  {/* 甲方签字区域 - 参考产品服务协议的实现 */}
+                  {/* 甲方签字区域 */}
                   {formData.partyAStampImage ? (
                     <div className={styles.stampPreview}>
                       <img
@@ -691,55 +722,158 @@ const AgencyAccountingAgreement = forwardRef<
                     </div>
                   ) : (
                     <div className={styles.stampPlaceholder}>
-                      <p className={styles.textSm + ' ' + styles.textGray400}>请通过"签署合同"功能生成甲方签字</p>
+                      <p>请通过"签署合同"功能生成甲方签字</p>
                     </div>
                   )}
                 </div>
+              </div>
+              <div className={styles.signatureStampColumn}>
+                <div className={styles.signatureStampSpace}>
+                  {/* 乙方盖章区域 */}
+                  {getPartyBStampImage(signatory) && (
+                    <img
+                      src={getPartyBStampImage(signatory)}
+                      alt="乙方盖章"
+                      className={styles.partyBSign}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 法定代表人信息行 */}
+            <div className={styles.signatureInfoRow}>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>法定代表人：</div>
                   <Input
                     placeholder="请输入法定代表人"
                     value={formData.partyALegalPerson || ''}
                     onChange={e => handleFormChange('partyALegalPerson', e.target.value)}
-                    style={{ width: '150px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
+              </div>
+              <div className={styles.signatureInfoColumn}>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>法定代表人：</div>
+                  <Input
+                    placeholder="请输入法定代表人"
+                    value={formData.partyBLegalPerson || '刘菲'}
+                    onChange={e => handleFormChange('partyBLegalPerson', e.target.value)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 联系人信息行 */}
+            <div className={styles.signatureInfoRow}>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>联系人：</div>
                   <Input
                     placeholder="请输入联系人"
                     value={formData.partyAContact || ''}
                     onChange={e => handleFormChange('partyAContact', e.target.value)}
-                    style={{ width: '150px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
+              </div>
+              <div className={styles.signatureInfoColumn}>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>联系人：</div>
+                  <Input
+                    placeholder="请输入联系人"
+                    value={formData.partyBContact || ''}
+                    onChange={e => handleFormChange('partyBContact', e.target.value)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 地址信息行 */}
+            <div className={styles.signatureInfoRow}>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>地址：</div>
                   <Input
                     placeholder="请输入地址"
                     value={formData.partyAAddress || ''}
                     onChange={e => handleFormChange('partyAAddress', e.target.value)}
-                    style={{ width: '200px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
+              </div>
+              <div className={styles.signatureInfoColumn}>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>地址：</div>
+                  <Input
+                    placeholder="请输入地址"
+                    value={formData.partyBAddress || config.address}
+                    onChange={e => handleFormChange('partyBAddress', e.target.value)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 邮编信息行 */}
+            <div className={styles.signatureInfoRow}>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>邮编：</div>
                   <Input
                     placeholder="请输入邮编"
                     value={formData.partyAPostalCode || ''}
                     onChange={e => handleFormChange('partyAPostalCode', e.target.value)}
-                    style={{ width: '120px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
+              </div>
+              <div className={styles.signatureInfoColumn}>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>邮编：</div>
+                  <Input
+                    placeholder="请输入邮编"
+                    value={formData.partyBPostalCode || ''}
+                    onChange={e => handleFormChange('partyBPostalCode', e.target.value)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 电话信息行 */}
+            <div className={styles.signatureInfoRow}>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>电话：</div>
                   <Input
                     placeholder="请输入电话"
                     value={formData.partyAPhone || ''}
                     onChange={e => handleFormChange('partyAPhone', e.target.value)}
-                    style={{ width: '150px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
+              </div>
+              <div className={styles.signatureInfoColumn}>
+                <div className={styles.signatureField}>
+                  <div className={styles.signatureLabel}>电话：</div>
+                  <Input
+                    placeholder="请输入电话"
+                    value={formData.partyBPhone || config.phone}
+                    onChange={e => handleFormChange('partyBPhone', e.target.value)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 签约日期信息行 */}
+            <div className={styles.signatureInfoRow}>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>签约日期：</div>
                   <DatePicker
@@ -749,67 +883,11 @@ const AgencyAccountingAgreement = forwardRef<
                     onChange={date =>
                       handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))
                     }
-                    style={{ width: '150px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
               </div>
-              <div className={styles.signatureColumn}>
-                <div className={styles.signatureTitle}>受托方：{config.title}</div>
-                <div className={styles.signatureStampSpace}>
-                  {/* 乙方盖章区域 - 显示公章图片 */}
-                  {getPartyBStampImage(signatory) && (
-                    <img
-                      src={getPartyBStampImage(signatory)}
-                      alt="乙方盖章"
-                      className={styles.partyBSign}
-                    />
-                  )}
-                </div>
-                <div className={styles.signatureField}>
-                  <div className={styles.signatureLabel}>法定代表人：</div>
-                  <Input
-                    placeholder="请输入法定代表人"
-                    value={formData.partyBLegalPerson || '刘菲'}
-                    onChange={e => handleFormChange('partyBLegalPerson', e.target.value)}
-                    style={{ width: '150px', fontSize: '12px' }}
-                  />
-                </div>
-                <div className={styles.signatureField}>
-                  <div className={styles.signatureLabel}>联系人：</div>
-                  <Input
-                    placeholder="请输入联系人"
-                    value={formData.partyBContact || ''}
-                    onChange={e => handleFormChange('partyBContact', e.target.value)}
-                    style={{ width: '150px', fontSize: '12px' }}
-                  />
-                </div>
-                <div className={styles.signatureField}>
-                  <div className={styles.signatureLabel}>地址：</div>
-                  <Input
-                    placeholder="请输入地址"
-                    value={formData.partyBAddress || config.address}
-                    onChange={e => handleFormChange('partyBAddress', e.target.value)}
-                    style={{ width: '200px', fontSize: '12px' }}
-                  />
-                </div>
-                <div className={styles.signatureField}>
-                  <div className={styles.signatureLabel}>邮编：</div>
-                  <Input
-                    placeholder="请输入邮编"
-                    value={formData.partyBPostalCode || ''}
-                    onChange={e => handleFormChange('partyBPostalCode', e.target.value)}
-                    style={{ width: '120px', fontSize: '12px' }}
-                  />
-                </div>
-                <div className={styles.signatureField}>
-                  <div className={styles.signatureLabel}>电话：</div>
-                  <Input
-                    placeholder="请输入电话"
-                    value={formData.partyBPhone || config.phone}
-                    onChange={e => handleFormChange('partyBPhone', e.target.value)}
-                    style={{ width: '150px', fontSize: '12px' }}
-                  />
-                </div>
+              <div className={styles.signatureInfoColumn}>
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>签约日期：</div>
                   <DatePicker
@@ -819,7 +897,7 @@ const AgencyAccountingAgreement = forwardRef<
                     onChange={date =>
                       handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))
                     }
-                    style={{ width: '150px', fontSize: '12px' }}
+                    style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
               </div>

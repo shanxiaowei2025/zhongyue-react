@@ -457,9 +457,20 @@ const ProductServiceAgreement = forwardRef<
       }
 
       try {
+        // 定义不允许更新的字段
+        const excludeFields = [
+          'id',
+          'contractNumber',
+          'contractSignature',
+          'createTime',
+          'updateTime',
+          'submitter',
+        ]
+
         const serviceData = collectServiceData()
 
-        const submitData: CreateContractDto = {
+        // 构建原始提交数据
+        const originalSubmitData: Record<string, any> = {
           signatory: formData.signatory,
           contractType: formData.contractType,
           partyACompany: formData.partyACompany,
@@ -487,6 +498,17 @@ const ProductServiceAgreement = forwardRef<
           ...serviceData,
         }
 
+        // 过滤掉不允许更新的字段
+        const submitData: CreateContractDto = Object.keys(originalSubmitData).reduce(
+          (acc, key) => {
+            if (!excludeFields.includes(key)) {
+              acc[key] = originalSubmitData[key]
+            }
+            return acc
+          },
+          {} as Record<string, any>
+        )
+
         if (mode === 'edit' && onUpdate) {
           await onUpdate(submitData)
         } else if (mode === 'create' && onSubmit) {
@@ -500,7 +522,6 @@ const ProductServiceAgreement = forwardRef<
         }
       } catch (error) {
         console.error('提交合同失败:', error)
-        // 重新抛出错误，让父组件处理
         throw error
       }
     }
