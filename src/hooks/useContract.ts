@@ -113,7 +113,7 @@ export const useContractList = (params: ContractQueryParams) => {
   // 签署合同
   const doSignContract = async (id: number, signData: SignContractDto) => {
     try {
-      const response = await signContractApi(id, signData)
+      const response = await signContractApi(id, signData) as any
       if (response.code === 0) {
         message.success('合同签署成功')
         await refreshContractList()

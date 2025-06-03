@@ -177,7 +177,18 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
             <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
           )}
           <div className="company-info" style={isMaixinProductService ? {paddingLeft: 0, borderLeft: 'none'} : {}}>
-            <h2 className="company-name">{config.title}</h2>
+            <h2 className="company-name">
+              {(contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' || 
+                contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司') ? (
+                <>
+                  定兴县中岳会计服务有限公司<br />
+                  {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? 
+                    '河北雄安分公司' : '高碑店分公司'}
+                </>
+              ) : (
+                config.title
+              )}
+            </h2>
             {config.englishTitle && <p className="company-name-en">{config.englishTitle}</p>}
             <p className="contact-info">咨询电话：{config.phone}</p>
             {config.englishTitle && <p className="company-registration">Company Registration</p>}
