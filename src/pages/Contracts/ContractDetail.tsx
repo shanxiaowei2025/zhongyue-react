@@ -13,6 +13,7 @@ import { useContractDetail } from '../../hooks/useContract'
 import ProductServiceAgreementView from '../../components/contracts/ProductServiceAgreementView'
 import AgencyAccountingAgreementView from '../../components/contracts/AgencyAccountingAgreementView'
 import SingleServiceAgreementView from '../../components/contracts/SingleServiceAgreementView'
+import styles from './ContractDetail.module.css'
 
 const { Title, Text } = Typography
 
@@ -53,41 +54,76 @@ const ContractDetail: React.FC = () => {
     setIsExporting(true)
 
     try {
+      // 准备html2canvas配置
+      const contentElement = contractContentRef.current
+      
       // 配置html2canvas选项
-      const canvas = await html2canvas(contractContentRef.current, {
+      const canvas = await html2canvas(contentElement, {
         backgroundColor: '#ffffff',
         scale: 2, // 提高清晰度
         useCORS: true,
         allowTaint: true,
-        scrollX: 0,
-        scrollY: 0,
-        width: contractContentRef.current.scrollWidth,
-        height: contractContentRef.current.scrollHeight,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        width: contentElement.scrollWidth,
+        height: contentElement.scrollHeight,
+        windowWidth: contentElement.scrollWidth,
+        windowHeight: contentElement.scrollHeight,
         onclone: clonedDoc => {
-          // 在克隆的文档中应用打印样式
-          const clonedElement = clonedDoc.querySelector('.contract-content-wrapper') as HTMLElement
+          // 获取克隆的内容元素
+          const clonedElement = clonedDoc.querySelector('[class*="contractContentInner"]') as HTMLElement
           if (clonedElement) {
+            // 设置样式确保全部内容可见
+            clonedElement.style.overflow = 'visible'
+            clonedElement.style.width = '210mm'
+            clonedElement.style.minWidth = '210mm'
+            clonedElement.style.height = 'auto'
+            clonedElement.style.minHeight = contentElement.scrollHeight + 'px'
+            clonedElement.style.padding = '0'
+            clonedElement.style.margin = '0 auto'
             clonedElement.style.background = '#ffffff'
-            clonedElement.style.padding = '20px'
-            clonedElement.style.borderRadius = '0'
             clonedElement.style.boxShadow = 'none'
-            clonedElement.style.display = 'flex'
-            clonedElement.style.justifyContent = 'center'
-            clonedElement.style.alignItems = 'flex-start'
+            clonedElement.style.borderRadius = '0'
+            
+            // 处理所有子元素，确保没有溢出隐藏
+            const allElements = clonedElement.querySelectorAll('*')
+            allElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.style.overflow = 'visible'
+              }
+            })
+          }
+
+          // 处理外层容器
+          const wrapperElement = clonedDoc.querySelector('[class*="contractContentWrapper"]') as HTMLElement
+          if (wrapperElement) {
+            wrapperElement.style.background = '#ffffff'
+            wrapperElement.style.padding = '0'
+            wrapperElement.style.borderRadius = '0'
+            wrapperElement.style.boxShadow = 'none'
+            wrapperElement.style.overflow = 'visible'
           }
 
           // 确保合同组件本身也居中
           const agreementElement = clonedDoc.querySelector('.product-service-agreement')
-          const accountingElement = clonedDoc.querySelector('.agency-accounting-agreement-view')
-
           if (agreementElement instanceof HTMLElement) {
             agreementElement.style.margin = '0 auto'
             agreementElement.style.display = 'block'
+            agreementElement.style.pageBreakInside = 'avoid'
           }
 
+          const accountingElement = clonedDoc.querySelector('.agency-accounting-agreement-view')
           if (accountingElement instanceof HTMLElement) {
             accountingElement.style.margin = '0 auto'
             accountingElement.style.display = 'block'
+            accountingElement.style.pageBreakInside = 'avoid'
+          }
+          
+          const serviceElement = clonedDoc.querySelector('.single-service-agreement-view')
+          if (serviceElement instanceof HTMLElement) {
+            serviceElement.style.margin = '0 auto'
+            serviceElement.style.display = 'block'
+            serviceElement.style.pageBreakInside = 'avoid'
           }
         },
       })
@@ -110,7 +146,7 @@ const ContractDetail: React.FC = () => {
           }
         },
         'image/png',
-        0.9
+        0.95 // 增加质量参数
       )
     } catch (error) {
       console.error('导出合同图片失败:', error)
@@ -317,11 +353,12 @@ const ContractDetail: React.FC = () => {
 
       {/* 合同内容区域 */}
       <div
-        className="contract-content-wrapper"
-        style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}
+        className={styles.contractContentWrapper}
         ref={contractContentRef}
       >
-        {renderContractContent()}
+        <div className={styles.contractContentInner}>
+          {renderContractContent()}
+        </div>
       </div>
     </div>
   )

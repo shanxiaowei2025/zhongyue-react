@@ -443,18 +443,6 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         </div>
       </div>
 
-      {contractSignature && (
-        <div className={styles.contractSignature}>
-          <div className={styles.signatureTitle}>电子签名</div>
-          <div className={styles.signatureImage}>
-            <img src={contractSignature} alt="电子签名" />
-          </div>
-          <div className={styles.signatureStatus}>
-            <Tag color="success">已签署</Tag>
-          </div>
-        </div>
-      )}
-
       <div className={styles.agreementSignatures}>
         <div className={styles.signatureContainer}>
           {/* 签名标题行 */}
@@ -471,8 +459,22 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
           <div className={styles.signatureStampRow}>
             <div className={styles.signatureStampColumn}>
               <div className={styles.signatureStampSpace}>
-                {/* 甲方签字区域 */}
-                {contractData.partyAStampImage ? (
+                {/* 甲方签字区域 - 修改这里展示电子签名 */}
+                {contractData.contractSignature ? (
+                  <div className={styles.stampPreview}>
+                    <img
+                      src={contractData.contractSignature}
+                      alt="甲方签字"
+                      className={styles.stampImage}
+                      style={{
+                        maxWidth: '150px',
+                        maxHeight: '80px',
+                        display: 'block',
+                        margin: '10px 0',
+                      }}
+                    />
+                  </div>
+                ) : contractData.partyAStampImage ? (
                   <div className={styles.stampPreview}>
                     <img
                       src={contractData.partyAStampImage}

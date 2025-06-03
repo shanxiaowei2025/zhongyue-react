@@ -290,29 +290,34 @@
 }
 
 .signatureArea {
-  width: 120px;
-  height: 60px;
+  height: 90px;
+  border: 1px dashed #ccc;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
+  align-items: center;
+  position: relative;
 }
 
 .signatureArea.signed {
+  border-color: #d9d9d9;
+}
+
+.signatureArea.unsigned {
+  border-style: dashed;
+}
+
+/* 乙方签名区域去掉边框 */
+.signatureColumn:last-child .signatureArea {
   border: none;
   background: transparent;
 }
 
-.signatureArea.unsigned {
-  background: #fafafa;
-  border: 1px dashed #999;
-}
-
 .stampImage {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
+  max-width: 150px;
+  max-height: 80px;
 }
 
 .signatureDateRow {

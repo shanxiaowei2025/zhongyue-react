@@ -532,17 +532,31 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           <div className={styles.signatureRow}>
             <div className={styles.signatureColumn}>
               <div
-                className={`${styles.signatureItem} ${contractData.partyAStampImage ? styles.signed : styles.unsigned}`}
+                className={`${styles.signatureItem} ${
+                  contractData.contractSignature || contractData.partyAStampImage ? styles.signed : styles.unsigned
+                }`}
               >
                 <span className={styles.signatureTitle}>（甲方盖章）：</span>
                 <div className={styles.signatureArea}>
-                  {contractData.partyAStampImage && (
+                  {contractData.contractSignature ? (
+                    <img
+                      src={contractData.contractSignature}
+                      alt="甲方签名"
+                      className={styles.stampImage}
+                      style={{
+                        maxWidth: '150px',
+                        maxHeight: '80px',
+                        display: 'block',
+                        margin: '10px 0',
+                      }}
+                    />
+                  ) : contractData.partyAStampImage ? (
                     <img
                       src={contractData.partyAStampImage}
                       alt="甲方盖章"
                       className={styles.stampImage}
                     />
-                  )}
+                  ) : null}
                 </div>
               </div>
               <div className={styles.signatureDateRow}>

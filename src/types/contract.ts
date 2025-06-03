@@ -64,6 +64,7 @@ export interface Contract {
   paymentMethod?: string
   contractStatus?: ContractStatus
   contractSignature?: string
+  contractImage?: string
   createTime: string
   updateTime: string
   submitter?: string
@@ -146,7 +147,9 @@ export interface CreateContractDto {
 }
 
 // 更新合同DTO
-export interface UpdateContractDto extends CreateContractDto {}
+export interface UpdateContractDto extends CreateContractDto {
+  contractImage?: string
+}
 
 // 签署合同DTO
 export interface SignContractDto {

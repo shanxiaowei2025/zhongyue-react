@@ -1,4 +1,5 @@
 import request from './request'
+import { publicRequest } from './request'
 import type {
   Contract,
   ContractQueryParams,
@@ -35,6 +36,30 @@ export const deleteContract = (id: number) => {
 }
 
 // 签署合同
-export const signContract = (id: number, data: SignContractDto) => {
-  return request.post<ApiResponse<Contract>>(`/contract/${id}/sign`, data)
+export const signContract = (id: number, data: { signature: string }) => {
+  return request.post(`/contract/${id}/sign`, data)
+}
+
+// 生成合同临时token
+export const generateContractToken = (contractId: number) => {
+  return request.get(`/contract-token?id=${contractId}`)
+}
+
+// 验证token有效性
+export const validateContractToken = (token: string) => {
+  return publicRequest.get(`/contract-token/validate/${token}`)
+}
+
+// 获取合同图片（通过token）
+export const getContractImageByToken = (token: string) => {
+  return publicRequest.get(`/contract-token/image?token=${token}`)
+}
+
+// 保存合同签名（通过token）
+export const saveContractSignature = (data: {
+  contractId: number
+  token: string
+  signatureUrl: string
+}) => {
+  return publicRequest.post('/contract-token/signature', data)
 }

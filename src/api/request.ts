@@ -199,4 +199,53 @@ const request = {
   },
 }
 
+// 创建不需要认证的axios实例（用于合同token相关API）
+const publicInstance = axios.create({
+  baseURL: apiBaseUrl,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// 公共实例的响应拦截器（不处理401认证错误）
+publicInstance.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // 如果是blob类型，直接返回响应
+    if (response.config.responseType === 'blob') {
+      return response
+    }
+
+    console.log('公共API响应:', response.data)
+
+    const res = response.data as ApiResponse<unknown>
+
+    // 后端接口返回的code不为0表示业务逻辑错误
+    if (res.code !== 0) {
+      console.warn('公共API业务逻辑错误:', res)
+      // 对于公共API，不显示错误信息，让调用方处理
+      return Promise.reject(new Error(res.message || '请求失败'))
+    }
+
+    return response
+  },
+  error => {
+    console.error('公共API错误:', error)
+    // 对于公共API，不处理401认证错误，直接返回错误
+    return Promise.reject(error)
+  }
+)
+
+// 不需要认证的请求方法
+export const publicRequest = {
+  get<T>(url: string, params?: object): Promise<T> {
+    return publicInstance.get(url, { params }).then(res => res.data)
+  },
+  post<T>(url: string, data?: object): Promise<T> {
+    const config =
+      data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    return publicInstance.post(url, data, config).then(res => res.data)
+  },
+}
+
 export default request

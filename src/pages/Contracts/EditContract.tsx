@@ -13,6 +13,7 @@ import AgencyAccountingAgreement, {
 import SingleServiceAgreement, {
   type SingleServiceAgreementRef,
 } from '../../components/contracts/SingleServiceAgreement'
+import styles from './EditContract.module.css'
 
 const EditContract: React.FC = () => {
   const navigate = useNavigate()
@@ -283,11 +284,10 @@ const EditContract: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <div
-        className="contract-content-wrapper"
-        style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}
-      >
-        {renderContractContent()}
+      <div className={styles.contractContentWrapper}>
+        <div className={styles.contractContentInner}>
+          {renderContractContent()}
+        </div>
       </div>
     </div>
   )
