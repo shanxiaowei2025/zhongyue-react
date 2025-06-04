@@ -346,10 +346,26 @@
 
 .cost-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
   margin-bottom: 10px;
-  flex-wrap: wrap;
+}
+
+.cost-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  width: 100%;
+  margin-bottom: 8px;
+  overflow: visible;
+}
+
+.cost-amount-row span {
+  font-size: 13px;
+  font-weight: bold;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  display: inline-block;
 }
 
 .cost-row span {
@@ -365,13 +381,16 @@
   background: transparent;
   padding: 4px 8px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 .amount-label {
-  margin-left: 20px;
+  margin-left: 10px;
+  margin-right: 5px;
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  white-space: nowrap;
 }
 
 .amount-text-input {
@@ -382,17 +401,21 @@
   background: transparent;
   padding: 4px 8px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 .cost-remark {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 5px;
+  flex-wrap: wrap;
 }
 
 .cost-remark span {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: bold;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
@@ -404,7 +427,8 @@
   background: transparent;
   padding: 4px 8px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 /* 付款方式、权利义务等各部分 */
@@ -876,6 +900,24 @@
   color: #000 !important;
 }
 
+/* 服务项目文本样式 */
+.service-items-text {
+  display: inline-block;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  line-height: 1.8;
+}
+
+.service-item-name {
+  font-weight: 500;
+  color: #000;
+}
+
+.service-item-separator {
+  margin: 0 3px;
+  color: #000;
+}
+
 /* 盖章区域样式 */
 .stamp-preview {
   background: transparent;
@@ -996,4 +1038,27 @@
 .contract-content-wrapper .product-service-agreement {
   flex-shrink: 0;
   position: relative;
+}
+
+/* 费用总计部分的样式 */
+.total-cost .cost-amount-row span,
+.total-cost .cost-remark span {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* 费用总计输入框样式 */
+.total-cost .amount-input,
+.total-cost .amount-text-input,
+.total-cost .remark-long-input {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* 详情视图中的费用总计和大写金额值 */
+.product-service-agreement .amount-value,
+.product-service-agreement .amount-text-value,
+.product-service-agreement .remark-value {
+  font-size: 13px;
+  font-weight: bold;
 }

@@ -151,14 +151,17 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
     }
 
     return (
-      <div className="flex flex-wrap gap-2">
+      <span className="service-items-text">
         {items.map((item, index) => (
-          <Tag key={index} color="default">
-            {getItemName(item.itemKey) || item.itemName}
-            {item.amount ? ` (${item.amount}元)` : ''}
-          </Tag>
+          <React.Fragment key={index}>
+            <span className="service-item-name">
+              {getItemName(item.itemKey) || item.itemName}
+              {item.amount ? ` (${item.amount}元)` : ''}
+            </span>
+            {index < items.length - 1 && <span className="service-item-separator">；</span>}
+          </React.Fragment>
         ))}
-      </div>
+      </span>
     )
   }
 
@@ -376,18 +379,20 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         {/* 费用总计 */}
         <div className="total-cost">
           <div className="cost-row">
-            <span>费用总计（人民币）：</span>
-            <span className="amount-value">{contractData.totalCost || '-'}</span>
-            <span>元</span>
-            <span className="amount-label">大写金额（人民币）：</span>
-            <span className="amount-text-value">
-              {numberToChinese(contractData.totalCost || 0)}
-            </span>
-            <span>。</span>
+            <div className="cost-amount-row">
+              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>费用总计（人民币）：</span>
+              <span className="amount-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>{contractData.totalCost || '-'}</span>
+              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>元</span>
+              <span className="amount-label" style={{ fontSize: '13px', fontWeight: 'bold' }}>大写金额（人民币）：</span>
+              <span className="amount-text-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                {numberToChinese(contractData.totalCost || 0)}
+              </span>
+              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>。</span>
+            </div>
           </div>
           <div className="cost-remark">
-            <span>备注：</span>
-            <span className="remark-value">{contractData.otherRemark || '-'}</span>
+            <span style={{ fontSize: '13px', fontWeight: 'bold' }}>备注：</span>
+            <span className="remark-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>{contractData.otherRemark || '-'}</span>
           </div>
         </div>
       </div>

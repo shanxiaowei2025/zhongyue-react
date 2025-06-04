@@ -1105,24 +1105,27 @@ const ProductServiceAgreement = forwardRef<
           {/* 费用总计 */}
           <div className="total-cost">
             <div className="cost-row">
-              <span>费用总计（人民币）：</span>
-              <Input
-                className="amount-input required"
-                placeholder="必填"
-                value={amountDisplayValues.totalCost || ''}
-                onChange={e => handleFormAmountChange('totalCost', e.target.value)}
-                onBlur={e => handleFormAmountBlur('totalCost', e.target.value)}
-              />
-              <span>元</span>
-              <span className="amount-label">大写金额（人民币）：</span>
-              <Input
-                className="amount-text-input"
-                placeholder="自动根据费用总计生成"
-                value={totalCostInWords}
-                readOnly
-                style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
-              />
-              <span>。</span>
+              <div className="cost-amount-row">
+                <span>费用总计（人民币）：</span>
+                <Input
+                  className="amount-input required"
+                  placeholder="必填"
+                  value={amountDisplayValues.totalCost || ''}
+                  onChange={e => handleFormAmountChange('totalCost', e.target.value)}
+                  onBlur={e => handleFormAmountBlur('totalCost', e.target.value)}
+                  style={{ fontSize: '13px', fontWeight: 'bold' }}
+                />
+                <span>元</span>
+                <span className="amount-label">大写金额（人民币）：</span>
+                <Input
+                  className="amount-text-input"
+                  placeholder="自动根据费用总计生成"
+                  value={totalCostInWords}
+                  readOnly
+                  style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', fontSize: '13px', fontWeight: 'bold' }}
+                />
+                <span>。</span>
+              </div>
             </div>
             <div className="cost-remark">
               <span>备注：</span>
@@ -1130,6 +1133,7 @@ const ProductServiceAgreement = forwardRef<
                 className="remark-long-input"
                 value={formData.otherRemark || ''}
                 onChange={e => handleFormChange('otherRemark', e.target.value)}
+                style={{ fontSize: '13px', fontWeight: 'bold' }}
               />
             </div>
           </div>

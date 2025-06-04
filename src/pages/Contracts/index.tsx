@@ -43,7 +43,6 @@ import {
   generateContractToken,
 } from '../../api/contract'
 import SignatureCanvas from '../../components/contracts/SignatureCanvas'
-import ContractPreviewModal from '../../components/contracts/ContractPreviewModal'
 
 // 添加样式来隔离签署模态框
 const modalStyle = `
@@ -152,10 +151,6 @@ const Contracts: React.FC = () => {
   const [createStep, setCreateStep] = useState(0)
   const [selectedSignatory, setSelectedSignatory] = useState<string>('')
   const [selectedContractType, setSelectedContractType] = useState<string>('')
-  
-  // 签署链接预览模态框状态
-  const [previewModalVisible, setPreviewModalVisible] = useState(false)
-  const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
 
   // 添加样式隔离
   useEffect(() => {
@@ -435,9 +430,8 @@ const Contracts: React.FC = () => {
 
   // 生成签署链接
   const handleGenerateSignLink = async (record: Contract) => {
-    // 设置选中合同ID并显示预览模态框
-    setSelectedContractId(record.id)
-    setPreviewModalVisible(true)
+    // 不再打开模态框，直接跳转到合同详情页面
+    navigate(`/contracts/detail/${record.id}?generateLink=true`)
   }
 
   // 格式化日期
@@ -773,18 +767,6 @@ const Contracts: React.FC = () => {
           )}
         </div>
       </Modal>
-
-      {/* 签署链接预览模态框 */}
-      {selectedContractId && (
-        <ContractPreviewModal
-          visible={previewModalVisible}
-          onClose={() => {
-            setPreviewModalVisible(false)
-            setSelectedContractId(null)
-          }}
-          contractId={selectedContractId}
-        />
-      )}
     </div>
   )
 }
