@@ -274,9 +274,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
             </div>
             {contractData.businessEstablishmentAddress && (
               <div className="service-description">
-                <span>在</span>
+                <span>在 </span>
                 <span className="location-value">{contractData.businessEstablishmentAddress}</span>
-                <span>为甲方代办工商营业执照。</span>
+                <span> 为甲方代办工商营业执照。</span>
               </div>
             )}
           </div>
@@ -609,56 +609,77 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
       {/* 签署区域 */}
       <div className="signature-section">
         <div className="signature-row">
+          {/* 甲方签署列 */}
           <div className="signature-column">
-            <div className="signature-item">
-              <span>（甲方盖章）：</span>
-              <div
-                className={`signature-area ${contractData.partyAStampImage ? 'signed' : 'unsigned'}`}
-              >
-                {contractData.partyAStampImage && (
+            <div className="signature-block">
+              <div className="signature-item">
+                <span>（甲方盖章）：</span>
+                <div
+                  className={`signature-area ${contractData.contractSignature || contractData.partyAStampImage ? 'signed' : 'unsigned'}`}
+                >
+                  {contractData.contractSignature ? (
+                    <div className="stamp-preview">
+                      <img
+                        src={contractData.contractSignature}
+                        alt="甲方签名"
+                        className="stamp-image"
+                        style={{
+                          maxWidth: '150px',
+                          maxHeight: '80px',
+                          display: 'block',
+                          margin: '10px 0',
+                        }}
+                      />
+                    </div>
+                  ) : contractData.partyAStampImage ? (
+                    <div className="stamp-preview">
+                      <img
+                        src={contractData.partyAStampImage}
+                        alt="甲方盖章"
+                        className="stamp-image"
+                        style={{
+                          maxWidth: '150px',
+                          maxHeight: '80px',
+                          display: 'block',
+                          margin: '10px 0',
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              <div className="date-item">
+                <span>日期：</span>
+                <span className="date-value">{formatDate(contractData.partyASignDate)}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* 乙方签署列 */}
+          <div className="signature-column">
+            <div className="signature-block">
+              <div className="signature-item">
+                <span>（乙方盖章）：</span>
+                <div className="signature-area signed">
                   <div className="stamp-preview">
                     <img
-                      src={contractData.partyAStampImage}
-                      alt="甲方盖章"
+                      src={getPartyBStampImage(contractData.signatory || '')}
+                      alt="乙方盖章"
                       className="stamp-image"
                       style={{
-                        maxWidth: '150px',
-                        maxHeight: '80px',
+                        maxWidth: '130px',
+                        maxHeight: '130px',
                         display: 'block',
-                        margin: '10px 0',
+                        margin: '-25px 0 -10px 0',
                       }}
                     />
                   </div>
-                )}
-              </div>
-            </div>
-            <div className="date-item">
-              <span>日期：</span>
-              <span className="date-value">{formatDate(contractData.partyASignDate)}</span>
-            </div>
-          </div>
-          <div className="signature-column">
-            <div className="signature-item">
-              <span>（乙方盖章）：</span>
-              <div className="signature-area signed">
-                <div className="stamp-preview">
-                  <img
-                    src={getPartyBStampImage(contractData.signatory || '')}
-                    alt="乙方盖章"
-                    className="stamp-image"
-                    style={{
-                      maxWidth: '130px',
-                      maxHeight: '130px',
-                      display: 'block',
-                      margin: '-25px 0 -10px 0',
-                    }}
-                  />
                 </div>
               </div>
-            </div>
-            <div className="date-item">
-              <span>日期：</span>
-              <span className="date-value">{formatDate(contractData.partyBSignDate)}</span>
+              <div className="date-item">
+                <span>日期：</span>
+                <span className="date-value">{formatDate(contractData.partyBSignDate)}</span>
+              </div>
             </div>
           </div>
         </div>

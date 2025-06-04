@@ -81,7 +81,6 @@
 
 .partyHeader {
   display: flex;
-  align-items: center;
   margin-bottom: 12px;
   gap: 10px;
 }
@@ -106,7 +105,6 @@
 
 .detailRow {
   display: flex;
-  align-items: center;
   margin-bottom: 8px;
   gap: 10px;
 }
@@ -175,7 +173,6 @@
 /* 备注行 */
 .remarkRow {
   display: flex;
-  align-items: center;
   margin-bottom: 10px;
   gap: 10px;
 }
@@ -197,9 +194,12 @@
 /* 费用行 */
 .feeRow {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  margin-bottom: 20px;
   gap: 15px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .feeLabel {
@@ -208,19 +208,22 @@
   flex-shrink: 0;
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  white-space: nowrap;
 }
 
 .feeAmount {
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  white-space: nowrap;
+  margin-right: 20px;
 }
 
 .feeWords {
-  margin-left: 20px;
   font-size: 12px;
   font-weight: bold;
   color: #000;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  white-space: nowrap;
 }
 
 /* 合同条款 */
@@ -306,7 +309,8 @@
 }
 
 .signatureArea.unsigned {
-  border-style: dashed;
+  background: #fafafa;
+  border: 1px dashed #999;
 }
 
 /* 乙方签名区域去掉边框 */
@@ -478,9 +482,11 @@
   }
 
   .feeRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
   }
 
   .contractSignatures {
@@ -526,4 +532,23 @@
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
   line-height: 1.6;
+}
+
+/* 签名区盖章占位 */
+.stampPlaceholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  color: #bbb;
+  font-size: 12px;
+  background: #fafafa;
+}
+
+.stampPlaceholder p {
+  margin: 0;
+  padding: 0;
+  color: #bbb;
+  font-style: italic;
 }

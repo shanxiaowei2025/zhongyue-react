@@ -708,14 +708,14 @@ const ProductServiceAgreement = forwardRef<
                 {renderCheckboxWithAmount('business_establish_self_employed', '个体工商户')}
               </div>
               <div className="service-description">
-                <span>在</span>
+                <span>在 </span>
                 <Input
                   className="location-input"
                   placeholder="请输入地点"
                   value={formData.businessEstablishmentAddress || ''}
                   onChange={e => handleFormChange('businessEstablishmentAddress', e.target.value)}
                 />
-                <span>为甲方代办工商营业执照。</span>
+                <span> 为甲方代办工商营业执照。</span>
               </div>
             </div>
 
@@ -1351,71 +1351,78 @@ const ProductServiceAgreement = forwardRef<
         {/* 签署区域 */}
         <div className="signature-section">
           <div className="signature-row">
+            {/* 甲方签署列 */}
             <div className="signature-column">
-              <div className="signature-item">
-                <span>（甲方盖章）：</span>
-                <div
-                  className={`signature-area ${formData.partyAStampImage ? 'signed' : 'unsigned'}`}
-                >
-                  {formData.partyAStampImage ? (
-                    <div className="stamp-preview">
-                      <img
-                        src={formData.partyAStampImage}
-                        alt="甲方盖章"
-                        className="stamp-image"
-                        style={{
-                          maxWidth: '150px',
-                          maxHeight: '80px',
-                          display: 'block',
-                          margin: '10px 0',
-                        }}
-                      />
-                      <p className="signed-note">签名图片已通过签署功能自动生成</p>
-                    </div>
-                  ) : (
-                    <div className="stamp-placeholder">
-                      <p className="text-sm text-gray-400">请通过"签署合同"功能生成甲方盖章</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="date-item">
-                <span>日期：</span>
-                <DatePicker
-                  placeholder="选择日期"
-                  format="YYYY年MM月DD日"
-                  value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
-                  onChange={date => handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))}
-                />
-              </div>
-            </div>
-            <div className="signature-column">
-              <div className="signature-item">
-                <span>（乙方盖章）：</span>
-                <div className="signature-area signed">
-                  <div className="stamp-preview">
-                    <img
-                      src={getPartyBStampImage(signatory)}
-                      alt="乙方盖章"
-                      className="stamp-image"
-                      style={{
-                        maxWidth: '130px',
-                        maxHeight: '130px',
-                        display: 'block',
-                        margin: '-25px 0 -10px 0',
-                      }}
-                    />
+              <div className="signature-block">
+                <div className="signature-item">
+                  <span>（甲方盖章）：</span>
+                  <div
+                    className={`signature-area ${formData.partyAStampImage ? 'signed' : 'unsigned'}`}
+                  >
+                    {formData.partyAStampImage ? (
+                      <div className="stamp-preview">
+                        <img
+                          src={formData.partyAStampImage}
+                          alt="甲方盖章"
+                          className="stamp-image"
+                          style={{
+                            maxWidth: '150px',
+                            maxHeight: '80px',
+                            display: 'block',
+                            margin: '10px 0',
+                          }}
+                        />
+                        <p className="signed-note">签名图片已通过签署功能自动生成</p>
+                      </div>
+                    ) : (
+                      <div className="stamp-placeholder">
+                        <p className="text-sm text-gray-400">请通过"签署合同"功能生成甲方盖章</p>
+                      </div>
+                    )}
                   </div>
                 </div>
+                <div className="date-item">
+                  <span>日期：</span>
+                  <DatePicker
+                    placeholder="选择日期"
+                    format="YYYY年MM月DD日"
+                    value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
+                    onChange={date => handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))}
+                  />
+                </div>
               </div>
-              <div className="date-item">
-                <span>日期：</span>
-                <DatePicker
-                  placeholder="选择日期"
-                  format="YYYY年MM月DD日"
-                  value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
-                  onChange={date => handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))}
-                />
+            </div>
+            
+            {/* 乙方签署列 */}
+            <div className="signature-column">
+              <div className="signature-block">
+                <div className="signature-item">
+                  <span>（乙方盖章）：</span>
+                  <div className="signature-area signed">
+                    <div className="stamp-preview">
+                      <img
+                        src={getPartyBStampImage(signatory)}
+                        alt="乙方盖章"
+                        className="stamp-image"
+                        style={{
+                          maxWidth: '130px',
+                          maxHeight: '130px',
+                          display: 'block',
+                          margin: '-25px 0 -10px 0',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="date-item">
+                  <span>日期：</span>
+                  <DatePicker
+                    placeholder="选择日期"
+                    format="YYYY年MM月DD日"
+                    value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
+                    onChange={date => handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))}
+                  />
+                </div>
               </div>
             </div>
           </div>

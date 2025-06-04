@@ -703,7 +703,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 </div>
 
                 <div className={styles.addressField}>
-                  <span>在</span>
+                  <span>在 </span>
                   <Input
                     className={styles.addressInput}
                     placeholder="请输入地址"
@@ -711,7 +711,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                     onChange={e => handleFormChange('businessEstablishmentAddress', e.target.value)}
                     bordered={false}
                   />
-                  <span>为甲方代办工商营业执照。</span>
+                  <span> 为甲方代办工商营业执照。</span>
                 </div>
 
                 <div className={styles.serviceItemGroup}>

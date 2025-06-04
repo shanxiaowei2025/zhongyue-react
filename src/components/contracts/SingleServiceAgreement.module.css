@@ -81,7 +81,6 @@
 
 .partyHeader {
   display: flex;
-  align-items: center;
   margin-bottom: 12px;
   gap: 10px;
 }
@@ -106,7 +105,6 @@
 
 .detailRow {
   display: flex;
-  align-items: center;
   margin-bottom: 8px;
   gap: 10px;
 }
@@ -196,7 +194,6 @@
 /* 备注行 */
 .remarkRow {
   display: flex;
-  align-items: center;
   margin-bottom: 10px;
   gap: 10px;
 }
@@ -299,7 +296,7 @@
   display: flex;
   flex-direction: column;
   width: 48%;
-  gap: 45px;
+  gap: 15px;
 }
 
 .signatureItem {

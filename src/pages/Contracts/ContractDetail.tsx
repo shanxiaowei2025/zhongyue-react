@@ -200,12 +200,95 @@ const ContractDetail: React.FC = () => {
           const partyCompanyName = header.querySelector('.party-company-name')
           if (partyCompanyName instanceof HTMLElement) {
             partyCompanyName.style.display = 'inline-block'
-            partyCompanyName.style.whiteSpace = 'nowrap'
+            partyCompanyName.style.whiteSpace = 'normal'
+            partyCompanyName.style.wordBreak = 'break-word'
+            partyCompanyName.style.wordWrap = 'break-word'
+            partyCompanyName.style.maxWidth = '450px'
             partyCompanyName.style.overflow = 'visible'
-            partyCompanyName.style.textOverflow = 'ellipsis'
+            partyCompanyName.style.textOverflow = 'clip'
+            partyCompanyName.style.lineHeight = '1.5'
           }
         }
       })
+      
+      // 确保详情描述区域也能自动换行
+      const detailRows = element.querySelectorAll('.detail-row');
+      detailRows.forEach(row => {
+        if (row instanceof HTMLElement) {
+          row.style.display = 'flex';
+          row.style.flexDirection = 'row';
+          row.style.alignItems = 'flex-start';
+          row.style.flexWrap = 'wrap';
+          row.style.marginBottom = '10px';
+          row.style.gap = '10px';
+          row.style.width = '100%';
+          
+          // 处理标签
+          const detailLabel = row.querySelector('.detail-label');
+          if (detailLabel instanceof HTMLElement) {
+            detailLabel.style.display = 'inline-block';
+            detailLabel.style.minWidth = '80px';
+            detailLabel.style.flexShrink = '0';
+            detailLabel.style.fontSize = '12px';
+            detailLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
+          }
+          
+          // 处理值
+          const detailValue = row.querySelector('.detail-value');
+          if (detailValue instanceof HTMLElement) {
+            detailValue.style.display = 'inline-block';
+            detailValue.style.fontSize = '12px';
+            detailValue.style.color = '#333';
+            detailValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
+            detailValue.style.wordBreak = 'break-word';
+            detailValue.style.wordWrap = 'break-word';
+            detailValue.style.whiteSpace = 'normal';
+            detailValue.style.flexGrow = '1';
+            detailValue.style.maxWidth = 'calc(100% - 100px)'; // 100px = 标签宽度 + 间距
+          }
+        }
+      });
+      
+      // 处理联系人信息区域
+      const contactRows = element.querySelectorAll('.contact-row');
+      contactRows.forEach(row => {
+        if (row instanceof HTMLElement) {
+          row.style.display = 'flex';
+          row.style.flexWrap = 'wrap';
+          row.style.gap = '30px';
+          
+          // 处理每个联系项
+          const contactItems = row.querySelectorAll('.contact-item');
+          contactItems.forEach(item => {
+            if (item instanceof HTMLElement) {
+              item.style.display = 'flex';
+              item.style.alignItems = 'flex-start';
+              item.style.gap = '8px';
+              item.style.marginBottom = '8px';
+              
+              // 处理标签
+              const contactLabel = item.querySelector('.contact-label');
+              if (contactLabel instanceof HTMLElement) {
+                contactLabel.style.whiteSpace = 'nowrap';
+                contactLabel.style.fontSize = '12px';
+                contactLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
+              }
+              
+              // 处理值
+              const contactValue = item.querySelector('.contact-value');
+              if (contactValue instanceof HTMLElement) {
+                contactValue.style.display = 'inline-block';
+                contactValue.style.fontSize = '12px';
+                contactValue.style.color = '#333';
+                contactValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
+                contactValue.style.wordBreak = 'break-word';
+                contactValue.style.wordWrap = 'break-word';
+                contactValue.style.whiteSpace = 'normal';
+              }
+            }
+          });
+        }
+      });
       
       // 设置服务项目样式
       const serviceItemsTexts = element.querySelectorAll('.service-items-text')
@@ -256,11 +339,27 @@ const ContractDetail: React.FC = () => {
       // 确定要截图的元素
       let targetElement: HTMLElement = contractContentRef.current
       
-      // 如果是产品服务协议，则只获取产品服务协议元素
+      // 根据合同类型选择不同的目标元素
       if (contractData.contractType === '产品服务协议') {
         const agreementElement = contractContentRef.current.querySelector('.product-service-agreement')
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
+        }
+      } else if (contractData.contractType === '代理记账合同') {
+        // 通过ID选择代理记账合同视图元素
+        const agreementElement = document.getElementById('agency-accounting-agreement-view')
+        if (agreementElement && agreementElement instanceof HTMLElement) {
+          targetElement = agreementElement
+        } else {
+          console.error('未找到代理记账合同视图元素')
+        }
+      } else if (contractData.contractType === '单项服务合同') {
+        // 通过ID选择单项服务合同视图元素
+        const agreementElement = document.getElementById('single-service-agreement-view')
+        if (agreementElement && agreementElement instanceof HTMLElement) {
+          targetElement = agreementElement
+        } else {
+          console.error('未找到单项服务合同视图元素')
         }
       }
       
@@ -293,218 +392,375 @@ const ContractDetail: React.FC = () => {
               clonedElement.style.pageBreakInside = 'avoid';
               clonedElement.style.paddingBottom = '50px'; // 增加底部填充
               
-              // 修复甲方乙方布局问题
-              const partyHeaders = clonedElement.querySelectorAll('.party-header')
+              // 应用样式修复
+              const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
                 if (header instanceof HTMLElement) {
-                  console.log('修复甲方乙方布局 - 克隆文档')
                   // 确保标签和名称水平对齐
+                  header.style.display = 'flex'
+                  header.style.flexDirection = 'row'
+                  header.style.alignItems = 'flex-start'
+                  header.style.flexWrap = 'wrap'
+                  header.style.whiteSpace = 'normal'
+                  header.style.marginBottom = '12px'
+                  header.style.gap = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '20px'
+                  row.style.gap = '15px'
+                  
+                  // 处理费用标签
+                  const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
+                  feeLabels.forEach(label => {
+                    if (label instanceof HTMLElement) {
+                      label.style.fontWeight = 'bold'
+                      label.style.minWidth = '120px'
+                      label.style.flexShrink = '0'
+                      label.style.whiteSpace = 'nowrap'
+                      label.style.fontSize = '12px'
+                  }
+                  })
+                  
+                  // 处理金额
+                  const feeAmount = row.querySelector('[class*="feeAmount"]')
+                  if (feeAmount instanceof HTMLElement) {
+                    feeAmount.style.whiteSpace = 'nowrap'
+                    feeAmount.style.marginRight = '20px'
+                    feeAmount.style.fontSize = '12px'
+                  }
+                  
+                  // 处理金额大写
+                  const feeWords = row.querySelector('[class*="feeWords"]')
+                  if (feeWords instanceof HTMLElement) {
+                    feeWords.style.whiteSpace = 'nowrap'
+                    feeWords.style.fontWeight = 'bold'
+                    feeWords.style.fontSize = '12px'
+                  }
+                }
+              })
+              
+              // 处理签署区域，确保甲方和乙方盖章区域左右排列
+              const signatureSection = clonedElement.querySelector('.signature-section')
+              if (signatureSection instanceof HTMLElement) {
+                signatureSection.style.margin = '50px 0 30px 0'
+                signatureSection.style.pageBreakInside = 'avoid'
+              }
+              
+              const signatureRow = clonedElement.querySelector('.signature-row')
+              if (signatureRow instanceof HTMLElement) {
+                signatureRow.style.display = 'flex'
+                signatureRow.style.flexDirection = 'row'
+                signatureRow.style.justifyContent = 'space-between'
+                signatureRow.style.alignItems = 'flex-start'
+                signatureRow.style.marginBottom = '20px'
+              }
+              
+              const signatureColumns = clonedElement.querySelectorAll('.signature-column')
+              signatureColumns.forEach(column => {
+                if (column instanceof HTMLElement) {
+                  column.style.display = 'flex'
+                  column.style.flexDirection = 'column'
+                  column.style.width = '48%'
+                }
+              })
+              
+              const signatureBlocks = clonedElement.querySelectorAll('.signature-block')
+              signatureBlocks.forEach(block => {
+                if (block instanceof HTMLElement) {
+                  block.style.display = 'flex'
+                  block.style.flexDirection = 'column'
+                  block.style.gap = '10px'
+                }
+              })
+              
+              const signatureItems = clonedElement.querySelectorAll('.signature-item')
+              signatureItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                  item.style.display = 'flex'
+                  item.style.alignItems = 'center'
+                  item.style.gap = '20px'
+                }
+              })
+              
+              const dateItems = clonedElement.querySelectorAll('.date-item')
+              dateItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                  item.style.display = 'flex'
+                  item.style.alignItems = 'center'
+                  item.style.gap = '10px'
+                }
+              })
+              
+              // 确保盖章区域样式正确
+              const signatureAreas = clonedElement.querySelectorAll('.signature-area')
+              signatureAreas.forEach(area => {
+                if (area instanceof HTMLElement) {
+                  if (area.classList.contains('signed')) {
+                    area.style.border = 'none'
+                    area.style.background = 'transparent'
+                  } else {
+                    area.style.width = '120px'
+                    area.style.height = '60px'
+                    area.style.border = '1px dashed #999'
+                    area.style.background = '#fafafa'
+                  }
+                }
+              })
+              
+              // 确保印章图片样式正确
+              const stampImages = clonedElement.querySelectorAll('.stamp-image')
+              stampImages.forEach(img => {
+                if (img instanceof HTMLElement) {
+                  img.style.display = 'block'
+                  
+                  // 甲方印章和乙方印章可能需要不同的样式
+                  const altText = img.getAttribute('alt') || ''
+                  if (altText.includes('甲方签名')) {
+                    img.style.maxWidth = '150px'
+                    img.style.maxHeight = '80px'
+                    img.style.margin = '10px 0'
+                  } else if (altText.includes('甲方')) {
+                    img.style.maxWidth = '150px'
+                    img.style.maxHeight = '80px'
+                    img.style.margin = '10px 0'
+                  } else if (altText.includes('乙方')) {
+                    img.style.maxWidth = '130px'
+                    img.style.maxHeight = '130px'
+                    img.style.margin = '-25px 0 -10px 0'
+                  }
+                }
+              })
+            }
+          } else if (contractData.contractType === '代理记账合同') {
+            // 通过ID选择代理记账合同视图元素
+            const element = clonedDoc.getElementById('agency-accounting-agreement-view')
+            if (element instanceof HTMLElement) {
+              clonedElement = element
+                  
+              // 应用样式修复
+              const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
+              partyHeaders.forEach(header => {
+                if (header instanceof HTMLElement) {
+                  // 确保标签和名称水平对齐
+                  header.style.display = 'flex'
+                  header.style.flexDirection = 'row'
+                  header.style.alignItems = 'flex-start'
+                  header.style.flexWrap = 'wrap'
+                  header.style.whiteSpace = 'normal'
+                  header.style.marginBottom = '12px'
+                  header.style.gap = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '20px'
+                  row.style.gap = '15px'
+                  
+                  // 处理费用标签
+                  const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
+                  feeLabels.forEach(label => {
+                    if (label instanceof HTMLElement) {
+                      label.style.fontWeight = 'bold'
+                      label.style.minWidth = '120px'
+                      label.style.flexShrink = '0'
+                      label.style.whiteSpace = 'nowrap'
+                      label.style.fontSize = '12px'
+                }
+              })
+              
+                  // 处理金额
+                  const feeAmount = row.querySelector('[class*="feeAmount"]')
+                  if (feeAmount instanceof HTMLElement) {
+                    feeAmount.style.whiteSpace = 'nowrap'
+                    feeAmount.style.marginRight = '20px'
+                    feeAmount.style.fontSize = '12px'
+                  }
+                  
+                  // 处理金额大写
+                  const feeWords = row.querySelector('[class*="feeWords"]')
+                  if (feeWords instanceof HTMLElement) {
+                    feeWords.style.whiteSpace = 'nowrap'
+                    feeWords.style.fontWeight = 'bold'
+                    feeWords.style.fontSize = '12px'
+                  }
+                }
+              })
+            }
+          } else if (contractData.contractType === '单项服务合同') {
+            // 通过ID选择单项服务合同视图元素
+            const element = clonedDoc.getElementById('single-service-agreement-view')
+            if (element instanceof HTMLElement) {
+              clonedElement = element
+              
+              // 修复合同标题样式
+              const contractTitle = clonedElement.querySelector('[class*="contractTitle"]')
+              if (contractTitle instanceof HTMLElement) {
+                contractTitle.style.textAlign = 'center'
+                contractTitle.style.margin = '20px 0'
+                contractTitle.style.fontSize = '18px'
+                contractTitle.style.fontWeight = 'bold'
+              }
+              
+              // 修复甲方乙方信息样式
+              const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
+              partyHeaders.forEach(header => {
+                if (header instanceof HTMLElement) {
+                  // 确保标签和名称水平对齐在同一行
                   header.style.display = 'flex'
                   header.style.flexDirection = 'row'
                   header.style.alignItems = 'center'
                   header.style.flexWrap = 'nowrap'
-                  header.style.whiteSpace = 'nowrap'
-                  header.style.marginBottom = '12px'
-                  header.style.gap = '10px'
-                  
-                  // 调整标签宽度和间距
-                  const partyLabel = header.querySelector('.party-label')
-                  if (partyLabel instanceof HTMLElement) {
-                    partyLabel.style.display = 'inline-block'
-                    partyLabel.style.whiteSpace = 'nowrap'
-                    partyLabel.style.marginRight = '5px'
-                    partyLabel.style.minWidth = '130px' // 确保有足够空间容纳文字和括号
-                    partyLabel.style.flexShrink = '0'
-                    partyLabel.style.letterSpacing = '0.5px' // 增加字母间距，防止重叠
-                  }
-                  
-                  // 确保公司名称在同一行
-                  const partyCompanyName = header.querySelector('.party-company-name')
-                  if (partyCompanyName instanceof HTMLElement) {
-                    partyCompanyName.style.display = 'inline-block'
-                    partyCompanyName.style.whiteSpace = 'nowrap'
-                    partyCompanyName.style.overflow = 'visible'
-                    partyCompanyName.style.textOverflow = 'ellipsis'
+                  header.style.marginBottom = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 修复甲方乙方标签和公司名称样式
+              const partyLabels = clonedElement.querySelectorAll('[class*="partyLabel"]')
+              partyLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                }
+              })
+              
+              const partyCompanyNames = clonedElement.querySelectorAll('[class*="partyCompanyName"]')
+              partyCompanyNames.forEach(name => {
+                if (name instanceof HTMLElement) {
+                  name.style.display = 'inline-block'
+                  name.style.whiteSpace = 'normal'
+                  name.style.fontSize = '12px'
+                }
+              })
+              
+              // 修复明细行样式
+              const detailRows = clonedElement.querySelectorAll('[class*="detailRow"]')
+              detailRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.alignItems = 'center'
+                  row.style.marginBottom = '8px'
+                  row.style.width = '100%'
+                }
+              })
+              
+              // 修复明细标签和值的样式
+              const detailLabels = clonedElement.querySelectorAll('[class*="detailLabel"]')
+              detailLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                }
+              })
+              
+              const detailValues = clonedElement.querySelectorAll('[class*="detailValue"]')
+              detailValues.forEach(value => {
+                if (value instanceof HTMLElement) {
+                  value.style.display = 'inline-block'
+                  value.style.whiteSpace = 'normal'
+                  value.style.fontSize = '12px'
+                  // 保持原有宽度设置
+                  if (!value.style.width) {
+                    value.style.flex = '1'
                   }
                 }
               })
               
-              // 设置服务项目样式
-              const serviceItemsTexts = clonedElement.querySelectorAll('.service-items-text')
-              serviceItemsTexts.forEach(itemsText => {
-                if (itemsText instanceof HTMLElement) {
-                  console.log('应用服务项目文本样式 - 克隆文档')
-                  itemsText.style.display = 'inline-block'
-                  itemsText.style.color = '#000'
-                  itemsText.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
-                  itemsText.style.lineHeight = '1.8'
-                  
-                  // 处理每个项目名称
-                  const itemNames = itemsText.querySelectorAll('.service-item-name')
-                  itemNames.forEach(name => {
-                    if (name instanceof HTMLElement) {
-                      name.style.fontWeight = '500'
-                      name.style.color = '#000'
-                    }
-                  })
-                  
-                  // 处理分隔符
-                  const separators = itemsText.querySelectorAll('.service-item-separator')
-                  separators.forEach(separator => {
-                    if (separator instanceof HTMLElement) {
-                      separator.style.margin = '0 3px'
-                      separator.style.color = '#000'
-                    }
-                  })
+              // 确保所有文本大小一致
+              const allTextElements = clonedElement.querySelectorAll('p, span, div')
+              allTextElements.forEach(el => {
+                if (el instanceof HTMLElement && !el.style.fontSize) {
+                  el.style.fontSize = '12px'
                 }
               })
               
-              // 确保页脚元素可见
-              const footerElement = clonedElement.querySelector('.contract-footer')
-              if (footerElement instanceof HTMLElement) {
-                footerElement.style.display = 'block'
-                footerElement.style.visibility = 'visible'
-                footerElement.style.position = 'relative' // 确保正常文档流
-                footerElement.style.marginTop = '30px'
-                footerElement.style.paddingTop = '20px'
-                footerElement.style.borderTop = '1px solid #ddd'
-                footerElement.style.pageBreakInside = 'avoid'
-                
-                // 确保页脚内的文本元素可见
-                const footerTexts = footerElement.querySelectorAll('p')
-                footerTexts.forEach(p => {
-                  if (p instanceof HTMLElement) {
-                    p.style.display = 'block'
-                    p.style.visibility = 'visible'
-                    p.style.margin = '8px 0'
-                    p.style.fontSize = '12px'
-                    p.style.lineHeight = '1.4'
-                    p.style.color = '#333'
-                    p.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
-                  }
-                })
-              }
-              
-              // 确保签署区域的左右布局
-              const signatureSection = clonedElement.querySelector('.signature-section');
-              if (signatureSection instanceof HTMLElement) {
-                signatureSection.style.marginTop = '50px';
-                signatureSection.style.marginBottom = '30px';
-                signatureSection.style.pageBreakInside = 'avoid';
-              }
-              
-              const signatureRow = clonedElement.querySelector('.signature-row');
-              if (signatureRow instanceof HTMLElement) {
-                signatureRow.style.display = 'flex';
-                signatureRow.style.flexDirection = 'row';
-                signatureRow.style.justifyContent = 'space-between';
-                signatureRow.style.alignItems = 'flex-start';
-                signatureRow.style.marginBottom = '20px';
-                signatureRow.style.width = '100%';
-              }
-              
-              const signatureColumns = clonedElement.querySelectorAll('.signature-column');
-              signatureColumns.forEach((column, index) => {
-                if (column instanceof HTMLElement) {
-                  column.style.display = 'flex';
-                  column.style.flexDirection = 'column';
-                  column.style.width = '48%';
-                  column.style.gap = '45px';
-                  column.style.maxWidth = '48%';
-                  column.style.boxSizing = 'border-box';
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '10px'
+                  row.style.gap = '5px'
                 }
-              });
-
-              // 确保费用总计部分的样式正确
-              const totalCostSection = clonedElement.querySelector('.total-cost');
-              if (totalCostSection instanceof HTMLElement) {
-                console.log('应用费用总计样式');
-                
-                // 设置总体容器样式
-                totalCostSection.style.marginTop = '20px';
-                totalCostSection.style.paddingTop = '15px';
-                totalCostSection.style.borderTop = '1px solid #ddd';
-                
-                // 设置费用金额行样式
-                const costAmountRow = totalCostSection.querySelector('.cost-amount-row');
-                if (costAmountRow instanceof HTMLElement) {
-                  costAmountRow.style.display = 'flex';
-                  costAmountRow.style.alignItems = 'center';
-                  costAmountRow.style.gap = '5px';
-                  costAmountRow.style.flexWrap = 'nowrap';
-                  costAmountRow.style.whiteSpace = 'nowrap';
-                  costAmountRow.style.width = '100%';
-                  costAmountRow.style.marginBottom = '8px';
-                  costAmountRow.style.overflow = 'visible';
-                  
-                  // 确保所有span元素正确显示
-                  const spans = costAmountRow.querySelectorAll('span');
-                  spans.forEach(span => {
-                    if (span instanceof HTMLElement) {
-                      span.style.display = 'inline-block';
-                      span.style.whiteSpace = 'nowrap';
-                      span.style.fontSize = '13px';
-                      span.style.fontWeight = 'bold';
-                      span.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
-                    }
-                  });
-                  
-                  // 特别处理金额标签和金额值
-                  const amountLabel = costAmountRow.querySelector('.amount-label');
-                  if (amountLabel instanceof HTMLElement) {
-                    amountLabel.style.marginLeft = '10px';
-                    amountLabel.style.marginRight = '5px';
-                    amountLabel.style.whiteSpace = 'nowrap';
-                    amountLabel.style.fontSize = '13px';
-                    amountLabel.style.fontWeight = 'bold';
-                  }
-                  
-                  // 处理金额值
-                  const amountValue = costAmountRow.querySelector('.amount-value');
-                  if (amountValue instanceof HTMLElement) {
-                    amountValue.style.fontSize = '13px';
-                    amountValue.style.fontWeight = 'bold';
-                  }
-                  
-                  // 处理大写金额值
-                  const amountTextValue = costAmountRow.querySelector('.amount-text-value');
-                  if (amountTextValue instanceof HTMLElement) {
-                    amountTextValue.style.fontSize = '13px';
-                    amountTextValue.style.fontWeight = 'bold';
-                  }
+              })
+              
+              // 处理费用标签
+              const feeLabels = clonedElement.querySelectorAll('[class*="feeLabel"]')
+              feeLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
                 }
-                
-                // 设置备注行样式
-                const costRemark = totalCostSection.querySelector('.cost-remark');
-                if (costRemark instanceof HTMLElement) {
-                  costRemark.style.display = 'flex';
-                  costRemark.style.alignItems = 'flex-start';
-                  costRemark.style.gap = '5px';
-                  costRemark.style.marginTop = '5px';
-                  costRemark.style.flexWrap = 'wrap';
-                  
-                  // 处理所有span元素
-                  const spans = costRemark.querySelectorAll('span');
-                  spans.forEach(span => {
-                    if (span instanceof HTMLElement) {
-                      span.style.fontSize = '13px';
-                      span.style.fontWeight = 'bold';
-                      span.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
-                    }
-                  });
-                  
-                  // 确保备注内容可以换行
-                  const remarkValue = costRemark.querySelector('.remark-value');
-                  if (remarkValue instanceof HTMLElement) {
-                    remarkValue.style.wordBreak = 'break-word';
-                    remarkValue.style.whiteSpace = 'normal';
-                    remarkValue.style.fontSize = '13px';
-                    remarkValue.style.fontWeight = 'bold';
-                  }
+              })
+              
+              // 处理金额
+              const feeAmounts = clonedElement.querySelectorAll('[class*="feeAmount"]')
+              feeAmounts.forEach(amount => {
+                if (amount instanceof HTMLElement) {
+                  amount.style.whiteSpace = 'nowrap'
+                  amount.style.marginRight = '10px'
+                  amount.style.fontSize = '12px'
+                  amount.style.display = 'inline-block'
                 }
-              }
+              })
+              
+              // 处理金额大写
+              const feeWords = clonedElement.querySelectorAll('[class*="feeWords"]')
+              feeWords.forEach(words => {
+                if (words instanceof HTMLElement) {
+                  words.style.whiteSpace = 'nowrap'
+                  words.style.fontWeight = 'bold'
+                  words.style.fontSize = '12px'
+                  words.style.display = 'inline-block'
+                }
+              })
             }
           } else {
+            // 处理其他合同类型
             const element = clonedDoc.querySelector('[class*="contractContentInner"]')
             if (element instanceof HTMLElement) {
               clonedElement = element
@@ -541,13 +797,6 @@ const ContractDetail: React.FC = () => {
               }
               
               // 确保合同组件本身也居中
-              const accountingElement = clonedDoc.querySelector('.agency-accounting-agreement-view')
-              if (accountingElement instanceof HTMLElement) {
-                accountingElement.style.margin = '0 auto'
-                accountingElement.style.display = 'block'
-                accountingElement.style.pageBreakInside = 'avoid'
-              }
-              
               const serviceElement = clonedDoc.querySelector('.single-service-agreement-view')
               if (serviceElement instanceof HTMLElement) {
                 serviceElement.style.margin = '0 auto'
@@ -600,11 +849,27 @@ const ContractDetail: React.FC = () => {
       // 确定要截图的元素
       let targetElement: HTMLElement = contractContentRef.current
       
-      // 如果是产品服务协议，则只获取产品服务协议元素
+      // 根据合同类型选择不同的目标元素
       if (contractData.contractType === '产品服务协议') {
         const agreementElement = contractContentRef.current.querySelector('.product-service-agreement')
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
+        }
+      } else if (contractData.contractType === '代理记账合同') {
+        // 通过ID选择代理记账合同视图元素
+        const agreementElement = document.getElementById('agency-accounting-agreement-view')
+        if (agreementElement && agreementElement instanceof HTMLElement) {
+          targetElement = agreementElement
+        } else {
+          console.error('未找到代理记账合同视图元素')
+        }
+      } else if (contractData.contractType === '单项服务合同') {
+        // 通过ID选择单项服务合同视图元素
+        const agreementElement = document.getElementById('single-service-agreement-view')
+        if (agreementElement && agreementElement instanceof HTMLElement) {
+          targetElement = agreementElement
+        } else {
+          console.error('未找到单项服务合同视图元素')
         }
       }
       
@@ -644,218 +909,375 @@ const ContractDetail: React.FC = () => {
               clonedElement.style.pageBreakInside = 'avoid';
               clonedElement.style.paddingBottom = '50px'; // 增加底部填充
               
-              // 修复甲方乙方布局问题
-              const partyHeaders = clonedElement.querySelectorAll('.party-header')
+              // 应用样式修复
+              const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
                 if (header instanceof HTMLElement) {
-                  console.log('修复甲方乙方布局 - 克隆文档')
                   // 确保标签和名称水平对齐
+                  header.style.display = 'flex'
+                  header.style.flexDirection = 'row'
+                  header.style.alignItems = 'flex-start'
+                  header.style.flexWrap = 'wrap'
+                  header.style.whiteSpace = 'normal'
+                  header.style.marginBottom = '12px'
+                  header.style.gap = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '20px'
+                  row.style.gap = '15px'
+                  
+                  // 处理费用标签
+                  const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
+                  feeLabels.forEach(label => {
+                    if (label instanceof HTMLElement) {
+                      label.style.fontWeight = 'bold'
+                      label.style.minWidth = '120px'
+                      label.style.flexShrink = '0'
+                      label.style.whiteSpace = 'nowrap'
+                      label.style.fontSize = '12px'
+                  }
+                  })
+                  
+                  // 处理金额
+                  const feeAmount = row.querySelector('[class*="feeAmount"]')
+                  if (feeAmount instanceof HTMLElement) {
+                    feeAmount.style.whiteSpace = 'nowrap'
+                    feeAmount.style.marginRight = '20px'
+                    feeAmount.style.fontSize = '12px'
+                  }
+                  
+                  // 处理金额大写
+                  const feeWords = row.querySelector('[class*="feeWords"]')
+                  if (feeWords instanceof HTMLElement) {
+                    feeWords.style.whiteSpace = 'nowrap'
+                    feeWords.style.fontWeight = 'bold'
+                    feeWords.style.fontSize = '12px'
+                  }
+                }
+              })
+              
+              // 处理签署区域，确保甲方和乙方盖章区域左右排列
+              const signatureSection = clonedElement.querySelector('.signature-section')
+              if (signatureSection instanceof HTMLElement) {
+                signatureSection.style.margin = '50px 0 30px 0'
+                signatureSection.style.pageBreakInside = 'avoid'
+              }
+              
+              const signatureRow = clonedElement.querySelector('.signature-row')
+              if (signatureRow instanceof HTMLElement) {
+                signatureRow.style.display = 'flex'
+                signatureRow.style.flexDirection = 'row'
+                signatureRow.style.justifyContent = 'space-between'
+                signatureRow.style.alignItems = 'flex-start'
+                signatureRow.style.marginBottom = '20px'
+              }
+              
+              const signatureColumns = clonedElement.querySelectorAll('.signature-column')
+              signatureColumns.forEach(column => {
+                if (column instanceof HTMLElement) {
+                  column.style.display = 'flex'
+                  column.style.flexDirection = 'column'
+                  column.style.width = '48%'
+                }
+              })
+              
+              const signatureBlocks = clonedElement.querySelectorAll('.signature-block')
+              signatureBlocks.forEach(block => {
+                if (block instanceof HTMLElement) {
+                  block.style.display = 'flex'
+                  block.style.flexDirection = 'column'
+                  block.style.gap = '10px'
+                }
+              })
+              
+              const signatureItems = clonedElement.querySelectorAll('.signature-item')
+              signatureItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                  item.style.display = 'flex'
+                  item.style.alignItems = 'center'
+                  item.style.gap = '20px'
+                }
+              })
+              
+              const dateItems = clonedElement.querySelectorAll('.date-item')
+              dateItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                  item.style.display = 'flex'
+                  item.style.alignItems = 'center'
+                  item.style.gap = '10px'
+                }
+              })
+              
+              // 确保盖章区域样式正确
+              const signatureAreas = clonedElement.querySelectorAll('.signature-area')
+              signatureAreas.forEach(area => {
+                if (area instanceof HTMLElement) {
+                  if (area.classList.contains('signed')) {
+                    area.style.border = 'none'
+                    area.style.background = 'transparent'
+                  } else {
+                    area.style.width = '120px'
+                    area.style.height = '60px'
+                    area.style.border = '1px dashed #999'
+                    area.style.background = '#fafafa'
+                  }
+                }
+              })
+              
+              // 确保印章图片样式正确
+              const stampImages = clonedElement.querySelectorAll('.stamp-image')
+              stampImages.forEach(img => {
+                if (img instanceof HTMLElement) {
+                  img.style.display = 'block'
+                  
+                  // 甲方印章和乙方印章可能需要不同的样式
+                  const altText = img.getAttribute('alt') || ''
+                  if (altText.includes('甲方签名')) {
+                    img.style.maxWidth = '150px'
+                    img.style.maxHeight = '80px'
+                    img.style.margin = '10px 0'
+                  } else if (altText.includes('甲方')) {
+                    img.style.maxWidth = '150px'
+                    img.style.maxHeight = '80px'
+                    img.style.margin = '10px 0'
+                  } else if (altText.includes('乙方')) {
+                    img.style.maxWidth = '130px'
+                    img.style.maxHeight = '130px'
+                    img.style.margin = '-25px 0 -10px 0'
+                  }
+                }
+              })
+            }
+          } else if (contractData.contractType === '代理记账合同') {
+            // 通过ID选择代理记账合同视图元素
+            const element = clonedDoc.getElementById('agency-accounting-agreement-view')
+            if (element instanceof HTMLElement) {
+              clonedElement = element
+                  
+              // 应用样式修复
+              const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
+              partyHeaders.forEach(header => {
+                if (header instanceof HTMLElement) {
+                  // 确保标签和名称水平对齐
+                  header.style.display = 'flex'
+                  header.style.flexDirection = 'row'
+                  header.style.alignItems = 'flex-start'
+                  header.style.flexWrap = 'wrap'
+                  header.style.whiteSpace = 'normal'
+                  header.style.marginBottom = '12px'
+                  header.style.gap = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '20px'
+                  row.style.gap = '15px'
+                  
+                  // 处理费用标签
+                  const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
+                  feeLabels.forEach(label => {
+                    if (label instanceof HTMLElement) {
+                      label.style.fontWeight = 'bold'
+                      label.style.minWidth = '120px'
+                      label.style.flexShrink = '0'
+                      label.style.whiteSpace = 'nowrap'
+                      label.style.fontSize = '12px'
+                }
+              })
+              
+                  // 处理金额
+                  const feeAmount = row.querySelector('[class*="feeAmount"]')
+                  if (feeAmount instanceof HTMLElement) {
+                    feeAmount.style.whiteSpace = 'nowrap'
+                    feeAmount.style.marginRight = '20px'
+                    feeAmount.style.fontSize = '12px'
+                  }
+                  
+                  // 处理金额大写
+                  const feeWords = row.querySelector('[class*="feeWords"]')
+                  if (feeWords instanceof HTMLElement) {
+                    feeWords.style.whiteSpace = 'nowrap'
+                    feeWords.style.fontWeight = 'bold'
+                    feeWords.style.fontSize = '12px'
+                  }
+                }
+              })
+            }
+          } else if (contractData.contractType === '单项服务合同') {
+            // 通过ID选择单项服务合同视图元素
+            const element = clonedDoc.getElementById('single-service-agreement-view')
+            if (element instanceof HTMLElement) {
+              clonedElement = element
+              
+              // 修复合同标题样式
+              const contractTitle = clonedElement.querySelector('[class*="contractTitle"]')
+              if (contractTitle instanceof HTMLElement) {
+                contractTitle.style.textAlign = 'center'
+                contractTitle.style.margin = '20px 0'
+                contractTitle.style.fontSize = '18px'
+                contractTitle.style.fontWeight = 'bold'
+              }
+              
+              // 修复甲方乙方信息样式
+              const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
+              partyHeaders.forEach(header => {
+                if (header instanceof HTMLElement) {
+                  // 确保标签和名称水平对齐在同一行
                   header.style.display = 'flex'
                   header.style.flexDirection = 'row'
                   header.style.alignItems = 'center'
                   header.style.flexWrap = 'nowrap'
-                  header.style.whiteSpace = 'nowrap'
-                  header.style.marginBottom = '12px'
-                  header.style.gap = '10px'
-                  
-                  // 调整标签宽度和间距
-                  const partyLabel = header.querySelector('.party-label')
-                  if (partyLabel instanceof HTMLElement) {
-                    partyLabel.style.display = 'inline-block'
-                    partyLabel.style.whiteSpace = 'nowrap'
-                    partyLabel.style.marginRight = '5px'
-                    partyLabel.style.minWidth = '130px' // 确保有足够空间容纳文字和括号
-                    partyLabel.style.flexShrink = '0'
-                    partyLabel.style.letterSpacing = '0.5px' // 增加字母间距，防止重叠
-                  }
-                  
-                  // 确保公司名称在同一行
-                  const partyCompanyName = header.querySelector('.party-company-name')
-                  if (partyCompanyName instanceof HTMLElement) {
-                    partyCompanyName.style.display = 'inline-block'
-                    partyCompanyName.style.whiteSpace = 'nowrap'
-                    partyCompanyName.style.overflow = 'visible'
-                    partyCompanyName.style.textOverflow = 'ellipsis'
+                  header.style.marginBottom = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 修复甲方乙方标签和公司名称样式
+              const partyLabels = clonedElement.querySelectorAll('[class*="partyLabel"]')
+              partyLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                }
+              })
+              
+              const partyCompanyNames = clonedElement.querySelectorAll('[class*="partyCompanyName"]')
+              partyCompanyNames.forEach(name => {
+                if (name instanceof HTMLElement) {
+                  name.style.display = 'inline-block'
+                  name.style.whiteSpace = 'normal'
+                  name.style.fontSize = '12px'
+                }
+              })
+              
+              // 修复明细行样式
+              const detailRows = clonedElement.querySelectorAll('[class*="detailRow"]')
+              detailRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.alignItems = 'center'
+                  row.style.marginBottom = '8px'
+                  row.style.width = '100%'
+                }
+              })
+              
+              // 修复明细标签和值的样式
+              const detailLabels = clonedElement.querySelectorAll('[class*="detailLabel"]')
+              detailLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                }
+              })
+              
+              const detailValues = clonedElement.querySelectorAll('[class*="detailValue"]')
+              detailValues.forEach(value => {
+                if (value instanceof HTMLElement) {
+                  value.style.display = 'inline-block'
+                  value.style.whiteSpace = 'normal'
+                  value.style.fontSize = '12px'
+                  // 保持原有宽度设置
+                  if (!value.style.width) {
+                    value.style.flex = '1'
                   }
                 }
               })
               
-              // 设置服务项目样式
-              const serviceItemsTexts = clonedElement.querySelectorAll('.service-items-text')
-              serviceItemsTexts.forEach(itemsText => {
-                if (itemsText instanceof HTMLElement) {
-                  console.log('应用服务项目文本样式 - 克隆文档')
-                  itemsText.style.display = 'inline-block'
-                  itemsText.style.color = '#000'
-                  itemsText.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
-                  itemsText.style.lineHeight = '1.8'
-                  
-                  // 处理每个项目名称
-                  const itemNames = itemsText.querySelectorAll('.service-item-name')
-                  itemNames.forEach(name => {
-                    if (name instanceof HTMLElement) {
-                      name.style.fontWeight = '500'
-                      name.style.color = '#000'
-                    }
-                  })
-                  
-                  // 处理分隔符
-                  const separators = itemsText.querySelectorAll('.service-item-separator')
-                  separators.forEach(separator => {
-                    if (separator instanceof HTMLElement) {
-                      separator.style.margin = '0 3px'
-                      separator.style.color = '#000'
-                    }
-                  })
+              // 确保所有文本大小一致
+              const allTextElements = clonedElement.querySelectorAll('p, span, div')
+              allTextElements.forEach(el => {
+                if (el instanceof HTMLElement && !el.style.fontSize) {
+                  el.style.fontSize = '12px'
                 }
               })
               
-              // 确保页脚元素可见
-              const footerElement = clonedElement.querySelector('.contract-footer')
-              if (footerElement instanceof HTMLElement) {
-                footerElement.style.display = 'block'
-                footerElement.style.visibility = 'visible'
-                footerElement.style.position = 'relative' // 确保正常文档流
-                footerElement.style.marginTop = '30px'
-                footerElement.style.paddingTop = '20px'
-                footerElement.style.borderTop = '1px solid #ddd'
-                footerElement.style.pageBreakInside = 'avoid'
-                
-                // 确保页脚内的文本元素可见
-                const footerTexts = footerElement.querySelectorAll('p')
-                footerTexts.forEach(p => {
-                  if (p instanceof HTMLElement) {
-                    p.style.display = 'block'
-                    p.style.visibility = 'visible'
-                    p.style.margin = '8px 0'
-                    p.style.fontSize = '12px'
-                    p.style.lineHeight = '1.4'
-                    p.style.color = '#333'
-                    p.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
-                  }
-                })
-              }
-              
-              // 确保签署区域的左右布局
-              const signatureSection = clonedElement.querySelector('.signature-section');
-              if (signatureSection instanceof HTMLElement) {
-                signatureSection.style.marginTop = '50px';
-                signatureSection.style.marginBottom = '30px';
-                signatureSection.style.pageBreakInside = 'avoid';
-              }
-              
-              const signatureRow = clonedElement.querySelector('.signature-row');
-              if (signatureRow instanceof HTMLElement) {
-                signatureRow.style.display = 'flex';
-                signatureRow.style.flexDirection = 'row';
-                signatureRow.style.justifyContent = 'space-between';
-                signatureRow.style.alignItems = 'flex-start';
-                signatureRow.style.marginBottom = '20px';
-                signatureRow.style.width = '100%';
-              }
-              
-              const signatureColumns = clonedElement.querySelectorAll('.signature-column');
-              signatureColumns.forEach((column, index) => {
-                if (column instanceof HTMLElement) {
-                  column.style.display = 'flex';
-                  column.style.flexDirection = 'column';
-                  column.style.width = '48%';
-                  column.style.gap = '45px';
-                  column.style.maxWidth = '48%';
-                  column.style.boxSizing = 'border-box';
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '10px'
+                  row.style.gap = '5px'
                 }
-              });
-
-              // 确保费用总计部分的样式正确
-              const totalCostSection = clonedElement.querySelector('.total-cost');
-              if (totalCostSection instanceof HTMLElement) {
-                console.log('应用费用总计样式');
-                
-                // 设置总体容器样式
-                totalCostSection.style.marginTop = '20px';
-                totalCostSection.style.paddingTop = '15px';
-                totalCostSection.style.borderTop = '1px solid #ddd';
-                
-                // 设置费用金额行样式
-                const costAmountRow = totalCostSection.querySelector('.cost-amount-row');
-                if (costAmountRow instanceof HTMLElement) {
-                  costAmountRow.style.display = 'flex';
-                  costAmountRow.style.alignItems = 'center';
-                  costAmountRow.style.gap = '5px';
-                  costAmountRow.style.flexWrap = 'nowrap';
-                  costAmountRow.style.whiteSpace = 'nowrap';
-                  costAmountRow.style.width = '100%';
-                  costAmountRow.style.marginBottom = '8px';
-                  costAmountRow.style.overflow = 'visible';
-                  
-                  // 确保所有span元素正确显示
-                  const spans = costAmountRow.querySelectorAll('span');
-                  spans.forEach(span => {
-                    if (span instanceof HTMLElement) {
-                      span.style.display = 'inline-block';
-                      span.style.whiteSpace = 'nowrap';
-                      span.style.fontSize = '13px';
-                      span.style.fontWeight = 'bold';
-                      span.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
-                    }
-                  });
-                  
-                  // 特别处理金额标签和金额值
-                  const amountLabel = costAmountRow.querySelector('.amount-label');
-                  if (amountLabel instanceof HTMLElement) {
-                    amountLabel.style.marginLeft = '10px';
-                    amountLabel.style.marginRight = '5px';
-                    amountLabel.style.whiteSpace = 'nowrap';
-                    amountLabel.style.fontSize = '13px';
-                    amountLabel.style.fontWeight = 'bold';
-                  }
-                  
-                  // 处理金额值
-                  const amountValue = costAmountRow.querySelector('.amount-value');
-                  if (amountValue instanceof HTMLElement) {
-                    amountValue.style.fontSize = '13px';
-                    amountValue.style.fontWeight = 'bold';
-                  }
-                  
-                  // 处理大写金额值
-                  const amountTextValue = costAmountRow.querySelector('.amount-text-value');
-                  if (amountTextValue instanceof HTMLElement) {
-                    amountTextValue.style.fontSize = '13px';
-                    amountTextValue.style.fontWeight = 'bold';
-                  }
+              })
+              
+              // 处理费用标签
+              const feeLabels = clonedElement.querySelectorAll('[class*="feeLabel"]')
+              feeLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
                 }
-                
-                // 设置备注行样式
-                const costRemark = totalCostSection.querySelector('.cost-remark');
-                if (costRemark instanceof HTMLElement) {
-                  costRemark.style.display = 'flex';
-                  costRemark.style.alignItems = 'flex-start';
-                  costRemark.style.gap = '5px';
-                  costRemark.style.marginTop = '5px';
-                  costRemark.style.flexWrap = 'wrap';
-                  
-                  // 处理所有span元素
-                  const spans = costRemark.querySelectorAll('span');
-                  spans.forEach(span => {
-                    if (span instanceof HTMLElement) {
-                      span.style.fontSize = '13px';
-                      span.style.fontWeight = 'bold';
-                      span.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
-                    }
-                  });
-                  
-                  // 确保备注内容可以换行
-                  const remarkValue = costRemark.querySelector('.remark-value');
-                  if (remarkValue instanceof HTMLElement) {
-                    remarkValue.style.wordBreak = 'break-word';
-                    remarkValue.style.whiteSpace = 'normal';
-                    remarkValue.style.fontSize = '13px';
-                    remarkValue.style.fontWeight = 'bold';
-                  }
+              })
+              
+              // 处理金额
+              const feeAmounts = clonedElement.querySelectorAll('[class*="feeAmount"]')
+              feeAmounts.forEach(amount => {
+                if (amount instanceof HTMLElement) {
+                  amount.style.whiteSpace = 'nowrap'
+                  amount.style.marginRight = '10px'
+                  amount.style.fontSize = '12px'
+                  amount.style.display = 'inline-block'
                 }
-              }
+              })
+              
+              // 处理金额大写
+              const feeWords = clonedElement.querySelectorAll('[class*="feeWords"]')
+              feeWords.forEach(words => {
+                if (words instanceof HTMLElement) {
+                  words.style.whiteSpace = 'nowrap'
+                  words.style.fontWeight = 'bold'
+                  words.style.fontSize = '12px'
+                  words.style.display = 'inline-block'
+                }
+              })
             }
           } else {
+            // 处理其他合同类型
             const element = clonedDoc.querySelector('[class*="contractContentInner"]')
             if (element instanceof HTMLElement) {
               clonedElement = element
@@ -892,13 +1314,6 @@ const ContractDetail: React.FC = () => {
               }
               
               // 确保合同组件本身也居中
-              const accountingElement = clonedDoc.querySelector('.agency-accounting-agreement-view')
-              if (accountingElement instanceof HTMLElement) {
-                accountingElement.style.margin = '0 auto'
-                accountingElement.style.display = 'block'
-                accountingElement.style.pageBreakInside = 'avoid'
-              }
-              
               const serviceElement = clonedDoc.querySelector('.single-service-agreement-view')
               if (serviceElement instanceof HTMLElement) {
                 serviceElement.style.margin = '0 auto'
@@ -1053,9 +1468,13 @@ const ContractDetail: React.FC = () => {
       case '产品服务协议':
         return <ProductServiceAgreementView contractData={contractData} />
       case '代理记账合同':
-        return <AgencyAccountingAgreementView contractData={contractData} />
+        return <div id="agency-accounting-agreement-view">
+          <AgencyAccountingAgreementView contractData={contractData} />
+        </div>
       case '单项服务合同':
-        return <SingleServiceAgreementView contractData={contractData} />
+        return <div id="single-service-agreement-view">
+          <SingleServiceAgreementView contractData={contractData} />
+        </div>
       default:
         return (
           <div className="text-center py-8">
@@ -1092,12 +1511,12 @@ const ContractDetail: React.FC = () => {
           <Space>
             {contractData && contractData.contractStatus === '0' && (
               <>
-                <Button
-                  icon={<EditOutlined />}
-                  onClick={handleEdit}
-                >
-                  编辑合同
-                </Button>
+              <Button
+                icon={<EditOutlined />}
+                onClick={handleEdit}
+              >
+                编辑合同
+              </Button>
                 <Button
                   type="primary"
                   icon={<LinkOutlined />}

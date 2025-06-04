@@ -107,6 +107,98 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
               agreementElement.style.display = 'block'
               agreementElement.style.pageBreakInside = 'avoid'
               agreementElement.style.maxHeight = 'none' // 移除最大高度限制
+              
+              // 处理签署区域，确保甲方和乙方盖章区域左右排列
+              const signatureSection = agreementElement.querySelector('.signature-section')
+              if (signatureSection instanceof HTMLElement) {
+                signatureSection.style.margin = '50px 0 30px 0'
+                signatureSection.style.pageBreakInside = 'avoid'
+              }
+              
+              const signatureRow = agreementElement.querySelector('.signature-row')
+              if (signatureRow instanceof HTMLElement) {
+                signatureRow.style.display = 'flex'
+                signatureRow.style.flexDirection = 'row'
+                signatureRow.style.justifyContent = 'space-between'
+                signatureRow.style.alignItems = 'flex-start'
+                signatureRow.style.marginBottom = '20px'
+              }
+              
+              const signatureColumns = agreementElement.querySelectorAll('.signature-column')
+              signatureColumns.forEach(column => {
+                if (column instanceof HTMLElement) {
+                  column.style.display = 'flex'
+                  column.style.flexDirection = 'column'
+                  column.style.width = '48%'
+                }
+              })
+              
+              const signatureBlocks = agreementElement.querySelectorAll('.signature-block')
+              signatureBlocks.forEach(block => {
+                if (block instanceof HTMLElement) {
+                  block.style.display = 'flex'
+                  block.style.flexDirection = 'column'
+                  block.style.gap = '10px'
+                }
+              })
+              
+              const signatureItems = agreementElement.querySelectorAll('.signature-item')
+              signatureItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                  item.style.display = 'flex'
+                  item.style.alignItems = 'center'
+                  item.style.gap = '20px'
+                }
+              })
+              
+              const dateItems = agreementElement.querySelectorAll('.date-item')
+              dateItems.forEach(item => {
+                if (item instanceof HTMLElement) {
+                  item.style.display = 'flex'
+                  item.style.alignItems = 'center'
+                  item.style.gap = '10px'
+                }
+              })
+              
+              // 确保盖章区域样式正确
+              const signatureAreas = agreementElement.querySelectorAll('.signature-area')
+              signatureAreas.forEach(area => {
+                if (area instanceof HTMLElement) {
+                  if (area.classList.contains('signed')) {
+                    area.style.border = 'none'
+                    area.style.background = 'transparent'
+                  } else {
+                    area.style.width = '120px'
+                    area.style.height = '60px'
+                    area.style.border = '1px dashed #999'
+                    area.style.background = '#fafafa'
+                  }
+                }
+              })
+              
+              // 确保印章图片样式正确
+              const stampImages = agreementElement.querySelectorAll('.stamp-image')
+              stampImages.forEach(img => {
+                if (img instanceof HTMLElement) {
+                  img.style.display = 'block'
+                  
+                  // 甲方印章和乙方印章可能需要不同的样式
+                  const altText = img.getAttribute('alt') || ''
+                  if (altText.includes('甲方签名')) {
+                    img.style.maxWidth = '150px'
+                    img.style.maxHeight = '80px'
+                    img.style.margin = '10px 0'
+                  } else if (altText.includes('甲方')) {
+                    img.style.maxWidth = '150px'
+                    img.style.maxHeight = '80px'
+                    img.style.margin = '10px 0'
+                  } else if (altText.includes('乙方')) {
+                    img.style.maxWidth = '130px'
+                    img.style.maxHeight = '130px'
+                    img.style.margin = '-25px 0 -10px 0'
+                  }
+                }
+              })
             }
 
             // 特别处理代理记账合同组件
@@ -129,6 +221,151 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
               serviceElement.style.display = 'block'
               serviceElement.style.pageBreakInside = 'avoid'
               serviceElement.style.maxHeight = 'none' // 移除最大高度限制
+              
+              // 修复合同标题样式
+              const contractTitle = serviceElement.querySelector('[class*="contractTitle"]')
+              if (contractTitle instanceof HTMLElement) {
+                contractTitle.style.textAlign = 'center'
+                contractTitle.style.margin = '20px 0'
+                contractTitle.style.fontSize = '18px'
+                contractTitle.style.fontWeight = 'bold'
+              }
+              
+              // 修复甲方乙方信息样式
+              const partyHeaders = serviceElement.querySelectorAll('[class*="partyHeader"]')
+              partyHeaders.forEach(header => {
+                if (header instanceof HTMLElement) {
+                  // 确保标签和名称水平对齐在同一行
+                  header.style.display = 'flex'
+                  header.style.flexDirection = 'row'
+                  header.style.alignItems = 'center'
+                  header.style.flexWrap = 'nowrap'
+                  header.style.marginBottom = '10px'
+                  header.style.width = '100%'
+                }
+              })
+              
+              // 修复甲方乙方标签和公司名称样式
+              const partyLabels = serviceElement.querySelectorAll('[class*="partyLabel"]')
+              partyLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                }
+              })
+              
+              const partyCompanyNames = serviceElement.querySelectorAll('[class*="partyCompanyName"]')
+              partyCompanyNames.forEach(name => {
+                if (name instanceof HTMLElement) {
+                  name.style.display = 'inline-block'
+                  name.style.whiteSpace = 'normal'
+                  name.style.fontSize = '12px'
+                }
+              })
+              
+              // 修复明细行样式
+              const detailRows = serviceElement.querySelectorAll('[class*="detailRow"]')
+              detailRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.alignItems = 'center'
+                  row.style.marginBottom = '8px'
+                  row.style.width = '100%'
+                }
+              })
+              
+              // 修复明细标签和值的样式
+              const detailLabels = serviceElement.querySelectorAll('[class*="detailLabel"]')
+              detailLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                }
+              })
+              
+              const detailValues = serviceElement.querySelectorAll('[class*="detailValue"]')
+              detailValues.forEach(value => {
+                if (value instanceof HTMLElement) {
+                  value.style.display = 'inline-block'
+                  value.style.whiteSpace = 'normal'
+                  value.style.fontSize = '12px'
+                  // 保持原有宽度设置
+                  if (!value.style.width) {
+                    value.style.flex = '1'
+                  }
+                }
+              })
+              
+              // 处理费用行，确保费用总计和大写金额在同一行
+              const feeRows = serviceElement.querySelectorAll('[class*="feeRow"]')
+              feeRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexDirection = 'row'
+                  row.style.alignItems = 'center'
+                  row.style.flexWrap = 'nowrap'
+                  row.style.whiteSpace = 'nowrap'
+                  row.style.width = '100%'
+                  row.style.marginBottom = '10px'
+                  row.style.gap = '5px'
+                }
+              })
+              
+              // 处理费用标签
+              const feeLabels = serviceElement.querySelectorAll('[class*="feeLabel"]')
+              feeLabels.forEach(label => {
+                if (label instanceof HTMLElement) {
+                  label.style.fontWeight = 'bold'
+                  label.style.minWidth = 'fit-content'
+                  label.style.flexShrink = '0'
+                  label.style.whiteSpace = 'nowrap'
+                  label.style.fontSize = '12px'
+                  label.style.display = 'inline-block'
+                  label.style.marginRight = '0'
+                }
+              })
+              
+              // 处理金额
+              const feeAmounts = serviceElement.querySelectorAll('[class*="feeAmount"]')
+              feeAmounts.forEach(amount => {
+                if (amount instanceof HTMLElement) {
+                  amount.style.whiteSpace = 'nowrap'
+                  amount.style.marginRight = '10px'
+                  amount.style.fontSize = '12px'
+                  amount.style.display = 'inline-block'
+                }
+              })
+              
+              // 处理金额大写
+              const feeWords = serviceElement.querySelectorAll('[class*="feeWords"]')
+              feeWords.forEach(words => {
+                if (words instanceof HTMLElement) {
+                  words.style.whiteSpace = 'nowrap'
+                  words.style.fontWeight = 'bold'
+                  words.style.fontSize = '12px'
+                  words.style.display = 'inline-block'
+                }
+              })
+              
+              // 确保所有文本大小一致
+              const allTextElements = serviceElement.querySelectorAll('p, span, div')
+              allTextElements.forEach(el => {
+                if (el instanceof HTMLElement && !el.style.fontSize) {
+                  el.style.fontSize = '12px'
+                }
+              })
             }
           }
 

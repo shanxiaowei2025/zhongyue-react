@@ -134,7 +134,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           <span key={index}>
             {getItemName(item.itemKey) || item.itemName}
             {item.amount ? `(${item.amount}元)` : ''}
-            {index < items.length - 1 ? '，' : ''}
+            {index < items.length - 1 ? '；' : ''}
           </span>
         ))}
       </span>
@@ -155,7 +155,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
   }
 
   return (
-    <div className={styles.singleServiceAgreement}>
+    <div className={styles.singleServiceAgreement} id="single-service-agreement-view">
       {/* 合同头部 */}
       <div className={styles.contractHeader}>
         <div className={styles.companyInfo}>
@@ -555,8 +555,16 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
                       src={contractData.partyAStampImage}
                       alt="甲方盖章"
                       className={styles.stampImage}
+                      style={{
+                        display: 'block',
+                        margin: '0 auto',
+                      }}
                     />
-                  ) : null}
+                  ) : (
+                    <div className={styles.stampPlaceholder}>
+                      <p>请盖章</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className={styles.signatureDateRow}>

@@ -103,7 +103,6 @@
 
 .party-header {
   display: flex;
-  align-items: center;
   margin-bottom: 12px;
   gap: 10px;
 }
@@ -140,7 +139,6 @@
 
 .detail-row {
   display: flex;
-  align-items: center;
   margin-bottom: 10px;
   gap: 10px;
 }
@@ -179,7 +177,6 @@
 
 .contact-item {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 
@@ -269,9 +266,6 @@
 
 .service-description {
   margin: 8px 0 8px 20px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .service-description span {
@@ -747,6 +741,19 @@
   .other-section h3 {
     font-size: 12px;
   }
+
+  .signature-row {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .signature-column {
+    width: 100%;
+  }
+  
+  .signature-block {
+    width: 100%;
+  }
 }
 
 /* 带金额输入框的复选框容器 */
@@ -1061,4 +1068,40 @@
 .product-service-agreement .remark-value {
   font-size: 13px;
   font-weight: bold;
+}
+
+/* 签署区域 - 新样式 */
+.signature-section {
+  margin: 50px 0 30px 0;
+  page-break-inside: avoid;
+}
+
+.signature-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.signature-column {
+  display: flex;
+  flex-direction: column;
+  width: 48%;
+}
+
+.signature-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.signature-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.signature-item span {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
