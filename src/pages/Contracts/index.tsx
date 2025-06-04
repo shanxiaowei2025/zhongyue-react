@@ -640,7 +640,7 @@ const Contracts: React.FC = () => {
                 name="createTimeRange"
                 className="mb-2 col-span-1 lg:col-span-2"
               >
-                <RangePicker showTime className="w-full" />
+                <RangePicker className="w-full" />
               </Form.Item>
             </div>
             <div className="flex justify-between items-center pt-3 border-t border-gray-200">
