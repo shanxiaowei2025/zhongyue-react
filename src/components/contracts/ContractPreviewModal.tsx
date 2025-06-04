@@ -107,14 +107,14 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
               agreementElement.style.display = 'block'
               agreementElement.style.pageBreakInside = 'avoid'
               agreementElement.style.maxHeight = 'none' // 移除最大高度限制
-              
+
               // 处理签署区域，确保甲方和乙方盖章区域左右排列
               const signatureSection = agreementElement.querySelector('.signature-section')
               if (signatureSection instanceof HTMLElement) {
                 signatureSection.style.margin = '50px 0 30px 0'
                 signatureSection.style.pageBreakInside = 'avoid'
               }
-              
+
               const signatureRow = agreementElement.querySelector('.signature-row')
               if (signatureRow instanceof HTMLElement) {
                 signatureRow.style.display = 'flex'
@@ -123,7 +123,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                 signatureRow.style.alignItems = 'flex-start'
                 signatureRow.style.marginBottom = '20px'
               }
-              
+
               const signatureColumns = agreementElement.querySelectorAll('.signature-column')
               signatureColumns.forEach(column => {
                 if (column instanceof HTMLElement) {
@@ -132,7 +132,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   column.style.width = '48%'
                 }
               })
-              
+
               const signatureBlocks = agreementElement.querySelectorAll('.signature-block')
               signatureBlocks.forEach(block => {
                 if (block instanceof HTMLElement) {
@@ -141,7 +141,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   block.style.gap = '10px'
                 }
               })
-              
+
               const signatureItems = agreementElement.querySelectorAll('.signature-item')
               signatureItems.forEach(item => {
                 if (item instanceof HTMLElement) {
@@ -150,7 +150,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   item.style.gap = '20px'
                 }
               })
-              
+
               const dateItems = agreementElement.querySelectorAll('.date-item')
               dateItems.forEach(item => {
                 if (item instanceof HTMLElement) {
@@ -159,7 +159,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   item.style.gap = '10px'
                 }
               })
-              
+
               // 确保盖章区域样式正确
               const signatureAreas = agreementElement.querySelectorAll('.signature-area')
               signatureAreas.forEach(area => {
@@ -175,13 +175,13 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   }
                 }
               })
-              
+
               // 确保印章图片样式正确
               const stampImages = agreementElement.querySelectorAll('.stamp-image')
               stampImages.forEach(img => {
                 if (img instanceof HTMLElement) {
                   img.style.display = 'block'
-                  
+
                   // 甲方印章和乙方印章可能需要不同的样式
                   const altText = img.getAttribute('alt') || ''
                   if (altText.includes('甲方签名')) {
@@ -221,7 +221,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
               serviceElement.style.display = 'block'
               serviceElement.style.pageBreakInside = 'avoid'
               serviceElement.style.maxHeight = 'none' // 移除最大高度限制
-              
+
               // 修复合同标题样式
               const contractTitle = serviceElement.querySelector('[class*="contractTitle"]')
               if (contractTitle instanceof HTMLElement) {
@@ -230,7 +230,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                 contractTitle.style.fontSize = '18px'
                 contractTitle.style.fontWeight = 'bold'
               }
-              
+
               // 修复甲方乙方信息样式
               const partyHeaders = serviceElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -244,7 +244,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   header.style.width = '100%'
                 }
               })
-              
+
               // 修复甲方乙方标签和公司名称样式
               const partyLabels = serviceElement.querySelectorAll('[class*="partyLabel"]')
               partyLabels.forEach(label => {
@@ -258,8 +258,10 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   label.style.fontSize = '12px'
                 }
               })
-              
-              const partyCompanyNames = serviceElement.querySelectorAll('[class*="partyCompanyName"]')
+
+              const partyCompanyNames = serviceElement.querySelectorAll(
+                '[class*="partyCompanyName"]'
+              )
               partyCompanyNames.forEach(name => {
                 if (name instanceof HTMLElement) {
                   name.style.display = 'inline-block'
@@ -267,7 +269,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   name.style.fontSize = '12px'
                 }
               })
-              
+
               // 修复明细行样式
               const detailRows = serviceElement.querySelectorAll('[class*="detailRow"]')
               detailRows.forEach(row => {
@@ -280,7 +282,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   row.style.width = '100%'
                 }
               })
-              
+
               // 修复明细标签和值的样式
               const detailLabels = serviceElement.querySelectorAll('[class*="detailLabel"]')
               detailLabels.forEach(label => {
@@ -294,7 +296,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   label.style.fontSize = '12px'
                 }
               })
-              
+
               const detailValues = serviceElement.querySelectorAll('[class*="detailValue"]')
               detailValues.forEach(value => {
                 if (value instanceof HTMLElement) {
@@ -307,7 +309,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   }
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = serviceElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -322,7 +324,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   row.style.gap = '5px'
                 }
               })
-              
+
               // 处理费用标签
               const feeLabels = serviceElement.querySelectorAll('[class*="feeLabel"]')
               feeLabels.forEach(label => {
@@ -336,7 +338,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   label.style.marginRight = '0'
                 }
               })
-              
+
               // 处理金额
               const feeAmounts = serviceElement.querySelectorAll('[class*="feeAmount"]')
               feeAmounts.forEach(amount => {
@@ -347,7 +349,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   amount.style.display = 'inline-block'
                 }
               })
-              
+
               // 处理金额大写
               const feeWords = serviceElement.querySelectorAll('[class*="feeWords"]')
               feeWords.forEach(words => {
@@ -358,7 +360,7 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
                   words.style.display = 'inline-block'
                 }
               })
-              
+
               // 确保所有文本大小一致
               const allTextElements = serviceElement.querySelectorAll('p, span, div')
               allTextElements.forEach(el => {
@@ -411,16 +413,16 @@ const ContractPreviewModal: React.FC<ContractPreviewModalProps> = ({
       })
 
       // 3. 创建File对象
-      const fileName = `contract_${contractData.id}_${new Date().getTime()}.png`
-      const file = new File([blob], fileName, { type: 'image/png' })
+      const fileNameWithTimestamp = `contract_${contractData.id}_${new Date().getTime()}.png`
+      const file = new File([blob], fileNameWithTimestamp, { type: 'image/png' })
 
       // 4. 上传到服务器
       const uploadResponse = await uploadFile(file, 'contracts')
-      const imageUrl = uploadResponse.data.url
+      const fileName = uploadResponse.data.fileName
 
       // 5. 检查并设置合同签署日期
       const currentDate = new Date().toISOString().split('T')[0] // 当前日期，格式为 YYYY-MM-DD
-      const updateData: any = { contractImage: imageUrl }
+      const updateData: any = { contractImage: fileName }
 
       // 如果甲方签署日期为空，设置为当前日期
       if (!contractData.partyASignDate) {

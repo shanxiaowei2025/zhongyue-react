@@ -146,6 +146,11 @@ export const buildImageUrl = (fileName: string | any): string => {
           ? fileName.url
           : String(fileName)
 
+  // 检查fileNameStr是否已经是完整URL（包含http或https协议）
+  if (fileNameStr.startsWith('http://') || fileNameStr.startsWith('https://')) {
+    return fileNameStr // 如果已经是完整URL，直接返回
+  }
+
   // 从环境变量获取MinIO配置
   const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
   const bucketName = import.meta.env.MINIO_BUCKET_NAME || 'zhongyue'

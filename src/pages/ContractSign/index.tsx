@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, Spin, Alert, Button, Typography, Image, message, Modal } from 'antd'
-import { getContractImageByToken, saveContractSignature, validateContractToken } from '../../api/contract'
+import {
+  getContractImageByToken,
+  saveContractSignature,
+  validateContractToken,
+} from '../../api/contract'
 import { uploadFile } from '../../api/upload'
-import SignatureCanvasForward, { SignatureCanvasRef } from '../../components/contracts/SignatureCanvasForward'
+import { buildImageUrl } from '../../utils/upload'
+import SignatureCanvasForward, {
+  SignatureCanvasRef,
+} from '../../components/contracts/SignatureCanvasForward'
 import { publicRequest } from '../../api/request'
 
 const { Title, Paragraph } = Typography
@@ -13,7 +20,7 @@ interface ContractSignProps {}
 const ContractSign: React.FC<ContractSignProps> = () => {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
-  
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [contractImage, setContractImage] = useState<string | null>(null)
@@ -33,8 +40,8 @@ const ContractSign: React.FC<ContractSignProps> = () => {
 
       try {
         setLoading(true)
-        const response = await getContractImageByToken(token) as any
-        
+        const response = (await getContractImageByToken(token)) as any
+
         if (response.data && response.data.contractImage) {
           setContractImage(response.data.contractImage)
           setContractId(response.data.contractId || null)
@@ -95,70 +102,69 @@ const ContractSign: React.FC<ContractSignProps> = () => {
       // 1. 获取签名图片的dataURL
       const signatureDataUrl = signatureRef.current.toDataURL('image/png')
       console.log('生成签名数据URL成功，长度:', signatureDataUrl.length)
-      
+
       // 2. 转换为Blob
       const response = await fetch(signatureDataUrl)
       const blob = await response.blob()
       console.log('签名Blob生成成功，大小:', blob.size, 'bytes')
-      
+
       // 3. 创建File对象
       const fileName = `signature_${contractId}_${new Date().getTime()}.png`
       const file = new File([blob], fileName, { type: 'image/png' })
-      
+
       // 4. 上传签名图片 - 使用token参数
       console.log('开始上传签名图片:', fileName)
       const formData = new FormData()
       formData.append('file', file)
-      
+
       // 使用完整URL，包含token参数
       const uploadUrl = `/storage/upload?token=${token}`
       const uploadResponse = await publicRequest.post<{
-        code: number,
-        data: { url: string },
+        code: number
+        data: { url: string; fileName: string }
         message: string
       }>(uploadUrl, formData)
-      
+
       console.log('签名上传响应:', uploadResponse)
-      
-      if (!uploadResponse || !uploadResponse.data || !uploadResponse.data.url) {
-        throw new Error('签名上传失败: 未返回有效的图片URL')
+
+      if (!uploadResponse || !uploadResponse.data || !uploadResponse.data.fileName) {
+        throw new Error('签名上传失败: 未返回有效的文件名')
       }
-      
-      const signatureUrl = uploadResponse.data.url
-      console.log('签名上传成功，URL:', signatureUrl)
-      
+
+      const signatureFileName = uploadResponse.data.fileName
+      console.log('签名上传成功，文件名:', signatureFileName)
+
       // 5. 保存合同签名 - 使用正确的接口参数
       console.log('开始保存合同签名, 合同ID:', contractId)
       const saveData = {
         contractId,
         token,
-        signatureUrl
+        signatureFileName,
       }
-      
+
       const saveResponse = await publicRequest.post('/contract-token/signature', saveData)
       console.log('保存签名响应:', saveResponse)
-      
+
       // 6. 关闭模态框并显示成功消息
       setSignModalVisible(false)
-      
+
       // 显示成功模态框
       Modal.success({
         title: '签署成功',
         content: '合同已成功签署，感谢您的配合！',
         okText: '返回首页',
-        onOk: () => navigate('/')
+        onOk: () => navigate('/'),
       })
-      
     } catch (error: any) {
       console.error('签署失败:', error)
       let errorMessage = '签署失败，请重试'
-      
+
       if (error.response) {
         console.error('错误响应数据:', error.response.data)
         console.error('错误状态码:', error.response.status)
         errorMessage = error.response.data?.message || errorMessage
       }
-      
+
       message.error(errorMessage)
     } finally {
       setSigning(false)
@@ -184,18 +190,9 @@ const ContractSign: React.FC<ContractSignProps> = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
-          <Alert
-            message="访问失败"
-            description={error}
-            type="error"
-            showIcon
-            className="mb-4"
-          />
+          <Alert message="访问失败" description={error} type="error" showIcon className="mb-4" />
           <div className="text-center">
-            <Button 
-              type="primary" 
-              onClick={() => navigate('/')}
-            >
+            <Button type="primary" onClick={() => navigate('/')}>
               返回首页
             </Button>
           </div>
@@ -211,13 +208,9 @@ const ContractSign: React.FC<ContractSignProps> = () => {
         {/* 页面标题 */}
         <div className="text-center mb-8">
           <Title level={2}>合同签署</Title>
-          <Paragraph className="text-gray-600">
-            请仔细阅读合同内容，确认无误后进行签署
-          </Paragraph>
+          <Paragraph className="text-gray-600">请仔细阅读合同内容，确认无误后进行签署</Paragraph>
           {contractId && (
-            <Paragraph className="text-sm text-gray-500">
-              合同ID: {contractId}
-            </Paragraph>
+            <Paragraph className="text-sm text-gray-500">合同ID: {contractId}</Paragraph>
           )}
         </div>
 
@@ -225,27 +218,32 @@ const ContractSign: React.FC<ContractSignProps> = () => {
         {contractImage ? (
           <Card className="mb-6">
             <div className="text-center">
-              <Title level={4} className="mb-4">合同内容</Title>
-              <div className="contract-image-container" style={{ 
-                maxWidth: '100%', 
-                overflow: 'auto',
-                border: '1px solid #d9d9d9',
-                borderRadius: '6px',
-                padding: '16px',
-                backgroundColor: '#fafafa'
-              }}>
+              <Title level={4} className="mb-4">
+                合同内容
+              </Title>
+              <div
+                className="contract-image-container"
+                style={{
+                  maxWidth: '100%',
+                  overflow: 'auto',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: '6px',
+                  padding: '16px',
+                  backgroundColor: '#fafafa',
+                }}
+              >
                 <Image
-                  src={contractImage}
+                  src={buildImageUrl(contractImage)}
                   alt="合同内容"
-                  style={{ 
+                  style={{
                     maxWidth: '100%',
                     height: 'auto',
                     display: 'block',
-                    margin: '0 auto'
+                    margin: '0 auto',
                   }}
                   preview={{
                     mask: '点击预览',
-                    style: { maxWidth: 'none' }
+                    style: { maxWidth: 'none' },
                   }}
                 />
               </div>
@@ -257,9 +255,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
               <Title level={4} className="text-gray-500">
                 未找到合同图片
               </Title>
-              <Paragraph className="text-gray-400">
-                该合同可能尚未生成图片或图片已被删除
-              </Paragraph>
+              <Paragraph className="text-gray-400">该合同可能尚未生成图片或图片已被删除</Paragraph>
             </div>
           </Card>
         )}
@@ -267,7 +263,9 @@ const ContractSign: React.FC<ContractSignProps> = () => {
         {/* 签署操作区域 */}
         <Card>
           <div className="text-center py-8">
-            <Title level={4} className="mb-4">签署操作</Title>
+            <Title level={4} className="mb-4">
+              签署操作
+            </Title>
             <Paragraph className="text-gray-600 mb-6">
               确认合同内容无误后，请点击下方按钮进行签署
             </Paragraph>
@@ -275,9 +273,9 @@ const ContractSign: React.FC<ContractSignProps> = () => {
               <Button size="large" onClick={() => navigate('/')}>
                 返回首页
               </Button>
-              <Button 
-                type="primary" 
-                size="large" 
+              <Button
+                type="primary"
+                size="large"
                 onClick={handleSign}
                 disabled={!contractImage || !contractId}
               >
@@ -303,7 +301,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
           <Paragraph className="text-gray-600 mb-4">
             请在下方空白区域进行手写签名，签名将用于确认合同签署
           </Paragraph>
-          
+
           <div className="border border-gray-300 rounded-lg p-2 mb-4">
             <SignatureCanvasForward
               ref={signatureRef}
@@ -314,20 +312,14 @@ const ContractSign: React.FC<ContractSignProps> = () => {
               }}
             />
           </div>
-          
+
           <div className="flex justify-between">
-            <Button onClick={handleClearSign}>
-              清除签名
-            </Button>
+            <Button onClick={handleClearSign}>清除签名</Button>
             <div>
               <Button className="mr-2" onClick={handleCancelSign}>
                 取消
               </Button>
-              <Button 
-                type="primary" 
-                onClick={handleConfirmSign}
-                loading={signing}
-              >
+              <Button type="primary" onClick={handleConfirmSign} loading={signing}>
                 {signing ? '正在提交...' : '确认签署'}
               </Button>
             </div>
@@ -338,4 +330,4 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   )
 }
 
-export default ContractSign 
+export default ContractSign
