@@ -134,12 +134,16 @@ const ContractSign: React.FC<ContractSignProps> = () => {
       const signatureFileName = uploadResponse.data.fileName
       console.log('签名上传成功，文件名:', signatureFileName)
 
+      // 使用buildImageUrl函数构建完整URL
+      const signatureUrl = buildImageUrl(signatureFileName)
+      console.log('签名URL:', signatureUrl)
+
       // 5. 保存合同签名 - 使用正确的接口参数
       console.log('开始保存合同签名, 合同ID:', contractId)
       const saveData = {
         contractId,
         token,
-        signatureFileName,
+        signatureUrl,
       }
 
       const saveResponse = await publicRequest.post('/contract-token/signature', saveData)

@@ -64,7 +64,7 @@ export const getContractImageByToken = (token: string) => {
 export const saveContractSignature = (data: {
   contractId: number
   token: string
-  signatureFileName: string
+  signatureUrl: string
 }) => {
   return publicRequest.post('/contract-token/signature', data)
 }
