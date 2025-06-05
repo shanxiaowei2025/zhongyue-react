@@ -77,19 +77,9 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
           backgroundColor="rgba(255, 255, 255, 1)"
           onEnd={checkIfEmpty}
         />
-        <div className="mt-2 flex justify-center">
-          <Button
-            icon={<ClearOutlined />}
-            onClick={handleClear}
-            disabled={isEmpty}
-            size="small"
-          >
-            清除
-          </Button>
-        </div>
       </div>
     )
   }
 )
 
-export default SignatureCanvasForward 
+export default SignatureCanvasForward

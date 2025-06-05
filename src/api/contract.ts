@@ -52,7 +52,12 @@ export const validateContractToken = (token: string) => {
 
 // 获取合同图片（通过token）
 export const getContractImageByToken = (token: string) => {
-  return publicRequest.get(`/contract-token/image?token=${token}`)
+  return publicRequest.get<
+    ApiResponse<{
+      contractImage: string // 文件名，非完整URL
+      contractId: number
+    }>
+  >(`/contract-token/image?token=${token}`)
 }
 
 // 保存合同签名（通过token）

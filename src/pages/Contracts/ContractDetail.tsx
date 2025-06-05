@@ -1,5 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, Button, Space, Breadcrumb, Alert, Spin, Divider, Typography, message, Modal, Input } from 'antd'
+import {
+  Card,
+  Button,
+  Space,
+  Breadcrumb,
+  Alert,
+  Spin,
+  Divider,
+  Typography,
+  message,
+  Modal,
+  Input,
+} from 'antd'
 import {
   ArrowLeftOutlined,
   HomeOutlined,
@@ -25,7 +37,7 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
   try {
     // 如果是相对路径，转为绝对路径
     const absoluteUrl = url.startsWith('/') ? window.location.origin + url : url
-    
+
     return new Promise((resolve, reject) => {
       const img = new Image()
       img.crossOrigin = 'anonymous'
@@ -47,7 +59,7 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
           reject(err)
         }
       }
-      img.onerror = (e) => {
+      img.onerror = e => {
         console.error('加载图片失败:', absoluteUrl, e)
         reject(new Error(`加载图片失败: ${absoluteUrl}`))
       }
@@ -83,7 +95,11 @@ const ContractDetail: React.FC = () => {
   // 检查URL查询参数，如果有generateLink=true则自动打开生成签署链接
   useEffect(() => {
     const params = new URLSearchParams(location.search)
-    if (params.get('generateLink') === 'true' && contractData && contractData.contractStatus === '0') {
+    if (
+      params.get('generateLink') === 'true' &&
+      contractData &&
+      contractData.contractStatus === '0'
+    ) {
       handleGenerateSignLink()
     }
   }, [location.search, contractData])
@@ -104,46 +120,48 @@ const ContractDetail: React.FC = () => {
       // 获取所有图片元素
       const images = element.querySelectorAll('img')
       console.log(`准备处理 ${images.length} 张图片...`)
-      
+
       // 处理所有图片
-      await Promise.all(Array.from(images).map(async (img) => {
-        try {
-          if (!img.src) return
-          
-          console.log(`处理图片: ${img.src}, 类名: ${img.className}`)
-          
-          // 转换为base64
-          const base64 = await loadImageAsBase64(img.src)
-          
-          // 替换图片源
-          img.src = base64
-          console.log(`图片转换成功: ${img.className || '未命名图片'}`)
-          
-          // 确保图片样式正确
-          img.style.display = 'block'
-          img.style.visibility = 'visible'
-          img.style.opacity = '1'
-          
-          // 对于logo特殊处理
-          if (img.className.includes('company-logo')) {
-            console.log('发现公司logo，应用特殊样式')
-            img.style.width = '100px'
-            img.style.height = '100px'
-            img.style.objectFit = 'contain'
+      await Promise.all(
+        Array.from(images).map(async img => {
+          try {
+            if (!img.src) return
+
+            console.log(`处理图片: ${img.src}, 类名: ${img.className}`)
+
+            // 转换为base64
+            const base64 = await loadImageAsBase64(img.src)
+
+            // 替换图片源
+            img.src = base64
+            console.log(`图片转换成功: ${img.className || '未命名图片'}`)
+
+            // 确保图片样式正确
+            img.style.display = 'block'
+            img.style.visibility = 'visible'
+            img.style.opacity = '1'
+
+            // 对于logo特殊处理
+            if (img.className.includes('company-logo')) {
+              console.log('发现公司logo，应用特殊样式')
+              img.style.width = '100px'
+              img.style.height = '100px'
+              img.style.objectFit = 'contain'
+            }
+
+            // 对于印章图片特殊处理
+            if (img.className.includes('stamp-image')) {
+              console.log('发现印章图片，应用特殊样式')
+              img.style.maxWidth = img.style.maxWidth || '150px'
+              img.style.maxHeight = img.style.maxHeight || '80px'
+              img.style.margin = img.style.margin || '10px 0'
+            }
+          } catch (err) {
+            console.error(`处理图片 ${img.src} 失败:`, err)
           }
-          
-          // 对于印章图片特殊处理
-          if (img.className.includes('stamp-image')) {
-            console.log('发现印章图片，应用特殊样式')
-            img.style.maxWidth = img.style.maxWidth || '150px'
-            img.style.maxHeight = img.style.maxHeight || '80px'
-            img.style.margin = img.style.margin || '10px 0'
-          }
-        } catch (err) {
-          console.error(`处理图片 ${img.src} 失败:`, err)
-        }
-      }))
-      
+        })
+      )
+
       // 确保页脚元素可见
       const footerElement = element.querySelector('.contract-footer')
       if (footerElement instanceof HTMLElement) {
@@ -170,7 +188,7 @@ const ContractDetail: React.FC = () => {
           }
         })
       }
-      
+
       // 修复甲方乙方布局问题
       const partyHeaders = element.querySelectorAll('.party-header')
       partyHeaders.forEach(header => {
@@ -184,7 +202,7 @@ const ContractDetail: React.FC = () => {
           header.style.whiteSpace = 'nowrap'
           header.style.marginBottom = '12px'
           header.style.gap = '10px'
-          
+
           // 调整标签宽度和间距
           const partyLabel = header.querySelector('.party-label')
           if (partyLabel instanceof HTMLElement) {
@@ -195,7 +213,7 @@ const ContractDetail: React.FC = () => {
             partyLabel.style.flexShrink = '0'
             partyLabel.style.letterSpacing = '0.5px' // 增加字母间距，防止重叠
           }
-          
+
           // 确保公司名称在同一行
           const partyCompanyName = header.querySelector('.party-company-name')
           if (partyCompanyName instanceof HTMLElement) {
@@ -210,86 +228,86 @@ const ContractDetail: React.FC = () => {
           }
         }
       })
-      
+
       // 确保详情描述区域也能自动换行
-      const detailRows = element.querySelectorAll('.detail-row');
+      const detailRows = element.querySelectorAll('.detail-row')
       detailRows.forEach(row => {
         if (row instanceof HTMLElement) {
-          row.style.display = 'flex';
-          row.style.flexDirection = 'row';
-          row.style.alignItems = 'flex-start';
-          row.style.flexWrap = 'wrap';
-          row.style.marginBottom = '10px';
-          row.style.gap = '10px';
-          row.style.width = '100%';
-          
+          row.style.display = 'flex'
+          row.style.flexDirection = 'row'
+          row.style.alignItems = 'flex-start'
+          row.style.flexWrap = 'wrap'
+          row.style.marginBottom = '10px'
+          row.style.gap = '10px'
+          row.style.width = '100%'
+
           // 处理标签
-          const detailLabel = row.querySelector('.detail-label');
+          const detailLabel = row.querySelector('.detail-label')
           if (detailLabel instanceof HTMLElement) {
-            detailLabel.style.display = 'inline-block';
-            detailLabel.style.minWidth = '80px';
-            detailLabel.style.flexShrink = '0';
-            detailLabel.style.fontSize = '12px';
-            detailLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
+            detailLabel.style.display = 'inline-block'
+            detailLabel.style.minWidth = '80px'
+            detailLabel.style.flexShrink = '0'
+            detailLabel.style.fontSize = '12px'
+            detailLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
           }
-          
+
           // 处理值
-          const detailValue = row.querySelector('.detail-value');
+          const detailValue = row.querySelector('.detail-value')
           if (detailValue instanceof HTMLElement) {
-            detailValue.style.display = 'inline-block';
-            detailValue.style.fontSize = '12px';
-            detailValue.style.color = '#333';
-            detailValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
-            detailValue.style.wordBreak = 'break-word';
-            detailValue.style.wordWrap = 'break-word';
-            detailValue.style.whiteSpace = 'normal';
-            detailValue.style.flexGrow = '1';
-            detailValue.style.maxWidth = 'calc(100% - 100px)'; // 100px = 标签宽度 + 间距
+            detailValue.style.display = 'inline-block'
+            detailValue.style.fontSize = '12px'
+            detailValue.style.color = '#333'
+            detailValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
+            detailValue.style.wordBreak = 'break-word'
+            detailValue.style.wordWrap = 'break-word'
+            detailValue.style.whiteSpace = 'normal'
+            detailValue.style.flexGrow = '1'
+            detailValue.style.maxWidth = 'calc(100% - 100px)' // 100px = 标签宽度 + 间距
           }
         }
-      });
-      
+      })
+
       // 处理联系人信息区域
-      const contactRows = element.querySelectorAll('.contact-row');
+      const contactRows = element.querySelectorAll('.contact-row')
       contactRows.forEach(row => {
         if (row instanceof HTMLElement) {
-          row.style.display = 'flex';
-          row.style.flexWrap = 'wrap';
-          row.style.gap = '30px';
-          
+          row.style.display = 'flex'
+          row.style.flexWrap = 'wrap'
+          row.style.gap = '30px'
+
           // 处理每个联系项
-          const contactItems = row.querySelectorAll('.contact-item');
+          const contactItems = row.querySelectorAll('.contact-item')
           contactItems.forEach(item => {
             if (item instanceof HTMLElement) {
-              item.style.display = 'flex';
-              item.style.alignItems = 'flex-start';
-              item.style.gap = '8px';
-              item.style.marginBottom = '8px';
-              
+              item.style.display = 'flex'
+              item.style.alignItems = 'flex-start'
+              item.style.gap = '8px'
+              item.style.marginBottom = '8px'
+
               // 处理标签
-              const contactLabel = item.querySelector('.contact-label');
+              const contactLabel = item.querySelector('.contact-label')
               if (contactLabel instanceof HTMLElement) {
-                contactLabel.style.whiteSpace = 'nowrap';
-                contactLabel.style.fontSize = '12px';
-                contactLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
+                contactLabel.style.whiteSpace = 'nowrap'
+                contactLabel.style.fontSize = '12px'
+                contactLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
               }
-              
+
               // 处理值
-              const contactValue = item.querySelector('.contact-value');
+              const contactValue = item.querySelector('.contact-value')
               if (contactValue instanceof HTMLElement) {
-                contactValue.style.display = 'inline-block';
-                contactValue.style.fontSize = '12px';
-                contactValue.style.color = '#333';
-                contactValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif";
-                contactValue.style.wordBreak = 'break-word';
-                contactValue.style.wordWrap = 'break-word';
-                contactValue.style.whiteSpace = 'normal';
+                contactValue.style.display = 'inline-block'
+                contactValue.style.fontSize = '12px'
+                contactValue.style.color = '#333'
+                contactValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
+                contactValue.style.wordBreak = 'break-word'
+                contactValue.style.wordWrap = 'break-word'
+                contactValue.style.whiteSpace = 'normal'
               }
             }
-          });
+          })
         }
-      });
-      
+      })
+
       // 设置服务项目样式
       const serviceItemsTexts = element.querySelectorAll('.service-items-text')
       serviceItemsTexts.forEach(itemsText => {
@@ -299,7 +317,7 @@ const ContractDetail: React.FC = () => {
           itemsText.style.color = '#000'
           itemsText.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
           itemsText.style.lineHeight = '1.8'
-          
+
           // 处理每个项目名称
           const itemNames = itemsText.querySelectorAll('.service-item-name')
           itemNames.forEach(name => {
@@ -308,7 +326,7 @@ const ContractDetail: React.FC = () => {
               name.style.color = '#000'
             }
           })
-          
+
           // 处理分隔符
           const separators = itemsText.querySelectorAll('.service-item-separator')
           separators.forEach(separator => {
@@ -319,7 +337,7 @@ const ContractDetail: React.FC = () => {
           })
         }
       })
-      
+
       console.log('所有图片和元素处理完成')
     } catch (error) {
       console.error('预处理图片失败:', error)
@@ -338,10 +356,12 @@ const ContractDetail: React.FC = () => {
     try {
       // 确定要截图的元素
       let targetElement: HTMLElement = contractContentRef.current
-      
+
       // 根据合同类型选择不同的目标元素
       if (contractData.contractType === '产品服务协议') {
-        const agreementElement = contractContentRef.current.querySelector('.product-service-agreement')
+        const agreementElement = contractContentRef.current.querySelector(
+          '.product-service-agreement'
+        )
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
         }
@@ -362,10 +382,10 @@ const ContractDetail: React.FC = () => {
           console.error('未找到单项服务合同视图元素')
         }
       }
-      
+
       // 预处理图片元素 - 转换为base64以避免跨域问题
       await prepareImagesForHtml2Canvas(targetElement)
-      
+
       // 配置html2canvas选项
       const canvas = await html2canvas(targetElement, {
         backgroundColor: '#ffffff',
@@ -378,20 +398,20 @@ const ContractDetail: React.FC = () => {
         height: targetElement.scrollHeight + 50, // 增加高度以确保捕获底部内容
         windowWidth: targetElement.scrollWidth,
         windowHeight: targetElement.scrollHeight + 50, // 增加高度以确保捕获底部内容
-        onclone: async (clonedDoc) => {
+        onclone: async clonedDoc => {
           // 获取克隆的目标元素
           let clonedElement: HTMLElement | null = null
-          
+
           if (contractData.contractType === '产品服务协议') {
             const element = clonedDoc.querySelector('.product-service-agreement')
             if (element instanceof HTMLElement) {
               clonedElement = element
-              
+
               // 保持产品服务协议原样，只添加关键样式确保正确生成
-              clonedElement.style.overflow = 'visible';
-              clonedElement.style.pageBreakInside = 'avoid';
-              clonedElement.style.paddingBottom = '50px'; // 增加底部填充
-              
+              clonedElement.style.overflow = 'visible'
+              clonedElement.style.pageBreakInside = 'avoid'
+              clonedElement.style.paddingBottom = '50px' // 增加底部填充
+
               // 应用样式修复
               const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -407,7 +427,7 @@ const ContractDetail: React.FC = () => {
                   header.style.width = '100%'
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -420,7 +440,7 @@ const ContractDetail: React.FC = () => {
                   row.style.width = '100%'
                   row.style.marginBottom = '20px'
                   row.style.gap = '15px'
-                  
+
                   // 处理费用标签
                   const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
                   feeLabels.forEach(label => {
@@ -430,9 +450,9 @@ const ContractDetail: React.FC = () => {
                       label.style.flexShrink = '0'
                       label.style.whiteSpace = 'nowrap'
                       label.style.fontSize = '12px'
-                  }
+                    }
                   })
-                  
+
                   // 处理金额
                   const feeAmount = row.querySelector('[class*="feeAmount"]')
                   if (feeAmount instanceof HTMLElement) {
@@ -440,7 +460,7 @@ const ContractDetail: React.FC = () => {
                     feeAmount.style.marginRight = '20px'
                     feeAmount.style.fontSize = '12px'
                   }
-                  
+
                   // 处理金额大写
                   const feeWords = row.querySelector('[class*="feeWords"]')
                   if (feeWords instanceof HTMLElement) {
@@ -450,14 +470,14 @@ const ContractDetail: React.FC = () => {
                   }
                 }
               })
-              
+
               // 处理签署区域，确保甲方和乙方盖章区域左右排列
               const signatureSection = clonedElement.querySelector('.signature-section')
               if (signatureSection instanceof HTMLElement) {
                 signatureSection.style.margin = '50px 0 30px 0'
                 signatureSection.style.pageBreakInside = 'avoid'
               }
-              
+
               const signatureRow = clonedElement.querySelector('.signature-row')
               if (signatureRow instanceof HTMLElement) {
                 signatureRow.style.display = 'flex'
@@ -466,7 +486,7 @@ const ContractDetail: React.FC = () => {
                 signatureRow.style.alignItems = 'flex-start'
                 signatureRow.style.marginBottom = '20px'
               }
-              
+
               const signatureColumns = clonedElement.querySelectorAll('.signature-column')
               signatureColumns.forEach(column => {
                 if (column instanceof HTMLElement) {
@@ -475,7 +495,7 @@ const ContractDetail: React.FC = () => {
                   column.style.width = '48%'
                 }
               })
-              
+
               const signatureBlocks = clonedElement.querySelectorAll('.signature-block')
               signatureBlocks.forEach(block => {
                 if (block instanceof HTMLElement) {
@@ -484,7 +504,7 @@ const ContractDetail: React.FC = () => {
                   block.style.gap = '10px'
                 }
               })
-              
+
               const signatureItems = clonedElement.querySelectorAll('.signature-item')
               signatureItems.forEach(item => {
                 if (item instanceof HTMLElement) {
@@ -493,7 +513,7 @@ const ContractDetail: React.FC = () => {
                   item.style.gap = '20px'
                 }
               })
-              
+
               const dateItems = clonedElement.querySelectorAll('.date-item')
               dateItems.forEach(item => {
                 if (item instanceof HTMLElement) {
@@ -502,7 +522,7 @@ const ContractDetail: React.FC = () => {
                   item.style.gap = '10px'
                 }
               })
-              
+
               // 确保盖章区域样式正确
               const signatureAreas = clonedElement.querySelectorAll('.signature-area')
               signatureAreas.forEach(area => {
@@ -518,13 +538,13 @@ const ContractDetail: React.FC = () => {
                   }
                 }
               })
-              
+
               // 确保印章图片样式正确
               const stampImages = clonedElement.querySelectorAll('.stamp-image')
               stampImages.forEach(img => {
                 if (img instanceof HTMLElement) {
                   img.style.display = 'block'
-                  
+
                   // 甲方印章和乙方印章可能需要不同的样式
                   const altText = img.getAttribute('alt') || ''
                   if (altText.includes('甲方签名')) {
@@ -548,7 +568,7 @@ const ContractDetail: React.FC = () => {
             const element = clonedDoc.getElementById('agency-accounting-agreement-view')
             if (element instanceof HTMLElement) {
               clonedElement = element
-                  
+
               // 应用样式修复
               const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -564,7 +584,7 @@ const ContractDetail: React.FC = () => {
                   header.style.width = '100%'
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -577,7 +597,7 @@ const ContractDetail: React.FC = () => {
                   row.style.width = '100%'
                   row.style.marginBottom = '20px'
                   row.style.gap = '15px'
-                  
+
                   // 处理费用标签
                   const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
                   feeLabels.forEach(label => {
@@ -587,9 +607,9 @@ const ContractDetail: React.FC = () => {
                       label.style.flexShrink = '0'
                       label.style.whiteSpace = 'nowrap'
                       label.style.fontSize = '12px'
-                }
-              })
-              
+                    }
+                  })
+
                   // 处理金额
                   const feeAmount = row.querySelector('[class*="feeAmount"]')
                   if (feeAmount instanceof HTMLElement) {
@@ -597,7 +617,7 @@ const ContractDetail: React.FC = () => {
                     feeAmount.style.marginRight = '20px'
                     feeAmount.style.fontSize = '12px'
                   }
-                  
+
                   // 处理金额大写
                   const feeWords = row.querySelector('[class*="feeWords"]')
                   if (feeWords instanceof HTMLElement) {
@@ -613,7 +633,7 @@ const ContractDetail: React.FC = () => {
             const element = clonedDoc.getElementById('single-service-agreement-view')
             if (element instanceof HTMLElement) {
               clonedElement = element
-              
+
               // 修复合同标题样式
               const contractTitle = clonedElement.querySelector('[class*="contractTitle"]')
               if (contractTitle instanceof HTMLElement) {
@@ -622,7 +642,7 @@ const ContractDetail: React.FC = () => {
                 contractTitle.style.fontSize = '18px'
                 contractTitle.style.fontWeight = 'bold'
               }
-              
+
               // 修复甲方乙方信息样式
               const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -636,7 +656,7 @@ const ContractDetail: React.FC = () => {
                   header.style.width = '100%'
                 }
               })
-              
+
               // 修复甲方乙方标签和公司名称样式
               const partyLabels = clonedElement.querySelectorAll('[class*="partyLabel"]')
               partyLabels.forEach(label => {
@@ -650,8 +670,10 @@ const ContractDetail: React.FC = () => {
                   label.style.fontSize = '12px'
                 }
               })
-              
-              const partyCompanyNames = clonedElement.querySelectorAll('[class*="partyCompanyName"]')
+
+              const partyCompanyNames = clonedElement.querySelectorAll(
+                '[class*="partyCompanyName"]'
+              )
               partyCompanyNames.forEach(name => {
                 if (name instanceof HTMLElement) {
                   name.style.display = 'inline-block'
@@ -659,7 +681,7 @@ const ContractDetail: React.FC = () => {
                   name.style.fontSize = '12px'
                 }
               })
-              
+
               // 修复明细行样式
               const detailRows = clonedElement.querySelectorAll('[class*="detailRow"]')
               detailRows.forEach(row => {
@@ -672,7 +694,7 @@ const ContractDetail: React.FC = () => {
                   row.style.width = '100%'
                 }
               })
-              
+
               // 修复明细标签和值的样式
               const detailLabels = clonedElement.querySelectorAll('[class*="detailLabel"]')
               detailLabels.forEach(label => {
@@ -686,7 +708,7 @@ const ContractDetail: React.FC = () => {
                   label.style.fontSize = '12px'
                 }
               })
-              
+
               const detailValues = clonedElement.querySelectorAll('[class*="detailValue"]')
               detailValues.forEach(value => {
                 if (value instanceof HTMLElement) {
@@ -699,7 +721,7 @@ const ContractDetail: React.FC = () => {
                   }
                 }
               })
-              
+
               // 确保所有文本大小一致
               const allTextElements = clonedElement.querySelectorAll('p, span, div')
               allTextElements.forEach(el => {
@@ -707,7 +729,7 @@ const ContractDetail: React.FC = () => {
                   el.style.fontSize = '12px'
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -722,7 +744,7 @@ const ContractDetail: React.FC = () => {
                   row.style.gap = '5px'
                 }
               })
-              
+
               // 处理费用标签
               const feeLabels = clonedElement.querySelectorAll('[class*="feeLabel"]')
               feeLabels.forEach(label => {
@@ -736,7 +758,7 @@ const ContractDetail: React.FC = () => {
                   label.style.marginRight = '0'
                 }
               })
-              
+
               // 处理金额
               const feeAmounts = clonedElement.querySelectorAll('[class*="feeAmount"]')
               feeAmounts.forEach(amount => {
@@ -747,7 +769,7 @@ const ContractDetail: React.FC = () => {
                   amount.style.display = 'inline-block'
                 }
               })
-              
+
               // 处理金额大写
               const feeWords = clonedElement.querySelectorAll('[class*="feeWords"]')
               feeWords.forEach(words => {
@@ -764,7 +786,7 @@ const ContractDetail: React.FC = () => {
             const element = clonedDoc.querySelector('[class*="contractContentInner"]')
             if (element instanceof HTMLElement) {
               clonedElement = element
-              
+
               // 设置样式确保全部内容可见
               clonedElement.style.overflow = 'visible'
               clonedElement.style.height = 'auto'
@@ -777,7 +799,7 @@ const ContractDetail: React.FC = () => {
               clonedElement.style.boxShadow = 'none'
               clonedElement.style.borderRadius = '0'
               clonedElement.style.paddingBottom = '50px' // 增加底部填充
-              
+
               // 处理所有子元素，确保没有溢出隐藏
               const allElements = clonedElement.querySelectorAll('*')
               allElements.forEach(el => {
@@ -785,7 +807,7 @@ const ContractDetail: React.FC = () => {
                   el.style.overflow = 'visible'
                 }
               })
-              
+
               // 处理外层容器
               const wrapperElement = clonedDoc.querySelector('[class*="contractContentWrapper"]')
               if (wrapperElement instanceof HTMLElement) {
@@ -795,7 +817,7 @@ const ContractDetail: React.FC = () => {
                 wrapperElement.style.boxShadow = 'none'
                 wrapperElement.style.overflow = 'visible'
               }
-              
+
               // 确保合同组件本身也居中
               const serviceElement = clonedDoc.querySelector('.single-service-agreement-view')
               if (serviceElement instanceof HTMLElement) {
@@ -848,10 +870,12 @@ const ContractDetail: React.FC = () => {
     try {
       // 确定要截图的元素
       let targetElement: HTMLElement = contractContentRef.current
-      
+
       // 根据合同类型选择不同的目标元素
       if (contractData.contractType === '产品服务协议') {
-        const agreementElement = contractContentRef.current.querySelector('.product-service-agreement')
+        const agreementElement = contractContentRef.current.querySelector(
+          '.product-service-agreement'
+        )
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
         }
@@ -872,14 +896,14 @@ const ContractDetail: React.FC = () => {
           console.error('未找到单项服务合同视图元素')
         }
       }
-      
+
       // 显示生成进度提示
       message.loading({
         content: '正在生成合同图片，请稍候...',
         key: 'contractImageGen',
         duration: 0,
       })
-      
+
       // 预处理图片元素 - 转换为base64以避免跨域问题
       await prepareImagesForHtml2Canvas(targetElement)
 
@@ -895,20 +919,20 @@ const ContractDetail: React.FC = () => {
         height: targetElement.scrollHeight + 50, // 增加高度以确保捕获底部内容
         windowWidth: targetElement.scrollWidth,
         windowHeight: targetElement.scrollHeight + 50, // 增加高度以确保捕获底部内容
-        onclone: async (clonedDoc) => {
+        onclone: async clonedDoc => {
           // 获取克隆的目标元素
           let clonedElement: HTMLElement | null = null
-          
+
           if (contractData.contractType === '产品服务协议') {
             const element = clonedDoc.querySelector('.product-service-agreement')
             if (element instanceof HTMLElement) {
               clonedElement = element
-              
+
               // 保持产品服务协议原样，只添加关键样式确保正确生成
-              clonedElement.style.overflow = 'visible';
-              clonedElement.style.pageBreakInside = 'avoid';
-              clonedElement.style.paddingBottom = '50px'; // 增加底部填充
-              
+              clonedElement.style.overflow = 'visible'
+              clonedElement.style.pageBreakInside = 'avoid'
+              clonedElement.style.paddingBottom = '50px' // 增加底部填充
+
               // 应用样式修复
               const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -924,7 +948,7 @@ const ContractDetail: React.FC = () => {
                   header.style.width = '100%'
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -937,7 +961,7 @@ const ContractDetail: React.FC = () => {
                   row.style.width = '100%'
                   row.style.marginBottom = '20px'
                   row.style.gap = '15px'
-                  
+
                   // 处理费用标签
                   const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
                   feeLabels.forEach(label => {
@@ -947,9 +971,9 @@ const ContractDetail: React.FC = () => {
                       label.style.flexShrink = '0'
                       label.style.whiteSpace = 'nowrap'
                       label.style.fontSize = '12px'
-                  }
+                    }
                   })
-                  
+
                   // 处理金额
                   const feeAmount = row.querySelector('[class*="feeAmount"]')
                   if (feeAmount instanceof HTMLElement) {
@@ -957,7 +981,7 @@ const ContractDetail: React.FC = () => {
                     feeAmount.style.marginRight = '20px'
                     feeAmount.style.fontSize = '12px'
                   }
-                  
+
                   // 处理金额大写
                   const feeWords = row.querySelector('[class*="feeWords"]')
                   if (feeWords instanceof HTMLElement) {
@@ -967,14 +991,14 @@ const ContractDetail: React.FC = () => {
                   }
                 }
               })
-              
+
               // 处理签署区域，确保甲方和乙方盖章区域左右排列
               const signatureSection = clonedElement.querySelector('.signature-section')
               if (signatureSection instanceof HTMLElement) {
                 signatureSection.style.margin = '50px 0 30px 0'
                 signatureSection.style.pageBreakInside = 'avoid'
               }
-              
+
               const signatureRow = clonedElement.querySelector('.signature-row')
               if (signatureRow instanceof HTMLElement) {
                 signatureRow.style.display = 'flex'
@@ -983,7 +1007,7 @@ const ContractDetail: React.FC = () => {
                 signatureRow.style.alignItems = 'flex-start'
                 signatureRow.style.marginBottom = '20px'
               }
-              
+
               const signatureColumns = clonedElement.querySelectorAll('.signature-column')
               signatureColumns.forEach(column => {
                 if (column instanceof HTMLElement) {
@@ -992,7 +1016,7 @@ const ContractDetail: React.FC = () => {
                   column.style.width = '48%'
                 }
               })
-              
+
               const signatureBlocks = clonedElement.querySelectorAll('.signature-block')
               signatureBlocks.forEach(block => {
                 if (block instanceof HTMLElement) {
@@ -1001,7 +1025,7 @@ const ContractDetail: React.FC = () => {
                   block.style.gap = '10px'
                 }
               })
-              
+
               const signatureItems = clonedElement.querySelectorAll('.signature-item')
               signatureItems.forEach(item => {
                 if (item instanceof HTMLElement) {
@@ -1010,7 +1034,7 @@ const ContractDetail: React.FC = () => {
                   item.style.gap = '20px'
                 }
               })
-              
+
               const dateItems = clonedElement.querySelectorAll('.date-item')
               dateItems.forEach(item => {
                 if (item instanceof HTMLElement) {
@@ -1019,7 +1043,7 @@ const ContractDetail: React.FC = () => {
                   item.style.gap = '10px'
                 }
               })
-              
+
               // 确保盖章区域样式正确
               const signatureAreas = clonedElement.querySelectorAll('.signature-area')
               signatureAreas.forEach(area => {
@@ -1035,13 +1059,13 @@ const ContractDetail: React.FC = () => {
                   }
                 }
               })
-              
+
               // 确保印章图片样式正确
               const stampImages = clonedElement.querySelectorAll('.stamp-image')
               stampImages.forEach(img => {
                 if (img instanceof HTMLElement) {
                   img.style.display = 'block'
-                  
+
                   // 甲方印章和乙方印章可能需要不同的样式
                   const altText = img.getAttribute('alt') || ''
                   if (altText.includes('甲方签名')) {
@@ -1065,7 +1089,7 @@ const ContractDetail: React.FC = () => {
             const element = clonedDoc.getElementById('agency-accounting-agreement-view')
             if (element instanceof HTMLElement) {
               clonedElement = element
-                  
+
               // 应用样式修复
               const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -1081,7 +1105,7 @@ const ContractDetail: React.FC = () => {
                   header.style.width = '100%'
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -1094,7 +1118,7 @@ const ContractDetail: React.FC = () => {
                   row.style.width = '100%'
                   row.style.marginBottom = '20px'
                   row.style.gap = '15px'
-                  
+
                   // 处理费用标签
                   const feeLabels = row.querySelectorAll('[class*="feeLabel"]')
                   feeLabels.forEach(label => {
@@ -1104,9 +1128,9 @@ const ContractDetail: React.FC = () => {
                       label.style.flexShrink = '0'
                       label.style.whiteSpace = 'nowrap'
                       label.style.fontSize = '12px'
-                }
-              })
-              
+                    }
+                  })
+
                   // 处理金额
                   const feeAmount = row.querySelector('[class*="feeAmount"]')
                   if (feeAmount instanceof HTMLElement) {
@@ -1114,7 +1138,7 @@ const ContractDetail: React.FC = () => {
                     feeAmount.style.marginRight = '20px'
                     feeAmount.style.fontSize = '12px'
                   }
-                  
+
                   // 处理金额大写
                   const feeWords = row.querySelector('[class*="feeWords"]')
                   if (feeWords instanceof HTMLElement) {
@@ -1130,7 +1154,7 @@ const ContractDetail: React.FC = () => {
             const element = clonedDoc.getElementById('single-service-agreement-view')
             if (element instanceof HTMLElement) {
               clonedElement = element
-              
+
               // 修复合同标题样式
               const contractTitle = clonedElement.querySelector('[class*="contractTitle"]')
               if (contractTitle instanceof HTMLElement) {
@@ -1139,7 +1163,7 @@ const ContractDetail: React.FC = () => {
                 contractTitle.style.fontSize = '18px'
                 contractTitle.style.fontWeight = 'bold'
               }
-              
+
               // 修复甲方乙方信息样式
               const partyHeaders = clonedElement.querySelectorAll('[class*="partyHeader"]')
               partyHeaders.forEach(header => {
@@ -1153,7 +1177,7 @@ const ContractDetail: React.FC = () => {
                   header.style.width = '100%'
                 }
               })
-              
+
               // 修复甲方乙方标签和公司名称样式
               const partyLabels = clonedElement.querySelectorAll('[class*="partyLabel"]')
               partyLabels.forEach(label => {
@@ -1167,8 +1191,10 @@ const ContractDetail: React.FC = () => {
                   label.style.fontSize = '12px'
                 }
               })
-              
-              const partyCompanyNames = clonedElement.querySelectorAll('[class*="partyCompanyName"]')
+
+              const partyCompanyNames = clonedElement.querySelectorAll(
+                '[class*="partyCompanyName"]'
+              )
               partyCompanyNames.forEach(name => {
                 if (name instanceof HTMLElement) {
                   name.style.display = 'inline-block'
@@ -1176,7 +1202,7 @@ const ContractDetail: React.FC = () => {
                   name.style.fontSize = '12px'
                 }
               })
-              
+
               // 修复明细行样式
               const detailRows = clonedElement.querySelectorAll('[class*="detailRow"]')
               detailRows.forEach(row => {
@@ -1189,7 +1215,7 @@ const ContractDetail: React.FC = () => {
                   row.style.width = '100%'
                 }
               })
-              
+
               // 修复明细标签和值的样式
               const detailLabels = clonedElement.querySelectorAll('[class*="detailLabel"]')
               detailLabels.forEach(label => {
@@ -1203,7 +1229,7 @@ const ContractDetail: React.FC = () => {
                   label.style.fontSize = '12px'
                 }
               })
-              
+
               const detailValues = clonedElement.querySelectorAll('[class*="detailValue"]')
               detailValues.forEach(value => {
                 if (value instanceof HTMLElement) {
@@ -1216,7 +1242,7 @@ const ContractDetail: React.FC = () => {
                   }
                 }
               })
-              
+
               // 确保所有文本大小一致
               const allTextElements = clonedElement.querySelectorAll('p, span, div')
               allTextElements.forEach(el => {
@@ -1224,7 +1250,7 @@ const ContractDetail: React.FC = () => {
                   el.style.fontSize = '12px'
                 }
               })
-              
+
               // 处理费用行，确保费用总计和大写金额在同一行
               const feeRows = clonedElement.querySelectorAll('[class*="feeRow"]')
               feeRows.forEach(row => {
@@ -1239,7 +1265,7 @@ const ContractDetail: React.FC = () => {
                   row.style.gap = '5px'
                 }
               })
-              
+
               // 处理费用标签
               const feeLabels = clonedElement.querySelectorAll('[class*="feeLabel"]')
               feeLabels.forEach(label => {
@@ -1253,7 +1279,7 @@ const ContractDetail: React.FC = () => {
                   label.style.marginRight = '0'
                 }
               })
-              
+
               // 处理金额
               const feeAmounts = clonedElement.querySelectorAll('[class*="feeAmount"]')
               feeAmounts.forEach(amount => {
@@ -1264,7 +1290,7 @@ const ContractDetail: React.FC = () => {
                   amount.style.display = 'inline-block'
                 }
               })
-              
+
               // 处理金额大写
               const feeWords = clonedElement.querySelectorAll('[class*="feeWords"]')
               feeWords.forEach(words => {
@@ -1281,7 +1307,7 @@ const ContractDetail: React.FC = () => {
             const element = clonedDoc.querySelector('[class*="contractContentInner"]')
             if (element instanceof HTMLElement) {
               clonedElement = element
-              
+
               // 设置样式确保全部内容可见
               clonedElement.style.overflow = 'visible'
               clonedElement.style.height = 'auto'
@@ -1294,7 +1320,7 @@ const ContractDetail: React.FC = () => {
               clonedElement.style.boxShadow = 'none'
               clonedElement.style.borderRadius = '0'
               clonedElement.style.paddingBottom = '50px' // 增加底部填充
-              
+
               // 处理所有子元素，确保没有溢出隐藏
               const allElements = clonedElement.querySelectorAll('*')
               allElements.forEach(el => {
@@ -1302,7 +1328,7 @@ const ContractDetail: React.FC = () => {
                   el.style.overflow = 'visible'
                 }
               })
-              
+
               // 处理外层容器
               const wrapperElement = clonedDoc.querySelector('[class*="contractContentWrapper"]')
               if (wrapperElement instanceof HTMLElement) {
@@ -1312,7 +1338,7 @@ const ContractDetail: React.FC = () => {
                 wrapperElement.style.boxShadow = 'none'
                 wrapperElement.style.overflow = 'visible'
               }
-              
+
               // 确保合同组件本身也居中
               const serviceElement = clonedDoc.querySelector('.single-service-agreement-view')
               if (serviceElement instanceof HTMLElement) {
@@ -1346,11 +1372,11 @@ const ContractDetail: React.FC = () => {
 
       // 上传到服务器
       const uploadResponse = await uploadFile(file, 'contracts')
-      const imageUrl = uploadResponse.data.url
+      const imageFileName = uploadResponse.data.fileName
 
       // 检查并设置合同签署日期
       const currentDate = new Date().toISOString().split('T')[0] // 当前日期，格式为 YYYY-MM-DD
-      const updateData: any = { contractImage: imageUrl }
+      const updateData: any = { contractImage: imageFileName }
 
       // 如果甲方签署日期为空，设置为当前日期
       if (!contractData.partyASignDate) {
@@ -1468,13 +1494,17 @@ const ContractDetail: React.FC = () => {
       case '产品服务协议':
         return <ProductServiceAgreementView contractData={contractData} />
       case '代理记账合同':
-        return <div id="agency-accounting-agreement-view">
-          <AgencyAccountingAgreementView contractData={contractData} />
-        </div>
+        return (
+          <div id="agency-accounting-agreement-view">
+            <AgencyAccountingAgreementView contractData={contractData} />
+          </div>
+        )
       case '单项服务合同':
-        return <div id="single-service-agreement-view">
-          <SingleServiceAgreementView contractData={contractData} />
-        </div>
+        return (
+          <div id="single-service-agreement-view">
+            <SingleServiceAgreementView contractData={contractData} />
+          </div>
+        )
       default:
         return (
           <div className="text-center py-8">
@@ -1511,12 +1541,9 @@ const ContractDetail: React.FC = () => {
           <Space>
             {contractData && contractData.contractStatus === '0' && (
               <>
-              <Button
-                icon={<EditOutlined />}
-                onClick={handleEdit}
-              >
-                编辑合同
-              </Button>
+                <Button icon={<EditOutlined />} onClick={handleEdit}>
+                  编辑合同
+                </Button>
                 <Button
                   type="primary"
                   icon={<LinkOutlined />}
@@ -1605,13 +1632,8 @@ const ContractDetail: React.FC = () => {
       <Divider />
 
       {/* 合同内容区域 */}
-      <div
-        className={styles.contractContentWrapper}
-        ref={contractContentRef}
-      >
-        <div className={styles.contractContentInner}>
-          {renderContractContent()}
-        </div>
+      <div className={styles.contractContentWrapper} ref={contractContentRef}>
+        <div className={styles.contractContentInner}>{renderContractContent()}</div>
       </div>
 
       {/* 签署链接模态框 */}
@@ -1635,7 +1657,7 @@ const ContractDetail: React.FC = () => {
             readOnly
             rows={3}
             className="mb-2"
-            onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+            onClick={e => (e.target as HTMLTextAreaElement).select()}
           />
           <p className="text-gray-500 text-sm mt-4">
             提示：链接有效期为30分钟，请及时将链接发送给签署方。
