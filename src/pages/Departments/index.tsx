@@ -470,11 +470,11 @@ const Departments = () => {
       title: '角色',
       dataIndex: 'roles',
       key: 'roles',
-      render: (roles: string[]) => (
+      render: (roles: string[], record: any) => (
         <>
-          {roles?.map(role => (
-            <Tag color="blue" key={role}>
-              {role}
+          {record.roleNames?.map((roleName: string, index: number) => (
+            <Tag color="blue" key={index}>
+              {roleName}
             </Tag>
           ))}
         </>

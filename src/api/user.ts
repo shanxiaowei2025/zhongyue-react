@@ -42,6 +42,15 @@ export const getUserList = (page = 1, limit = 10, keyword?: string) => {
   return request.get<ApiResponse<PaginatedResponse<User>>>('/users', params)
 }
 
+// 搜索用户
+export const searchUsers = (username: string, page = 1, limit = 10) => {
+  return request.get<ApiResponse<PaginatedResponse<User>>>('/users/search', {
+    username,
+    page,
+    limit
+  })
+}
+
 // 获取用户详情
 export const getUser = (id: number) => {
   return request.get<ApiResponse<User>>(`/users/${id}`)

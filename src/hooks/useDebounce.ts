@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 
 /**
  * 防抖Hook - 限制函数调用频率
@@ -42,4 +42,26 @@ export function useDebounce<T extends (...args: any[]) => any>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [delay, ...deps]
   )
+}
+
+/**
+ * 防抖值Hook - 对一个值进行防抖处理
+ * @param value 需要防抖的值
+ * @param delay 延迟时间（毫秒）
+ * @returns 防抖处理后的值
+ */
+export function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [value, delay])
+
+  return debouncedValue
 }

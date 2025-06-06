@@ -1570,46 +1570,46 @@ const ContractDetail: React.FC = () => {
       {/* 合同基本信息 */}
       {contractData && (
         <Card className="mb-4">
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">合同编号：</span>
-              <span className="font-medium text-blue-600">
+              <span className="text-gray-600 min-w-24">合同编号：</span>
+              <span className="font-medium text-blue-600 ml-2">
                 {contractData.contractNumber || '未生成'}
               </span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">签署方：</span>
-              <span className="font-medium text-blue-600">{contractData.signatory}</span>
+              <span className="text-gray-600 min-w-24">签署方：</span>
+              <span className="font-medium text-blue-600 ml-2">{contractData.signatory}</span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">合同类型：</span>
-              <span className="font-medium text-green-600">{contractData.contractType}</span>
+              <span className="text-gray-600 min-w-24">合同类型：</span>
+              <span className="font-medium text-green-600 ml-2">{contractData.contractType}</span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">合同状态：</span>
+              <span className="text-gray-600 min-w-24">合同状态：</span>
               <span
-                className={`font-medium text-${getContractStatusDisplay(contractData.contractStatus).color}-600`}
+                className={`font-medium text-${getContractStatusDisplay(contractData.contractStatus).color}-600 ml-2`}
               >
                 {getContractStatusDisplay(contractData.contractStatus).text}
               </span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">甲方公司：</span>
-              <span className="font-medium">{contractData.partyACompany || '-'}</span>
+              <span className="text-gray-600 min-w-24">甲方公司：</span>
+              <span className="font-medium ml-2">{contractData.partyACompany || '-'}</span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">费用总计：</span>
-              <span className="font-medium text-red-600">
+              <span className="text-gray-600 min-w-24">费用总计：</span>
+              <span className="font-medium text-red-600 ml-2">
                 {contractData.totalCost ? `¥${contractData.totalCost}` : '-'}
               </span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">提交人：</span>
-              <span className="font-medium">{contractData.submitter || '-'}</span>
+              <span className="text-gray-600 min-w-24">提交人：</span>
+              <span className="font-medium ml-2">{contractData.submitter || '-'}</span>
             </div>
             <div className="flex items-center">
-              <span className="text-gray-600 w-24">创建时间：</span>
-              <span className="font-medium">
+              <span className="text-gray-600 min-w-24">创建时间：</span>
+              <span className="font-medium ml-2">
                 {contractData.createTime
                   ? new Date(contractData.createTime).toLocaleString()
                   : '未知'}
@@ -1617,8 +1617,8 @@ const ContractDetail: React.FC = () => {
             </div>
             {contractData.contractStatus === '1' && (
               <div className="flex items-center">
-                <span className="text-gray-600 w-24">签署时间：</span>
-                <span className="font-medium">
+                <span className="text-gray-600 min-w-24">签署时间：</span>
+                <span className="font-medium ml-2">
                   {contractData.updateTime
                     ? new Date(contractData.updateTime).toLocaleString()
                     : '未知'}

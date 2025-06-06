@@ -22,6 +22,7 @@ import {
   InfoCircleOutlined,
   DownloadOutlined,
   FileSearchOutlined,
+  UploadOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'

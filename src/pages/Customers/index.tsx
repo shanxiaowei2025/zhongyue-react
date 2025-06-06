@@ -611,8 +611,12 @@ export default function Customers() {
       file.name.endsWith('.xlsx') ||
       file.name.endsWith('.xls')
 
-    if (!isExcel) {
-      message.error('只能上传Excel文件！')
+    const isCSV = 
+      file.type === 'text/csv' ||
+      file.name.endsWith('.csv')
+
+    if (!isExcel && !isCSV) {
+      message.error('只能上传Excel或CSV文件！')
       return false
     }
 
@@ -634,9 +638,13 @@ export default function Customers() {
       file.type === 'application/vnd.ms-excel' ||
       file.name.endsWith('.xlsx') ||
       file.name.endsWith('.xls')
+      
+    const isCSV = 
+      file.type === 'text/csv' ||
+      file.name.endsWith('.csv')
 
-    if (!isExcel) {
-      message.error('只能上传Excel文件！')
+    if (!isExcel && !isCSV) {
+      message.error('只能上传Excel或CSV文件！')
       return false
     }
 
@@ -961,7 +969,7 @@ export default function Customers() {
         >
           导出
         </Button>
-        <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls">
+        <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls,.csv">
           <Button
             type="default"
             icon={<UploadOutlined />}
@@ -970,7 +978,7 @@ export default function Customers() {
             导入
           </Button>
         </Upload>
-        <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls">
+        <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls,.csv">
           <Button
             type="default"
             icon={<FileExcelOutlined />}

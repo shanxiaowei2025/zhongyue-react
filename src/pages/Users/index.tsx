@@ -15,11 +15,12 @@ import {
 } from 'antd'
 import type { TablePaginationConfig } from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons'
 import { User, Department, ApiResponse, PaginatedResponse } from '../../types'
-import { getUserList, createUser, updateUserById, deleteUser } from '../../api/user'
+import { getUserList, createUser, updateUserById, deleteUser, searchUsers } from '../../api/user'
 import { getDepartmentList, getDepartmentTree } from '../../api/department'
 import { getRoleList } from '../../api/roles'
+import { useDebouncedValue } from '../../hooks/useDebounce'
 import dayjs from 'dayjs'
 
 // 适配后端API返回的用户数据结构
@@ -71,11 +72,15 @@ const Users = () => {
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [form] = Form.useForm()
   const [keyword, setKeyword] = useState<string>('')
+  const [searchText, setSearchText] = useState<string>('')
   const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
     pageSize: 10,
     total: 0,
   })
+
+  // 使用防抖值处理搜索
+  const debouncedSearchText = useDebouncedValue(searchText, 500)
 
   // 创建角色代码到名称的映射
   const roleCodeToName = useMemo(() => {
@@ -135,16 +140,29 @@ const Users = () => {
     fetchUsers()
     fetchRoles()
     fetchDepartmentTree()
-  }, [pagination.current, pagination.pageSize, keyword])
+  }, [pagination.current, pagination.pageSize, debouncedSearchText])
 
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const response = await getUserList(
-        pagination.current as number,
-        pagination.pageSize as number,
-        keyword
-      )
+      let response;
+      
+      if (debouncedSearchText) {
+        // 使用搜索接口
+        response = await searchUsers(
+          debouncedSearchText,
+          pagination.current as number,
+          pagination.pageSize as number
+        );
+      } else {
+        // 使用常规列表接口
+        response = await getUserList(
+          pagination.current as number,
+          pagination.pageSize as number,
+          keyword
+        );
+      }
+      
       if (response) {
         const apiResponse = response as unknown as ApiData<UserResponse>
         if (apiResponse.code === 0 && apiResponse.data) {
@@ -335,6 +353,25 @@ const Users = () => {
     })
   }
 
+  // 处理搜索
+  const handleSearch = (value: string) => {
+    setSearchText(value);
+    // 重置到第一页
+    setPagination(prev => ({
+      ...prev,
+      current: 1
+    }));
+  }
+
+  // 处理重置
+  const handleReset = () => {
+    setSearchText('');
+    setPagination(prev => ({
+      ...prev,
+      current: 1
+    }));
+  }
+
   const columns: ColumnsType<ApiUser> = [
     {
       title: 'ID',
@@ -439,11 +476,13 @@ const Users = () => {
             添加用户
           </Button>
           <Input
-            placeholder="搜索用户"
-            value={keyword}
-            onChange={e => setKeyword(e.target.value)}
+            placeholder="搜索用户名"
+            value={searchText}
+            onChange={e => handleSearch(e.target.value)}
             style={{ width: 200 }}
+            allowClear
           />
+          <Button onClick={handleReset}>重置</Button>
         </Space>
       </div>
 
