@@ -17,14 +17,23 @@ const App = () => {
     clearTimer,
     passwordModalVisible,
     checkPasswordExpiration,
+    checkAndHandleAutoLogout,
+    updateLastActivity,
   } = useAuthStore()
 
   // 在应用启动时预加载角色数据，但仅当用户已登录时
   useEffect(() => {
     const preloadData = async () => {
       try {
-        // 只有当用户已登录时才预加载需要权限的数据
+        // 首先检查是否应该自动退出（基于最后活动时间）
         if (isAuthenticated) {
+          const shouldLogout = checkAndHandleAutoLogout()
+          if (shouldLogout) {
+            // 如果已经自动退出，不需要继续执行后续逻辑
+            setLoading(false)
+            return
+          }
+
           // 预加载角色数据
           await loadRolesFromAPI()
           // 这里可以添加其他需要预加载的数据
@@ -42,7 +51,7 @@ const App = () => {
     }
 
     preloadData()
-  }, [isAuthenticated, checkPasswordExpiration])
+  }, [isAuthenticated, checkPasswordExpiration, checkAndHandleAutoLogout])
 
   // 添加自动登出功能
   useEffect(() => {
@@ -53,6 +62,7 @@ const App = () => {
 
       // 定义用户活动处理函数
       const handleUserActivity = () => {
+        updateLastActivity() // 更新最后活动时间
         resetTimer() // 重置计时器
       }
 
@@ -63,6 +73,11 @@ const App = () => {
       window.addEventListener('touchmove', handleUserActivity)
       window.addEventListener('scroll', handleUserActivity)
 
+      // 添加定期检查，每分钟检查一次是否应该自动退出
+      const intervalCheck = setInterval(() => {
+        checkAndHandleAutoLogout()
+      }, 60000) // 每60秒检查一次
+
       // 组件卸载时清理
       return () => {
         window.removeEventListener('mousemove', handleUserActivity)
@@ -70,6 +85,7 @@ const App = () => {
         window.removeEventListener('keypress', handleUserActivity)
         window.removeEventListener('touchmove', handleUserActivity)
         window.removeEventListener('scroll', handleUserActivity)
+        clearInterval(intervalCheck) // 清除定期检查
         clearTimer() // 清除计时器
       }
     }

@@ -6,6 +6,24 @@ import type { User } from '../types'
 // 超时时间设置为30分钟（毫秒）
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000
 
+// 获取最后活动时间
+const getLastActivityTime = (): number => {
+  const lastActivity = localStorage.getItem('lastActivityTime')
+  return lastActivity ? parseInt(lastActivity, 10) : Date.now()
+}
+
+// 设置最后活动时间
+const setLastActivityTime = (time: number) => {
+  localStorage.setItem('lastActivityTime', time.toString())
+}
+
+// 检查是否应该自动退出
+const shouldAutoLogout = (): boolean => {
+  const lastActivity = getLastActivityTime()
+  const now = Date.now()
+  return now - lastActivity > INACTIVITY_TIMEOUT
+}
+
 // 获取本地存储的用户信息
 const getUserFromStorage = (): User | null => {
   const userString = localStorage.getItem('user')
@@ -38,6 +56,8 @@ interface AuthState {
   resetTimer: () => void
   startTimer: () => void
   clearTimer: () => void
+  checkAndHandleAutoLogout: () => boolean
+  updateLastActivity: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -116,6 +136,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         localStorage.removeItem('passwordUpdatedAt')
+        localStorage.removeItem('lastActivityTime')
         state.user = null
         state.token = null
         state.isAuthenticated = false
@@ -131,13 +152,17 @@ export const useAuthStore = create<AuthState>()(
     // 重置计时器
     resetTimer: () =>
       set(state => {
+        // 更新最后活动时间
+        setLastActivityTime(Date.now())
+
         if (state.inactivityTimer) {
           window.clearTimeout(state.inactivityTimer)
           state.inactivityTimer = null
         }
         if (state.isAuthenticated) {
           state.inactivityTimer = window.setTimeout(() => {
-            useAuthStore.getState().logout()
+            const authState = useAuthStore.getState()
+            authState.logout()
             // 使用更友好的消息提示，而不是alert
             message.warning('您的登录已过期，请重新登录')
             window.location.href = '/login'
@@ -149,8 +174,12 @@ export const useAuthStore = create<AuthState>()(
     startTimer: () =>
       set(state => {
         if (state.isAuthenticated && !state.inactivityTimer) {
+          // 更新最后活动时间
+          setLastActivityTime(Date.now())
+
           state.inactivityTimer = window.setTimeout(() => {
-            useAuthStore.getState().logout()
+            const authState = useAuthStore.getState()
+            authState.logout()
             message.warning('您的登录已过期，请重新登录')
             window.location.href = '/login'
           }, INACTIVITY_TIMEOUT) as unknown as number
@@ -165,5 +194,22 @@ export const useAuthStore = create<AuthState>()(
           state.inactivityTimer = null
         }
       }),
+
+    // 检查并处理自动退出
+    checkAndHandleAutoLogout: () => {
+      const state = useAuthStore.getState()
+      if (state.isAuthenticated && shouldAutoLogout()) {
+        state.logout()
+        message.warning('长时间未操作，已自动退出登录，请重新登录')
+        window.location.href = '/login'
+        return true
+      }
+      return false
+    },
+
+    // 更新最后活动时间
+    updateLastActivity: () => {
+      setLastActivityTime(Date.now())
+    },
   }))
 )

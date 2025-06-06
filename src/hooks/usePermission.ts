@@ -31,7 +31,7 @@ export const usePermission = () => {
         // 记录费用管理相关的权限
         const expensePermissions = response.data.filter(p => p.page_name === '费用管理')
         console.log('费用管理相关权限:', expensePermissions)
-        
+
         // 记录合同管理相关的权限
         const contractPermissions = response.data.filter(p => p.page_name === '合同管理')
         console.log('合同管理相关权限:', contractPermissions)
@@ -50,9 +50,11 @@ export const usePermission = () => {
           // 特别记录当前用户角色的费用管理权限
           const userExpensePermissions = userRolePermissions.filter(p => p.page_name === '费用管理')
           console.log('当前用户角色的费用管理权限:', userExpensePermissions)
-          
+
           // 特别记录当前用户角色的合同管理权限
-          const userContractPermissions = userRolePermissions.filter(p => p.page_name === '合同管理')
+          const userContractPermissions = userRolePermissions.filter(
+            p => p.page_name === '合同管理'
+          )
           console.log('当前用户角色的合同管理权限:', userContractPermissions)
         }
 
