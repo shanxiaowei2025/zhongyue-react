@@ -47,7 +47,7 @@ export const searchUsers = (username: string, page = 1, limit = 10) => {
   return request.get<ApiResponse<PaginatedResponse<User>>>('/users/search', {
     username,
     page,
-    limit
+    limit,
   })
 }
 

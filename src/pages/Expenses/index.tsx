@@ -701,73 +701,64 @@ const Expenses: React.FC = () => {
   return (
     <div className="expenses-page">
       <div className="search-card mb-4">
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-          {/* 左侧：搜索表单 */}
-          <div className="flex-1">
-            <Form
-              form={form}
-              layout="inline"
-              className="search-form"
-              onFinish={handleSearch}
-              onValuesChange={handleFormFieldChange}
+        <Form
+          form={form}
+          layout="inline"
+          className="search-form"
+          onFinish={handleSearch}
+          onValuesChange={handleFormFieldChange}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
+            <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
+              <Input placeholder="输入企业名称" allowClear />
+            </Form.Item>
+
+            <Form.Item
+              name="unifiedSocialCreditCode"
+              label="统一社会信用代码"
+              className="m-0 w-full"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
-                <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
-                  <Input placeholder="输入企业名称" allowClear />
-                </Form.Item>
+              <Input placeholder="输入统一社会信用代码" allowClear />
+            </Form.Item>
 
-                <Form.Item
-                  name="unifiedSocialCreditCode"
-                  label="统一社会信用代码"
-                  className="m-0 w-full"
-                >
-                  <Input placeholder="输入统一社会信用代码" allowClear />
-                </Form.Item>
+            <Form.Item name="status" label="状态" className="m-0 w-full">
+              <Select placeholder="选择状态" allowClear>
+                <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
+                <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
+                <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
+              </Select>
+            </Form.Item>
 
-                <Form.Item name="status" label="状态" className="m-0 w-full">
-                  <Select placeholder="选择状态" allowClear>
-                    <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
-                    <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
-                    <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
-                  </Select>
-                </Form.Item>
+            <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
+              <Input placeholder="输入业务员" allowClear />
+            </Form.Item>
 
-                <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
-                  <Input placeholder="输入业务员" allowClear />
-                </Form.Item>
-
-                <Form.Item
-                  name="dateRange"
-                  label="收费日期"
-                  className="m-0 w-full"
-                  style={{ gridColumn: 'span 2' }}
-                >
-                  <RangePicker
-                    allowClear
-                    style={{ width: '100%' }}
-                    onChange={() => {
-                      // 日期变化时特殊处理，确保能正确触发搜索
-                      setTimeout(handleFormFieldChange, 0)
-                    }}
-                  />
-                </Form.Item>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 w-full">
-                <div className="flex gap-2">
-                  <Form.Item className="m-0">
-                    <Button icon={<ReloadOutlined />} onClick={handleReset}>
-                      重置
-                    </Button>
-                  </Form.Item>
-                </div>
-              </div>
-            </Form>
+            <Form.Item
+              name="dateRange"
+              label="收费日期"
+              className="m-0 w-full"
+              style={{ gridColumn: 'span 2' }}
+            >
+              <RangePicker
+                allowClear
+                style={{ width: '100%' }}
+                onChange={() => {
+                  // 日期变化时特殊处理，确保能正确触发搜索
+                  setTimeout(handleFormFieldChange, 0)
+                }}
+              />
+            </Form.Item>
           </div>
 
-          {/* 右侧：操作按钮区域 */}
-          <div className="flex flex-col justify-center gap-2 min-w-[200px]">
-            <div className="flex gap-2 justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-4 w-full">
+            <div className="flex gap-2">
+              <Form.Item className="m-0">
+                <Button icon={<ReloadOutlined />} onClick={handleReset}>
+                  重置
+                </Button>
+              </Form.Item>
+            </div>
+            <div className="flex gap-2">
               {canCreateExpense && (
                 <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
                   新增费用
@@ -778,7 +769,7 @@ const Expenses: React.FC = () => {
               </Button>
             </div>
           </div>
-        </div>
+        </Form>
       </div>
 
       <div>

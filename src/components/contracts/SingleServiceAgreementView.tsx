@@ -335,14 +335,20 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             </span>
             <span className={styles.feeLabel}>大写金额（人民币）：</span>
             <span className={styles.feeWords}>
-              <strong>{contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}</strong>
+              <strong>
+                {contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
+              </strong>
             </span>
           </div>
 
           {/* 备注 */}
           <div className={styles.remarkRow}>
-            <span className={styles.remarkLabel} style={{ fontWeight: 'bold' }}>备注：</span>
-            <span className={styles.remarkContent} style={{ fontWeight: 'bold' }}>{contractData.remarks || '-'}</span>
+            <span className={styles.remarkLabel} style={{ fontWeight: 'bold' }}>
+              备注：
+            </span>
+            <span className={styles.remarkContent} style={{ fontWeight: 'bold' }}>
+              {contractData.remarks || '-'}
+            </span>
           </div>
         </div>
       </div>
@@ -533,7 +539,9 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             <div className={styles.signatureColumn}>
               <div
                 className={`${styles.signatureItem} ${
-                  contractData.contractSignature || contractData.partyAStampImage ? styles.signed : styles.unsigned
+                  contractData.contractSignature || contractData.partyAStampImage
+                    ? styles.signed
+                    : styles.unsigned
                 }`}
               >
                 <span className={styles.signatureTitle}>（甲方盖章）：</span>
@@ -580,7 +588,10 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             <div className={styles.signatureColumn}>
               <div className={styles.signatureItem}>
                 <span className={styles.signatureTitle}>（乙方盖章）：</span>
-                <div className={styles.signatureArea} style={{ border: 'none', background: 'transparent' }}>
+                <div
+                  className={styles.signatureArea}
+                  style={{ border: 'none', background: 'transparent' }}
+                >
                   <img
                     src={getPartyBStampImage(contractData.signatory || '')}
                     alt="乙方盖章"

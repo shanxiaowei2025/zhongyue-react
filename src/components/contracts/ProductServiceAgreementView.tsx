@@ -64,8 +64,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
   }
 
   // 检查是否是脉信公司的产品服务协议
-  const isMaixinProductService = contractData.signatory === '保定脉信会计服务有限公司' && 
-                                contractData.contractType === '产品服务协议'
+  const isMaixinProductService =
+    contractData.signatory === '保定脉信会计服务有限公司' &&
+    contractData.contractType === '产品服务协议'
 
   // 获取项目名称
   const getItemName = (itemKey: string): string => {
@@ -179,14 +180,19 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           {!isMaixinProductService && (
             <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
           )}
-          <div className="company-info" style={isMaixinProductService ? {paddingLeft: 0, borderLeft: 'none'} : {}}>
+          <div
+            className="company-info"
+            style={isMaixinProductService ? { paddingLeft: 0, borderLeft: 'none' } : {}}
+          >
             <h2 className="company-name">
-              {(contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' || 
-                contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司') ? (
+              {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ||
+              contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司' ? (
                 <>
-                  定兴县中岳会计服务有限公司<br />
-                  {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? 
-                    '河北雄安分公司' : '高碑店分公司'}
+                  定兴县中岳会计服务有限公司
+                  <br />
+                  {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司'
+                    ? '河北雄安分公司'
+                    : '高碑店分公司'}
                 </>
               ) : (
                 config.title
@@ -381,9 +387,13 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           <div className="cost-row">
             <div className="cost-amount-row">
               <span style={{ fontSize: '13px', fontWeight: 'bold' }}>费用总计（人民币）：</span>
-              <span className="amount-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>{contractData.totalCost || '-'}</span>
+              <span className="amount-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                {contractData.totalCost || '-'}
+              </span>
               <span style={{ fontSize: '13px', fontWeight: 'bold' }}>元</span>
-              <span className="amount-label" style={{ fontSize: '13px', fontWeight: 'bold' }}>大写金额（人民币）：</span>
+              <span className="amount-label" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                大写金额（人民币）：
+              </span>
               <span className="amount-text-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
                 {numberToChinese(contractData.totalCost || 0)}
               </span>
@@ -392,7 +402,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           </div>
           <div className="cost-remark">
             <span style={{ fontSize: '13px', fontWeight: 'bold' }}>备注：</span>
-            <span className="remark-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>{contractData.otherRemark || '-'}</span>
+            <span className="remark-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+              {contractData.otherRemark || '-'}
+            </span>
           </div>
         </div>
       </div>
@@ -654,7 +666,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
               </div>
             </div>
           </div>
-          
+
           {/* 乙方签署列 */}
           <div className="signature-column">
             <div className="signature-block">

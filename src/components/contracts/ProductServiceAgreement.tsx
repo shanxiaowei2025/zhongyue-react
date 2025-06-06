@@ -167,8 +167,8 @@ const ProductServiceAgreement = forwardRef<
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
     // 检查是否是脉信公司的产品服务协议
-    const isMaixinProductService = signatory === '保定脉信会计服务有限公司' && 
-                                 formData.contractType === '产品服务协议'
+    const isMaixinProductService =
+      signatory === '保定脉信会计服务有限公司' && formData.contractType === '产品服务协议'
 
     if (!config) {
       return <div className="error-message">不支持的签署方: {signatory}</div>
@@ -577,14 +577,19 @@ const ProductServiceAgreement = forwardRef<
             {isMaixinProductService ? null : (
               <img src="/images/contract-logo.png" alt="公司logo" className="company-logo" />
             )}
-            <div className="company-info" style={isMaixinProductService ? {paddingLeft: 0, borderLeft: 'none'} : {}}>
+            <div
+              className="company-info"
+              style={isMaixinProductService ? { paddingLeft: 0, borderLeft: 'none' } : {}}
+            >
               <h2 className="company-name">
-                {(signatory === '定兴县中岳会计服务有限公司河北雄安分公司' || 
-                  signatory === '定兴县中岳会计服务有限公司高碑店分公司') ? (
+                {signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ||
+                signatory === '定兴县中岳会计服务有限公司高碑店分公司' ? (
                   <>
-                    定兴县中岳会计服务有限公司<br />
-                    {signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? 
-                      '河北雄安分公司' : '高碑店分公司'}
+                    定兴县中岳会计服务有限公司
+                    <br />
+                    {signatory === '定兴县中岳会计服务有限公司河北雄安分公司'
+                      ? '河北雄安分公司'
+                      : '高碑店分公司'}
                   </>
                 ) : (
                   config.title
@@ -1122,7 +1127,12 @@ const ProductServiceAgreement = forwardRef<
                   placeholder="自动根据费用总计生成"
                   value={totalCostInWords}
                   readOnly
-                  style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed', fontSize: '13px', fontWeight: 'bold' }}
+                  style={{
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                  }}
                 />
                 <span>。</span>
               </div>
@@ -1387,12 +1397,14 @@ const ProductServiceAgreement = forwardRef<
                     placeholder="选择日期"
                     format="YYYY年MM月DD日"
                     value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
-                    onChange={date => handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))}
+                    onChange={date =>
+                      handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))
+                    }
                   />
                 </div>
               </div>
             </div>
-            
+
             {/* 乙方签署列 */}
             <div className="signature-column">
               <div className="signature-block">
@@ -1420,7 +1432,9 @@ const ProductServiceAgreement = forwardRef<
                     placeholder="选择日期"
                     format="YYYY年MM月DD日"
                     value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
-                    onChange={date => handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))}
+                    onChange={date =>
+                      handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))
+                    }
                   />
                 </div>
               </div>

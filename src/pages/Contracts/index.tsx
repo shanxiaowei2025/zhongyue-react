@@ -43,6 +43,7 @@ import {
   generateContractToken,
 } from '../../api/contract'
 import SignatureCanvas from '../../components/contracts/SignatureCanvas'
+import { useDebouncedValue } from '../../hooks/useDebounce'
 
 // 添加样式来隔离签署模态框
 const modalStyle = `
@@ -198,6 +199,15 @@ const Contracts: React.FC = () => {
     ...pagination,
   }
 
+  // 添加防抖搜索参数
+  const debouncedSearchParams = useDebouncedValue(searchParams, 500)
+
+  // 构建查询参数
+  const debouncedQueryParams: ContractQueryParams = {
+    ...debouncedSearchParams,
+    ...pagination,
+  }
+
   // 获取合同数据
   const {
     data: contracts,
@@ -208,7 +218,7 @@ const Contracts: React.FC = () => {
     refreshContractList,
     removeContract,
     doSignContract,
-  } = useContractList(queryParams)
+  } = useContractList(debouncedQueryParams)
 
   // 设置表单初始值
   useEffect(() => {
@@ -598,10 +608,32 @@ const Contracts: React.FC = () => {
   ]
 
   return (
-    <div className="p-4">
+    <div>
       {/* 搜索区域 */}
       <div className="mb-4">
-        <Form form={form} layout="inline" className="contract-search-form">
+        <Form
+          form={form}
+          layout="inline"
+          className="contract-search-form"
+          onValuesChange={() => {
+            // 当表单值变化时自动搜索（通过防抖处理）
+            const values = form.getFieldsValue()
+            const newSearchParams = {
+              contractNumber: values.contractNumber || '',
+              partyACompany: values.partyACompany || '',
+              partyACreditCode: values.partyACreditCode || '',
+              contractType: values.contractType || '',
+              signatory: values.signatory || '',
+              contractStatus: values.contractStatus || undefined,
+              partyASignDateStart: values.partyASignDateRange?.[0]?.format('YYYY-MM-DD') || '',
+              partyASignDateEnd: values.partyASignDateRange?.[1]?.format('YYYY-MM-DD') || '',
+              createTimeStart: values.createTimeRange?.[0]?.format('YYYY-MM-DD') || '',
+              createTimeEnd: values.createTimeRange?.[1]?.format('YYYY-MM-DD') || '',
+            }
+            setSearchParams(newSearchParams)
+            setPagination({ page: 1, pageSize: pagination.pageSize })
+          }}
+        >
           <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-2">
               <Form.Item label="合同编号" name="contractNumber" className="mb-2">
@@ -647,9 +679,6 @@ const Contracts: React.FC = () => {
               <Space>
                 <Button icon={<ReloadOutlined />} onClick={handleReset}>
                   重置
-                </Button>
-                <Button icon={<SearchOutlined />} type="primary" onClick={handleSearch}>
-                  搜索
                 </Button>
               </Space>
               <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>

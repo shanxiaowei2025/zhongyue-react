@@ -145,24 +145,24 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      let response;
-      
+      let response
+
       if (debouncedSearchText) {
         // 使用搜索接口
         response = await searchUsers(
           debouncedSearchText,
           pagination.current as number,
           pagination.pageSize as number
-        );
+        )
       } else {
         // 使用常规列表接口
         response = await getUserList(
           pagination.current as number,
           pagination.pageSize as number,
           keyword
-        );
+        )
       }
-      
+
       if (response) {
         const apiResponse = response as unknown as ApiData<UserResponse>
         if (apiResponse.code === 0 && apiResponse.data) {
@@ -355,21 +355,21 @@ const Users = () => {
 
   // 处理搜索
   const handleSearch = (value: string) => {
-    setSearchText(value);
+    setSearchText(value)
     // 重置到第一页
     setPagination(prev => ({
       ...prev,
-      current: 1
-    }));
+      current: 1,
+    }))
   }
 
   // 处理重置
   const handleReset = () => {
-    setSearchText('');
+    setSearchText('')
     setPagination(prev => ({
       ...prev,
-      current: 1
-    }));
+      current: 1,
+    }))
   }
 
   const columns: ColumnsType<ApiUser> = [

@@ -15,6 +15,7 @@ import {
   DatePicker,
   Image,
   Upload,
+  Form,
 } from 'antd'
 import {
   PlusOutlined,
@@ -45,6 +46,7 @@ import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
+import { useDebouncedValue } from '../../hooks/useDebounce'
 import useSWR, { mutate } from 'swr'
 import {
   getCustomerDetail,
@@ -109,11 +111,14 @@ export default function Customers() {
     refreshPermissions()
   }, [refreshPermissions])
 
+  // 添加防抖搜索参数
+  const debouncedSearchParams = useDebouncedValue(searchParams, 500)
+
   // 构建请求参数
   const requestParams = {
     page: current,
     pageSize,
-    ...searchParams,
+    ...debouncedSearchParams,
   }
 
   // 使用SWR获取客户列表数据
@@ -167,6 +172,26 @@ export default function Customers() {
     setCurrent(1) // 重置到第一页
     // SWR会自动触发新请求
   }
+
+  // 当搜索参数变化时，自动重置到第一页（仅当不是初始加载时）
+  useEffect(() => {
+    if (current !== 1) {
+      setCurrent(1)
+    }
+  }, [
+    searchParams.keyword,
+    searchParams.taxNumber,
+    searchParams.consultantAccountant,
+    searchParams.bookkeepingAccountant,
+    searchParams.taxBureau,
+    searchParams.enterpriseType,
+    searchParams.industryCategory,
+    searchParams.enterpriseStatus,
+    searchParams.businessStatus,
+    searchParams.location,
+    searchParams.startDate,
+    searchParams.endDate,
+  ])
 
   const resetSearch = () => {
     setSearchParams({
@@ -611,9 +636,7 @@ export default function Customers() {
       file.name.endsWith('.xlsx') ||
       file.name.endsWith('.xls')
 
-    const isCSV = 
-      file.type === 'text/csv' ||
-      file.name.endsWith('.csv')
+    const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv')
 
     if (!isExcel && !isCSV) {
       message.error('只能上传Excel或CSV文件！')
@@ -638,10 +661,8 @@ export default function Customers() {
       file.type === 'application/vnd.ms-excel' ||
       file.name.endsWith('.xlsx') ||
       file.name.endsWith('.xls')
-      
-    const isCSV = 
-      file.type === 'text/csv' ||
-      file.name.endsWith('.csv')
+
+    const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv')
 
     if (!isExcel && !isCSV) {
       message.error('只能上传Excel或CSV文件！')
@@ -843,150 +864,190 @@ export default function Customers() {
   return (
     <div className="customer-management-container">
       {/* 搜索和操作工具栏 */}
-      <div className="mb-4 flex flex-wrap gap-2 items-center">
-        <div className="flex flex-wrap gap-2 flex-1">
-          <Input
-            placeholder="企业名称关键词"
-            value={searchParams.keyword}
-            onChange={e => setSearchParams({ ...searchParams, keyword: e.target.value })}
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="税号"
-            value={searchParams.taxNumber}
-            onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="顾问会计"
-            value={searchParams.consultantAccountant}
-            onChange={e =>
-              setSearchParams({ ...searchParams, consultantAccountant: e.target.value })
-            }
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="记账会计"
-            value={searchParams.bookkeepingAccountant}
-            onChange={e =>
-              setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })
-            }
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="企业类型"
-            value={searchParams.enterpriseType}
-            onChange={e => setSearchParams({ ...searchParams, enterpriseType: e.target.value })}
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="所属分局"
-            value={searchParams.taxBureau}
-            onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="归属地"
-            value={searchParams.location}
-            onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Input
-            placeholder="行业大类"
-            value={searchParams.industryCategory}
-            onChange={e => setSearchParams({ ...searchParams, industryCategory: e.target.value })}
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <Select
-            placeholder="工商状态"
-            value={searchParams.enterpriseStatus || undefined}
-            onChange={value => setSearchParams({ ...searchParams, enterpriseStatus: value })}
-            allowClear
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-            options={Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
-              value,
-              label,
-            }))}
-          />
-          <Select
-            placeholder="税务状态"
-            value={searchParams.businessStatus || undefined}
-            onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
-            allowClear
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-            options={Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
-              value,
-              label,
-            }))}
-          />
-          <DatePicker
-            placeholder="开始日期"
-            value={searchParams.startDate ? dayjs.utc(searchParams.startDate).local() : null}
-            onChange={date =>
-              setSearchParams({ ...searchParams, startDate: date ? date.format('YYYY-MM-DD') : '' })
-            }
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
-          <DatePicker
-            placeholder="结束日期"
-            value={searchParams.endDate ? dayjs.utc(searchParams.endDate).local() : null}
-            onChange={date =>
-              setSearchParams({ ...searchParams, endDate: date ? date.format('YYYY-MM-DD') : '' })
-            }
-            className="w-full sm:w-[calc(50%-0.25rem)] xl:w-[180px]"
-          />
+      <div className="mb-4">
+        <Form layout="inline" className="customer-search-form">
+          <div className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-2">
+              <Form.Item label="企业名称" className="mb-2">
+                <Input
+                  placeholder="请输入企业名称关键词"
+                  value={searchParams.keyword}
+                  onChange={e => setSearchParams({ ...searchParams, keyword: e.target.value })}
+                  className="w-40"
+                />
+              </Form.Item>
 
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={handleSearch}
-            className="w-full sm:w-auto"
-          >
-            搜索
-          </Button>
-          <Button onClick={resetSearch} className="w-full sm:w-auto">
-            重置
-          </Button>
-          <Button icon={<ReloadOutlined />} onClick={refreshCustomers} className="w-full sm:w-auto">
-            刷新
-          </Button>
-        </div>
-        {canCreateCustomer && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-            className="w-full sm:w-auto mt-2 sm:mt-0"
-          >
-            添加客户
-          </Button>
-        )}
-        <Button
-          type="default"
-          icon={<DownloadOutlined />}
-          onClick={handleExport}
-          className="w-full sm:w-auto mt-2 sm:mt-0 ml-0 sm:ml-2"
-        >
-          导出
-        </Button>
-        <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls,.csv">
-          <Button
-            type="default"
-            icon={<UploadOutlined />}
-            className="w-full sm:w-auto mt-2 sm:mt-0 ml-0 sm:ml-2"
-          >
-            导入
-          </Button>
-        </Upload>
-        <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls,.csv">
-          <Button
-            type="default"
-            icon={<FileExcelOutlined />}
-            className="w-full sm:w-auto mt-2 sm:mt-0 ml-0 sm:ml-2"
-          >
-            批量替换
-          </Button>
-        </Upload>
+              <Form.Item label="税号" className="mb-2">
+                <Input
+                  placeholder="请输入税号"
+                  value={searchParams.taxNumber}
+                  onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="顾问会计" className="mb-2">
+                <Input
+                  placeholder="请输入顾问会计"
+                  value={searchParams.consultantAccountant}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, consultantAccountant: e.target.value })
+                  }
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="记账会计" className="mb-2">
+                <Input
+                  placeholder="请输入记账会计"
+                  value={searchParams.bookkeepingAccountant}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })
+                  }
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="企业类型" className="mb-2">
+                <Input
+                  placeholder="请输入企业类型"
+                  value={searchParams.enterpriseType}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, enterpriseType: e.target.value })
+                  }
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="所属分局" className="mb-2">
+                <Input
+                  placeholder="请输入所属分局"
+                  value={searchParams.taxBureau}
+                  onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="归属地" className="mb-2">
+                <Input
+                  placeholder="请输入归属地"
+                  value={searchParams.location}
+                  onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="行业大类" className="mb-2">
+                <Input
+                  placeholder="请输入行业大类"
+                  value={searchParams.industryCategory}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, industryCategory: e.target.value })
+                  }
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="工商状态" className="mb-2">
+                <Select
+                  placeholder="请选择工商状态"
+                  value={searchParams.enterpriseStatus || undefined}
+                  onChange={value => setSearchParams({ ...searchParams, enterpriseStatus: value })}
+                  allowClear
+                  className="w-40"
+                  options={Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
+                    value,
+                    label,
+                  }))}
+                />
+              </Form.Item>
+
+              <Form.Item label="税务状态" className="mb-2">
+                <Select
+                  placeholder="请选择税务状态"
+                  value={searchParams.businessStatus || undefined}
+                  onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
+                  allowClear
+                  className="w-40"
+                  options={Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
+                    value,
+                    label,
+                  }))}
+                />
+              </Form.Item>
+
+              <Form.Item label="开始日期" className="mb-2">
+                <DatePicker
+                  placeholder="请选择开始日期"
+                  value={searchParams.startDate ? dayjs.utc(searchParams.startDate).local() : null}
+                  onChange={date =>
+                    setSearchParams({
+                      ...searchParams,
+                      startDate: date ? date.format('YYYY-MM-DD') : '',
+                    })
+                  }
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="结束日期" className="mb-2">
+                <DatePicker
+                  placeholder="请选择结束日期"
+                  value={searchParams.endDate ? dayjs.utc(searchParams.endDate).local() : null}
+                  onChange={date =>
+                    setSearchParams({
+                      ...searchParams,
+                      endDate: date ? date.format('YYYY-MM-DD') : '',
+                    })
+                  }
+                  className="w-40"
+                />
+              </Form.Item>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mt-4 justify-between items-center">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={resetSearch}
+                  className="w-full sm:w-auto"
+                >
+                  重置
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {canCreateCustomer && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAdd}
+                    className="w-full sm:w-auto"
+                  >
+                    添加客户
+                  </Button>
+                )}
+                <Button
+                  type="default"
+                  icon={<DownloadOutlined />}
+                  onClick={handleExport}
+                  className="w-full sm:w-auto"
+                >
+                  导出
+                </Button>
+                <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls,.csv">
+                  <Button type="default" icon={<UploadOutlined />} className="w-full sm:w-auto">
+                    导入
+                  </Button>
+                </Upload>
+                <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls,.csv">
+                  <Button type="default" icon={<FileExcelOutlined />} className="w-full sm:w-auto">
+                    批量替换
+                  </Button>
+                </Upload>
+              </div>
+            </div>
+          </div>
+        </Form>
       </div>
 
       {/* 数据表格 */}

@@ -273,16 +273,18 @@ const ContractDetail: React.FC = () => {
         if (row instanceof HTMLElement) {
           row.style.display = 'flex'
           row.style.flexWrap = 'wrap'
-          row.style.gap = '30px'
+          row.style.gap = '15px' // 缩小间隔，从30px改为15px，与前端页面保持一致
+          row.style.alignItems = 'flex-start'
 
           // 处理每个联系项
           const contactItems = row.querySelectorAll('.contact-item')
           contactItems.forEach(item => {
             if (item instanceof HTMLElement) {
               item.style.display = 'flex'
-              item.style.alignItems = 'flex-start'
-              item.style.gap = '8px'
-              item.style.marginBottom = '8px'
+              item.style.alignItems = 'center' // 改为center，让联系人和联系电话垂直居中对齐
+              item.style.gap = '4px' // 缩小内部间隔，从8px改为4px
+              item.style.marginBottom = '0px' // 去掉下边距，避免额外空隙
+              item.style.marginRight = '15px' // 添加右边距来控制项目间距离
 
               // 处理标签
               const contactLabel = item.querySelector('.contact-label')
@@ -290,6 +292,7 @@ const ContractDetail: React.FC = () => {
                 contactLabel.style.whiteSpace = 'nowrap'
                 contactLabel.style.fontSize = '12px'
                 contactLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
+                contactLabel.style.marginRight = '2px' // 增加标签和值之间的小间距
               }
 
               // 处理值
@@ -1057,6 +1060,50 @@ const ContractDetail: React.FC = () => {
                     area.style.border = '1px dashed #999'
                     area.style.background = '#fafafa'
                   }
+                }
+              })
+
+              // 处理联系人信息区域
+              const contactRows = clonedElement.querySelectorAll('.contact-row')
+              contactRows.forEach(row => {
+                if (row instanceof HTMLElement) {
+                  row.style.display = 'flex'
+                  row.style.flexWrap = 'wrap'
+                  row.style.gap = '15px' // 缩小间隔，从30px改为15px，与前端页面保持一致
+                  row.style.alignItems = 'flex-start'
+
+                  // 处理每个联系项
+                  const contactItems = row.querySelectorAll('.contact-item')
+                  contactItems.forEach(item => {
+                    if (item instanceof HTMLElement) {
+                      item.style.display = 'flex'
+                      item.style.alignItems = 'center' // 改为center，让联系人和联系电话垂直居中对齐
+                      item.style.gap = '4px' // 缩小内部间隔，从8px改为4px
+                      item.style.marginBottom = '0px' // 去掉下边距，避免额外空隙
+                      item.style.marginRight = '15px' // 添加右边距来控制项目间距离
+
+                      // 处理标签
+                      const contactLabel = item.querySelector('.contact-label')
+                      if (contactLabel instanceof HTMLElement) {
+                        contactLabel.style.whiteSpace = 'nowrap'
+                        contactLabel.style.fontSize = '12px'
+                        contactLabel.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
+                        contactLabel.style.marginRight = '2px' // 增加标签和值之间的小间距
+                      }
+
+                      // 处理值
+                      const contactValue = item.querySelector('.contact-value')
+                      if (contactValue instanceof HTMLElement) {
+                        contactValue.style.display = 'inline-block'
+                        contactValue.style.fontSize = '12px'
+                        contactValue.style.color = '#333'
+                        contactValue.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
+                        contactValue.style.wordBreak = 'break-word'
+                        contactValue.style.wordWrap = 'break-word'
+                        contactValue.style.whiteSpace = 'normal'
+                      }
+                    }
+                  })
                 }
               })
 

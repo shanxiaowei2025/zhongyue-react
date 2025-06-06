@@ -285,9 +285,7 @@ const EditContract: React.FC = () => {
 
       {/* 合同内容区域 */}
       <div className={styles.contractContentWrapper}>
-        <div className={styles.contractContentInner}>
-          {renderContractContent()}
-        </div>
+        <div className={styles.contractContentInner}>{renderContractContent()}</div>
       </div>
     </div>
   )
