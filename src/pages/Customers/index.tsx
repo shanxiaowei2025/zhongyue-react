@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Table,
@@ -16,6 +16,7 @@ import {
   Image,
   Upload,
   Form,
+  Tooltip,
 } from 'antd'
 import {
   PlusOutlined,
@@ -62,6 +63,60 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 const { confirm } = Modal
+
+// 智能文本渲染组件 - 只在文本被截断时显示tooltip
+const EllipsisText: React.FC<{
+  text: string
+  maxWidth?: number
+}> = ({ text, maxWidth }) => {
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [isOverflowing, setIsOverflowing] = useState(false)
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current) {
+        const isOverflow = textRef.current.scrollWidth > textRef.current.clientWidth
+        setIsOverflowing(isOverflow)
+      }
+    }
+
+    checkOverflow()
+    // 添加resize监听以处理窗口大小变化
+    window.addEventListener('resize', checkOverflow)
+    return () => window.removeEventListener('resize', checkOverflow)
+  }, [text])
+
+  const content = (
+    <span
+      ref={textRef}
+      style={{
+        cursor: isOverflowing ? 'pointer' : 'default',
+        display: 'block',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        maxWidth: maxWidth ? `${maxWidth}px` : '100%',
+      }}
+    >
+      {text}
+    </span>
+  )
+
+  if (isOverflowing) {
+    return (
+      <Tooltip
+        title={text}
+        placement="topLeft"
+        overlayClassName="customer-table-tooltip"
+        mouseEnterDelay={0.3}
+      >
+        {content}
+      </Tooltip>
+    )
+  }
+
+  return content
+}
 
 export default function Customers() {
   // 使用 pageStates 存储来保持状态
@@ -687,6 +742,7 @@ export default function Customers() {
       key: 'companyName',
       width: isMobile ? 160 : 200,
       fixed: 'left',
+      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 140 : 180} />,
     },
     {
       title: '税号',
@@ -694,6 +750,7 @@ export default function Customers() {
       key: 'taxNumber',
       width: isMobile ? 120 : 150,
       responsive: ['md'],
+      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 100 : 130} />,
     },
     {
       title: '企业类型',
@@ -701,6 +758,7 @@ export default function Customers() {
       key: 'enterpriseType',
       width: 120,
       responsive: ['lg'],
+      render: text => <EllipsisText text={text || '-'} maxWidth={100} />,
     },
     {
       title: '所属分局',
@@ -708,6 +766,7 @@ export default function Customers() {
       key: 'taxBureau',
       width: 150,
       responsive: ['lg'],
+      render: text => <EllipsisText text={text || '-'} maxWidth={130} />,
     },
     {
       title: '归属地',
@@ -715,6 +774,7 @@ export default function Customers() {
       key: 'location',
       width: 150,
       responsive: ['lg'],
+      render: text => <EllipsisText text={text || '-'} maxWidth={130} />,
     },
     {
       title: '实际负责人',
@@ -722,6 +782,7 @@ export default function Customers() {
       key: 'actualResponsibleName',
       width: isMobile ? 100 : 120,
       responsive: ['sm'],
+      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 80 : 100} />,
     },
     {
       title: '联系电话',
@@ -729,6 +790,7 @@ export default function Customers() {
       key: 'actualResponsiblePhone',
       width: isMobile ? 100 : 120,
       responsive: ['md'],
+      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 80 : 100} />,
     },
     {
       title: '工商状态',
@@ -736,14 +798,24 @@ export default function Customers() {
       key: 'enterpriseStatus',
       width: isMobile ? 80 : 100,
       render: (status: string) => {
-        if (!status) return <Tag color="default">未设置</Tag>
+        if (!status) {
+          return (
+            <Tooltip title="未设置" placement="topLeft" mouseEnterDelay={0.3}>
+              <Tag color="default">未设置</Tag>
+            </Tooltip>
+          )
+        }
 
         const color =
           ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] ||
           'default'
         const label = ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status
 
-        return <Tag color={color}>{label}</Tag>
+        return (
+          <Tooltip title={label} placement="topLeft" mouseEnterDelay={0.3}>
+            <Tag color={color}>{label}</Tag>
+          </Tooltip>
+        )
       },
     },
     {
@@ -752,13 +824,23 @@ export default function Customers() {
       key: 'businessStatus',
       width: isMobile ? 80 : 100,
       render: (status: string) => {
-        if (!status) return <Tag color="default">未设置</Tag>
+        if (!status) {
+          return (
+            <Tooltip title="未设置" placement="topLeft" mouseEnterDelay={0.3}>
+              <Tag color="default">未设置</Tag>
+            </Tooltip>
+          )
+        }
 
         const color =
           BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default'
         const label = BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status
 
-        return <Tag color={color}>{label}</Tag>
+        return (
+          <Tooltip title={label} placement="topLeft" mouseEnterDelay={0.3}>
+            <Tag color={color}>{label}</Tag>
+          </Tooltip>
+        )
       },
     },
     {
@@ -767,7 +849,10 @@ export default function Customers() {
       key: 'createTime',
       width: isMobile ? 130 : 180,
       responsive: ['lg'],
-      render: (date: string) => dayjs.utc(date).local().format('YYYY-MM-DD HH:mm:ss'),
+      render: (date: string) => {
+        const formattedDate = dayjs.utc(date).local().format('YYYY-MM-DD HH:mm:ss')
+        return <EllipsisText text={formattedDate} maxWidth={isMobile ? 110 : 160} />
+      },
     },
     {
       title: '操作',
@@ -863,6 +948,18 @@ export default function Customers() {
 
   return (
     <div className="customer-management-container">
+      <style>
+        {`
+          .customer-table-tooltip {
+            max-width: 300px;
+            word-wrap: break-word;
+            z-index: 1060;
+          }
+          .customer-management-container .ant-table-tbody > tr > td {
+            position: relative;
+          }
+        `}
+      </style>
       {/* 搜索和操作工具栏 */}
       <div className="mb-4">
         <Form layout="inline" className="customer-search-form">

@@ -92,11 +92,6 @@ const Users = () => {
   }, [roles])
 
   const transformToCascaderOptions = (departments: any[]): CascaderOption[] => {
-    const rootOption: CascaderOption = {
-      value: null,
-      label: '无上级部门',
-    }
-
     const transform = (depts: any[]): CascaderOption[] => {
       return depts.map(dept => ({
         value: dept.id,
@@ -105,7 +100,7 @@ const Users = () => {
       }))
     }
 
-    return [rootOption, ...transform(departments)]
+    return transform(departments)
   }
 
   // 添加获取部门路径的辅助函数

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Card,
   Table,
@@ -83,6 +83,18 @@ const modalStyle = `
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     color: #374151 !important;
   }
+
+  /* 合同表格tooltip样式 */
+  .contract-table-tooltip {
+    max-width: 300px;
+    word-wrap: break-word;
+    z-index: 1060;
+  }
+
+  /* 确保表格单元格相对定位 */
+  .contract-table .ant-table-tbody > tr > td {
+    position: relative;
+  }
 `
 
 const { RangePicker } = DatePicker
@@ -121,6 +133,11 @@ const getContractTypeOptions = (signatory: string) => {
     : CONTRACT_TYPE_OPTIONS.group2
 }
 
+// 获取所有可能的合同类型选项（用于搜索）
+const getAllContractTypeOptions = () => {
+  return [...CONTRACT_TYPE_OPTIONS.group1, ...CONTRACT_TYPE_OPTIONS.group2]
+}
+
 // 合同状态选项
 const CONTRACT_STATUS_OPTIONS = [
   { label: '全部', value: '' },
@@ -141,6 +158,60 @@ const getStatusTag = (status?: ContractStatus) => {
     default:
       return <Tag color="default">未知</Tag>
   }
+}
+
+// 智能文本渲染组件 - 只在文本被截断时显示tooltip
+const EllipsisText: React.FC<{
+  text: string
+  maxWidth?: number
+}> = ({ text, maxWidth }) => {
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [isOverflowing, setIsOverflowing] = useState(false)
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current) {
+        const isOverflow = textRef.current.scrollWidth > textRef.current.clientWidth
+        setIsOverflowing(isOverflow)
+      }
+    }
+
+    checkOverflow()
+    // 添加resize监听以处理窗口大小变化
+    window.addEventListener('resize', checkOverflow)
+    return () => window.removeEventListener('resize', checkOverflow)
+  }, [text])
+
+  const content = (
+    <span
+      ref={textRef}
+      style={{
+        cursor: isOverflowing ? 'pointer' : 'default',
+        display: 'block',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        maxWidth: maxWidth ? `${maxWidth}px` : '100%',
+      }}
+    >
+      {text}
+    </span>
+  )
+
+  if (isOverflowing) {
+    return (
+      <Tooltip
+        title={text}
+        placement="topLeft"
+        overlayClassName="contract-table-tooltip"
+        mouseEnterDelay={0.3}
+      >
+        {content}
+      </Tooltip>
+    )
+  }
+
+  return content
 }
 
 const Contracts: React.FC = () => {
@@ -467,44 +538,47 @@ const Contracts: React.FC = () => {
       title: '合同编号',
       dataIndex: 'contractNumber',
       key: 'contractNumber',
-      width: 140,
+      width: 170,
       fixed: 'left',
-      render: text => text || '-',
+      render: text => <EllipsisText text={text || '-'} maxWidth={150} />,
     },
     {
       title: '签署方',
       dataIndex: 'signatory',
       key: 'signatory',
-      width: 120,
-      render: text => text || '-',
+      width: 150,
+      render: text => <EllipsisText text={text || '-'} maxWidth={130} />,
     },
     {
       title: '甲方公司',
       dataIndex: 'partyACompany',
       key: 'partyACompany',
-      width: 160,
-      render: text => text || '-',
+      width: 190,
+      render: text => <EllipsisText text={text || '-'} maxWidth={170} />,
     },
     {
       title: '甲方信用代码',
       dataIndex: 'partyACreditCode',
       key: 'partyACreditCode',
       width: 160,
-      render: text => text || '-',
+      render: text => <EllipsisText text={text || '-'} maxWidth={140} />,
     },
     {
       title: '合同类型',
       dataIndex: 'contractType',
       key: 'contractType',
       width: 120,
-      render: text => text || '-',
+      render: text => <EllipsisText text={text || '-'} maxWidth={100} />,
     },
     {
       title: '甲方签订日期',
       dataIndex: 'partyASignDate',
       key: 'partyASignDate',
       width: 120,
-      render: formatDate,
+      render: text => {
+        const formattedDate = formatDate(text)
+        return <EllipsisText text={formattedDate} maxWidth={100} />
+      },
     },
     {
       title: '委托期限',
@@ -513,14 +587,15 @@ const Contracts: React.FC = () => {
       render: (_, record) => {
         const start = record.entrustmentStartDate
         const end = record.entrustmentEndDate
+        let content = '-'
         if (start && end) {
-          return `${formatDate(start)} 至 ${formatDate(end)}`
+          content = `${formatDate(start)} 至 ${formatDate(end)}`
         } else if (start) {
-          return `自 ${formatDate(start)}`
+          content = `自 ${formatDate(start)}`
         } else if (end) {
-          return `至 ${formatDate(end)}`
+          content = `至 ${formatDate(end)}`
         }
-        return '-'
+        return <EllipsisText text={content} maxWidth={160} />
       },
     },
     {
@@ -529,7 +604,10 @@ const Contracts: React.FC = () => {
       key: 'totalCost',
       width: 100,
       align: 'right',
-      render: value => (value ? `¥${value.toLocaleString()}` : '-'),
+      render: value => {
+        const content = value ? `¥${value.toLocaleString()}` : '-'
+        return <EllipsisText text={content} maxWidth={80} />
+      },
     },
     {
       title: '合同状态',
@@ -537,21 +615,38 @@ const Contracts: React.FC = () => {
       key: 'contractStatus',
       width: 100,
       align: 'center',
-      render: getStatusTag,
+      render: status => {
+        const statusTag = getStatusTag(status)
+        const statusText =
+          status === '0' ? '未签署' : status === '1' ? '已签署' : status === '2' ? '已终止' : '未知'
+        return (
+          <Tooltip
+            title={statusText}
+            placement="topLeft"
+            overlayClassName="contract-table-tooltip"
+            mouseEnterDelay={0.3}
+          >
+            <span style={{ cursor: 'pointer' }}>{statusTag}</span>
+          </Tooltip>
+        )
+      },
     },
     {
       title: '提交人',
       dataIndex: 'submitter',
       key: 'submitter',
       width: 100,
-      render: text => text || '-',
+      render: text => <EllipsisText text={text || '-'} maxWidth={80} />,
     },
     {
       title: '创建时间',
       dataIndex: 'createTime',
       key: 'createTime',
       width: 140,
-      render: formatDateTime,
+      render: text => {
+        const formattedDateTime = formatDateTime(text)
+        return <EllipsisText text={formattedDateTime} maxWidth={120} />
+      },
     },
     {
       title: '操作',
@@ -646,10 +741,22 @@ const Contracts: React.FC = () => {
                 <Input placeholder="请输入统一社会信用代码" className="w-40" allowClear />
               </Form.Item>
               <Form.Item label="签署方" name="signatory" className="mb-2">
-                <Input placeholder="请输入签署方" className="w-40" allowClear />
+                <Select placeholder="请选择签署方" className="w-40" allowClear>
+                  {SIGNATORY_OPTIONS.map(signatory => (
+                    <Option key={signatory} value={signatory}>
+                      {signatory}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
               <Form.Item label="合同类型" name="contractType" className="mb-2">
-                <Input placeholder="请输入合同类型" className="w-40" allowClear />
+                <Select placeholder="请选择合同类型" className="w-40" allowClear>
+                  {getAllContractTypeOptions().map(contractType => (
+                    <Option key={contractType} value={contractType}>
+                      {contractType}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
               <Form.Item label="合同状态" name="contractStatus" className="mb-2">
                 <Select placeholder="请选择合同状态" className="w-40" allowClear>
