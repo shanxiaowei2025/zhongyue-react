@@ -205,7 +205,7 @@ const EllipsisText: React.FC<{
       <Tooltip
         title={text}
         placement="topLeft"
-        overlayClassName="contract-table-tooltip"
+        classNames={{ root: 'contract-table-tooltip' }}
         mouseEnterDelay={0.3}
       >
         {content}
@@ -627,7 +627,7 @@ const Contracts: React.FC = () => {
           <Tooltip
             title={statusText}
             placement="topLeft"
-            overlayClassName="contract-table-tooltip"
+            classNames={{ root: 'contract-table-tooltip' }}
             mouseEnterDelay={0.3}
           >
             <span style={{ cursor: 'pointer' }}>{statusTag}</span>

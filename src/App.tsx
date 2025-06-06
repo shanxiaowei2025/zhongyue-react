@@ -60,10 +60,19 @@ const App = () => {
       // 初始化计时器
       startTimer()
 
+      // 添加节流机制，避免过于频繁的调用
+      let lastActivityTime = 0
+      const throttleDelay = 1000 // 1秒内最多触发一次
+
       // 定义用户活动处理函数
       const handleUserActivity = () => {
-        updateLastActivity() // 更新最后活动时间
-        resetTimer() // 重置计时器
+        const now = Date.now()
+        // 只有距离上次调用超过1秒才执行
+        if (now - lastActivityTime >= throttleDelay) {
+          lastActivityTime = now
+          updateLastActivity() // 更新最后活动时间
+          resetTimer() // 重置计时器
+        }
       }
 
       // 添加用户活动事件监听器

@@ -215,7 +215,7 @@ const Roles = () => {
 
   return (
     <div>
-      <Card bordered={false}>
+      <Card variant="borderless">
         <div style={{ marginBottom: 16 }}>
           <Space>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>

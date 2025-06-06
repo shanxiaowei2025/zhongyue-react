@@ -152,9 +152,6 @@ export const useAuthStore = create<AuthState>()(
     // 重置计时器
     resetTimer: () =>
       set(state => {
-        // 更新最后活动时间
-        setLastActivityTime(Date.now())
-
         if (state.inactivityTimer) {
           window.clearTimeout(state.inactivityTimer)
           state.inactivityTimer = null
@@ -207,7 +204,7 @@ export const useAuthStore = create<AuthState>()(
       return false
     },
 
-    // 更新最后活动时间
+    // 更新最后活动时间（不触发状态更新，只更新localStorage）
     updateLastActivity: () => {
       setLastActivityTime(Date.now())
     },

@@ -107,7 +107,7 @@ const EllipsisText: React.FC<{
       <Tooltip
         title={text}
         placement="topLeft"
-        overlayClassName="customer-table-tooltip"
+        classNames={{ root: 'customer-table-tooltip' }}
         mouseEnterDelay={0.3}
       >
         {content}
