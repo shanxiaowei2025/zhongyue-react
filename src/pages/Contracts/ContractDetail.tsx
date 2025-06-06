@@ -1443,7 +1443,7 @@ const ContractDetail: React.FC = () => {
       const { token } = tokenResponse.data
 
       // 生成签署页面链接
-      const url = `${window.location.origin}/contract-sign/${token}`
+      const url = `https://zhongyue-manage.starlogic.tech/contract-sign/${token}`
       setSignUrl(url)
       setSignLinkModalVisible(true)
 
