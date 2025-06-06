@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Spin, Alert, Button, Typography, Image, message, Modal } from 'antd'
+import { Card, Spin, Alert, Button, Typography, message, Modal } from 'antd'
 import {
   getContractImageByToken,
   saveContractSignature,
@@ -12,6 +12,67 @@ import SignatureCanvasForward, {
   SignatureCanvasRef,
 } from '../../components/contracts/SignatureCanvasForward'
 import { publicRequest } from '../../api/request'
+
+// 手机端优化样式
+const mobileStyles = `
+  .signature-canvas {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  .contract-image-container img {
+    max-width: 100%;
+    height: auto;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  @media (max-width: 640px) {
+    .ant-modal-body {
+      padding: 12px 16px !important;
+    }
+    
+    .ant-modal-header {
+      padding: 12px 16px !important;
+    }
+    
+    .ant-modal {
+      margin: 16px !important;
+    }
+    
+    .ant-modal-content {
+      border-radius: 8px !important;
+    }
+    
+    .ant-typography h2 {
+      font-size: 1.2rem !important;
+      margin-bottom: 0.5rem !important;
+    }
+    
+    .ant-typography h4 {
+      font-size: 1rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+    
+    /* 移动端合同图片Card撑满屏幕 */
+    .contract-image-card {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      border-radius: 0 !important;
+    }
+    
+    .contract-image-card .ant-card-body {
+      padding: 0 !important;
+    }
+  }
+`
 
 const { Title, Paragraph } = Typography
 
@@ -27,7 +88,22 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   const [contractId, setContractId] = useState<number | null>(null)
   const [signModalVisible, setSignModalVisible] = useState(false)
   const [signing, setSigning] = useState(false)
+  const [windowWidth, setWindowWidth] = useState(0)
   const signatureRef = useRef<SignatureCanvasRef | null>(null)
+
+  // 获取窗口宽度
+  useEffect(() => {
+    const updateWindowWidth = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    // 初始化窗口宽度
+    updateWindowWidth()
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', updateWindowWidth)
+    return () => window.removeEventListener('resize', updateWindowWidth)
+  }, [])
 
   // 验证令牌并获取合同图片
   useEffect(() => {
@@ -207,130 +283,148 @@ const ContractSign: React.FC<ContractSignProps> = () => {
 
   // 签署页面内容
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* 页面标题 */}
-        <div className="text-center mb-8">
-          <Title level={2}>合同签署</Title>
-          <Paragraph className="text-gray-600">请仔细阅读合同内容，确认无误后进行签署</Paragraph>
-          {contractId && (
-            <Paragraph className="text-sm text-gray-500">合同ID: {contractId}</Paragraph>
-          )}
-        </div>
+    <>
+      {/* 注入手机端优化样式 */}
+      <style dangerouslySetInnerHTML={{ __html: mobileStyles }} />
 
-        {/* 合同图片展示区域 */}
-        {contractImage ? (
-          <Card className="mb-6">
-            <div className="text-center">
-              <Title level={4} className="mb-4">
-                合同内容
-              </Title>
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+        <div className="max-w-6xl mx-auto sm:px-4">
+          {/* 页面标题 */}
+          <div className="text-center mb-4 sm:mb-8 px-4 sm:px-0">
+            <Title level={2} className="text-lg sm:text-2xl">
+              合同签署
+            </Title>
+            <Paragraph className="text-gray-600 text-sm sm:text-base">
+              请仔细阅读合同内容，确认无误后进行签署
+            </Paragraph>
+            {contractId && (
+              <Paragraph className="text-xs sm:text-sm text-gray-500">
+                合同ID: {contractId}
+              </Paragraph>
+            )}
+          </div>
+
+          {/* 合同图片展示区域 */}
+          {contractImage ? (
+            <Card className="mb-4 sm:mb-6 mx-0 sm:mx-0 contract-image-card">
+              <div className="text-center px-4 sm:px-6">
+                <Title level={4} className="mb-2 sm:mb-4 text-base sm:text-lg">
+                  合同内容
+                </Title>
+              </div>
               <div
                 className="contract-image-container"
                 style={{
                   maxWidth: '100%',
                   overflow: 'auto',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: '6px',
-                  padding: '16px',
-                  backgroundColor: '#fafafa',
+                  border: 'none',
+                  borderRadius: '0',
+                  padding: '0',
+                  backgroundColor: '#ffffff',
                 }}
               >
-                <Image
+                <img
                   src={buildImageUrl(contractImage)}
                   alt="合同内容"
                   style={{
-                    maxWidth: '100%',
+                    width: '100%',
                     height: 'auto',
                     display: 'block',
                     margin: '0 auto',
                   }}
-                  preview={{
-                    mask: '点击预览',
-                    style: { maxWidth: 'none' },
-                  }}
                 />
+              </div>
+            </Card>
+          ) : (
+            <Card className="mb-4 sm:mb-6 mx-4 sm:mx-0">
+              <div className="text-center py-8 sm:py-12">
+                <Title level={4} className="text-gray-500 text-base sm:text-lg">
+                  未找到合同图片
+                </Title>
+                <Paragraph className="text-gray-400 text-sm sm:text-base">
+                  该合同可能尚未生成图片或图片已被删除
+                </Paragraph>
+              </div>
+            </Card>
+          )}
+
+          {/* 签署操作区域 */}
+          <Card className="mx-4 sm:mx-0">
+            <div className="text-center py-4 sm:py-8">
+              <Title level={4} className="mb-2 sm:mb-4 text-base sm:text-lg">
+                签署操作
+              </Title>
+              <Paragraph className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
+                确认合同内容无误后，请点击下方按钮进行签署
+              </Paragraph>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <Button size="large" onClick={() => navigate('/')} className="w-full sm:w-auto">
+                  返回首页
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleSign}
+                  disabled={!contractImage || !contractId}
+                  className="w-full sm:w-auto"
+                >
+                  确认签署
+                </Button>
               </div>
             </div>
           </Card>
-        ) : (
-          <Card className="mb-6">
-            <div className="text-center py-12">
-              <Title level={4} className="text-gray-500">
-                未找到合同图片
-              </Title>
-              <Paragraph className="text-gray-400">该合同可能尚未生成图片或图片已被删除</Paragraph>
-            </div>
-          </Card>
-        )}
-
-        {/* 签署操作区域 */}
-        <Card>
-          <div className="text-center py-8">
-            <Title level={4} className="mb-4">
-              签署操作
-            </Title>
-            <Paragraph className="text-gray-600 mb-6">
-              确认合同内容无误后，请点击下方按钮进行签署
-            </Paragraph>
-            <div className="space-x-4">
-              <Button size="large" onClick={() => navigate('/')}>
-                返回首页
-              </Button>
-              <Button
-                type="primary"
-                size="large"
-                onClick={handleSign}
-                disabled={!contractImage || !contractId}
-              >
-                确认签署
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* 签名模态框 */}
-      <Modal
-        title="请在下方进行签名"
-        open={signModalVisible}
-        onCancel={handleCancelSign}
-        footer={null}
-        width={500}
-        maskClosable={false}
-        centered
-        destroyOnClose
-      >
-        <div className="py-4">
-          <Paragraph className="text-gray-600 mb-4">
-            请在下方空白区域进行手写签名，签名将用于确认合同签署
-          </Paragraph>
-
-          <div className="border border-gray-300 rounded-lg p-2 mb-4">
-            <SignatureCanvasForward
-              ref={signatureRef}
-              canvasProps={{
-                className: 'signature-canvas',
-                width: 450,
-                height: 200,
-              }}
-            />
-          </div>
-
-          <div className="flex justify-between">
-            <Button onClick={handleClearSign}>清除签名</Button>
-            <div>
-              <Button className="mr-2" onClick={handleCancelSign}>
-                取消
-              </Button>
-              <Button type="primary" onClick={handleConfirmSign} loading={signing}>
-                {signing ? '正在提交...' : '确认签署'}
-              </Button>
-            </div>
-          </div>
         </div>
-      </Modal>
-    </div>
+
+        {/* 签名模态框 */}
+        <Modal
+          title="请在下方进行签名"
+          open={signModalVisible}
+          onCancel={handleCancelSign}
+          footer={null}
+          width="90%"
+          style={{ maxWidth: '500px' }}
+          maskClosable={false}
+          centered
+          destroyOnClose
+        >
+          <div className="py-2 sm:py-4">
+            <Paragraph className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">
+              请在下方空白区域进行手写签名，签名将用于确认合同签署
+            </Paragraph>
+
+            <div className="border border-gray-300 rounded-lg p-1 sm:p-2 mb-3 sm:mb-4 touch-pan-y">
+              <SignatureCanvasForward
+                ref={signatureRef}
+                canvasProps={{
+                  className: 'signature-canvas w-full',
+                  width: windowWidth > 640 ? 450 : Math.min(windowWidth - 120, 320),
+                  height: windowWidth > 640 ? 200 : 150,
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
+              <Button onClick={handleClearSign} className="w-full sm:w-auto">
+                清除签名
+              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                <Button className="w-full sm:w-auto sm:mr-2" onClick={handleCancelSign}>
+                  取消
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={handleConfirmSign}
+                  loading={signing}
+                  className="w-full sm:w-auto"
+                >
+                  {signing ? '正在提交...' : '确认签署'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </div>
+    </>
   )
 }
 
