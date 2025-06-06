@@ -122,6 +122,7 @@ export interface PaginationParams {
   keyword?: string
   companyName?: string
   taxNumber?: string
+  customerLevel?: string
   enterpriseType?: string
   taxBureau?: string
   enterpriseStatus?: string
@@ -176,6 +177,7 @@ export interface Customer {
   id: number
   companyName: string
   unifiedSocialCreditCode: string
+  customerLevel?: string
   consultantAccountant: string
   bookkeepingAccountant: string
   invoiceOfficer: string

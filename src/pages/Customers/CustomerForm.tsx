@@ -41,6 +41,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   // 基本信息标签页字段
   companyName: 'basic',
   unifiedSocialCreditCode: 'basic',
+  customerLevel: 'basic',
   taxNumber: 'basic',
   enterpriseType: 'basic',
   taxBureau: 'basic',
@@ -1009,6 +1010,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             rules={[{ required: mode === 'add', message: '请输入统一社会信用代码' }]}
           >
             <Input disabled={mode === 'edit' || mode === 'view'} />
+          </Form.Item>
+
+          <Form.Item name="customerLevel" label="客户分级">
+            <Input placeholder="请输入客户分级" />
           </Form.Item>
 
           <Form.Item name="taxNumber" label="税号">

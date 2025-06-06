@@ -135,6 +135,7 @@ export default function Customers() {
   const [searchParams, setSearchParams] = useState({
     keyword: '',
     taxNumber: '',
+    customerLevel: '',
     consultantAccountant: '',
     bookkeepingAccountant: '',
     taxBureau: '',
@@ -252,6 +253,7 @@ export default function Customers() {
     setSearchParams({
       keyword: '',
       taxNumber: '',
+      customerLevel: '',
       consultantAccountant: '',
       bookkeepingAccountant: '',
       taxBureau: '',
@@ -745,9 +747,9 @@ export default function Customers() {
       render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 140 : 180} />,
     },
     {
-      title: '税号',
-      dataIndex: 'taxNumber',
-      key: 'taxNumber',
+      title: '客户分级',
+      dataIndex: 'customerLevel',
+      key: 'customerLevel',
       width: isMobile ? 120 : 150,
       responsive: ['md'],
       render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 100 : 130} />,
@@ -980,6 +982,18 @@ export default function Customers() {
                   placeholder="请输入税号"
                   value={searchParams.taxNumber}
                   onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
+                  className="w-40"
+                  allowClear
+                />
+              </Form.Item>
+
+              <Form.Item label="客户分级" className="mb-2">
+                <Input
+                  placeholder="请输入客户分级"
+                  value={searchParams.customerLevel}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, customerLevel: e.target.value })
+                  }
                   className="w-40"
                   allowClear
                 />
@@ -1634,6 +1648,9 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions.Item>
           <Descriptions.Item label="统一社会信用代码">
             {displayCustomer.unifiedSocialCreditCode || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="客户分级">
+            {displayCustomer.customerLevel || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="税号">{displayCustomer.taxNumber || '-'}</Descriptions.Item>
           <Descriptions.Item label="企业类型">
