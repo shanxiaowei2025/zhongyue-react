@@ -31,6 +31,10 @@ export const usePermission = () => {
         // 记录费用管理相关的权限
         const expensePermissions = response.data.filter(p => p.page_name === '费用管理')
         console.log('费用管理相关权限:', expensePermissions)
+        
+        // 记录合同管理相关的权限
+        const contractPermissions = response.data.filter(p => p.page_name === '合同管理')
+        console.log('合同管理相关权限:', contractPermissions)
 
         // 记录当前用户角色的权限
         if (user.roles.length > 0) {
@@ -46,6 +50,10 @@ export const usePermission = () => {
           // 特别记录当前用户角色的费用管理权限
           const userExpensePermissions = userRolePermissions.filter(p => p.page_name === '费用管理')
           console.log('当前用户角色的费用管理权限:', userExpensePermissions)
+          
+          // 特别记录当前用户角色的合同管理权限
+          const userContractPermissions = userRolePermissions.filter(p => p.page_name === '合同管理')
+          console.log('当前用户角色的合同管理权限:', userContractPermissions)
         }
 
         setPermissions(response.data)
@@ -199,6 +207,38 @@ export const usePermission = () => {
     return permissionResults
   }, [hasPermission, user, permissions.length])
 
+  // 合同管理页面相关权限
+  const contractPermissions = useMemo(() => {
+    // 如果权限列表为空，开启降级模式，默认所有权限为true
+    if (!user || permissions.length === 0) {
+      console.log('权限列表为空，开启降级模式，默认所有合同管理权限为true')
+      return {
+        canCreate: true,
+        canEdit: true,
+        canDelete: true,
+        canViewAll: true,
+        canViewByLocation: true,
+        canViewOwn: true,
+      }
+    }
+
+    // 添加详细的权限调试信息
+    const permissionResults = {
+      canCreate: hasPermission('contract_action_create'),
+      canEdit: hasPermission('contract_action_edit'),
+      canDelete: hasPermission('contract_action_delete'),
+      canViewAll: hasPermission('contract_data_view_all'),
+      canViewByLocation: hasPermission('contract_data_view_by_location'),
+      canViewOwn: hasPermission('contract_data_view_own'),
+    }
+
+    // 输出用户角色和权限调试信息
+    console.log('当前用户角色:', user?.roles)
+    console.log('合同管理权限详情:', permissionResults)
+
+    return permissionResults
+  }, [hasPermission, user, permissions.length])
+
   return {
     permissions,
     loading,
@@ -206,6 +246,7 @@ export const usePermission = () => {
     hasPermission,
     customerPermissions,
     expensePermissions,
+    contractPermissions,
     refreshPermissions: fetchPermissions,
   }
 }

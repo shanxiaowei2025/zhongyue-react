@@ -32,6 +32,8 @@ import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useContractList } from '../../hooks/useContract'
+import { usePermission } from '../../hooks/usePermission'
+import PermissionGuard from '../../components/PermissionGuard'
 import type { Contract, ContractQueryParams, ContractStatus } from '../../types/contract'
 import {
   getContractList,
@@ -217,6 +219,8 @@ const EllipsisText: React.FC<{
 const Contracts: React.FC = () => {
   const [form] = Form.useForm()
   const navigate = useNavigate()
+  // 获取权限控制
+  const { contractPermissions } = usePermission()
 
   // 发起合同模态框状态
   const [createModalVisible, setCreateModalVisible] = useState(false)
@@ -664,7 +668,8 @@ const Contracts: React.FC = () => {
               className="action-btn view-btn"
             />
           </Tooltip>
-          {record.contractStatus === '0' && (
+          {/* 使用权限控制编辑按钮 */}
+          {record.contractStatus === '0' && contractPermissions.canEdit && (
             <Tooltip title="编辑">
               <Button
                 type="text"
@@ -687,16 +692,19 @@ const Contracts: React.FC = () => {
               />
             </Tooltip>
           )}
-          <Tooltip title="删除">
-            <Button
-              type="text"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record.id)}
-              className="action-btn delete-btn"
-            />
-          </Tooltip>
+          {/* 使用权限控制删除按钮 */}
+          {contractPermissions.canDelete && (
+            <Tooltip title="删除">
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record.id)}
+                className="action-btn delete-btn"
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -788,9 +796,12 @@ const Contracts: React.FC = () => {
                   重置
                 </Button>
               </Space>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                发起合同
-              </Button>
+              {/* 使用权限控制"发起合同"按钮 */}
+              {contractPermissions.canCreate && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                  发起合同
+                </Button>
+              )}
             </div>
           </div>
         </Form>
