@@ -637,22 +637,22 @@ const Contracts: React.FC = () => {
           <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-2">
               <Form.Item label="合同编号" name="contractNumber" className="mb-2">
-                <Input placeholder="请输入合同编号" className="w-40" />
+                <Input placeholder="请输入合同编号" className="w-40" allowClear />
               </Form.Item>
               <Form.Item label="甲方公司" name="partyACompany" className="mb-2">
-                <Input placeholder="请输入甲方公司名称" className="w-40" />
+                <Input placeholder="请输入甲方公司名称" className="w-40" allowClear />
               </Form.Item>
               <Form.Item label="甲方信用代码" name="partyACreditCode" className="mb-2">
-                <Input placeholder="请输入统一社会信用代码" className="w-40" />
+                <Input placeholder="请输入统一社会信用代码" className="w-40" allowClear />
               </Form.Item>
               <Form.Item label="签署方" name="signatory" className="mb-2">
-                <Input placeholder="请输入签署方" className="w-40" />
+                <Input placeholder="请输入签署方" className="w-40" allowClear />
               </Form.Item>
               <Form.Item label="合同类型" name="contractType" className="mb-2">
-                <Input placeholder="请输入合同类型" className="w-40" />
+                <Input placeholder="请输入合同类型" className="w-40" allowClear />
               </Form.Item>
               <Form.Item label="合同状态" name="contractStatus" className="mb-2">
-                <Select placeholder="请选择合同状态" className="w-40">
+                <Select placeholder="请选择合同状态" className="w-40" allowClear>
                   {CONTRACT_STATUS_OPTIONS.map(option => (
                     <Option key={option.value} value={option.value}>
                       {option.label}

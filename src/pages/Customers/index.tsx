@@ -874,6 +874,7 @@ export default function Customers() {
                   value={searchParams.keyword}
                   onChange={e => setSearchParams({ ...searchParams, keyword: e.target.value })}
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -883,6 +884,7 @@ export default function Customers() {
                   value={searchParams.taxNumber}
                   onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -894,6 +896,7 @@ export default function Customers() {
                     setSearchParams({ ...searchParams, consultantAccountant: e.target.value })
                   }
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -905,6 +908,7 @@ export default function Customers() {
                     setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })
                   }
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -916,6 +920,7 @@ export default function Customers() {
                     setSearchParams({ ...searchParams, enterpriseType: e.target.value })
                   }
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -925,6 +930,7 @@ export default function Customers() {
                   value={searchParams.taxBureau}
                   onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -934,6 +940,7 @@ export default function Customers() {
                   value={searchParams.location}
                   onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
@@ -945,6 +952,7 @@ export default function Customers() {
                     setSearchParams({ ...searchParams, industryCategory: e.target.value })
                   }
                   className="w-40"
+                  allowClear
                 />
               </Form.Item>
 
