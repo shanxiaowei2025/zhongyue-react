@@ -287,6 +287,13 @@ const MainLayout = () => {
       // 然后进行导航
       navigate('/login', { replace: true })
     } else if (key === 'profile') {
+      // 在新标签页中打开个人资料
+      tabsStore.addTab({
+        key: '/profile',
+        label: '个人资料',
+        icon: <UserOutlined />,
+        closable: true,
+      })
       navigate('/profile')
     } else if (key === 'settings') {
       // 跳转到账号设置页面
