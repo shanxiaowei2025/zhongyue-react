@@ -65,48 +65,57 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
     const height = canvasProps.height || 200
     const className = canvasProps.className || 'signature-canvas'
 
-    // 修复Canvas坐标偏移问题
+    // 修复Canvas坐标和尺寸问题
     useEffect(() => {
-      const resizeCanvas = () => {
+      const setupCanvas = () => {
         if (sigCanvas.current && containerRef.current) {
           const canvas = sigCanvas.current.getCanvas()
           const container = containerRef.current
-          const rect = container.getBoundingClientRect()
 
-          // 计算实际可用宽度（取最小值避免超出）
-          const availableWidth = Math.min(width, rect.width)
+          // 等待DOM更新完成
+          setTimeout(() => {
+            const rect = container.getBoundingClientRect()
+            const computedStyle = window.getComputedStyle(canvas)
 
-          // 设置Canvas的实际像素尺寸
-          const devicePixelRatio = window.devicePixelRatio || 1
-          canvas.width = availableWidth * devicePixelRatio
-          canvas.height = height * devicePixelRatio
+            // 获取Canvas的实际显示尺寸（去除border和padding）
+            const displayWidth = parseFloat(computedStyle.width)
+            const displayHeight = parseFloat(computedStyle.height)
 
-          // 设置Canvas的CSS显示尺寸
-          canvas.style.width = `${availableWidth}px`
-          canvas.style.height = `${height}px`
+            // 设置Canvas的实际像素尺寸以匹配显示尺寸
+            const devicePixelRatio = window.devicePixelRatio || 1
+            canvas.width = displayWidth * devicePixelRatio
+            canvas.height = displayHeight * devicePixelRatio
 
-          // 缩放绘图上下文以匹配设备像素比
-          const ctx = canvas.getContext('2d')
-          if (ctx) {
-            ctx.scale(devicePixelRatio, devicePixelRatio)
-          }
+            // 确保CSS尺寸与计算出的尺寸一致
+            canvas.style.width = `${displayWidth}px`
+            canvas.style.height = `${displayHeight}px`
 
-          // 清除并重新设置背景
-          sigCanvas.current.clear()
+            // 缩放绘图上下文
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              ctx.scale(devicePixelRatio, devicePixelRatio)
+              ctx.imageSmoothingEnabled = true
+              ctx.imageSmoothingQuality = 'high'
+            }
+
+            // 重新设置背景
+            if (sigCanvas.current) {
+              sigCanvas.current.clear()
+            }
+          }, 50)
         }
       }
 
-      // 初始化
-      const timer = setTimeout(resizeCanvas, 100)
+      // 初始化设置
+      setupCanvas()
 
-      // 监听窗口大小变化
-      window.addEventListener('resize', resizeCanvas)
-      window.addEventListener('orientationchange', resizeCanvas)
+      // 监听窗口变化
+      window.addEventListener('resize', setupCanvas)
+      window.addEventListener('orientationchange', setupCanvas)
 
       return () => {
-        clearTimeout(timer)
-        window.removeEventListener('resize', resizeCanvas)
-        window.removeEventListener('orientationchange', resizeCanvas)
+        window.removeEventListener('resize', setupCanvas)
+        window.removeEventListener('orientationchange', setupCanvas)
       }
     }, [width, height])
 
@@ -118,6 +127,9 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
           maxWidth: '100%',
           height: `${height}px`,
           overflow: 'hidden',
+          padding: 0,
+          margin: 0,
+          boxSizing: 'border-box',
         }}
       >
         <SignaturePad
@@ -132,6 +144,10 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
               height: `${height}px`,
               touchAction: 'none',
               display: 'block',
+              padding: 0,
+              margin: 0,
+              border: 'none',
+              boxSizing: 'border-box',
             },
           }}
           backgroundColor="rgba(255, 255, 255, 1)"

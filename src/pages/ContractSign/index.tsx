@@ -392,7 +392,10 @@ const ContractSign: React.FC<ContractSignProps> = () => {
               请在下方空白区域进行手写签名，签名将用于确认合同签署
             </Paragraph>
 
-            <div className="border border-gray-300 rounded-lg p-1 sm:p-2 mb-3 sm:mb-4 touch-pan-y">
+            <div
+              className="border border-gray-300 rounded-lg mb-3 sm:mb-4 touch-pan-y"
+              style={{ padding: '4px', borderWidth: '1px' }}
+            >
               <SignatureCanvasForward
                 ref={signatureRef}
                 canvasProps={{
