@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Spin, Button, Flex, Radio } from 'antd'
+import { Modal, Spin, Button, Flex, Radio, AutoComplete, Tag } from 'antd'
 import { useExpenseReceipt, getExpenseReceiptKey, useExpenseDetail } from '../../hooks/useExpense'
-import { DownloadOutlined, ReloadOutlined } from '@ant-design/icons'
+import { DownloadOutlined, ReloadOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import html2canvas from 'html2canvas'
 import { message } from 'antd'
 import { mutate } from 'swr'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { buildImageUrl } from '../../utils/upload'
+import { getContractList } from '../../api/contract'
+import { Link } from 'react-router-dom'
+import './expenses.css'
 
 interface ExpenseReceiptProps {
   visible: boolean
@@ -55,6 +58,13 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
   const [hasRefreshed, setHasRefreshed] = useState(false)
   const [contractImage, setContractImage] = useState<Array<{ fileName: string; url: string }>>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
+
+  // 关联合同搜索状态
+  const [contractOptions, setContractOptions] = useState<{ value: string; id: number }[]>([])
+  const [contractSearchLoading, setContractSearchLoading] = useState(false)
+  const [relatedContracts, setRelatedContracts] = useState<
+    { id: number; contractNumber: string }[]
+  >([])
 
   // 在组件显示时刷新数据，但只刷新一次
   useEffect(() => {
@@ -122,6 +132,25 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
     }
   }, [visible, expense])
 
+  // 在组件显示时初始化关联合同数据
+  useEffect(() => {
+    console.log('ExpenseReceipt - 初始化关联合同数据:', {
+      visible,
+      expense,
+      relatedContract: expense?.relatedContract,
+    })
+
+    if (visible && expense) {
+      if (expense.relatedContract && expense.relatedContract.length > 0) {
+        setRelatedContracts(expense.relatedContract)
+      } else {
+        setRelatedContracts([])
+      }
+    } else {
+      setRelatedContracts([])
+    }
+  }, [visible, expense])
+
   // 刷新收据数据
   const refreshReceipt = async (showMessage = true) => {
     if (!expenseId) return
@@ -159,18 +188,25 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
     const receiptId = receipt?.id || 'unknown'
     const fileName = `${companyName.trim()}-收据-${receiptId}.png`
 
-    // 隐藏印章选择器和电子合同上传部分，以便截图不包含它们
+    // 隐藏印章选择器、电子合同上传部分和关联合同部分，以便截图不包含它们
     const sealSelector = element.querySelector('.seal-selector') as HTMLElement
     const contractUploadSection = element.querySelector('.contract-upload-section') as HTMLElement
+    const relatedContractSection = element.querySelector('.related-contract-section') as HTMLElement
 
     const originalSealDisplay = sealSelector ? sealSelector.style.display : ''
     const originalContractDisplay = contractUploadSection ? contractUploadSection.style.display : ''
+    const originalRelatedContractDisplay = relatedContractSection
+      ? relatedContractSection.style.display
+      : ''
 
     if (sealSelector) {
       sealSelector.style.display = 'none'
     }
     if (contractUploadSection) {
       contractUploadSection.style.display = 'none'
+    }
+    if (relatedContractSection) {
+      relatedContractSection.style.display = 'none'
     }
 
     // 在导出前临时添加样式修复表格边框
@@ -261,12 +297,15 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
         },
       })
         .then(canvas => {
-          // 恢复印章选择器和电子合同上传部分显示
+          // 恢复印章选择器、电子合同上传部分和关联合同部分显示
           if (sealSelector) {
             sealSelector.style.display = originalSealDisplay
           }
           if (contractUploadSection) {
             contractUploadSection.style.display = originalContractDisplay
+          }
+          if (relatedContractSection) {
+            relatedContractSection.style.display = originalRelatedContractDisplay
           }
 
           // 移除临时样式
@@ -288,12 +327,15 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
           console.error('生成图片错误:', err)
           message.error('生成图片失败')
 
-          // 恢复印章选择器和电子合同上传部分显示以及移除临时样式
+          // 恢复印章选择器、电子合同上传部分和关联合同部分显示以及移除临时样式
           if (sealSelector) {
             sealSelector.style.display = originalSealDisplay
           }
           if (contractUploadSection) {
             contractUploadSection.style.display = originalContractDisplay
+          }
+          if (relatedContractSection) {
+            relatedContractSection.style.display = originalRelatedContractDisplay
           }
           if (document.head.contains(exportStyle)) {
             document.head.removeChild(exportStyle)
@@ -341,6 +383,103 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
   // 处理文件删除
   const handleFileRemove = (fileName: string) => {
     setUploadedFiles(prev => prev.filter(name => name !== fileName))
+  }
+
+  // 搜索合同
+  const searchContract = async (value: string) => {
+    if (!value.trim()) {
+      setContractOptions([])
+      return
+    }
+
+    setContractSearchLoading(true)
+    try {
+      const response = await getContractList({
+        page: 1,
+        pageSize: 20,
+        contractNumber: value.trim(),
+      })
+
+      if (response.data.list && response.data.list.length > 0) {
+        const options = response.data.list.map((contract: any) => ({
+          value: contract.contractNumber,
+          id: contract.id,
+        }))
+        setContractOptions(options)
+      } else {
+        setContractOptions([])
+      }
+    } catch (error) {
+      console.error('搜索合同失败:', error)
+      setContractOptions([])
+    } finally {
+      setContractSearchLoading(false)
+    }
+  }
+
+  // 添加关联合同
+  const handleAddRelatedContract = (value: string, option: any) => {
+    if (!value || !option || !option.id) return
+
+    // 检查是否已存在
+    const existingContract = relatedContracts.find(c => c.id === option.id)
+    if (existingContract) {
+      message.warning('该合同已添加')
+      return
+    }
+
+    // 添加新合同
+    const newContract = {
+      id: option.id,
+      contractNumber: value,
+    }
+
+    const updatedContracts = [...relatedContracts, newContract]
+    setRelatedContracts(updatedContracts)
+
+    // 自动保存关联合同
+    handleRelatedContractChange(updatedContracts)
+
+    // 清空搜索字段
+    setTimeout(() => {
+      const searchInput = document.querySelector(
+        'input[id="contractSearchReceipt"]'
+      ) as HTMLInputElement
+      if (searchInput) {
+        searchInput.value = ''
+      }
+    }, 0)
+  }
+
+  // 删除关联合同
+  const handleRemoveRelatedContract = (id: number) => {
+    const updatedContracts = relatedContracts.filter(c => c.id !== id)
+    setRelatedContracts(updatedContracts)
+
+    // 自动保存关联合同
+    handleRelatedContractChange(updatedContracts)
+  }
+
+  // 处理关联合同变更 - 自动保存
+  const handleRelatedContractChange = async (
+    contracts: { id: number; contractNumber: string }[]
+  ) => {
+    // 自动保存关联合同
+    if (!expenseId) return
+
+    try {
+      await updateExpense(expenseId, {
+        relatedContract: contracts,
+      })
+
+      message.success('关联合同已自动保存')
+      // 刷新收据数据和费用详情数据
+      await mutate(getExpenseReceiptKey(expenseId))
+      await refreshExpenseDetail()
+    } catch (error) {
+      console.error('自动保存关联合同失败:', error)
+      message.error('自动保存关联合同失败')
+    }
   }
 
   // 格式化金额为大写
@@ -744,6 +883,73 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
                 onFileUpload={handleFileUpload}
                 onFileRemove={handleFileRemove}
               />
+            </div>
+          )}
+
+          {/* 关联合同 - 在预览模式下不显示 */}
+          {!previewMode && (
+            <div
+              className="related-contract-section"
+              style={{ marginTop: '20px', borderTop: '2px dashed #d9d9d9', paddingTop: '15px' }}
+            >
+              <p style={{ marginBottom: '15px', fontWeight: '600', fontSize: '15px' }}>
+                关联合同：
+              </p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <AutoComplete
+                    id="contractSearchReceipt"
+                    style={{ width: '100%' }}
+                    placeholder="输入合同编号搜索"
+                    onSearch={searchContract}
+                    onSelect={handleAddRelatedContract}
+                    options={contractOptions}
+                    notFoundContent={
+                      contractSearchLoading ? (
+                        <div className="text-center py-2">
+                          <Spin size="small" />
+                        </div>
+                      ) : null
+                    }
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    loading={contractSearchLoading}
+                    onClick={() => {
+                      const input = document.querySelector(
+                        'input[id="contractSearchReceipt"]'
+                      ) as HTMLInputElement
+                      if (input && input.value) {
+                        searchContract(input.value)
+                      }
+                    }}
+                  >
+                    搜索
+                  </Button>
+                </div>
+                {relatedContracts.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {relatedContracts.map(contract => (
+                      <Tag
+                        key={contract.id}
+                        closable
+                        onClose={() => handleRemoveRelatedContract(contract.id)}
+                        className="relative"
+                      >
+                        <Link
+                          to={`/contracts/detail/${contract.id}`}
+                          className="related-contract-link"
+                          title="点击查看合同详情"
+                        >
+                          {contract.contractNumber}
+                          <ExportOutlined />
+                        </Link>
+                      </Tag>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

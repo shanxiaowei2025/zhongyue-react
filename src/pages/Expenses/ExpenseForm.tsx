@@ -16,7 +16,8 @@ import {
   AutoComplete,
   Spin,
 } from 'antd'
-import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
+import { PlusOutlined, UploadOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons'
+import { Link } from 'react-router-dom'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import {
   Expense,
@@ -35,6 +36,7 @@ import { BUSINESS_STATUS_MAP } from '../../constants'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
+import './expenses.css'
 
 // 定义状态标签映射
 const STATUS_LABELS = {
@@ -974,8 +976,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             key={contract.id}
                             closable
                             onClose={() => handleRemoveRelatedContract(contract.id)}
+                            className="relative"
                           >
-                            {contract.contractNumber}
+                            <Link
+                              to={`/contracts/detail/${contract.id}`}
+                              className="related-contract-link"
+                              title="点击查看合同详情"
+                            >
+                              {contract.contractNumber}
+                              <ExportOutlined />
+                            </Link>
                           </Tag>
                         ))}
                       </div>

@@ -109,6 +109,10 @@ export interface CreateExpenseDto {
   businessType?: string
   contractType?: string
   contractImage?: string[]
+  relatedContract?: {
+    id: number
+    contractNumber: string
+  }[]
   invoiceSoftwareFee?: number | string
   invoiceSoftwareStartDate?: string
   invoiceSoftwareEndDate?: string

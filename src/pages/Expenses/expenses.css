@@ -45,6 +45,39 @@
   color: #9254de;
 }
 
+/* 关联合同链接样式 */
+.related-contract-link {
+  color: inherit !important;
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.related-contract-link:hover {
+  color: #1890ff !important;
+  text-decoration: none !important;
+}
+
+.related-contract-link .anticon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.related-contract-link:hover .anticon {
+  opacity: 1;
+}
+
+/* 确保Tag内的链接样式正确 */
+.ant-tag .related-contract-link {
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+.ant-tag:hover .related-contract-link {
+  color: #1890ff !important;
+}
+
 /* 水印样式 */
 .receipt-watermark {
   position: absolute;
