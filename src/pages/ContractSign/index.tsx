@@ -71,6 +71,12 @@ const mobileStyles = `
     .contract-image-card .ant-card-body {
       padding: 0 !important;
     }
+    
+    /* 确保签名板边框样式不被覆盖 */
+    .signature-container {
+      border: 1px solid #d1d5db !important;
+      border-radius: 0.5rem !important;
+    }
   }
 `
 
@@ -393,8 +399,12 @@ const ContractSign: React.FC<ContractSignProps> = () => {
             </Paragraph>
 
             <div
-              className="border border-gray-300 rounded-lg mb-3 sm:mb-4 touch-pan-y"
-              style={{ padding: '4px', borderWidth: '1px' }}
+              className="mb-3 sm:mb-4 touch-pan-y signature-container"
+              style={{
+                padding: '4px',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.5rem',
+              }}
             >
               <SignatureCanvasForward
                 ref={signatureRef}
