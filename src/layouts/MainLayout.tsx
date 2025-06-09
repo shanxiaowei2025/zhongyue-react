@@ -1,4 +1,11 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+
+// 扩展Window接口，添加自定义方法
+declare global {
+  interface Window {
+    activateMenuTab?: (mainTabPath: string, targetPath: string) => boolean
+  }
+}
 import { Layout, Menu, Avatar, Dropdown, Button, Drawer, Badge, Tooltip, message, Tabs } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -280,6 +287,51 @@ const MainLayout = () => {
     },
   ]
 
+  // 定义全局导航函数，用于从其他组件调用
+  React.useEffect(() => {
+    // 定义全局函数，用于从其他组件激活特定tab并跳转
+    window.activateMenuTab = (mainTabPath: string, targetPath: string) => {
+      // 查找菜单项并点击
+      const targetMenuItem = menuItems?.find(
+        item => item && 'key' in item && item.key === mainTabPath
+      )
+
+      if (targetMenuItem) {
+        // 检查合同管理tab是否已经存在
+        const tabExists = tabsStore.tabs.some(tab => tab.key === mainTabPath)
+
+        if (!tabExists) {
+          // 如果tab不存在，先添加tab
+          const menuItem = targetMenuItem as any
+          tabsStore.addTab({
+            key: mainTabPath,
+            label: menuItem.label as string,
+            icon: menuItem.icon,
+            closable: mainTabPath !== '/', // 仪表盘不可关闭
+          })
+        }
+
+        // 先切换到主tab
+        tabsStore.setActiveKey(mainTabPath)
+
+        // 再导航到目标路径
+        setTimeout(() => {
+          navigate(targetPath)
+        }, 100)
+        return true
+      }
+
+      // 如果找不到菜单项，直接导航
+      navigate(targetPath)
+      return false
+    }
+
+    // 清理函数
+    return () => {
+      delete window.activateMenuTab
+    }
+  }, [menuItems, navigate])
+
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'logout') {
       // 先清除用户状态
@@ -359,6 +411,7 @@ const MainLayout = () => {
       items={menuItems}
       onClick={handleMenuClick}
       className="menu-container"
+      id="main-navigation-menu"
     />
   )
 

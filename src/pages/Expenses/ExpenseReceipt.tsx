@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Spin, Button, Flex, Radio, AutoComplete, Tag } from 'antd'
 import { useExpenseReceipt, getExpenseReceiptKey, useExpenseDetail } from '../../hooks/useExpense'
-import { DownloadOutlined, ReloadOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons'
+import { DownloadOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import html2canvas from 'html2canvas'
 import { message } from 'antd'
@@ -9,7 +9,7 @@ import { mutate } from 'swr'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { buildImageUrl } from '../../utils/upload'
 import { getContractList } from '../../api/contract'
-import { Link } from 'react-router-dom'
+import ContractLink from '../../components/ContractLink'
 import './expenses.css'
 
 interface ExpenseReceiptProps {
@@ -937,14 +937,9 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
                         onClose={() => handleRemoveRelatedContract(contract.id)}
                         className="relative"
                       >
-                        <Link
-                          to={`/contracts/detail/${contract.id}`}
-                          className="related-contract-link"
-                          title="点击查看合同详情"
-                        >
+                        <ContractLink contractId={contract.id} className="related-contract-link">
                           {contract.contractNumber}
-                          <ExportOutlined />
-                        </Link>
+                        </ContractLink>
                       </Tag>
                     ))}
                   </div>

@@ -16,8 +16,8 @@ import {
   AutoComplete,
   Spin,
 } from 'antd'
-import { PlusOutlined, UploadOutlined, SearchOutlined, ExportOutlined } from '@ant-design/icons'
-import { Link } from 'react-router-dom'
+import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
+import ContractLink from '../../components/ContractLink'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import {
   Expense,
@@ -978,14 +978,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             onClose={() => handleRemoveRelatedContract(contract.id)}
                             className="relative"
                           >
-                            <Link
-                              to={`/contracts/detail/${contract.id}`}
+                            <ContractLink
+                              contractId={contract.id}
                               className="related-contract-link"
-                              title="点击查看合同详情"
                             >
                               {contract.contractNumber}
-                              <ExportOutlined />
-                            </Link>
+                            </ContractLink>
                           </Tag>
                         ))}
                       </div>
