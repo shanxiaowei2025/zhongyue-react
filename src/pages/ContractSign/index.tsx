@@ -296,8 +296,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
       Modal.success({
         title: '签署成功',
         content: '合同已成功签署，感谢您的配合！',
-        okText: '返回首页',
-        onOk: () => navigate('/'),
+        okText: '关闭',
       })
     } catch (error: any) {
       console.error('签署失败:', error)
