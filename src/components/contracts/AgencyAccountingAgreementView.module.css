@@ -290,7 +290,7 @@
 }
 
 .signatureStampSpace {
-  height: 90px;
+  height: 130px;
   position: relative;
   margin-bottom: 12px;
 }
@@ -316,8 +316,7 @@
 .partyBSign {
   width: 130px;
   height: auto;
-  position: absolute;
-  top: -20px;
+  position: relative;
   left: 100px;
   z-index: 2;
 }

@@ -41,10 +41,10 @@ const SIGNATORY_CONFIG = {
 
 // 章图片映射配置
 const STAMP_IMAGE_MAP = {
-  定兴县中岳会计服务有限公司: '/images/dingxing-zhang.png',
-  定兴县中岳会计服务有限公司河北雄安分公司: '/images/xiongan-zhang.png',
-  定兴县中岳会计服务有限公司高碑店分公司: '/images/gaobeidian-zhang.png',
-  保定脉信会计服务有限公司: '/images/maixin-zhang.png',
+  定兴县中岳会计服务有限公司: '/images/contract-seals/dingxing-seal.jpg',
+  定兴县中岳会计服务有限公司河北雄安分公司: '/images/contract-seals/xiongan-seal.jpg',
+  定兴县中岳会计服务有限公司高碑店分公司: '/images/contract-seals/gaobeidian-seal.jpg',
+  保定脉信会计服务有限公司: '/images/contract-seals/maixin-seal.jpg',
 }
 
 // 获取乙方盖章图片

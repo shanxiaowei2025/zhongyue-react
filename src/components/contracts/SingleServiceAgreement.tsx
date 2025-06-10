@@ -27,8 +27,8 @@ const SIGNATORY_CONFIG = {
 
 // 章图片映射配置
 const STAMP_IMAGE_MAP = {
-  保定如你心意企业管理咨询有限公司: '/images/runixinyi-zhang.png',
-  定兴县金盾企业管理咨询有限公司: '/images/jindun-zhang.png',
+  保定如你心意企业管理咨询有限公司: '/images/contract-seals/runixinyi-seal.jpg',
+  定兴县金盾企业管理咨询有限公司: '/images/contract-seals/jindun-seal.jpg',
 }
 
 // 获取乙方盖章图片
