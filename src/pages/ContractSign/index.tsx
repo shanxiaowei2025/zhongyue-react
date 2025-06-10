@@ -78,6 +78,19 @@ const mobileStyles = `
       border-radius: 0.5rem !important;
     }
   }
+  
+  /* 横屏模式的签名板样式 */
+  @media screen and (orientation: landscape) {
+    .signature-container {
+      max-width: 80vw !important;
+      margin: 0 auto;
+    }
+    
+    .signature-canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  }
 `
 
 const { Title, Paragraph } = Typography
@@ -95,21 +108,60 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   const [signModalVisible, setSignModalVisible] = useState(false)
   const [signing, setSigning] = useState(false)
   const [windowWidth, setWindowWidth] = useState(0)
+  const [windowHeight, setWindowHeight] = useState(0)
+  const [isLandscape, setIsLandscape] = useState(false)
   const signatureRef = useRef<SignatureCanvasRef | null>(null)
 
-  // 获取窗口宽度
+  // 获取窗口尺寸和方向
   useEffect(() => {
-    const updateWindowWidth = () => {
+    const updateWindowDimensions = () => {
       setWindowWidth(window.innerWidth)
+      setWindowHeight(window.innerHeight)
+      setIsLandscape(window.innerWidth > window.innerHeight)
     }
 
-    // 初始化窗口宽度
-    updateWindowWidth()
+    // 初始化窗口尺寸
+    updateWindowDimensions()
 
     // 监听窗口大小变化
-    window.addEventListener('resize', updateWindowWidth)
-    return () => window.removeEventListener('resize', updateWindowWidth)
+    window.addEventListener('resize', updateWindowDimensions)
+    window.addEventListener('orientationchange', updateWindowDimensions)
+    
+    return () => {
+      window.removeEventListener('resize', updateWindowDimensions)
+      window.removeEventListener('orientationchange', updateWindowDimensions)
+    }
   }, [])
+
+  // 处理屏幕方向锁定
+  const lockScreenOrientation = async () => {
+    if (typeof screen !== 'undefined' && screen.orientation) {
+      try {
+        // 使用类型断言来避免TypeScript类型错误
+        await (screen.orientation as any).lock('landscape');
+        console.log('屏幕已锁定为横屏模式')
+      } catch (error) {
+        console.warn('无法锁定屏幕方向:', error)
+        // 显示提示信息给用户
+        message.info('请将设备横置以获得更好的签名体验')
+      }
+    } else if (typeof window.orientation !== 'undefined') {
+      // 旧版API，已废弃但仍有部分设备支持
+      message.info('请将设备横置以获得更好的签名体验')
+    }
+  }
+
+  // 解除屏幕方向锁定
+  const unlockScreenOrientation = () => {
+    if (typeof screen !== 'undefined' && screen.orientation && (screen.orientation as any).unlock) {
+      try {
+        (screen.orientation as any).unlock();
+        console.log('屏幕方向锁定已解除')
+      } catch (error) {
+        console.warn('解除屏幕方向锁定失败:', error)
+      }
+    }
+  }
 
   // 验证令牌并获取合同图片
   useEffect(() => {
@@ -151,11 +203,15 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   // 打开签名模态框
   const handleSign = () => {
     setSignModalVisible(true)
+    // 尝试锁定横屏
+    lockScreenOrientation()
   }
 
   // 关闭签名模态框
   const handleCancelSign = () => {
     setSignModalVisible(false)
+    // 解除屏幕锁定
+    unlockScreenOrientation()
   }
 
   // 清除签名
@@ -233,6 +289,8 @@ const ContractSign: React.FC<ContractSignProps> = () => {
 
       // 6. 关闭模态框并显示成功消息
       setSignModalVisible(false)
+      // 解除屏幕锁定
+      unlockScreenOrientation()
 
       // 显示成功模态框
       Modal.success({
@@ -286,6 +344,28 @@ const ContractSign: React.FC<ContractSignProps> = () => {
       </div>
     )
   }
+
+  // 计算签名板尺寸
+  const getSignatureCanvasSize = () => {
+    // 判断当前是否是横屏
+    const isLandscape = window.innerWidth > window.innerHeight;
+    
+    if (isLandscape) {
+      // 横屏模式下，提供更宽的签名区域
+      return {
+        width: Math.min(window.innerWidth - 80, 700),
+        height: Math.min(window.innerHeight - 220, 300)
+      }
+    } else {
+      // 竖屏模式下，较小的签名区域
+      return {
+        width: Math.min(window.innerWidth - 80, 320),
+        height: 180
+      }
+    }
+  }
+
+  const canvasSize = getSignatureCanvasSize();
 
   // 签署页面内容
   return (
@@ -363,10 +443,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
               <Paragraph className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                 确认合同内容无误后，请点击下方按钮进行签署
               </Paragraph>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                <Button size="large" onClick={() => navigate('/')} className="w-full sm:w-auto">
-                  返回首页
-                </Button>
+              <div className="flex justify-center">
                 <Button
                   type="primary"
                   size="large"
@@ -387,8 +464,8 @@ const ContractSign: React.FC<ContractSignProps> = () => {
           open={signModalVisible}
           onCancel={handleCancelSign}
           footer={null}
-          width="90%"
-          style={{ maxWidth: '500px' }}
+          width={isLandscape ? "90%" : "90%"}
+          style={{ maxWidth: isLandscape ? '800px' : '500px' }}
           maskClosable={false}
           centered
           destroyOnClose
@@ -396,6 +473,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
           <div className="py-2 sm:py-4">
             <Paragraph className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">
               请在下方空白区域进行手写签名，签名将用于确认合同签署
+              {!isLandscape && <span className="text-blue-500 ml-1">建议将设备横置获得更好体验</span>}
             </Paragraph>
 
             <div
@@ -410,8 +488,8 @@ const ContractSign: React.FC<ContractSignProps> = () => {
                 ref={signatureRef}
                 canvasProps={{
                   className: 'signature-canvas w-full',
-                  width: windowWidth > 640 ? 450 : Math.min(windowWidth - 120, 320),
-                  height: windowWidth > 640 ? 200 : 150,
+                  width: canvasSize.width,
+                  height: canvasSize.height,
                 }}
               />
             </div>
