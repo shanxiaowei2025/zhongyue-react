@@ -170,6 +170,58 @@
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
+/* 服务项目复选框 */
+.serviceItemsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 5px 0 10px 0;
+}
+
+.serviceItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  margin-right: 15px;
+}
+
+/* 选中状态的复选框 */
+.checkboxChecked {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #000;
+  background-color: #fff;
+  position: relative;
+  margin-right: 8px;
+}
+
+.checkboxChecked::after {
+  content: '✓';
+  position: absolute;
+  top: -7px;
+  left: 0px;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 未选中状态的复选框 */
+.checkboxUnchecked {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #000;
+  background-color: #fff;
+  position: relative;
+  margin-right: 8px;
+}
+
+.serviceItemAmount {
+  margin-left: 5px;
+  font-weight: bold;
+}
+
 /* 备注行 */
 .remarkRow {
   display: flex;
@@ -179,7 +231,7 @@
 
 .remarkLabel {
   font-weight: normal;
-  min-width: 80px;
+  white-space: nowrap;
   flex-shrink: 0;
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
@@ -278,7 +330,7 @@
   display: flex;
   flex-direction: column;
   width: 48%;
-  gap: 45px;
+  gap: 0px;
 }
 
 .signatureItem {

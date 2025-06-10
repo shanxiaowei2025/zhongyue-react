@@ -206,16 +206,35 @@ const AgencyAccountingAgreement = forwardRef<
     const handleServiceChange = (checkedValues: string[]) => {
       setSelectedServices(checkedValues)
 
-      // 构建declarationService数据结构
+      // 构建declarationService数据结构，保留已有的fee值
       const declarationService = checkedValues.map(value => {
         const option = DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === value)
+        // 如果之前存在这个服务，保留其fee值
+        const existingService = formData.declarationService?.find(
+          (s: any) => s.value === value
+        )
         return {
           value,
           label: option ? option.label : '',
+          fee: existingService?.fee || null,
         }
       })
 
       handleFormChange('declarationService', declarationService)
+    }
+
+    // 处理服务费用变化
+    const handleServiceFeeChange = (serviceValue: string, fee: number | null) => {
+      if (!formData.declarationService) return
+
+      const updatedServices = formData.declarationService.map((service: any) => {
+        if (service.value === serviceValue) {
+          return { ...service, fee }
+        }
+        return service
+      })
+
+      handleFormChange('declarationService', updatedServices)
     }
 
     // 处理其他业务变化
@@ -465,25 +484,51 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.taxServices}>
               <div>(同时为甲方提供代理纳税申报服务，包括：</div>
               <div className={styles.serviceCheckboxes}>
-                {DECLARATION_SERVICE_OPTIONS.map(option => (
-                  <Checkbox
-                    key={option.value}
-                    value={option.value}
-                    checked={selectedServices.includes(option.value)}
-                    onChange={e => {
-                      const { value, checked } = e.target
-                      let newServices: string[]
-                      if (checked) {
-                        newServices = [...selectedServices, value]
-                      } else {
-                        newServices = selectedServices.filter(service => service !== value)
-                      }
-                      handleServiceChange(newServices)
-                    }}
-                  >
-                    {option.label}
-                  </Checkbox>
-                ))}
+                {DECLARATION_SERVICE_OPTIONS.map(option => {
+                  const isChecked = selectedServices.includes(option.value)
+                  const serviceData = formData.declarationService?.find(
+                    (s: any) => s.value === option.value
+                  )
+                  const fee = serviceData?.fee || ''
+                  
+                  return (
+                    <div key={option.value} className={styles.serviceCheckboxItem}>
+                      <Checkbox
+                        value={option.value}
+                        checked={isChecked}
+                        onChange={e => {
+                          const { value, checked } = e.target
+                          let newServices: string[]
+                          if (checked) {
+                            newServices = [...selectedServices, value]
+                          } else {
+                            newServices = selectedServices.filter(service => service !== value)
+                          }
+                          handleServiceChange(newServices)
+                        }}
+                      >
+                        {option.label}
+                      </Checkbox>
+                      {isChecked && (
+                        <Input
+                          placeholder="费用"
+                          className={styles.serviceFeeInput}
+                          value={fee}
+                          onChange={e => {
+                            const numValue = parseAmount(e.target.value)
+                            handleServiceFeeChange(option.value, numValue || null)
+                          }}
+                          onBlur={e => {
+                            const numValue = parseAmount(e.target.value)
+                            const formattedValue = numValue === 0 ? '' : numValue.toFixed(2)
+                            e.target.value = formattedValue
+                          }}
+                          suffix="元"
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
               <div className={styles.otherBusiness}>
                 <div className={styles.otherBusinessLabel}>其他业务：</div>

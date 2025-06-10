@@ -147,19 +147,36 @@
   font-size: 12px;
 }
 
-.serviceCheckboxIndicator {
+/* 选中状态的复选框 */
+.checkboxChecked {
   display: inline-block;
-  width: 14px;
-  height: 14px;
-  line-height: 12px;
-  text-align: center;
+  width: 10px;
+  height: 10px;
   border: 1px solid #000;
-  border-radius: 0;
-  color: #000;
   background-color: #fff;
+  position: relative;
   margin-right: 8px;
+}
+
+.checkboxChecked::after {
+  content: '✓';
+  position: absolute;
+  top: -7px;
+  left: 0px;
+  color: #000;
   font-size: 12px;
   font-weight: bold;
+}
+
+/* 未选中状态的复选框 */
+.checkboxUnchecked {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #000;
+  background-color: #fff;
+  position: relative;
+  margin-right: 8px;
 }
 
 .serviceItemEmpty {
@@ -194,6 +211,12 @@
 .paymentMethod {
   font-weight: bold;
   margin-left: 5px;
+}
+
+/* 服务费金额显示 */
+.serviceFeeValue {
+  margin-left: 5px;
+  font-weight: bold;
 }
 
 /* 电子签名 */
@@ -246,13 +269,6 @@
 .signatureTitleColumn:last-child {
   padding-right: 0;
   padding-left: 10px;
-}
-
-.signatureTitle {
-  font-weight: bold;
-  margin-bottom: 12px;
-  font-size: 13px;
-  position: relative;
 }
 
 /* 盖章空间行 */

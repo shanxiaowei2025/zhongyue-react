@@ -504,7 +504,7 @@ const ContractDetail: React.FC = () => {
                 if (block instanceof HTMLElement) {
                   block.style.display = 'flex'
                   block.style.flexDirection = 'column'
-                  block.style.gap = '10px'
+                  block.style.gap = '50px'
                 }
               })
 
@@ -1618,21 +1618,21 @@ const ContractDetail: React.FC = () => {
       {contractData && (
         <Card className="mb-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">合同编号：</span>
               <span className="font-medium text-blue-600 ml-2">
                 {contractData.contractNumber || '未生成'}
               </span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">签署方：</span>
               <span className="font-medium text-blue-600 ml-2">{contractData.signatory}</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">合同类型：</span>
               <span className="font-medium text-green-600 ml-2">{contractData.contractType}</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">合同状态：</span>
               <span
                 className={`font-medium text-${getContractStatusDisplay(contractData.contractStatus).color}-600 ml-2`}
@@ -1640,21 +1640,21 @@ const ContractDetail: React.FC = () => {
                 {getContractStatusDisplay(contractData.contractStatus).text}
               </span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">甲方公司：</span>
               <span className="font-medium ml-2">{contractData.partyACompany || '-'}</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">费用总计：</span>
               <span className="font-medium text-red-600 ml-2">
                 {contractData.totalCost ? `¥${contractData.totalCost}` : '-'}
               </span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">提交人：</span>
               <span className="font-medium ml-2">{contractData.submitter || '-'}</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex">
               <span className="text-gray-600 min-w-24">创建时间：</span>
               <span className="font-medium ml-2">
                 {contractData.createTime
@@ -1663,7 +1663,7 @@ const ContractDetail: React.FC = () => {
               </span>
             </div>
             {contractData.contractStatus === '1' && (
-              <div className="flex items-center">
+              <div className="flex">
                 <span className="text-gray-600 min-w-24">签署时间：</span>
                 <span className="font-medium ml-2">
                   {contractData.updateTime

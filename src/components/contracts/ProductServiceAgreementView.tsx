@@ -145,24 +145,144 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
     return itemNameMap[itemKey] || itemKey
   }
 
+  // 获取所有可能的选项，根据不同类别
+  const getAllPossibleItems = (category: string): Array<{ itemKey: string; itemName: string }> => {
+    const allItems: Record<string, string[]> = {
+      business_establish: [
+        'business_establish_limited',
+        'business_establish_branch',
+        'business_establish_individual',
+        'business_establish_partnership',
+        'business_establish_nonprofit',
+        'business_establish_joint_stock',
+        'business_establish_self_employed',
+      ],
+      business_change: [
+        'business_change_legal_person',
+        'business_change_shareholder',
+        'business_change_capital',
+        'business_change_name',
+        'business_change_scope',
+        'business_change_address',
+        'business_change_manager',
+        'business_change_directors',
+      ],
+      business_cancel: [
+        'business_cancel_limited',
+        'business_cancel_branch',
+        'business_cancel_individual',
+        'business_cancel_partnership',
+        'business_cancel_foreign',
+        'business_cancel_joint_stock',
+        'business_cancel_self_employed',
+      ],
+      business_other: [
+        'business_other_annual_report',
+        'business_other_remove_exception',
+        'business_other_info_repair',
+        'business_other_file_retrieval',
+        'business_other_license_annual',
+        'business_address_small_scale',
+        'business_address_general',
+      ],
+      business_material: [
+        'business_material_seal',
+        'business_material_rubber',
+        'business_material_crystal',
+        'business_material_kt_board',
+        'business_material_copper',
+      ],
+      tax: [
+        'tax_assessment',
+        'tax_filing',
+        'tax_cancellation',
+        'tax_invoice_apply',
+        'tax_invoice_issue',
+        'tax_change',
+        'tax_remove_exception',
+        'tax_supplement',
+        'tax_software',
+        'tax_invoice_software',
+      ],
+      bank: [
+        'bank_general_account',
+        'bank_basic_account',
+        'bank_foreign_account',
+        'bank_info_change',
+        'bank_cancel',
+        'bank_financing',
+        'bank_loan',
+      ],
+      social: [
+        'social_security_open',
+        'social_security_hosting',
+        'social_security_cancel',
+        'fund_open',
+        'fund_hosting',
+        'fund_change',
+      ],
+      license: [
+        'license_food',
+        'license_health',
+        'license_catering',
+        'license_transport',
+        'license_medical',
+        'license_other',
+        'license_prepackaged',
+      ],
+    }
+
+    return (allItems[category] || []).map(itemKey => ({
+      itemKey,
+      itemName: getItemName(itemKey),
+    }))
+  }
+
+  // 检查项目是否被选中
+  const isItemSelected = (items: Array<Record<string, any>> = [], itemKey: string): boolean => {
+    return items.some(item => item.itemKey === itemKey)
+  }
+
+  // 获取项目的金额
+  const getItemAmount = (
+    items: Array<Record<string, any>> = [],
+    itemKey: string
+  ): string | null => {
+    const item = items.find(item => item.itemKey === itemKey)
+    return item && item.amount ? `${item.amount}` : null
+  }
+
   // 渲染服务项目标签
-  const renderServiceItems = (items: Array<Record<string, any>>) => {
-    if (!items || items.length === 0) {
+  const renderServiceItems = (items: Array<Record<string, any>> = [], category: string) => {
+    // 获取所有可能的选项
+    const allPossibleItems = getAllPossibleItems(category)
+
+    if (allPossibleItems.length === 0) {
       return <span className="text-gray-400">未选择</span>
     }
 
     return (
-      <span className="service-items-text">
-        {items.map((item, index) => (
-          <React.Fragment key={index}>
-            <span className="service-item-name">
-              {getItemName(item.itemKey) || item.itemName}
-              {item.amount ? ` (${item.amount}元)` : ''}
+      <div className="service-items-container">
+        {allPossibleItems.map((possibleItem, index) => {
+          const isSelected = isItemSelected(items, possibleItem.itemKey)
+          const amount = getItemAmount(items, possibleItem.itemKey)
+
+          return (
+            <span
+              key={possibleItem.itemKey}
+              className={isSelected ? 'service-item-checked' : 'service-item-unchecked'}
+            >
+              <span className="checkbox-view">
+                <span
+                  className={isSelected ? 'checkbox-view-checked' : 'checkbox-view-unchecked'}
+                />
+              </span>
+              {possibleItem.itemName}
+              {amount && <span className="service-item-amount">（{amount}元）</span>}
             </span>
-            {index < items.length - 1 && <span className="service-item-separator">；</span>}
-          </React.Fragment>
-        ))}
-      </span>
+          )
+        })}
+      </div>
     )
   }
 
@@ -276,7 +396,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           <div className="service-item">
             <span>①设立：</span>
             <div className="service-content">
-              {renderServiceItems(contractData.businessEstablishment || [])}
+              {renderServiceItems(contractData.businessEstablishment || [], 'business_establish')}
             </div>
             {contractData.businessEstablishmentAddress && (
               <div className="service-description">
@@ -290,28 +410,28 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           <div className="service-item">
             <span>②变更：</span>
             <div className="service-content">
-              {renderServiceItems(contractData.businessChange || [])}
+              {renderServiceItems(contractData.businessChange || [], 'business_change')}
             </div>
           </div>
 
           <div className="service-item">
             <span>③注销：</span>
             <div className="service-content">
-              {renderServiceItems(contractData.businessCancellation || [])}
+              {renderServiceItems(contractData.businessCancellation || [], 'business_cancel')}
             </div>
           </div>
 
           <div className="service-item">
             <span>④其他：</span>
             <div className="service-content">
-              {renderServiceItems(contractData.businessOther || [])}
+              {renderServiceItems(contractData.businessOther || [], 'business_other')}
             </div>
           </div>
 
           <div className="service-item">
             <span>⑤物料：</span>
             <div className="service-content">
-              {renderServiceItems(contractData.businessMaterials || [])}
+              {renderServiceItems(contractData.businessMaterials || [], 'business_material')}
             </div>
           </div>
 
@@ -327,7 +447,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         {/* 税务服务 */}
         <div className="service-category">
           <h4>2、税务：</h4>
-          <div className="service-content">{renderServiceItems(contractData.taxMatters || [])}</div>
+          <div className="service-content">
+            {renderServiceItems(contractData.taxMatters || [], 'tax')}
+          </div>
           <div className="service-remark">
             <span>备注：</span>
             <span className="remark-value">{contractData.taxRemark || '-'}</span>
@@ -341,7 +463,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         <div className="service-category">
           <h4>3、银行：</h4>
           <div className="service-content">
-            {renderServiceItems(contractData.bankMatters || [])}
+            {renderServiceItems(contractData.bankMatters || [], 'bank')}
           </div>
           <div className="service-remark">
             <span>备注：</span>
@@ -356,7 +478,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         <div className="service-category">
           <h4>4、社保：</h4>
           <div className="service-content">
-            {renderServiceItems(contractData.socialSecurity || [])}
+            {renderServiceItems(contractData.socialSecurity || [], 'social')}
           </div>
           <div className="service-remark">
             <span>备注：</span>
@@ -371,7 +493,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         <div className="service-category">
           <h4>5、许可业务：</h4>
           <div className="service-content">
-            {renderServiceItems(contractData.licenseBusiness || [])}
+            {renderServiceItems(contractData.licenseBusiness || [], 'license')}
           </div>
           <div className="service-remark">
             <span>备注：</span>

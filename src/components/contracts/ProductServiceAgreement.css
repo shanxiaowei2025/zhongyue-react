@@ -244,23 +244,46 @@
   font-size: 12px;
 }
 
-.checkbox-group {
-  margin: 8px 0 8px 20px;
+.service-items-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
-.checkbox-group .ant-checkbox-wrapper {
-  font-size: 12px;
-  margin: 0;
-  white-space: nowrap;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+.checkbox-view {
+  display: inline-block;
+  margin-right: 4px;
+  position: relative;
+  top: 1px;
 }
 
-.checkbox-group .ant-checkbox-wrapper span {
+.checkbox-view-unchecked {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #000;
+  position: relative;
+}
+
+.checkbox-view-checked {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #000;
+  background-color: #fff;
+  position: relative;
+}
+
+.checkbox-view-checked::after {
+  content: '✓';
+  position: absolute;
+  top: -7px;
+  left: 0px;
+  color: #000;
   font-size: 12px;
-  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-weight: bold;
 }
 
 .service-description {
@@ -1091,7 +1114,7 @@
 .signature-block {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 50px;
 }
 
 .signature-item {
@@ -1103,4 +1126,35 @@
 .signature-item span {
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+/* 自定义勾选框样式 */
+.checkbox-view {
+  display: inline-block;
+  margin-right: 5px;
+  position: relative;
+  top: 2px;
+}
+
+.service-item-checked {
+  font-weight: normal;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 12px;
+  margin-bottom: 5px;
+}
+
+.service-item-unchecked {
+  font-weight: normal;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 12px;
+  margin-bottom: 5px;
+  color: #000;
+}
+
+.service-item-amount {
+  margin-left: 4px;
+  font-weight: normal;
+  color: #000;
 }

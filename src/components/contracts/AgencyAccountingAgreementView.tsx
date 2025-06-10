@@ -157,27 +157,34 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
 
   // 获取申报服务选项
   const getSelectedServices = () => {
-    if (
-      !declarationService ||
-      !Array.isArray(declarationService) ||
-      declarationService.length === 0
-    ) {
+    if (!declarationService || !Array.isArray(declarationService)) {
       return <div className={styles.serviceItemEmpty}>未选择</div>
     }
 
+    // 创建一个映射，用于快速查找选中的服务及其金额
+    const selectedServiceMap = declarationService.reduce((acc, service) => {
+      acc[service.value] = service.fee || null;
+      return acc;
+    }, {} as Record<string, number | null>);
+
     return (
       <div className={`${styles.serviceCheckboxes} ${styles.viewMode}`}>
-        {declarationService.map((service, index) => (
-          <div key={index} className={styles.serviceItem}>
-            <span className={styles.serviceCheckboxIndicator}>✓</span>
-            <span className={styles.serviceLabel}>
-              {DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === service.value)?.label ||
-                service.label}
-            </span>
-          </div>
-        ))}
+        {DECLARATION_SERVICE_OPTIONS.map((option, index) => {
+          const isSelected = selectedServiceMap.hasOwnProperty(option.value);
+          const fee = selectedServiceMap[option.value];
+          
+          return (
+            <div key={index} className={styles.serviceItem}>
+              <span className={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}></span>
+              <span className={styles.serviceLabel}>
+                {option.label}
+                {isSelected && fee ? <span className={styles.serviceFeeValue}>{fee.toFixed(2)}元</span> : ''}
+              </span>
+            </div>
+          );
+        })}
       </div>
-    )
+    );
   }
 
   return (

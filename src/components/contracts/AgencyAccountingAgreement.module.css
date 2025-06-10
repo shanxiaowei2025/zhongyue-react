@@ -154,8 +154,24 @@
   gap: 6px;
 }
 
-.serviceCheckboxes :global(.ant-checkbox-wrapper) {
+.serviceCheckboxItem {
+  display: flex;
+  align-items: center;
   margin-left: 2em;
+}
+
+.serviceFeeInput {
+  width: 100px;
+  margin-left: 10px;
+  height: 28px;
+  font-size: 12px;
+  border: none;
+  border-bottom: 1px solid #000;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.serviceCheckboxes :global(.ant-checkbox-wrapper) {
   margin-bottom: 0;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
   font-size: 12px;
