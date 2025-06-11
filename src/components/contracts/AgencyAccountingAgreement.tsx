@@ -210,9 +210,7 @@ const AgencyAccountingAgreement = forwardRef<
       const declarationService = checkedValues.map(value => {
         const option = DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === value)
         // 如果之前存在这个服务，保留其fee值
-        const existingService = formData.declarationService?.find(
-          (s: any) => s.value === value
-        )
+        const existingService = formData.declarationService?.find((s: any) => s.value === value)
         return {
           value,
           label: option ? option.label : '',
@@ -490,7 +488,7 @@ const AgencyAccountingAgreement = forwardRef<
                     (s: any) => s.value === option.value
                   )
                   const fee = serviceData?.fee || ''
-                  
+
                   return (
                     <div key={option.value} className={styles.serviceCheckboxItem}>
                       <Checkbox

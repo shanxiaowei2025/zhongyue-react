@@ -134,7 +134,7 @@ export default function Customers() {
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState({
     keyword: '',
-    taxNumber: '',
+    unifiedSocialCreditCode: '',
     customerLevel: '',
     consultantAccountant: '',
     bookkeepingAccountant: '',
@@ -236,7 +236,7 @@ export default function Customers() {
     }
   }, [
     searchParams.keyword,
-    searchParams.taxNumber,
+    searchParams.unifiedSocialCreditCode,
     searchParams.consultantAccountant,
     searchParams.bookkeepingAccountant,
     searchParams.taxBureau,
@@ -252,7 +252,7 @@ export default function Customers() {
   const resetSearch = () => {
     setSearchParams({
       keyword: '',
-      taxNumber: '',
+      unifiedSocialCreditCode: '',
       customerLevel: '',
       consultantAccountant: '',
       bookkeepingAccountant: '',
@@ -977,11 +977,13 @@ export default function Customers() {
                 />
               </Form.Item>
 
-              <Form.Item label="税号" className="mb-2">
+              <Form.Item label="统一社会信用代码" className="mb-2">
                 <Input
-                  placeholder="请输入税号"
-                  value={searchParams.taxNumber}
-                  onChange={e => setSearchParams({ ...searchParams, taxNumber: e.target.value })}
+                  placeholder="请输入统一社会信用代码"
+                  value={searchParams.unifiedSocialCreditCode}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, unifiedSocialCreditCode: e.target.value })
+                  }
                   className="w-40"
                   allowClear
                 />

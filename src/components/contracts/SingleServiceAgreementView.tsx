@@ -129,119 +129,126 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
     }
 
     // 将现有项目转换为Map以便快速查找
-    const selectedItemsMap = items.reduce((acc, item) => {
-      acc[item.itemKey] = item;
-      return acc;
-    }, {} as Record<string, any>);
+    const selectedItemsMap = items.reduce(
+      (acc, item) => {
+        acc[item.itemKey] = item
+        return acc
+      },
+      {} as Record<string, any>
+    )
 
     // 定义每个类别可能的所有选项
-    const allCategoryOptions: Record<string, Array<{key: string, label: string}>> = {
-      'businessEstablishment': [
-        {key: 'business_establish_limited', label: '有限责任公司'},
-        {key: 'business_establish_branch', label: '有限责任公司分支机构'},
-        {key: 'business_establish_individual', label: '个人独资企业'},
-        {key: 'business_establish_partnership', label: '合伙企业'},
-        {key: 'business_establish_nonprofit', label: '民办非企业'},
-        {key: 'business_establish_joint_stock', label: '股份有限公司'},
-        {key: 'business_establish_self_employed', label: '个体工商户'}
+    const allCategoryOptions: Record<string, Array<{ key: string; label: string }>> = {
+      businessEstablishment: [
+        { key: 'business_establish_limited', label: '有限责任公司' },
+        { key: 'business_establish_branch', label: '有限责任公司分支机构' },
+        { key: 'business_establish_individual', label: '个人独资企业' },
+        { key: 'business_establish_partnership', label: '合伙企业' },
+        { key: 'business_establish_nonprofit', label: '民办非企业' },
+        { key: 'business_establish_joint_stock', label: '股份有限公司' },
+        { key: 'business_establish_self_employed', label: '个体工商户' },
       ],
-      'businessChange': [
-        {key: 'business_change_legal_person', label: '法定代表人'},
-        {key: 'business_change_shareholder', label: '股东股权'},
-        {key: 'business_change_capital', label: '注册资金'},
-        {key: 'business_change_name', label: '公司名称'},
-        {key: 'business_change_scope', label: '经营范围'},
-        {key: 'business_change_address', label: '注册地址'},
-        {key: 'business_change_manager', label: '分公司负责人'},
-        {key: 'business_change_directors', label: '董事/监事人员'}
+      businessChange: [
+        { key: 'business_change_legal_person', label: '法定代表人' },
+        { key: 'business_change_shareholder', label: '股东股权' },
+        { key: 'business_change_capital', label: '注册资金' },
+        { key: 'business_change_name', label: '公司名称' },
+        { key: 'business_change_scope', label: '经营范围' },
+        { key: 'business_change_address', label: '注册地址' },
+        { key: 'business_change_manager', label: '分公司负责人' },
+        { key: 'business_change_directors', label: '董事/监事人员' },
       ],
-      'businessCancellation': [
-        {key: 'business_cancel_limited', label: '有限责任公司'},
-        {key: 'business_cancel_branch', label: '有限责任公司分支机构'},
-        {key: 'business_cancel_individual', label: '个人独资企业'},
-        {key: 'business_cancel_partnership', label: '合伙企业'},
-        {key: 'business_cancel_foreign', label: '外商投资企业'},
-        {key: 'business_cancel_joint_stock', label: '股份有限公司'},
-        {key: 'business_cancel_self_employed', label: '个体工商户'}
+      businessCancellation: [
+        { key: 'business_cancel_limited', label: '有限责任公司' },
+        { key: 'business_cancel_branch', label: '有限责任公司分支机构' },
+        { key: 'business_cancel_individual', label: '个人独资企业' },
+        { key: 'business_cancel_partnership', label: '合伙企业' },
+        { key: 'business_cancel_foreign', label: '外商投资企业' },
+        { key: 'business_cancel_joint_stock', label: '股份有限公司' },
+        { key: 'business_cancel_self_employed', label: '个体工商户' },
       ],
-      'businessOther': [
-        {key: 'business_other_annual_report', label: '年报公示'},
-        {key: 'business_other_remove_exception', label: '解除异常'},
-        {key: 'business_other_info_repair', label: '信息修复'},
-        {key: 'business_other_file_retrieval', label: '档案调取'},
-        {key: 'business_other_license_annual', label: '许可证年检'}
+      businessOther: [
+        { key: 'business_other_annual_report', label: '年报公示' },
+        { key: 'business_other_remove_exception', label: '解除异常' },
+        { key: 'business_other_info_repair', label: '信息修复' },
+        { key: 'business_other_file_retrieval', label: '档案调取' },
+        { key: 'business_other_license_annual', label: '许可证年检' },
       ],
-      'businessMaterials': [
-        {key: 'business_material_seal', label: '备案章'},
-        {key: 'business_material_rubber', label: '胶皮章'},
-        {key: 'business_material_crystal', label: '水晶章'},
-        {key: 'business_material_kt_board', label: 'KT板牌子'},
-        {key: 'business_material_copper', label: '铜牌'}
+      businessMaterials: [
+        { key: 'business_material_seal', label: '备案章' },
+        { key: 'business_material_rubber', label: '胶皮章' },
+        { key: 'business_material_crystal', label: '水晶章' },
+        { key: 'business_material_kt_board', label: 'KT板牌子' },
+        { key: 'business_material_copper', label: '铜牌' },
       ],
-      'taxMatters': [
-        {key: 'tax_assessment', label: '核定税种'},
-        {key: 'tax_filing', label: '报税'},
-        {key: 'tax_cancellation', label: '注销'},
-        {key: 'tax_invoice_apply', label: '申请发票'},
-        {key: 'tax_invoice_issue', label: '代开发票'},
-        {key: 'tax_change', label: '税务变更'},
-        {key: 'tax_remove_exception', label: '解除异常'},
-        {key: 'tax_supplement', label: '补充申报'},
-        {key: 'tax_software', label: '记账软件'},
-        {key: 'tax_invoice_software', label: '开票软件'}
+      taxMatters: [
+        { key: 'tax_assessment', label: '核定税种' },
+        { key: 'tax_filing', label: '报税' },
+        { key: 'tax_cancellation', label: '注销' },
+        { key: 'tax_invoice_apply', label: '申请发票' },
+        { key: 'tax_invoice_issue', label: '代开发票' },
+        { key: 'tax_change', label: '税务变更' },
+        { key: 'tax_remove_exception', label: '解除异常' },
+        { key: 'tax_supplement', label: '补充申报' },
+        { key: 'tax_software', label: '记账软件' },
+        { key: 'tax_invoice_software', label: '开票软件' },
       ],
-      'bankMatters': [
-        {key: 'bank_general_account', label: '一般账户设立'},
-        {key: 'bank_basic_account', label: '基本账户设立'},
-        {key: 'bank_foreign_account', label: '外币账户设立'},
-        {key: 'bank_info_change', label: '信息变更'},
-        {key: 'bank_cancel', label: '银行账户注销'},
-        {key: 'bank_financing', label: '融资业务（开通平台手续）'},
-        {key: 'bank_loan', label: '贷款服务'}
+      bankMatters: [
+        { key: 'bank_general_account', label: '一般账户设立' },
+        { key: 'bank_basic_account', label: '基本账户设立' },
+        { key: 'bank_foreign_account', label: '外币账户设立' },
+        { key: 'bank_info_change', label: '信息变更' },
+        { key: 'bank_cancel', label: '银行账户注销' },
+        { key: 'bank_financing', label: '融资业务（开通平台手续）' },
+        { key: 'bank_loan', label: '贷款服务' },
       ],
-      'socialSecurity': [
-        {key: 'social_security_open', label: '社保开户'},
-        {key: 'social_security_hosting', label: '社保托管'},
-        {key: 'social_security_cancel', label: '社保账户注销'},
-        {key: 'fund_open', label: '公积金开户'},
-        {key: 'fund_hosting', label: '公积金托管'},
-        {key: 'fund_change', label: '公积金变更'}
+      socialSecurity: [
+        { key: 'social_security_open', label: '社保开户' },
+        { key: 'social_security_hosting', label: '社保托管' },
+        { key: 'social_security_cancel', label: '社保账户注销' },
+        { key: 'fund_open', label: '公积金开户' },
+        { key: 'fund_hosting', label: '公积金托管' },
+        { key: 'fund_change', label: '公积金变更' },
       ],
-      'licenseBusiness': [
-        {key: 'license_food', label: '食品经营许可证'},
-        {key: 'license_health', label: '卫生许可证'},
-        {key: 'license_catering', label: '餐饮许可证'},
-        {key: 'license_transport', label: '道路运输许可证'},
-        {key: 'license_medical', label: '二类医疗器械备案'},
-        {key: 'license_other', label: '其他许可证'},
-        {key: 'license_prepackaged', label: '预包装食品备案'}
-      ]
-    };
+      licenseBusiness: [
+        { key: 'license_food', label: '食品经营许可证' },
+        { key: 'license_health', label: '卫生许可证' },
+        { key: 'license_catering', label: '餐饮许可证' },
+        { key: 'license_transport', label: '道路运输许可证' },
+        { key: 'license_medical', label: '二类医疗器械备案' },
+        { key: 'license_other', label: '其他许可证' },
+        { key: 'license_prepackaged', label: '预包装食品备案' },
+      ],
+    }
 
     // 获取当前类别的所有可能选项
-    const categoryOptions = allCategoryOptions[categoryType] || [];
+    const categoryOptions = allCategoryOptions[categoryType] || []
 
     return (
       <div className={styles.serviceItemsContainer}>
-        {categoryOptions.map((option) => {
-          const isSelected = selectedItemsMap.hasOwnProperty(option.key);
-          const item = selectedItemsMap[option.key];
-          
+        {categoryOptions.map(option => {
+          const isSelected = selectedItemsMap.hasOwnProperty(option.key)
+          const item = selectedItemsMap[option.key]
+
           return (
             <div key={option.key} className={styles.serviceItem}>
-              <span className={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}></span>
+              <span
+                className={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}
+              ></span>
               <span className={styles.serviceItemLabel}>
                 {option.label}
                 {isSelected && item.amount ? (
                   <span className={styles.serviceItemAmount}>({item.amount}元)</span>
-                ) : ''}
+                ) : (
+                  ''
+                )}
               </span>
             </div>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -340,7 +347,10 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             {/* 设立 */}
             <div className={styles.mb10}>
               <div className={styles.mb5}>①设立：</div>
-              {renderServiceItems(contractData.businessEstablishment || [], 'businessEstablishment')}
+              {renderServiceItems(
+                contractData.businessEstablishment || [],
+                'businessEstablishment'
+              )}
             </div>
 
             {contractData.businessEstablishmentAddress && (
@@ -386,7 +396,9 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           {/* 银行服务 */}
           <div className={styles.serviceCategory}>
             <div className={styles.categoryTitle}>2、银行：</div>
-            <div className={styles.mb10}>{renderServiceItems(contractData.bankMatters || [], 'bankMatters')}</div>
+            <div className={styles.mb10}>
+              {renderServiceItems(contractData.bankMatters || [], 'bankMatters')}
+            </div>
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
@@ -441,7 +453,9 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.socialSecurityRemark || '-'}</span>
+              <span className={styles.remarkContent}>
+                {contractData.socialSecurityRemark || '-'}
+              </span>
               <span className={styles.remarkLabel}>服务费用：</span>
               <span className={styles.remarkContent}>
                 {contractData.socialSecurityServiceFee

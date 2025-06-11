@@ -126,7 +126,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
     // 监听窗口大小变化
     window.addEventListener('resize', updateWindowDimensions)
     window.addEventListener('orientationchange', updateWindowDimensions)
-    
+
     return () => {
       window.removeEventListener('resize', updateWindowDimensions)
       window.removeEventListener('orientationchange', updateWindowDimensions)
@@ -138,7 +138,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
     if (typeof screen !== 'undefined' && screen.orientation) {
       try {
         // 使用类型断言来避免TypeScript类型错误
-        await (screen.orientation as any).lock('landscape');
+        await (screen.orientation as any).lock('landscape')
         console.log('屏幕已锁定为横屏模式')
       } catch (error) {
         console.warn('无法锁定屏幕方向:', error)
@@ -155,7 +155,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   const unlockScreenOrientation = () => {
     if (typeof screen !== 'undefined' && screen.orientation && (screen.orientation as any).unlock) {
       try {
-        (screen.orientation as any).unlock();
+        ;(screen.orientation as any).unlock()
         console.log('屏幕方向锁定已解除')
       } catch (error) {
         console.warn('解除屏幕方向锁定失败:', error)
@@ -347,24 +347,24 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   // 计算签名板尺寸
   const getSignatureCanvasSize = () => {
     // 判断当前是否是横屏
-    const isLandscape = window.innerWidth > window.innerHeight;
-    
+    const isLandscape = window.innerWidth > window.innerHeight
+
     if (isLandscape) {
       // 横屏模式下，提供更宽的签名区域
       return {
         width: Math.min(window.innerWidth - 80, 700),
-        height: Math.min(window.innerHeight - 220, 300)
+        height: Math.min(window.innerHeight - 220, 300),
       }
     } else {
       // 竖屏模式下，较小的签名区域
       return {
         width: Math.min(window.innerWidth - 80, 320),
-        height: 180
+        height: 180,
       }
     }
   }
 
-  const canvasSize = getSignatureCanvasSize();
+  const canvasSize = getSignatureCanvasSize()
 
   // 签署页面内容
   return (
@@ -463,7 +463,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
           open={signModalVisible}
           onCancel={handleCancelSign}
           footer={null}
-          width={isLandscape ? "90%" : "90%"}
+          width={isLandscape ? '90%' : '90%'}
           style={{ maxWidth: isLandscape ? '800px' : '500px' }}
           maskClosable={false}
           centered
@@ -472,7 +472,9 @@ const ContractSign: React.FC<ContractSignProps> = () => {
           <div className="py-2 sm:py-4">
             <Paragraph className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">
               请在下方空白区域进行手写签名，签名将用于确认合同签署
-              {!isLandscape && <span className="text-blue-500 ml-1">建议将设备横置获得更好体验</span>}
+              {!isLandscape && (
+                <span className="text-blue-500 ml-1">建议将设备横置获得更好体验</span>
+              )}
             </Paragraph>
 
             <div

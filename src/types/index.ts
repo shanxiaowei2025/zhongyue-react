@@ -121,7 +121,7 @@ export interface PaginationParams {
   pageSize: number
   keyword?: string
   companyName?: string
-  taxNumber?: string
+  unifiedSocialCreditCode?: string
   customerLevel?: string
   enterpriseType?: string
   taxBureau?: string
