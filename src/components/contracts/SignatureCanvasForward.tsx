@@ -60,9 +60,9 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
       }
     }
 
-    // 设置默认尺寸
-    const width = canvasProps.width || 450
-    const height = canvasProps.height || 200
+    // 设置默认尺寸 - 改为获取容器尺寸
+    const width = canvasProps.width || 700
+    const height = canvasProps.height || 300
     const className = canvasProps.className || 'signature-canvas'
 
     // 修复Canvas坐标和尺寸问题
@@ -74,23 +74,25 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
 
           // 等待DOM更新完成
           setTimeout(() => {
-            const rect = container.getBoundingClientRect()
-            const computedStyle = window.getComputedStyle(canvas)
+            // 获取容器的实际尺寸
+            const containerRect = container.getBoundingClientRect()
+            const containerWidth = container.offsetWidth
+            const containerHeight = container.offsetHeight
 
-            // 获取Canvas的实际显示尺寸（去除border和padding）
-            const displayWidth = parseFloat(computedStyle.width)
-            const displayHeight = parseFloat(computedStyle.height)
+            // 如果容器有实际尺寸，使用容器尺寸，否则使用默认尺寸
+            const actualWidth = containerWidth > 0 ? containerWidth : width
+            const actualHeight = containerHeight > 0 ? containerHeight : height
 
-            // 设置Canvas的实际像素尺寸以匹配显示尺寸
+            // 设置Canvas的实际像素尺寸
             const devicePixelRatio = window.devicePixelRatio || 1
-            canvas.width = displayWidth * devicePixelRatio
-            canvas.height = displayHeight * devicePixelRatio
+            canvas.width = actualWidth * devicePixelRatio
+            canvas.height = actualHeight * devicePixelRatio
 
-            // 确保CSS尺寸与计算出的尺寸一致
-            canvas.style.width = `${displayWidth}px`
-            canvas.style.height = `${displayHeight}px`
+            // 确保CSS尺寸与实际尺寸一致
+            canvas.style.width = `${actualWidth}px`
+            canvas.style.height = `${actualHeight}px`
 
-            // 缩放绘图上下文
+            // 缩放绘图上下文以保持笔触与笔迹一致
             const ctx = canvas.getContext('2d')
             if (ctx) {
               ctx.scale(devicePixelRatio, devicePixelRatio)
@@ -102,7 +104,7 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
             if (sigCanvas.current) {
               sigCanvas.current.clear()
             }
-          }, 50)
+          }, 100)
         }
       }
 
@@ -124,7 +126,7 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
         ref={containerRef}
         className="w-full"
         style={{
-          maxWidth: '100%',
+          width: '100%',
           height: `${height}px`,
           overflow: 'hidden',
           padding: 0,
@@ -140,8 +142,7 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
             className,
             style: {
               width: '100%',
-              maxWidth: `${width}px`,
-              height: `${height}px`,
+              height: '100%',
               touchAction: 'none',
               display: 'block',
               padding: 0,

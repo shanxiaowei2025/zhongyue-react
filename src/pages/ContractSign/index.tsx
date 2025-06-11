@@ -76,6 +76,14 @@ const mobileStyles = `
     .signature-container {
       border: 1px solid #d1d5db !important;
       border-radius: 0.5rem !important;
+      overflow: hidden !important;
+    }
+    
+    /* 确保签名画布完全撑满容器 */
+    .signature-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
     }
   }
   
@@ -352,14 +360,14 @@ const ContractSign: React.FC<ContractSignProps> = () => {
     if (isLandscape) {
       // 横屏模式下，提供更宽的签名区域
       return {
-        width: Math.min(window.innerWidth - 80, 700),
-        height: Math.min(window.innerHeight - 220, 300),
+        width: Math.min(window.innerWidth - 120, 800),
+        height: Math.min(window.innerHeight - 220, 350),
       }
     } else {
       // 竖屏模式下，较小的签名区域
       return {
-        width: Math.min(window.innerWidth - 80, 320),
-        height: 180,
+        width: Math.min(window.innerWidth - 80, 400),
+        height: 200,
       }
     }
   }
@@ -463,8 +471,8 @@ const ContractSign: React.FC<ContractSignProps> = () => {
           open={signModalVisible}
           onCancel={handleCancelSign}
           footer={null}
-          width={isLandscape ? '90%' : '90%'}
-          style={{ maxWidth: isLandscape ? '800px' : '500px' }}
+          width={isLandscape ? '95%' : '90%'}
+          style={{ maxWidth: isLandscape ? '900px' : '500px' }}
           maskClosable={false}
           centered
           destroyOnClose
@@ -480,9 +488,12 @@ const ContractSign: React.FC<ContractSignProps> = () => {
             <div
               className="mb-3 sm:mb-4 touch-pan-y signature-container"
               style={{
+                width: '100%',
+                height: `${canvasSize.height + 8}px`, // 给容器设置固定高度
                 padding: '4px',
                 border: '1px solid #d1d5db',
                 borderRadius: '0.5rem',
+                boxSizing: 'border-box',
               }}
             >
               <SignatureCanvasForward
