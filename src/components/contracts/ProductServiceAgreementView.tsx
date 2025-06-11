@@ -508,23 +508,83 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         <div className="total-cost">
           <div className="cost-row">
             <div className="cost-amount-row">
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>费用总计（人民币）：</span>
-              <span className="amount-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+                }}
+              >
+                费用总计（人民币）：
+              </span>
+              <span
+                className="amount-value"
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+                }}
+              >
                 {contractData.totalCost || '-'}
               </span>
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>元</span>
-              <span className="amount-label" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+                }}
+              >
+                元
+              </span>
+              <span
+                className="amount-label"
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+                }}
+              >
                 大写金额（人民币）：
               </span>
-              <span className="amount-text-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+              <span
+                className="amount-text-value"
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+                }}
+              >
                 {numberToChinese(contractData.totalCost || 0)}
               </span>
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>。</span>
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 'bold',
+                  fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+                }}
+              >
+                。
+              </span>
             </div>
           </div>
           <div className="cost-remark">
-            <span style={{ fontSize: '13px', fontWeight: 'bold' }}>备注：</span>
-            <span className="remark-value" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+            <span
+              style={{
+                fontSize: '13px',
+                fontWeight: 'bold',
+                fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+              }}
+            >
+              备注：
+            </span>
+            <span
+              className="remark-value"
+              style={{
+                fontSize: '13px',
+                fontWeight: 'bold',
+                fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
+              }}
+            >
               {contractData.otherRemark || '-'}
             </span>
           </div>

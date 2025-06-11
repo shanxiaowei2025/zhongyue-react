@@ -83,7 +83,12 @@ const ContractDetail: React.FC = () => {
   const [signUrl, setSignUrl] = useState<string>('')
 
   // 获取合同详情数据
-  const { data: contractData, isLoading, error } = useContractDetail(contractId)
+  const {
+    data: contractData,
+    isLoading,
+    error,
+    refreshContractDetail,
+  } = useContractDetail(contractId)
 
   // 检查合同ID有效性
   useEffect(() => {
@@ -871,6 +876,33 @@ const ContractDetail: React.FC = () => {
     setIsGeneratingLink(true)
 
     try {
+      // 首先检查并设置合同签署日期（如果为空的话）
+      const currentDate = new Date().toISOString().split('T')[0] // 当前日期，格式为 YYYY-MM-DD
+      const shouldUpdateDates = !contractData.partyASignDate || !contractData.partyBSignDate
+
+      if (shouldUpdateDates) {
+        const dateUpdateData: any = {}
+
+        // 如果甲方签署日期为空，设置为当前日期
+        if (!contractData.partyASignDate) {
+          dateUpdateData.partyASignDate = currentDate
+        }
+
+        // 如果乙方签署日期为空，设置为当前日期
+        if (!contractData.partyBSignDate) {
+          dateUpdateData.partyBSignDate = currentDate
+        }
+
+        // 先更新合同日期信息
+        await updateContract(contractId, dateUpdateData)
+
+        // 重新获取合同数据以刷新页面显示
+        await refreshContractDetail()
+
+        // 等待一小段时间确保页面重新渲染完成
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+
       // 确定要截图的元素
       let targetElement: HTMLElement = contractContentRef.current
 
@@ -1025,7 +1057,7 @@ const ContractDetail: React.FC = () => {
                 if (block instanceof HTMLElement) {
                   block.style.display = 'flex'
                   block.style.flexDirection = 'column'
-                  block.style.gap = '10px'
+                  block.style.gap = '50px'
                 }
               })
 
@@ -1421,19 +1453,8 @@ const ContractDetail: React.FC = () => {
       const uploadResponse = await uploadFile(file, 'contracts')
       const imageFileName = uploadResponse.data.fileName
 
-      // 检查并设置合同签署日期
-      const currentDate = new Date().toISOString().split('T')[0] // 当前日期，格式为 YYYY-MM-DD
+      // 更新合同图片信息（日期已经在前面设置过了）
       const updateData: any = { contractImage: imageFileName }
-
-      // 如果甲方签署日期为空，设置为当前日期
-      if (!contractData.partyASignDate) {
-        updateData.partyASignDate = currentDate
-      }
-
-      // 如果乙方签署日期为空，设置为当前日期
-      if (!contractData.partyBSignDate) {
-        updateData.partyBSignDate = currentDate
-      }
 
       // 更新合同信息
       await updateContract(contractId, updateData)

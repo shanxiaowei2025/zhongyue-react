@@ -10,7 +10,7 @@ console.log('API配置 - 基础URL:', apiBaseUrl)
 // 创建 axios 实例
 const instance = axios.create({
   baseURL: apiBaseUrl,
-  timeout: 10000,
+  timeout: 0, // 不设置超时时间
   headers: {
     'Content-Type': 'application/json',
   },
@@ -202,7 +202,7 @@ const request = {
 // 创建不需要认证的axios实例（用于合同token相关API）
 const publicInstance = axios.create({
   baseURL: apiBaseUrl,
-  timeout: 10000,
+  timeout: 0, // 不设置超时时间
   headers: {
     'Content-Type': 'application/json',
   },

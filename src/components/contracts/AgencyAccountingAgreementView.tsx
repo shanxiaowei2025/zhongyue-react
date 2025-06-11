@@ -161,34 +161,26 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       return <div className={styles.serviceItemEmpty}>未选择</div>
     }
 
-    // 创建一个映射，用于快速查找选中的服务及其金额
+    // 创建一个映射，用于快速查找选中的服务
     const selectedServiceMap = declarationService.reduce(
       (acc, service) => {
-        acc[service.value] = service.fee || null
+        acc[service.value] = true
         return acc
       },
-      {} as Record<string, number | null>
+      {} as Record<string, boolean>
     )
 
     return (
       <div className={`${styles.serviceCheckboxes} ${styles.viewMode}`}>
         {DECLARATION_SERVICE_OPTIONS.map((option, index) => {
           const isSelected = selectedServiceMap.hasOwnProperty(option.value)
-          const fee = selectedServiceMap[option.value]
 
           return (
             <div key={index} className={styles.serviceItem}>
               <span
                 className={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}
               ></span>
-              <span className={styles.serviceLabel}>
-                {option.label}
-                {isSelected && fee ? (
-                  <span className={styles.serviceFeeValue}>{fee.toFixed(2)}元</span>
-                ) : (
-                  ''
-                )}
-              </span>
+              <span className={styles.serviceLabel}>{option.label}</span>
             </div>
           )
         })}

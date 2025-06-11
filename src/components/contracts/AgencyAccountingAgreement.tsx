@@ -206,33 +206,16 @@ const AgencyAccountingAgreement = forwardRef<
     const handleServiceChange = (checkedValues: string[]) => {
       setSelectedServices(checkedValues)
 
-      // 构建declarationService数据结构，保留已有的fee值
+      // 构建declarationService数据结构，只保存选中的服务
       const declarationService = checkedValues.map(value => {
         const option = DECLARATION_SERVICE_OPTIONS.find(opt => opt.value === value)
-        // 如果之前存在这个服务，保留其fee值
-        const existingService = formData.declarationService?.find((s: any) => s.value === value)
         return {
           value,
           label: option ? option.label : '',
-          fee: existingService?.fee || null,
         }
       })
 
       handleFormChange('declarationService', declarationService)
-    }
-
-    // 处理服务费用变化
-    const handleServiceFeeChange = (serviceValue: string, fee: number | null) => {
-      if (!formData.declarationService) return
-
-      const updatedServices = formData.declarationService.map((service: any) => {
-        if (service.value === serviceValue) {
-          return { ...service, fee }
-        }
-        return service
-      })
-
-      handleFormChange('declarationService', updatedServices)
     }
 
     // 处理其他业务变化
@@ -484,10 +467,6 @@ const AgencyAccountingAgreement = forwardRef<
               <div className={styles.serviceCheckboxes}>
                 {DECLARATION_SERVICE_OPTIONS.map(option => {
                   const isChecked = selectedServices.includes(option.value)
-                  const serviceData = formData.declarationService?.find(
-                    (s: any) => s.value === option.value
-                  )
-                  const fee = serviceData?.fee || ''
 
                   return (
                     <div key={option.value} className={styles.serviceCheckboxItem}>
@@ -507,23 +486,6 @@ const AgencyAccountingAgreement = forwardRef<
                       >
                         {option.label}
                       </Checkbox>
-                      {isChecked && (
-                        <Input
-                          placeholder="费用"
-                          className={styles.serviceFeeInput}
-                          value={fee}
-                          onChange={e => {
-                            const numValue = parseAmount(e.target.value)
-                            handleServiceFeeChange(option.value, numValue || null)
-                          }}
-                          onBlur={e => {
-                            const numValue = parseAmount(e.target.value)
-                            const formattedValue = numValue === 0 ? '' : numValue.toFixed(2)
-                            e.target.value = formattedValue
-                          }}
-                          suffix="元"
-                        />
-                      )}
                     </div>
                   )
                 })}
