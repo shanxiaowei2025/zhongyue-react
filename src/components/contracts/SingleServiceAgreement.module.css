@@ -312,7 +312,6 @@
 .signatureArea {
   width: 120px;
   height: 60px;
-  border: 1px dashed #999;
   background: white;
   display: flex;
   align-items: center;
@@ -325,10 +324,10 @@
   background: transparent;
 }
 
-/* 未签署状态的盖章区域保持原样 */
+/* 未签署状态的盖章区域不再显示虚线框 */
 .signatureArea.unsigned {
-  background: #fafafa;
-  border: 1px dashed #999;
+  background: transparent;
+  border: none;
 }
 
 .stampImage {

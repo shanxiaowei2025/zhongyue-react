@@ -533,7 +533,6 @@
 .signature-area {
   width: 120px;
   height: 60px;
-  border: 1px dashed #999;
   background: white;
 }
 
@@ -543,10 +542,10 @@
   background: transparent;
 }
 
-/* 未签署状态的盖章区域保持原样 */
+/* 未签署状态的盖章区域不再显示虚线框 */
 .signature-area.unsigned {
-  background: #fafafa;
-  border: 1px dashed #999;
+  background: transparent;
+  border: none;
 }
 
 .date-item {
@@ -909,7 +908,6 @@
 
 .product-service-agreement .remark-value {
   color: #000;
-  font-style: italic;
 }
 
 .product-service-agreement .fee-value {
@@ -1009,11 +1007,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #d9d9d9;
-  border-radius: 4px;
-  background-color: #fafafa;
+  border: none;
+  background: transparent;
   color: #999;
-  font-style: italic;
 }
 
 .stamp-placeholder p {
@@ -1036,7 +1032,6 @@
   font-size: 10px;
   color: #666;
   margin-top: 5px;
-  font-style: italic;
 }
 
 /* 导出图片时的样式优化 */

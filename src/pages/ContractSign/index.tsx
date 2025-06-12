@@ -1,17 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, Spin, Alert, Button, Typography, message, Modal } from 'antd'
-import {
-  getContractImageByToken,
-  saveContractSignature,
-  validateContractToken,
-} from '../../api/contract'
-import { uploadFile } from '../../api/upload'
+import { getContractImageByToken, validateContractToken } from '../../api/contract'
 import { buildImageUrl } from '../../utils/upload'
 import SignatureCanvasForward, {
   SignatureCanvasRef,
 } from '../../components/contracts/SignatureCanvasForward'
-import { publicRequest } from '../../api/request'
+import axios from 'axios'
 
 // 手机端优化样式
 const mobileStyles = `
@@ -102,6 +97,21 @@ const mobileStyles = `
 `
 
 const { Title, Paragraph } = Typography
+
+// 定义API响应类型
+interface ApiResponse<T> {
+  code: number
+  data: T
+  message: string
+  timestamp: number
+}
+
+interface SignatureResponseData {
+  success: boolean
+  message: string
+  contractId: number
+  encryptedCode: string
+}
 
 interface ContractSignProps {}
 
@@ -264,27 +274,26 @@ const ContractSign: React.FC<ContractSignProps> = () => {
       formData.append('file', file)
 
       // 使用完整URL，包含token参数
-      const uploadUrl = `/storage/upload?token=${token}`
-      const uploadResponse = await publicRequest.post<{
-        code: number
-        data: { url: string; fileName: string }
-        message: string
-      }>(uploadUrl, formData)
-
+      const uploadUrl = `/api/storage/upload?token=${token}`
+      const uploadResponse = await axios.post(uploadUrl, formData)
       console.log('签名上传响应:', uploadResponse)
 
-      if (!uploadResponse || !uploadResponse.data || !uploadResponse.data.fileName) {
+      if (
+        !uploadResponse.data ||
+        uploadResponse.data.code !== 0 ||
+        !uploadResponse.data.data.fileName
+      ) {
         throw new Error('签名上传失败: 未返回有效的文件名')
       }
 
-      const signatureFileName = uploadResponse.data.fileName
+      const signatureFileName = uploadResponse.data.data.fileName
       console.log('签名上传成功，文件名:', signatureFileName)
 
       // 使用buildImageUrl函数构建完整URL
       const signatureUrl = buildImageUrl(signatureFileName)
       console.log('签名URL:', signatureUrl)
 
-      // 5. 保存合同签名 - 使用正确的接口参数
+      // 5. 保存合同签名
       console.log('开始保存合同签名, 合同ID:', contractId)
       const saveData = {
         contractId,
@@ -292,18 +301,62 @@ const ContractSign: React.FC<ContractSignProps> = () => {
         signatureUrl,
       }
 
-      const saveResponse = await publicRequest.post('/contract-token/signature', saveData)
+      const saveResponse = await axios.post('/api/contract-token/signature', saveData)
       console.log('保存签名响应:', saveResponse)
+
+      if (
+        !saveResponse.data ||
+        saveResponse.data.code !== 0 ||
+        !saveResponse.data.data.encryptedCode
+      ) {
+        throw new Error('签名保存失败: 未返回encryptedCode')
+      }
+
+      // 提取 encryptedCode
+      const encryptedCode = saveResponse.data.data.encryptedCode
+      console.log('获取到加密码:', encryptedCode)
+
+      // 生成可分享的链接 - 使用固定域名
+      const shareableLink = `https://zhongyue-manage.starlogic.tech/contract/view/${encryptedCode}`
 
       // 6. 关闭模态框并显示成功消息
       setSignModalVisible(false)
       // 解除屏幕锁定
       unlockScreenOrientation()
 
-      // 显示成功模态框
+      // 显示成功模态框，包含可复制的链接
       Modal.success({
         title: '签署成功',
-        content: '合同已成功签署，感谢您的配合！',
+        content: (
+          <div>
+            <p>合同已成功签署，感谢您的配合！</p>
+            <div className="mt-4">
+              <p className="mb-2 text-sm text-gray-600">
+                您可以复制以下链接查看或分享已签名的合同：
+              </p>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  readOnly
+                  value={shareableLink}
+                  className="flex-1 border p-2 rounded-l text-sm"
+                  onClick={e => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  type="primary"
+                  size="middle"
+                  className="rounded-l-none"
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareableLink)
+                    message.success('链接已复制到剪贴板')
+                  }}
+                >
+                  复制
+                </Button>
+              </div>
+            </div>
+          </div>
+        ),
         okText: '关闭',
       })
     } catch (error: any) {

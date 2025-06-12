@@ -9,6 +9,8 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   margin: 0 auto;
   padding: 20mm;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* 费用部分查看样式 */
@@ -295,9 +297,8 @@
   margin-bottom: 12px;
 }
 
-/* 添加委托方虚线框样式 */
+/* 委托方签名区域样式 */
 .signatureStampColumn:first-child .signatureStampSpace {
-  border: 1px dashed #ccc;
   padding: 10px;
   display: flex;
   justify-content: center;
@@ -326,15 +327,7 @@
 }
 
 .stampPlaceholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 12px;
-  text-align: center;
-  color: #999;
-  border: none;
+  display: none;
 }
 
 /* 签名信息行 - 每一行都对齐 */

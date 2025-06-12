@@ -70,7 +70,6 @@ const CreateContract: React.FC = () => {
         return
       }
 
-      message.success('合同创建成功！')
       // 提交成功后返回合同列表
       setTimeout(() => {
         navigate('/contracts')

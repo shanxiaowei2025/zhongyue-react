@@ -427,47 +427,9 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             </div>
           </div>
 
-          {/* 税务服务 */}
-          <div className={styles.serviceCategory}>
-            <div className={styles.categoryTitle}>2、税务：</div>
-            <div className={styles.mb10}>
-              {renderServiceItems(contractData.taxMatters || [], 'taxMatters')}
-            </div>
-
-            <div className={styles.remarkRow}>
-              <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.taxRemark || '-'}</span>
-              <span className={styles.remarkLabel}>服务费用：</span>
-              <span className={styles.remarkContent}>
-                {contractData.taxServiceFee ? `${contractData.taxServiceFee}元` : '-'}
-              </span>
-            </div>
-          </div>
-
-          {/* 社保服务 */}
-          <div className={styles.serviceCategory}>
-            <div className={styles.categoryTitle}>2、社保/公积金：</div>
-            <div className={styles.mb10}>
-              {renderServiceItems(contractData.socialSecurity || [], 'socialSecurity')}
-            </div>
-
-            <div className={styles.remarkRow}>
-              <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>
-                {contractData.socialSecurityRemark || '-'}
-              </span>
-              <span className={styles.remarkLabel}>服务费用：</span>
-              <span className={styles.remarkContent}>
-                {contractData.socialSecurityServiceFee
-                  ? `${contractData.socialSecurityServiceFee}元`
-                  : '-'}
-              </span>
-            </div>
-          </div>
-
           {/* 其他服务事项 */}
           <div className={styles.serviceCategory}>
-            <div className={styles.categoryTitle}>其他服务事项</div>
+            <div className={styles.categoryTitle}>4、其他服务事项：</div>
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
@@ -720,11 +682,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
                         margin: '0 auto',
                       }}
                     />
-                  ) : (
-                    <div className={styles.stampPlaceholder}>
-                      <p>请盖章</p>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
               <div className={styles.signatureDateRow}>

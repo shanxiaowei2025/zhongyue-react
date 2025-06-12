@@ -22,6 +22,7 @@ const CreateContract = lazy(() => import('../pages/Contracts/CreateContract'))
 const ContractDetail = lazy(() => import('../pages/Contracts/ContractDetail'))
 const EditContract = lazy(() => import('../pages/Contracts/EditContract'))
 const ContractSign = lazy(() => import('../pages/ContractSign'))
+const ContractView = lazy(() => import('../pages/ContractView'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -113,6 +114,10 @@ const routes: RouteObject[] = [
   {
     path: '/contract-sign/:token',
     element: <ContractSign />,
+  },
+  {
+    path: '/contract/view/:encryptedCode',
+    element: <ContractView />,
   },
   {
     path: '*',

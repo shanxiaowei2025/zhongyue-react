@@ -839,7 +839,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
                         }}
                       />
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="stamp-placeholder"></div>
+                  )}
                 </div>
               </div>
               <div className="date-item">

@@ -496,11 +496,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
                       }}
                     />
                   </div>
-                ) : (
-                  <div className={styles.stampPlaceholder}>
-                    <span>暂无签字</span>
-                  </div>
-                )}
+                ) : null}
               </div>
             </div>
             <div className={styles.signatureStampColumn}>

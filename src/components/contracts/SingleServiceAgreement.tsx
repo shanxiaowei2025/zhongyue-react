@@ -878,7 +878,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
 
             {/* 其他服务事项 */}
             <div className={styles.serviceCategory}>
-              <div className={styles.categoryTitle}>4、其他服务事项</div>
+              <div className={styles.categoryTitle}>4、其他服务事项：</div>
 
               <div className={styles.remarkRow}>
                 <span className={styles.remarkLabel}>备注：</span>

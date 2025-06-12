@@ -68,3 +68,12 @@ export const saveContractSignature = (data: {
 }) => {
   return publicRequest.post('/contract-token/signature', data)
 }
+
+// 通过encryptedCode获取已签名的合同图片
+export const getSignedContractByCode = (encryptedCode: string) => {
+  return publicRequest.get<
+    ApiResponse<{
+      contractImage: string // 文件名，非完整URL
+    }>
+  >(`/contract/get-image/${encryptedCode}`)
+}

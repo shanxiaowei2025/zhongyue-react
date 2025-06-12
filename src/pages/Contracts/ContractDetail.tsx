@@ -535,15 +535,11 @@ const ContractDetail: React.FC = () => {
               const signatureAreas = clonedElement.querySelectorAll('.signature-area')
               signatureAreas.forEach(area => {
                 if (area instanceof HTMLElement) {
-                  if (area.classList.contains('signed')) {
-                    area.style.border = 'none'
-                    area.style.background = 'transparent'
-                  } else {
-                    area.style.width = '120px'
-                    area.style.height = '60px'
-                    area.style.border = '1px dashed #999'
-                    area.style.background = '#fafafa'
-                  }
+                  // 不管是否已签名，都移除边框和背景
+                  area.style.border = 'none'
+                  area.style.background = 'transparent'
+                  area.style.width = '120px'
+                  area.style.height = '60px'
                 }
               })
 
@@ -568,6 +564,16 @@ const ContractDetail: React.FC = () => {
                     img.style.maxHeight = '130px'
                     img.style.margin = '-25px 0 -10px 0'
                   }
+                }
+              })
+
+              // 确保占位符没有边框和背景
+              const stampPlaceholders = clonedElement.querySelectorAll('.stamp-placeholder')
+              stampPlaceholders.forEach(placeholder => {
+                if (placeholder instanceof HTMLElement) {
+                  placeholder.style.border = 'none'
+                  placeholder.style.background = 'transparent'
+                  placeholder.style.minHeight = '60px'
                 }
               })
             }
@@ -1083,15 +1089,11 @@ const ContractDetail: React.FC = () => {
               const signatureAreas = clonedElement.querySelectorAll('.signature-area')
               signatureAreas.forEach(area => {
                 if (area instanceof HTMLElement) {
-                  if (area.classList.contains('signed')) {
-                    area.style.border = 'none'
-                    area.style.background = 'transparent'
-                  } else {
-                    area.style.width = '120px'
-                    area.style.height = '60px'
-                    area.style.border = '1px dashed #999'
-                    area.style.background = '#fafafa'
-                  }
+                  // 不管是否已签名，都移除边框和背景
+                  area.style.border = 'none'
+                  area.style.background = 'transparent'
+                  area.style.width = '120px'
+                  area.style.height = '60px'
                 }
               })
 
@@ -1160,6 +1162,16 @@ const ContractDetail: React.FC = () => {
                     img.style.maxHeight = '130px'
                     img.style.margin = '-25px 0 -10px 0'
                   }
+                }
+              })
+
+              // 确保占位符没有边框和背景
+              const stampPlaceholders = clonedElement.querySelectorAll('.stamp-placeholder')
+              stampPlaceholders.forEach(placeholder => {
+                if (placeholder instanceof HTMLElement) {
+                  placeholder.style.border = 'none'
+                  placeholder.style.background = 'transparent'
+                  placeholder.style.minHeight = '60px'
                 }
               })
             }
@@ -1471,11 +1483,20 @@ const ContractDetail: React.FC = () => {
       // 关闭loading提示并显示成功消息
       message.destroy('contractImageGen')
       message.success('签署链接生成成功')
-    } catch (error) {
+    } catch (error: any) {
       console.error('生成签署链接失败:', error)
       // 关闭loading提示
       message.destroy('contractImageGen')
-      message.error('生成签署链接失败，请重试')
+
+      // 显示接口返回的原始错误信息
+      if (error.response && error.response.data && error.response.data.message) {
+        message.error(error.response.data.message)
+      } else {
+        message.error('生成签署链接失败，请重试')
+      }
+
+      // 刷新合同详情页面
+      refreshContractDetail()
     } finally {
       setIsGeneratingLink(false)
     }

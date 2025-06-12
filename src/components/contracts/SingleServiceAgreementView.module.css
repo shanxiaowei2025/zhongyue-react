@@ -587,19 +587,9 @@
 
 /* 签名区盖章占位 */
 .stampPlaceholder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  color: #bbb;
-  font-size: 12px;
-  background: #fafafa;
+  display: none;
 }
 
 .stampPlaceholder p {
-  margin: 0;
-  padding: 0;
-  color: #bbb;
-  font-style: italic;
+  display: none;
 }
