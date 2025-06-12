@@ -1,5 +1,225 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+# 权限控制模式
+
+## 权限管理架构
+基于 [usePermission.ts](mdc:zhongyue-react/src/hooks/usePermission.ts) 和 [PermissionGuard.tsx](mdc:zhongyue-react/src/components/PermissionGuard.tsx) 的权限控制模式：
+
+### 权限钩子 (usePermission)
+```tsx
+// 权限钩子，用于获取当前用户权限并提供权限检查功能
+export const usePermission = () => {
+  // 从认证状态获取当前用户
+  const { user } = useAuthStore()
+  // 权限列表状态
+  const [permissions, setPermissions] = useState<Permission[]>([])
+  
+  // 获取当前用户所有权限
+  const fetchPermissions = useCallback(async () => {
+    if (!user) return
+    
+    try {
+      const response = await getPermissionList()
+      if (response.code === 0 && response.data) {
+        setPermissions(response.data)
+      }
+    } catch (err) {
+      console.error('获取权限列表失败:', err)
+    }
+  }, [user])
+  
+  // 检查是否有指定权限
+  const hasPermission = useCallback(
+    (permissionName: string) => {
+      // 超级管理员始终有权限
+      if (user?.roles.includes('super_admin') || user?.roles.includes('超级管理员')) {
+        return true
+      }
+      
+      // 检查用户角色是否有此权限
+      for (const role of user?.roles || []) {
+        const permission = permissions.find(
+          p => (p.role_name === role) && p.permission_name === permissionName
+        )
+        if (permission && permission.permission_value === true) {
+          return true
+        }
+      }
+      
+      return false
+    },
+    [user, permissions]
+  )
+  
+  // 特定模块权限集合
+  const contractPermissions = useMemo(() => ({
+    canCreate: hasPermission('contract_action_create'),
+    canEdit: hasPermission('contract_action_edit'),
+    canDelete: hasPermission('contract_action_delete'),
+    canViewAll: hasPermission('contract_data_view_all'),
+    canViewByLocation: hasPermission('contract_data_view_by_location'),
+    canViewOwn: hasPermission('contract_data_view_own'),
+  }), [hasPermission])
+  
+  return {
+    hasPermission,
+    contractPermissions,
+    // 其他权限集合和方法...
+  }
+}
+```
+
+### 权限守卫组件
+```tsx
+// 权限守卫组件，用于控制UI元素的显示/隐藏
+const PermissionGuard: React.FC<{
+  permissionName: string
+  children: ReactNode
+  fallback?: ReactNode
+}> = ({ permissionName, children, fallback = null }) => {
+  const { hasPermission } = usePermission()
+  
+  // 有权限时显示内容，无权限显示fallback
+  return hasPermission(permissionName) ? <>{children}</> : <>{fallback}</>
+}
+```
+
+## 权限使用模式
+
+### 直接使用钩子控制UI元素
+```tsx
+const { contractPermissions } = usePermission()
+
+// 在JSX中使用
+return (
+  <div>
+    {contractPermissions.canCreate && (
+      <Button type="primary" onClick={handleCreate}>
+        创建
+      </Button>
+    )}
+    
+    <Table 
+      columns={[
+        // ...其他列
+        {
+          title: '操作',
+          render: (record) => (
+            <Space>
+              {contractPermissions.canEdit && (
+                <Button onClick={() => handleEdit(record)}>
+                  编辑
+                </Button>
+              )}
+              {contractPermissions.canDelete && (
+                <Button onClick={() => handleDelete(record)}>
+                  删除
+                </Button>
+              )}
+            </Space>
+          )
+        }
+      ]} 
+    />
+  </div>
+)
+```
+
+### 使用权限守卫组件
+```tsx
+// 导入权限守卫组件
+import PermissionGuard from '../components/PermissionGuard'
+
+// 在JSX中使用
+return (
+  <div>
+    <PermissionGuard permissionName="contract_action_create">
+      <Button type="primary" onClick={handleCreate}>
+        创建
+      </Button>
+    </PermissionGuard>
+    
+    <Table 
+      columns={[
+        // ...其他列
+        {
+          title: '操作',
+          render: (record) => (
+            <Space>
+              <PermissionGuard permissionName="contract_action_edit">
+                <Button onClick={() => handleEdit(record)}>
+                  编辑
+                </Button>
+              </PermissionGuard>
+              <PermissionGuard permissionName="contract_action_delete">
+                <Button onClick={() => handleDelete(record)}>
+                  删除
+                </Button>
+              </PermissionGuard>
+            </Space>
+          )
+        }
+      ]} 
+    />
+  </div>
+)
+```
+
+## 权限命名规范
+
+### 权限命名模式
+权限命名遵循 `{module}_{type}_{action}` 格式：
+
+- **module**: 模块名称，如 `contract`、`customer`、`expense`
+- **type**: 权限类型，如 `action`（操作权限）或 `data`（数据权限）
+- **action**: 具体操作，如 `create`、`edit`、`delete`、`view_all`、`view_own`
+
+### 常用权限类型
+
+1. **操作权限**:
+   - `{module}_action_create`: 创建权限
+   - `{module}_action_edit`: 编辑权限
+   - `{module}_action_delete`: 删除权限
+   - `{module}_action_export`: 导出权限
+   - `{module}_action_import`: 导入权限
+   - `{module}_action_audit`: 审核权限
+   - `{module}_action_cancel_audit`: 取消审核权限
+
+2. **数据权限**:
+   - `{module}_data_view_all`: 查看所有数据权限
+   - `{module}_data_view_by_location`: 查看本地区数据权限
+   - `{module}_data_view_own`: 查看自己提交的数据权限
+
+## 角色与权限关系
+
+### 角色类型
+系统中定义了以下角色类型：
+- 超级管理员 (super_admin)
+- 管理员 (admin)
+- 销售专员 (sales_specialist)
+- 注册专员 (register_specialist)
+- 行政专员 (admin_specialist)
+- 顾问会计 (consultantAccountant)
+- 记账会计 (bookkeepingAccountant)
+- 开票员 (invoiceOfficer)
+- 分公司负责人 (branch_manager)
+- 费用审核员 (expense_auditor)
+
+### 权限降级模式
+当权限系统无法获取有效权限时，采用降级模式处理：
+
+```tsx
+// 权限降级示例
+if (!user || permissions.length === 0) {
+  console.log('权限列表为空，开启降级模式，默认所有权限为true')
+  return {
+    canCreate: true,
+    canEdit: true,
+    canDelete: true,
+    // ...其他权限
+  }
+}
+```

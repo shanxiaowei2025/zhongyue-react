@@ -1,5 +1,311 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+# 样式和响应式设计模式
+
+## Tailwind CSS 应用模式
+基于项目中建立的样式模式，参考 [MainLayout.tsx](mdc:zhongyue-react/src/layouts/MainLayout.tsx) 等组件的实现：
+
+### 布局组件样式
+```tsx
+// 主布局容器
+<div className="min-h-screen bg-gray-50">
+  {/* 侧边栏 */}
+  <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg">
+    {/* 侧边栏内容 */}
+  </div>
+  
+  {/* 主内容区域 */}
+  <div className="ml-64 min-h-screen">
+    {/* 头部导航 */}
+    <header className="bg-white shadow-sm border-b px-6 py-4">
+      {/* 头部内容 */}
+    </header>
+    
+    {/* 页面内容 */}
+    <main className="p-6">
+      {/* 页面组件 */}
+    </main>
+  </div>
+</div>
+```
+
+### 响应式断点应用
+```tsx
+// 移动端适配
+<div className="block md:hidden">
+  {/* 移动端显示内容 */}
+</div>
+
+<div className="hidden md:block">
+  {/* 桌面端显示内容 */}
+</div>
+
+// 响应式网格布局
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  {/* 卡片项目 */}
+</div>
+
+// 响应式间距
+<div className="p-4 md:p-6 lg:p-8">
+  {/* 内容 */}
+</div>
+```
+
+### 表格响应式设计
+```tsx
+// 表格容器的响应式处理
+<div className="overflow-x-auto">
+  <Table
+    columns={columns}
+    dataSource={data}
+    scroll={{ x: 1200 }} // 固定最小宽度
+    pagination={{
+      current: currentPage,
+      pageSize: pageSize,
+      total: total,
+      showSizeChanger: true,
+      showQuickJumper: true,
+      showTotal: (total, range) => 
+        `第 ${range[0]}-${range[1]} 条/总共 ${total} 条`,
+    }}
+  />
+</div>
+```
+
+### 按钮组样式模式
+```tsx
+// 操作按钮组 - 两端对齐布局
+<div className="flex justify-between items-center mb-4">
+  {/* 左侧操作按钮 */}
+  <div className="flex items-center space-x-2">
+    <Button
+      icon={<ReloadOutlined />}
+      onClick={handleReset}
+      className="mr-2"
+    >
+      重置
+    </Button>
+  </div>
+  
+  {/* 右侧操作按钮 */}
+  <div className="flex items-center">
+    <Space>
+      <Button type="primary" onClick={handleAdd}>
+        新增
+      </Button>
+      <Button onClick={handleExport}>
+        导出
+      </Button>
+      <Button onClick={handleImport}>
+        导入
+      </Button>
+    </Space>
+  </div>
+</div>
+```
+
+### 搜索表单样式
+```tsx
+// 搜索表单的间距和布局
+<Form
+  form={searchForm}
+  layout="inline"
+  onValuesChange={handleValuesChange}
+  className="mb-4"
+>
+  <Form.Item label="客户名称" name="name">
+    <Input
+      placeholder="请输入客户名称"
+      style={{ width: 200 }}
+      className="focus:ring-2 focus:ring-blue-500"
+    />
+  </Form.Item>
+  
+  <Form.Item label="状态" name="status">
+    <Select
+      placeholder="请选择状态"
+      style={{ width: 150 }}
+      allowClear
+    >
+      <Option value="active">激活</Option>
+      <Option value="inactive">禁用</Option>
+    </Select>
+  </Form.Item>
+</Form>
+```
+
+### 卡片和面板样式
+```tsx
+// 内容卡片样式
+<div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+  <div className="flex items-center justify-between mb-4">
+    <h3 className="text-lg font-semibold text-gray-900">
+      卡片标题
+    </h3>
+    <Button type="link" className="text-blue-600 hover:text-blue-800">
+      查看更多
+    </Button>
+  </div>
+  
+  <div className="text-gray-600">
+    {/* 卡片内容 */}
+  </div>
+</div>
+
+// 统计面板样式
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-blue-100 text-sm">总客户数</p>
+        <p className="text-2xl font-bold">1,234</p>
+      </div>
+      <div className="text-blue-200">
+        <UserOutlined className="text-3xl" />
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### 状态样式系统
+```tsx
+// 状态标签的颜色映射
+const getStatusColor = (status: string) => {
+  const statusColors = {
+    active: 'green',
+    inactive: 'red',
+    pending: 'orange',
+    completed: 'blue',
+    draft: 'gray',
+  };
+  return statusColors[status] || 'default';
+};
+
+// 状态标签组件
+<Tag color={getStatusColor(record.status)} className="rounded-full px-3">
+  {getStatusText(record.status)}
+</Tag>
+```
+
+### 表单布局样式
+```tsx
+// 水平表单布局
+<Form
+  form={form}
+  layout="horizontal"
+  labelCol={{ span: 6 }}
+  wrapperCol={{ span: 18 }}
+  className="max-w-2xl"
+>
+  <Form.Item
+    label="客户名称"
+    name="name"
+    rules={[{ required: true, message: '请输入客户名称' }]}
+  >
+    <Input placeholder="请输入客户名称" />
+  </Form.Item>
+</Form>
+
+// 垂直表单布局（移动端）
+<Form
+  form={form}
+  layout="vertical"
+  className="md:max-w-lg"
+>
+  <Form.Item
+    label="客户名称"
+    name="name"
+    rules={[{ required: true, message: '请输入客户名称' }]}
+  >
+    <Input placeholder="请输入客户名称" />
+  </Form.Item>
+</Form>
+```
+
+### 加载和空状态样式
+```tsx
+// 加载状态
+<div className="flex justify-center items-center h-64">
+  <Spin size="large" />
+  <span className="ml-3 text-gray-500">加载中...</span>
+</div>
+
+// 空状态
+<div className="flex flex-col items-center justify-center h-64 text-gray-500">
+  <FileTextOutlined className="text-6xl mb-4 text-gray-300" />
+  <p className="text-lg mb-2">暂无数据</p>
+  <p className="text-sm">请尝试调整搜索条件</p>
+</div>
+```
+
+### 工具提示样式
+```tsx
+// 自定义工具提示样式
+<Tooltip
+  title={text}
+  placement="topLeft"
+  overlayClassName="custom-tooltip"
+  overlayStyle={{
+    maxWidth: '300px',
+    fontSize: '12px',
+  }}
+>
+  <span className="truncate">
+    {text}
+  </span>
+</Tooltip>
+
+// CSS样式（如果需要）
+.custom-tooltip .ant-tooltip-inner {
+  @apply bg-gray-800 text-white text-xs rounded shadow-lg;
+}
+```
+
+### 侧边栏和导航样式
+```tsx
+// 可折叠侧边栏
+<div className={`
+  fixed left-0 top-0 h-full bg-white shadow-lg transition-all duration-300
+  ${collapsed ? 'w-16' : 'w-64'}
+`}>
+  {/* 侧边栏内容 */}
+</div>
+
+// 导航菜单项
+<div className="
+  flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+  cursor-pointer transition-colors duration-200
+">
+  <Icon className="mr-3" />
+  {!collapsed && <span>菜单项</span>}
+</div>
+```
+
+### 主题色彩系统
+```tsx
+// 主要颜色
+const colors = {
+  primary: '#1890ff',     // 主色调（蓝色）
+  success: '#52c41a',     // 成功色（绿色）
+  warning: '#faad14',     // 警告色（橙色）
+  error: '#f5222d',       // 错误色（红色）
+  info: '#1890ff',        // 信息色（蓝色）
+  
+  gray: {
+    50: '#fafafa',
+    100: '#f5f5f5',
+    200: '#eeeeee',
+    300: '#d9d9d9',
+    400: '#bfbfbf',
+    500: '#8c8c8c',
+    600: '#595959',
+    700: '#434343',
+    800: '#262626',
+    900: '#1f1f1f',
+  }
+};
+```

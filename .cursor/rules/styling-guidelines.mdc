@@ -1,0 +1,245 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Description: 样式实现最佳实践
+Globs: src/**/*.tsx, src/**/*.css, src/**/*.scss, src/**/*.module.css, src/**/*.module.scss
+
+# 样式实现最佳实践
+
+## 基本原则
+
+- **始终使用 Tailwind CSS 或 CSS Modules 来实现样式以保持样式隔离**
+- 避免使用全局 CSS 样式，减少样式冲突
+- 按组件职责划分样式，保持样式的模块化
+- 遵循响应式设计原则，确保在不同设备上的良好展示
+
+## Tailwind CSS 使用规范
+
+- 优先使用 Tailwind CSS 的工具类实现样式
+- 使用 `@apply` 指令抽取重复的工具类组合
+- 遵循移动优先的设计理念，使用响应式断点
+- 示例:
+
+```tsx
+// 使用 Tailwind CSS 的工具类
+const Button = ({ children, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
+    >
+      {children}
+    </button>
+  );
+};
+
+// 响应式设计
+const Card = ({ title, children }) => {
+  return (
+    <div className="p-4 md:p-6 lg:p-8 bg-white rounded-lg shadow-md">
+      <h2 className="text-lg md:text-xl font-semibold mb-2">{title}</h2>
+      <div>{children}</div>
+    </div>
+  );
+};
+```
+
+## 在 Tailwind 配置中定义主题变量
+
+- 在 `tailwind.config.js` 中定义项目的颜色、字体等主题变量
+- 确保整个项目使用一致的设计标准
+- 示例:
+
+```js
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          light: '#4da8ff',
+          DEFAULT: '#1677ff',
+          dark: '#0958d9',
+        },
+        secondary: {
+          light: '#7d53de',
+          DEFAULT: '#5928e5',
+          dark: '#391f9d',
+        },
+        success: '#52c41a',
+        warning: '#faad14',
+        error: '#ff4d4f',
+      },
+      fontFamily: {
+        sans: ['PingFang SC', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
+    },
+  },
+  // 其他配置...
+};
+```
+
+## CSS Modules 使用规范
+
+- 文件命名必须使用 `.module.css` 或 `.module.scss` 后缀
+- 类名使用 camelCase 命名，便于在 JavaScript 中使用
+- 使用组合继承复用样式
+- 示例:
+
+```css
+/* Button.module.css */
+.button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary:hover {
+  background-color: var(--primary-color-dark);
+}
+
+.secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.secondary:hover {
+  background-color: var(--secondary-color-dark);
+}
+```
+
+```tsx
+// Button.tsx
+import styles from './Button.module.css';
+import classNames from 'classnames';
+
+interface ButtonProps {
+  type?: 'primary' | 'secondary';
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+}
+
+const Button: React.FC<ButtonProps> = ({
+  type = 'primary',
+  children,
+  onClick,
+  className,
+}) => {
+  return (
+    <button
+      className={classNames(
+        styles.button,
+        type === 'primary' ? styles.primary : styles.secondary,
+        className
+      )}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+## 混合使用 Tailwind 和 CSS Modules
+
+- 对于简单样式，直接使用 Tailwind 工具类
+- 对于复杂或重复的样式，使用 CSS Modules
+- 使用 `classNames` 库组合多个类名
+- 示例:
+
+```tsx
+// Card.tsx
+import styles from './Card.module.css';
+import classNames from 'classnames';
+
+interface CardProps {
+  title: string;
+  children: React.ReactNode;
+  highlighted?: boolean;
+}
+
+const Card: React.FC<CardProps> = ({ title, children, highlighted }) => {
+  return (
+    <div 
+      className={classNames(
+        'p-4 rounded-lg shadow-md',  // Tailwind 类
+        styles.card,                 // CSS Module 类
+        highlighted && styles.highlighted  // 条件类
+      )}
+    >
+      <h2 className="text-lg font-semibold mb-2">{title}</h2>
+      <div>{children}</div>
+    </div>
+  );
+};
+```
+
+## 避免的做法
+
+- **避免使用内联样式**，除非是动态计算的样式值
+- **避免使用全局样式**，可能导致样式冲突
+- **避免使用 !important**，破坏样式优先级
+- **避免过度嵌套选择器**，增加选择器特异性
+
+```tsx
+// 不好的做法 - 内联样式
+<div style={{ padding: '20px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+  <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>{title}</h2>
+  {children}
+</div>
+
+// 不好的做法 - 全局样式
+// global.css
+.card {
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+.card h2 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+// 好的做法 - Tailwind CSS
+<div className="p-5 bg-gray-100 rounded">
+  <h2 className="text-lg font-bold mb-2.5">{title}</h2>
+  {children}
+</div>
+
+// 好的做法 - CSS Modules
+// Card.module.css
+.card {
+  padding: 20px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+.title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+// Card.tsx
+import styles from './Card.module.css';
+<div className={styles.card}>
+  <h2 className={styles.title}>{title}</h2>
+  {children}
+</div>
+```
+
+## 项目中的样式实现示例
+
+- Tailwind CSS 配置: [tailwind.config.js](mdc:zhongyue-react/tailwind.config.js)
+- 全局样式入口: [src/index.css](mdc:zhongyue-react/src/index.css)
+- 组件样式示例: [src/components/MultiImageUpload.tsx](mdc:zhongyue-react/src/components/MultiImageUpload.tsx)
