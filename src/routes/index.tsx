@@ -23,6 +23,8 @@ const ContractDetail = lazy(() => import('../pages/Contracts/ContractDetail'))
 const EditContract = lazy(() => import('../pages/Contracts/EditContract'))
 const ContractSign = lazy(() => import('../pages/ContractSign'))
 const ContractView = lazy(() => import('../pages/ContractView'))
+const EnterpriseService = lazy(() => import('../pages/EnterpriseService'))
+const EnterpriseDetail = lazy(() => import('../pages/EnterpriseService/Detail'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -104,6 +106,14 @@ const routes: RouteObject[] = [
       {
         path: 'contracts/edit/:id',
         element: <EditContract />,
+      },
+      {
+        path: 'enterprise-service',
+        element: <EnterpriseService />,
+      },
+      {
+        path: 'enterprise-service/detail/:id',
+        element: <EnterpriseDetail />,
       },
       {
         path: 'profile',

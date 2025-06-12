@@ -24,6 +24,7 @@ import {
   ApartmentOutlined,
   DollarOutlined,
   FileTextOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import type { MenuProps } from 'antd'
@@ -133,6 +134,11 @@ const MainLayout = () => {
       icon: <FileTextOutlined />,
       label: '合同管理',
     },
+    {
+      key: '/enterprise-service',
+      icon: <AppstoreOutlined />,
+      label: '企业服务',
+    },
   ]
 
   // 系统管理菜单项
@@ -214,6 +220,32 @@ const MainLayout = () => {
   // 跟踪路由变化，添加新标签
   useEffect(() => {
     const { pathname } = location
+
+    // 特殊处理企业详情页
+    if (pathname.startsWith('/enterprise-service/detail/')) {
+      // 为企业详情页添加自定义标签
+      const enterpriseData = localStorage.getItem('currentEnterprise')
+      if (enterpriseData) {
+        try {
+          const enterprise = JSON.parse(enterpriseData)
+          tabsStore.addTab({
+            key: pathname,
+            label: `企业详情 - ${enterprise.companyName}`,
+            icon: <AppstoreOutlined />,
+            closable: true,
+          })
+        } catch (error) {
+          console.error('解析企业信息失败:', error)
+          tabsStore.addTab({
+            key: pathname,
+            label: '企业详情',
+            icon: <AppstoreOutlined />,
+            closable: true,
+          })
+        }
+      }
+      return
+    }
 
     // 根据当前路径找到对应的菜单项
     const currentMenuItem = getMenuItemByKey(pathname)
