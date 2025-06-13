@@ -3,7 +3,9 @@ import type {
   EnterpriseQueryParams, 
   EnterpriseListResponse,
   ServiceHistoryQueryParams,
-  ServiceHistoryResponse
+  ServiceHistoryResponse,
+  ExpenseContributionQueryParams,
+  ExpenseContributionResponse
 } from '../types/enterpriseService'
 
 /**
@@ -28,4 +30,12 @@ export const getEnterpriseById = (id: number) => {
  */
 export const getServiceHistory = (params: ServiceHistoryQueryParams) => {
   return request.get<ServiceHistoryResponse>('/enterprise-service/service-history/find-company-history', params)
+}
+
+/**
+ * 获取企业费用贡献
+ * @param params 查询参数
+ */
+export const getExpenseContribution = (params: ExpenseContributionQueryParams) => {
+  return request.get<ExpenseContributionResponse>('/enterprise-service/expense-contribution/find-company-expenses', params)
 } 

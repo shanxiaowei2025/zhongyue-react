@@ -11,14 +11,18 @@ import {
   Spin,
   Tag,
   message,
+  List,
+  Space,
+  Divider,
 } from 'antd'
 import {
   ArrowLeftOutlined,
   ClockCircleOutlined,
   DollarCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
-import { getServiceHistory } from '../../api/enterpriseService'
-import type { Enterprise, ServiceHistory } from '../../types/enterpriseService'
+import { getServiceHistory, getExpenseContribution } from '../../api/enterpriseService'
+import type { Enterprise, ServiceHistory, ExpenseRecord, ExpenseContribution } from '../../types/enterpriseService'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
@@ -28,8 +32,8 @@ const FIELD_MAPPING: Record<string, string> = {
   consultantAccountant: '顾问会计',
   bookkeepingAccountant: '记账会计',
   invoiceOfficer: '开票员',
-  enterpriseStatus: '企业状态',
-  businessStatus: '经营状态',
+  enterpriseStatus: '工商状态',
+  businessStatus: '税务状态',
   customerLevel: '客户分级',
   location: '归属地',
   taxBureau: '所属分局',
@@ -52,6 +56,8 @@ const EnterpriseDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false)
   const [serviceHistory, setServiceHistory] = useState<ServiceHistory[]>([])
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null)
+  const [expenseLoading, setExpenseLoading] = useState<boolean>(false)
+  const [expenseContribution, setExpenseContribution] = useState<ExpenseContribution | null>(null)
 
   // 从 localStorage 或者状态管理中获取企业信息
   // 这里简单使用 localStorage 存储，实际项目中可以使用更复杂的状态管理
@@ -95,9 +101,50 @@ const EnterpriseDetail: React.FC = () => {
     }
   }
 
+  // 加载费用贡献数据
+  const loadExpenseContribution = async () => {
+    if (!enterprise) return
+
+    try {
+      setExpenseLoading(true)
+      
+      // 优先使用统一社会信用代码，没有则使用企业名称
+      const params = enterprise.unifiedSocialCreditCode
+        ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
+        : { companyName: enterprise.companyName }
+
+      const response = await getExpenseContribution(params)
+      
+      if (response.code === 0 && response.data) {
+        // 按收费时间从早到晚排序，时间相同时按收据编号排序
+        const sortedExpenses = {
+          ...response.data,
+          expenses: response.data.expenses.sort((a, b) => {
+            // 首先按时间排序（从早到晚）
+            const timeComparison = new Date(a.chargeDate).getTime() - new Date(b.chargeDate).getTime()
+            
+            // 如果时间相同，则按收据编号排序
+            if (timeComparison === 0) {
+              return a.receiptNo.localeCompare(b.receiptNo)
+            }
+            
+            return timeComparison
+          })
+        }
+        setExpenseContribution(sortedExpenses)
+      }
+    } catch (error) {
+      console.error('加载费用贡献失败:', error)
+      message.error('加载费用贡献失败')
+    } finally {
+      setExpenseLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (enterprise) {
       loadServiceHistory()
+      loadExpenseContribution()
     }
   }, [enterprise])
 
@@ -109,6 +156,36 @@ const EnterpriseDetail: React.FC = () => {
   // 格式化日期
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss')
+  }
+
+  // 格式化收费日期（简化版本）
+  const formatChargeDate = (dateString: string) => {
+    return dayjs(dateString).format('YYYY-MM-DD')
+  }
+
+  // 格式化金额
+  const formatAmount = (amount: string | number) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+    if (isNaN(numAmount)) return '¥0.00'
+    
+    return new Intl.NumberFormat('zh-CN', {
+      style: 'currency',
+      currency: 'CNY',
+      minimumFractionDigits: 2,
+    }).format(numAmount)
+  }
+
+  // 生成收据链接 - 这里假设有一个收据查看的路由
+  const getReceiptLink = (receiptNo: string) => {
+    // 根据实际业务需求调整链接格式
+    return `/receipts/${receiptNo}`
+  }
+
+  // 处理收据链接点击
+  const handleReceiptClick = (receiptNo: string) => {
+    // 这里可以打开新窗口或者跳转到收据详情页
+    // 暂时用 message 提示，实际项目中可以替换为真实的跳转逻辑
+    message.info(`跳转到收据: ${receiptNo}`)
   }
 
   // 格式化字段值
@@ -138,6 +215,14 @@ const EnterpriseDetail: React.FC = () => {
     return value
   }
 
+  // 检查历程记录是否包含注销状态
+  const isTerminationRecord = (history: ServiceHistory) => {
+    const updatedFields = history.updatedFields
+    return Object.values(updatedFields).some(value => 
+      value === 'cancelled' || value === 'logged_out'
+    )
+  }
+
   // 渲染服务历程项
   const renderHistoryItem = (history: ServiceHistory) => {
     const updatedFieldsEntries = Object.entries(history.updatedFields)
@@ -159,19 +244,6 @@ const EnterpriseDetail: React.FC = () => {
         </div>
       </div>
     )
-  }
-
-  // 格式化企业费用贡献金额
-  const formatCurrency = (amount?: string | null) => {
-    if (amount === undefined || amount === null) return '¥0.00'
-    const numAmount = parseFloat(amount)
-    if (isNaN(numAmount)) return '¥0.00'
-    
-    return new Intl.NumberFormat('zh-CN', {
-      style: 'currency',
-      currency: 'CNY',
-      minimumFractionDigits: 2,
-    }).format(numAmount)
   }
 
   if (!enterprise) {
@@ -228,16 +300,39 @@ const EnterpriseDetail: React.FC = () => {
             <Spin spinning={loading}>
               {serviceHistory.length > 0 ? (
                 <Timeline>
+                  <Timeline.Item color="green">
+                    <div>
+                      <div style={{ marginBottom: 8 }}>
+                        <Text strong>{enterprise.createTime ? formatDate(enterprise.createTime) : '未知时间'}</Text>
+                      </div>
+                      <div>
+                        <Text type="secondary">服务开始</Text>
+                      </div>
+                    </div>
+                  </Timeline.Item>
+                  
                   {serviceHistory.map((history) => (
-                    <Timeline.Item key={history.id}>
+                    <Timeline.Item 
+                      key={history.id}
+                      color={isTerminationRecord(history) ? 'red' : 'blue'}
+                    >
                       {renderHistoryItem(history)}
                     </Timeline.Item>
                   ))}
                 </Timeline>
               ) : (
-                <div style={{ textAlign: 'center', padding: 50 }}>
-                  <Text type="secondary">暂无服务历程记录</Text>
-                </div>
+                <Timeline>
+                  <Timeline.Item color="green">
+                    <div>
+                      <div style={{ marginBottom: 8 }}>
+                        <Text strong>{enterprise.createTime ? formatDate(enterprise.createTime) : '未知时间'}</Text>
+                      </div>
+                      <div>
+                        <Text type="secondary">服务开始</Text>
+                      </div>
+                    </div>
+                  </Timeline.Item>
+                </Timeline>
               )}
             </Spin>
           </Card>
@@ -251,19 +346,59 @@ const EnterpriseDetail: React.FC = () => {
                 费用贡献
               </span>
             }
-            style={{ height: 600 }}
+            style={{ height: 600, overflow: 'auto' }}
           >
-            <div style={{ textAlign: 'center', padding: 50 }}>
-              <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-                总贡献金额
-              </div>
-              <div style={{ fontSize: 36, color: '#1890ff', fontWeight: 'bold' }}>
-                {formatCurrency(enterprise.contributionAmount)}
-              </div>
-              <div style={{ marginTop: 24, color: '#666' }}>
-                <Text type="secondary">更多费用详情功能开发中...</Text>
-              </div>
-            </div>
+            <Spin spinning={expenseLoading}>
+              {expenseContribution && expenseContribution.expenses.length > 0 ? (
+                <>
+                  <List
+                    dataSource={expenseContribution.expenses}
+                    renderItem={(expense: ExpenseRecord) => (
+                      <List.Item
+                        key={expense.id}
+                        style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}
+                      >
+                        <div style={{ width: '100%' }}>
+                          <Row justify="space-between" align="middle">
+                            <Col span={16}>
+                              <Space direction="vertical" size="small">
+                                <Text strong>{formatChargeDate(expense.chargeDate)}</Text>
+                                <Button
+                                  type="link"
+                                  icon={<FileTextOutlined />}
+                                  onClick={() => handleReceiptClick(expense.receiptNo)}
+                                  style={{ padding: 0, height: 'auto' }}
+                                >
+                                  收据: {expense.receiptNo}
+                                </Button>
+                              </Space>
+                            </Col>
+                            <Col span={8} style={{ textAlign: 'right' }}>
+                              <Text strong style={{ color: '#1890ff', fontSize: 16 }}>
+                                {formatAmount(expense.totalFee)}
+                              </Text>
+                            </Col>
+                          </Row>
+                        </div>
+                      </List.Item>
+                    )}
+                  />
+                  <Divider />
+                  <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                    <div style={{ fontSize: 16, marginBottom: 8 }}>
+                      <Text type="secondary">费用合计</Text>
+                    </div>
+                    <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1890ff' }}>
+                      {formatAmount(expenseContribution.totalAmount)}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 50 }}>
+                  <Text type="secondary">暂无费用贡献记录</Text>
+                </div>
+              )}
+            </Spin>
           </Card>
         </Col>
       </Row>

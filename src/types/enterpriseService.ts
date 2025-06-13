@@ -52,4 +52,24 @@ export interface ServiceHistoryQueryParams {
   unifiedSocialCreditCode?: string
 }
 
-export interface ServiceHistoryResponse extends ApiResponse<ServiceHistory[]> {} 
+export interface ServiceHistoryResponse extends ApiResponse<ServiceHistory[]> {}
+
+// 费用贡献相关类型
+export interface ExpenseRecord {
+  id: number
+  chargeDate: string
+  receiptNo: string
+  totalFee: string
+}
+
+export interface ExpenseContribution {
+  expenses: ExpenseRecord[]
+  totalAmount: number
+}
+
+export interface ExpenseContributionQueryParams {
+  companyName?: string
+  unifiedSocialCreditCode?: string
+}
+
+export interface ExpenseContributionResponse extends ApiResponse<ExpenseContribution> {} 
