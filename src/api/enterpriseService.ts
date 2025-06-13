@@ -5,8 +5,10 @@ import type {
   ServiceHistoryQueryParams,
   ServiceHistoryResponse,
   ExpenseContributionQueryParams,
-  ExpenseContributionResponse
+  ExpenseContributionResponse,
+  Enterprise
 } from '../types/enterpriseService'
+import type { ApiResponse } from '../types'
 
 /**
  * 获取企业列表
@@ -14,6 +16,18 @@ import type {
  */
 export const getEnterpriseList = (params: EnterpriseQueryParams) => {
   return request.get<EnterpriseListResponse>('/enterprise-service/customer', params)
+}
+
+/**
+ * 根据企业名称或统一社会信用代码查询企业信息
+ * @param companyName 企业名称
+ * @param unifiedSocialCreditCode 统一社会信用代码
+ */
+export const getEnterpriseByNameOrCode = (params: { 
+  companyName?: string
+  unifiedSocialCreditCode?: string 
+}) => {
+  return request.get<ApiResponse<{ data: Enterprise[] }>>('/enterprise-service/customer', params)
 }
 
 /**

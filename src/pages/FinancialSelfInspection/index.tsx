@@ -43,6 +43,9 @@ import type {
   InspectorConfirmationDto,
   CreateFinancialSelfInspectionDto,
 } from '../../types/financialSelfInspection'
+import { getEnterpriseByNameOrCode } from '../../api/enterpriseService'
+import type { Enterprise } from '../../types/enterpriseService'
+import { useAuthStore } from '../../store/auth'
 
 const { Title } = Typography
 const { RangePicker } = DatePicker
@@ -82,6 +85,9 @@ const FinancialSelfInspection: React.FC = () => {
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
+  
+  // 获取当前用户信息
+  const { user } = useAuthStore()
 
   // 从 pageStates 恢复搜索参数和分页信息
   const savedActiveTab = getState('financialInspectionActiveTab') || 'submitted'
@@ -153,6 +159,25 @@ const FinancialSelfInspection: React.FC = () => {
   const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
   const [createLoading, setCreateLoading] = useState<boolean>(false)
   const [createForm] = Form.useForm()
+  
+  // 企业信息查询状态
+  const [enterpriseSearchLoading, setEnterpriseSearchLoading] = useState<boolean>(false)
+
+  // 检查用户是否有整改权限（记账会计、管理员、超级管理员）
+  const hasRectificationPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      console.log('用户角色信息不存在或格式错误:', user?.roles)
+      return false
+    }
+    
+    // 允许的角色：记账会计、管理员、超级管理员
+    const allowedRoles = ['记账会计', 'admin', 'super_admin', '管理员', '超级管理员']
+    
+    const hasPermission = user.roles.some(role => allowedRoles.includes(role))
+    console.log('用户角色:', user.roles, '是否有整改权限:', hasPermission)
+    
+    return hasPermission
+  }
 
   // 加载我提交的数据
   const loadSubmittedData = async () => {
@@ -413,10 +438,58 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
+  // 根据企业名称或统一社会信用代码查询企业信息
+  const handleEnterpriseSearch = async (value: string, field: 'companyName' | 'unifiedSocialCreditCode') => {
+    if (!value || value.trim() === '') {
+      return
+    }
+
+    try {
+      setEnterpriseSearchLoading(true)
+      const params = field === 'companyName' 
+        ? { companyName: value.trim() }
+        : { unifiedSocialCreditCode: value.trim() }
+      
+      const response = await getEnterpriseByNameOrCode(params)
+      
+      if (response.code === 0 && response.data?.data && response.data.data.length > 0) {
+        const enterprise = response.data.data[0] // 取第一个匹配的企业
+        
+        // 自动填入相关字段
+        createForm.setFieldsValue({
+          companyName: enterprise.companyName,
+          unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+          bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
+          consultantAccountant: enterprise.consultantAccountant || '',
+        })
+        
+        message.success('企业信息已自动填入')
+      } else {
+        message.warning('未找到相关企业信息')
+      }
+    } catch (error) {
+      console.error('查询企业信息失败:', error)
+      message.error('查询企业信息失败')
+    } finally {
+      setEnterpriseSearchLoading(false)
+    }
+  }
+
   // 打开新建自查记录弹窗
   const handleOpenCreateModal = () => {
-    setCreateModalVisible(true)
+    // 先设置抽查人，再重置其他字段
+    const inspectorValue = user?.username || ''
+    console.log('当前用户信息:', user)
+    console.log('设置抽查人为:', inspectorValue)
+    
+    // 重置表单并设置初始值
     createForm.resetFields()
+    createForm.setFieldsValue({
+      inspector: inspectorValue
+    })
+    
+    // 打开弹窗
+    setCreateModalVisible(true)
   }
 
   // 关闭新建自查记录弹窗
@@ -642,7 +715,7 @@ const FinancialSelfInspection: React.FC = () => {
               onClick={() => handleViewResponsibleDetail(record)}
             />
           </Tooltip>
-          {!record.rectificationCompletionDate && (
+          {!record.rectificationCompletionDate && hasRectificationPermission() && (
             <Tooltip title="整改">
               <Button 
                 type="link" 
@@ -986,12 +1059,14 @@ const FinancialSelfInspection: React.FC = () => {
           onCancel={handleCloseCreateModal}
           confirmLoading={createLoading}
           width={800}
-          destroyOnClose
         >
           <Form
             form={createForm}
             layout="vertical"
             preserve={false}
+            initialValues={{
+              inspector: user?.username || ''
+            }}
           >
             <Row gutter={16}>
               <Col span={12}>
@@ -1017,8 +1092,13 @@ const FinancialSelfInspection: React.FC = () => {
                     { required: true, message: '请输入企业名称' },
                     { max: 100, message: '企业名称不能超过100个字符' },
                   ]}
+                  extra="输入企业名称后，将自动填入相关信息"
                 >
-                  <Input placeholder="请输入企业名称" />
+                  <Input 
+                    placeholder="请输入企业名称，输入完成后点击其他区域自动查询" 
+                    onBlur={(e) => handleEnterpriseSearch(e.target.value, 'companyName')}
+                    disabled={enterpriseSearchLoading}
+                  />
                 </Form.Item>
               </Col>
             </Row>
@@ -1029,24 +1109,25 @@ const FinancialSelfInspection: React.FC = () => {
                   label="统一社会信用代码"
                   name="unifiedSocialCreditCode"
                   rules={[
-                    { required: true, message: '请输入统一社会信用代码' },
                     { len: 18, message: '统一社会信用代码必须为18位' },
                     { pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, message: '请输入正确的统一社会信用代码格式' },
                   ]}
+                  extra="输入统一社会信用代码后，将自动填入相关信息（可选）"
                 >
-                  <Input placeholder="请输入统一社会信用代码" />
+                  <Input 
+                    placeholder="请输入统一社会信用代码，输入完成后点击其他区域自动查询" 
+                    onBlur={(e) => handleEnterpriseSearch(e.target.value, 'unifiedSocialCreditCode')}
+                    disabled={enterpriseSearchLoading}
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
                   label="记账会计"
                   name="bookkeepingAccountant"
-                  rules={[
-                    { required: true, message: '请输入记账会计' },
-                    { max: 50, message: '记账会计不能超过50个字符' },
-                  ]}
+                  extra="此字段将根据企业信息自动填入，无法编辑（可选）"
                 >
-                  <Input placeholder="请输入记账会计" />
+                  <Input placeholder="记账会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
                 </Form.Item>
               </Col>
             </Row>
@@ -1056,12 +1137,9 @@ const FinancialSelfInspection: React.FC = () => {
                 <Form.Item
                   label="顾问会计"
                   name="consultantAccountant"
-                  rules={[
-                    { required: true, message: '请输入顾问会计' },
-                    { max: 50, message: '顾问会计不能超过50个字符' },
-                  ]}
+                  extra="此字段将根据企业信息自动填入，无法编辑（可选）"
                 >
-                  <Input placeholder="请输入顾问会计" />
+                  <Input placeholder="顾问会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -1069,11 +1147,11 @@ const FinancialSelfInspection: React.FC = () => {
                   label="抽查人"
                   name="inspector"
                   rules={[
-                    { required: true, message: '请输入抽查人' },
-                    { max: 50, message: '抽查人不能超过50个字符' },
+                    { required: true, message: '抽查人不能为空' },
                   ]}
+                  extra="此字段自动填入当前登录用户，无法编辑"
                 >
-                  <Input placeholder="请输入抽查人" />
+                  <Input placeholder="抽查人自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
                 </Form.Item>
               </Col>
             </Row>
