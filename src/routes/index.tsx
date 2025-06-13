@@ -29,6 +29,7 @@ const FinancialSelfInspection = lazy(() => import('../pages/FinancialSelfInspect
 const FinancialSelfInspectionDetail = lazy(() => import('../pages/FinancialSelfInspection/Detail'))
 const FinancialSelfInspectionResponsibleDetail = lazy(() => import('../pages/FinancialSelfInspection/ResponsibleDetail'))
 const TaxReview = lazy(() => import('../pages/TaxReview'))
+const TaxReviewDetail = lazy(() => import('../pages/TaxReview/Detail'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -134,6 +135,10 @@ const routes: RouteObject[] = [
       {
         path: 'tax-review',
         element: <TaxReview />,
+      },
+      {
+        path: 'tax-review/:id',
+        element: <TaxReviewDetail />,
       },
       {
         path: 'profile',
