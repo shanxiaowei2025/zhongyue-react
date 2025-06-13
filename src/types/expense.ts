@@ -77,6 +77,7 @@ export interface Expense {
   rejectReason?: string // 退回原因
   receiptRemarks?: string
   internalRemarks?: string
+  receiptNo?: string // 收据编号
 }
 
 // 前端表单使用的类型定义，支持文件上传组件

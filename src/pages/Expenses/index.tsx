@@ -24,7 +24,7 @@ import {
   FileSearchOutlined,
   UploadOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useExpenseList } from '../../hooks/useExpense'
 import { usePermission } from '../../hooks/usePermission'
@@ -124,6 +124,9 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
 ]
 
 const Expenses: React.FC = () => {
+  const navigateRoute = useNavigate()
+  const [urlSearchParams, setUrlSearchParams] = useSearchParams()
+
   // 获取权限控制
   const { expensePermissions, loading: permissionsLoading, refreshPermissions } = usePermission()
 
@@ -302,6 +305,36 @@ const Expenses: React.FC = () => {
       setIsSearching(false)
     }
   }, [loading, isSearching])
+
+  // 处理URL参数 - 自动打开收据模态框
+  useEffect(() => {
+    const openReceiptParam = urlSearchParams.get('openReceipt')
+    
+    if (openReceiptParam && expenses.length > 0 && !loading) {
+      // 根据收据编号查找对应的费用ID
+      const targetExpense = expenses.find(expense => expense.receiptNo === openReceiptParam)
+      
+      if (targetExpense) {
+        console.log('找到收据对应的费用记录:', targetExpense)
+        // 自动打开收据模态框
+        setReceiptExpenseId(targetExpense.id)
+        setReceiptVisible(true)
+        
+        // 清除URL参数，避免重复打开
+        const newSearchParams = new URLSearchParams(urlSearchParams)
+        newSearchParams.delete('openReceipt')
+        setUrlSearchParams(newSearchParams, { replace: true })
+      } else {
+        // 如果没找到对应的收据，显示提示信息
+        message.warning(`未找到收据编号为 ${openReceiptParam} 的费用记录`)
+        
+        // 清除URL参数
+        const newSearchParams = new URLSearchParams(urlSearchParams)
+        newSearchParams.delete('openReceipt')
+        setUrlSearchParams(newSearchParams, { replace: true })
+      }
+    }
+  }, [urlSearchParams, expenses, loading, setUrlSearchParams])
 
   // 重置搜索条件
   const handleReset = () => {

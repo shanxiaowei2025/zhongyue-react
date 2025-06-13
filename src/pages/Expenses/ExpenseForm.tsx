@@ -149,9 +149,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 防抖函数：计算总费用和标签页费用
   const calculateFees = useDebounce(
     () => {
-      if (!visible || !formMountedRef.current || !formInitializedRef.current) return
+      if (!visible || !formMountedRef.current || !formInitializedRef.current) {
+        console.log('计算费用被跳过:', { visible, formMounted: formMountedRef.current, formInitialized: formInitializedRef.current })
+        return
+      }
 
       try {
+        console.log('开始计算费用...')
+        
         // 从表单获取所有费用字段的当前值
         const values: Record<string, any> = {}
         let hasChanges = false
@@ -167,10 +172,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           }
         }
 
-        // 如果没有变化，不进行计算
-        if (!hasChanges) return
+        console.log('当前费用字段值:', values)
+        console.log('是否有变化:', hasChanges)
 
-        // 更新缓存
+        // 更新缓存（无论是否有变化都更新，确保数据一致性）
         setFeeFieldsCache(values)
 
         // 计算总费用
@@ -178,13 +183,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         for (const field of feeFields) {
           const value = values[field]
           if (value) {
-            total += typeof value === 'string' ? parseFloat(value) : Number(value)
+            const numValue = typeof value === 'string' ? parseFloat(value) || 0 : Number(value) || 0
+            total += numValue
           }
         }
 
         // 更新总费用
         const currentTotal = form.getFieldValue('totalFee')
         if (currentTotal !== total) {
+          console.log('更新总费用:', currentTotal, '->', total)
           form.setFieldValue('totalFee', total)
         }
 
@@ -203,11 +210,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
           let sum = 0
           fieldsInTab.forEach(field => {
-            if (values[field]) {
-              sum +=
-                typeof values[field] === 'string'
-                  ? parseFloat(values[field])
-                  : Number(values[field])
+            const value = values[field]
+            if (value) {
+              const numValue = typeof value === 'string' ? parseFloat(value) || 0 : Number(value) || 0
+              sum += numValue
             }
           })
           newTabFeeSums[tabKey] = sum
@@ -216,16 +222,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 检查是否有变化
         let tabSumsChanged = false
         for (const key in newTabFeeSums) {
-          if (newTabFeeSums[key] !== tabFeeSums[key]) {
+          if (Math.abs(newTabFeeSums[key] - (tabFeeSums[key] || 0)) > 0.01) {
             tabSumsChanged = true
             break
           }
         }
 
-        // 只在有变化时更新状态
-        if (tabSumsChanged) {
-          setTabFeeSums(newTabFeeSums)
-        }
+        // 总是更新标签页费用状态，确保UI显示正确
+        console.log('更新标签页费用:', {
+          old: tabFeeSums,
+          new: newTabFeeSums,
+          changed: tabSumsChanged
+        })
+        setTabFeeSums(newTabFeeSums)
+        
       } catch (error) {
         console.error('计算费用失败:', error)
       }
@@ -234,17 +244,44 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     [visible, form, feeFieldsCache, tabFeeSums]
   )
 
-  // 监听所有费用字段的变化
-  feeFields.forEach(field => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const value = Form.useWatch(field, form)
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEffect(() => {
-      if (formInitializedRef.current) {
-        calculateFees()
-      }
-    }, [value])
-  })
+  // 监听所有费用字段的变化 - 修复React Hooks规则违反问题
+  const licenseFeeValue = Form.useWatch('licenseFee', form)
+  const brandFeeValue = Form.useWatch('brandFee', form)
+  const recordSealFeeValue = Form.useWatch('recordSealFee', form)
+  const generalSealFeeValue = Form.useWatch('generalSealFee', form)
+  const agencyFeeValue = Form.useWatch('agencyFee', form)
+  const accountingSoftwareFeeValue = Form.useWatch('accountingSoftwareFee', form)
+  const addressFeeValue = Form.useWatch('addressFee', form)
+  const invoiceSoftwareFeeValue = Form.useWatch('invoiceSoftwareFee', form)
+  const socialInsuranceAgencyFeeValue = Form.useWatch('socialInsuranceAgencyFee', form)
+  const housingFundAgencyFeeValue = Form.useWatch('housingFundAgencyFee', form)
+  const statisticalReportFeeValue = Form.useWatch('statisticalReportFee', form)
+  const changeFeeValue = Form.useWatch('changeFee', form)
+  const administrativeLicenseFeeValue = Form.useWatch('administrativeLicenseFee', form)
+  const otherBusinessFeeValue = Form.useWatch('otherBusinessFee', form)
+
+  // 统一监听所有费用字段变化
+  useEffect(() => {
+    if (formInitializedRef.current) {
+      console.log('费用字段发生变化，触发计算')
+      calculateFees()
+    }
+  }, [
+    licenseFeeValue,
+    brandFeeValue,
+    recordSealFeeValue,
+    generalSealFeeValue,
+    agencyFeeValue,
+    accountingSoftwareFeeValue,
+    addressFeeValue,
+    invoiceSoftwareFeeValue,
+    socialInsuranceAgencyFeeValue,
+    housingFundAgencyFeeValue,
+    statisticalReportFeeValue,
+    changeFeeValue,
+    administrativeLicenseFeeValue,
+    otherBusinessFeeValue,
+  ])
 
   // 监听是否有公积金字段的变化
   const hasHousingFund = Form.useWatch('hasHousingFund', form)
@@ -363,8 +400,48 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 设置表单初始值
         form.setFieldsValue(formData)
 
-        // 重新计算费用总额
-        calculateFees()
+        // 初始化费用字段缓存
+        const initialFeeValues: Record<string, any> = {}
+        feeFields.forEach(field => {
+          initialFeeValues[field] = formData[field] || 0
+        })
+        setFeeFieldsCache(initialFeeValues)
+
+        // 初始化标签页费用合计
+        const initialTabFeeSums: Record<string, number> = {
+          '1': 0,
+          '2': 0,
+          '3': 0,
+          '4': 0,
+          '5': 0,
+          '6': 0,
+          '7': 0,
+        }
+
+        // 计算初始标签页费用
+        Object.entries(tabFeeFieldsMap).forEach(([tabKey, fieldsInTab]) => {
+          let sum = 0
+          fieldsInTab.forEach(field => {
+            const value = formData[field] || 0
+            sum += typeof value === 'string' ? parseFloat(value) || 0 : Number(value) || 0
+          })
+          initialTabFeeSums[tabKey] = sum
+        })
+
+        setTabFeeSums(initialTabFeeSums)
+
+        // 标记表单已初始化
+        formInitializedRef.current = true
+
+        // 延迟计算费用，确保所有状态更新完成
+        setTimeout(() => {
+          console.log('编辑模式：开始计算费用', { 
+            formInitialized: formInitializedRef.current, 
+            visible,
+            initialTabFeeSums 
+          })
+          calculateFees()
+        }, 100)
       } else {
         // 添加模式，设置默认值
         const today = dayjs()
@@ -395,7 +472,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           '7': 0,
         })
 
+        // 标记表单已初始化
         formInitializedRef.current = true
+
+        // 初始化完成后计算费用
+        setTimeout(() => {
+          calculateFees()
+        }, 50)
       }
 
       // 设置默认选项卡

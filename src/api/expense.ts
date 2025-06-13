@@ -83,13 +83,18 @@ export const getExpenseAutocomplete = (field: string) => {
 }
 
 // 查看费用收据
-export const getExpenseReceipt = (id: number) => {
+export const getExpenseReceipt = (params: { id?: number; receiptNo?: string }) => {
+  // 确保至少提供一个参数
+  if (!params.id && !params.receiptNo) {
+    throw new Error('必须提供 id 或 receiptNo 中的至少一个参数')
+  }
+
   return request.get<{
     data: ReceiptViewDto
     code: number
     message: string
     timestamp: number
-  }>(`/expense/${id}/receipt`)
+  }>('/expense/receipt', params)
 }
 
 // 导出费用数据为CSV

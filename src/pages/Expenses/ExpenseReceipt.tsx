@@ -50,7 +50,9 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
   onClose,
   previewMode = false,
 }) => {
-  const { receipt, isLoading } = useExpenseReceipt(visible ? expenseId : null)
+  const { receipt, isLoading } = useExpenseReceipt(
+    visible && expenseId ? { id: expenseId } : null
+  )
   const { expense, updateExpense, refreshExpenseDetail } = useExpenseDetail(
     visible ? expenseId : null
   )
@@ -160,7 +162,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
         message.loading('正在刷新收据数据...', 0.5)
       }
 
-      await mutate(getExpenseReceiptKey(expenseId))
+      await mutate(getExpenseReceiptKey({ id: expenseId }))
       // 同时刷新费用详情数据以获取最新的电子合同
       await refreshExpenseDetail()
 
@@ -367,7 +369,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
 
       message.success('电子合同已自动保存')
       // 刷新收据数据和费用详情数据
-      await mutate(getExpenseReceiptKey(expenseId))
+      await mutate(getExpenseReceiptKey({ id: expenseId }))
       await refreshExpenseDetail()
     } catch (error) {
       console.error('自动保存电子合同失败:', error)
@@ -474,7 +476,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
 
       message.success('关联合同已自动保存')
       // 刷新收据数据和费用详情数据
-      await mutate(getExpenseReceiptKey(expenseId))
+      await mutate(getExpenseReceiptKey({ id: expenseId }))
       await refreshExpenseDetail()
     } catch (error) {
       console.error('自动保存关联合同失败:', error)
