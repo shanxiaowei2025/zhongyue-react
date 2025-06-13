@@ -178,14 +178,14 @@ const EnterpriseDetail: React.FC = () => {
   // 生成收据链接 - 这里假设有一个收据查看的路由
   const getReceiptLink = (receiptNo: string) => {
     // 根据实际业务需求调整链接格式
-    return `/receipts/${receiptNo}`
+    return `/receipts?receiptNo=${receiptNo}`
   }
 
   // 处理收据链接点击
   const handleReceiptClick = (receiptNo: string) => {
-    // 这里可以打开新窗口或者跳转到收据详情页
-    // 暂时用 message 提示，实际项目中可以替换为真实的跳转逻辑
-    message.info(`跳转到收据: ${receiptNo}`)
+    // 跳转到费用管理页面并自动打开收据模态框
+    // 使用receiptNo作为查询参数，费用管理页面会根据此参数自动打开模态框
+    navigate(`/expenses?openReceipt=${receiptNo}`)
   }
 
   // 格式化字段值
@@ -344,6 +344,9 @@ const EnterpriseDetail: React.FC = () => {
               <span>
                 <DollarCircleOutlined style={{ marginRight: 8 }} />
                 费用贡献
+                <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+                  (点击收据编号可查看收据详情)
+                </Text>
               </span>
             }
             style={{ height: 600, overflow: 'auto' }}
@@ -368,6 +371,7 @@ const EnterpriseDetail: React.FC = () => {
                                   icon={<FileTextOutlined />}
                                   onClick={() => handleReceiptClick(expense.receiptNo)}
                                   style={{ padding: 0, height: 'auto' }}
+                                  title="点击查看收据详情"
                                 >
                                   收据: {expense.receiptNo}
                                 </Button>
