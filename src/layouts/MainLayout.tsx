@@ -25,6 +25,8 @@ import {
   DollarOutlined,
   FileTextOutlined,
   AppstoreOutlined,
+  AuditOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import type { MenuProps } from 'antd'
@@ -135,9 +137,26 @@ const MainLayout = () => {
       label: '合同管理',
     },
     {
-      key: '/enterprise-service',
+      key: 'enterprise',
       icon: <AppstoreOutlined />,
       label: '企业服务',
+      children: [
+        {
+          key: '/enterprise-service',
+          icon: <AppstoreOutlined />,
+          label: '企业服务管理',
+        },
+        {
+          key: '/financial-self-inspection',
+          icon: <AuditOutlined />,
+          label: '账务自查',
+        },
+        {
+          key: '/tax-review',
+          icon: <FileDoneOutlined />,
+          label: '税务核查',
+        },
+      ],
     },
   ]
 
@@ -244,6 +263,30 @@ const MainLayout = () => {
           })
         }
       }
+      return
+    }
+
+    // 特殊处理账务自查详情页
+    if (pathname.startsWith('/financial-self-inspection/detail/')) {
+      const recordId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `账务自查详情 - #${recordId}`,
+        icon: <AuditOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理我负责的账务自查详情页
+    if (pathname.startsWith('/financial-self-inspection/responsible-detail/')) {
+      const recordId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `我负责的账务自查 - #${recordId}`,
+        icon: <AuditOutlined />,
+        closable: true,
+      })
       return
     }
 
@@ -391,6 +434,9 @@ const MainLayout = () => {
     } else if (key === 'system') {
       // 系统管理主菜单，默认跳转到用户管理
       navigate('/users')
+    } else if (key === 'enterprise') {
+      // 企业服务主菜单，默认跳转到企业服务管理
+      navigate('/enterprise-service')
     } else {
       navigate(key)
       if (isMobile) {

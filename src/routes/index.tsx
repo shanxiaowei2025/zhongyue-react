@@ -25,6 +25,10 @@ const ContractSign = lazy(() => import('../pages/ContractSign'))
 const ContractView = lazy(() => import('../pages/ContractView'))
 const EnterpriseService = lazy(() => import('../pages/EnterpriseService'))
 const EnterpriseDetail = lazy(() => import('../pages/EnterpriseService/Detail'))
+const FinancialSelfInspection = lazy(() => import('../pages/FinancialSelfInspection'))
+const FinancialSelfInspectionDetail = lazy(() => import('../pages/FinancialSelfInspection/Detail'))
+const FinancialSelfInspectionResponsibleDetail = lazy(() => import('../pages/FinancialSelfInspection/ResponsibleDetail'))
+const TaxReview = lazy(() => import('../pages/TaxReview'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -114,6 +118,22 @@ const routes: RouteObject[] = [
       {
         path: 'enterprise-service/detail/:id',
         element: <EnterpriseDetail />,
+      },
+      {
+        path: 'financial-self-inspection',
+        element: <FinancialSelfInspection />,
+      },
+      {
+        path: 'financial-self-inspection/detail/:id',
+        element: <FinancialSelfInspectionDetail />,
+      },
+      {
+        path: 'financial-self-inspection/responsible-detail/:id',
+        element: <FinancialSelfInspectionResponsibleDetail />,
+      },
+      {
+        path: 'tax-review',
+        element: <TaxReview />,
       },
       {
         path: 'profile',
