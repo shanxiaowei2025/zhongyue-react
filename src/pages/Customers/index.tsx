@@ -470,7 +470,12 @@ export default function Customers() {
   const handleExport = async () => {
     try {
       message.loading('正在导出数据，请稍候...', 0)
-      const response = await exportCustomerCSV()
+      
+      // 使用当前搜索和分页参数导出数据
+      // 移除分页大小参数，导出所有匹配条件的数据
+      const { pageSize: _, ...exportParams } = requestParams
+      const response = await exportCustomerCSV(exportParams)
+      
       message.destroy()
 
       // 创建Blob对象

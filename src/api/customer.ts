@@ -131,8 +131,20 @@ export const getPaginatedCustomers = async (params: Record<string, any>) => {
   }
 }
 
-export const exportCustomerCSV = () => {
-  return request.get('/customer/export/csv', {}, 'blob')
+export const exportCustomerCSV = (params?: Record<string, any>) => {
+  // 如果提供了查询参数，构建查询字符串
+  let queryString = ''
+  if (params) {
+    const queryParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, String(value))
+      }
+    })
+    queryString = queryParams.toString()
+  }
+  
+  return request.get(`/customer/export/csv${queryString ? `?${queryString}` : ''}`, {}, 'blob')
 }
 
 // 导入客户Excel文件
