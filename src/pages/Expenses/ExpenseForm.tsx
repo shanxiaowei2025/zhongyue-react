@@ -159,21 +159,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         
         // 从表单获取所有费用字段的当前值
         const values: Record<string, any> = {}
-        let hasChanges = false
 
-        // 检查每个字段是否有变化
+        // 获取每个字段的当前值
         for (const field of feeFields) {
           const currentValue = form.getFieldValue(field as any) || 0
           values[field] = currentValue
-
-          // 检测值是否有变化
-          if (feeFieldsCache[field] !== currentValue) {
-            hasChanges = true
-          }
         }
 
         console.log('当前费用字段值:', values)
-        console.log('是否有变化:', hasChanges)
 
         // 更新缓存（无论是否有变化都更新，确保数据一致性）
         setFeeFieldsCache(values)
@@ -219,20 +212,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           newTabFeeSums[tabKey] = sum
         })
 
-        // 检查是否有变化
-        let tabSumsChanged = false
-        for (const key in newTabFeeSums) {
-          if (Math.abs(newTabFeeSums[key] - (tabFeeSums[key] || 0)) > 0.01) {
-            tabSumsChanged = true
-            break
-          }
-        }
-
         // 总是更新标签页费用状态，确保UI显示正确
         console.log('更新标签页费用:', {
-          old: tabFeeSums,
           new: newTabFeeSums,
-          changed: tabSumsChanged
         })
         setTabFeeSums(newTabFeeSums)
         
@@ -241,7 +223,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       }
     },
     DEBOUNCE_DELAY,
-    [visible, form, feeFieldsCache, tabFeeSums]
+    [] // 空依赖数组，避免循环引用
   )
 
   // 监听所有费用字段的变化 - 修复React Hooks规则违反问题
@@ -267,6 +249,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       calculateFees()
     }
   }, [
+    calculateFees,
     licenseFeeValue,
     brandFeeValue,
     recordSealFeeValue,
@@ -397,6 +380,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           setRelatedContracts(expense.relatedContract)
         }
 
+        // 处理chargeMethod字段，确保它是数组格式（因为使用了mode="tags"）
+        if (formData.chargeMethod) {
+          if (!Array.isArray(formData.chargeMethod)) {
+            formData.chargeMethod = [formData.chargeMethod]
+          }
+        } else {
+          formData.chargeMethod = []
+        }
+
         // 设置表单初始值
         form.setFieldsValue(formData)
 
@@ -448,6 +440,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         form.setFieldsValue({
           chargeDate: today,
           totalFee: 0,
+          chargeMethod: [], // 确保chargeMethod是数组格式
         })
         setPrevFormValues({
           chargeDate: today,
