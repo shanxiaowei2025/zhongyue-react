@@ -144,7 +144,7 @@ const MainLayout = () => {
         {
           key: '/enterprise-service',
           icon: <AppstoreOutlined />,
-          label: '企业服务管理',
+          label: '企业服务详情',
         },
         {
           key: '/financial-self-inspection',
