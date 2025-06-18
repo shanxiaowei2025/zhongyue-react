@@ -152,7 +152,7 @@ export const buildImageUrl = (fileName: string | any): string => {
   }
 
   // 从环境变量获取MinIO配置
-  const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://zhongyue-minio-api.starlogic.tech'
+  const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://minio-api.zhongyuekuaiji.cn'
   const bucketName = import.meta.env.MINIO_BUCKET_NAME || 'zhongyue'
 
   // 确保endpoint末尾有斜杠

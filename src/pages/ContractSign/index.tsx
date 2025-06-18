@@ -317,7 +317,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
       console.log('获取到加密码:', encryptedCode)
 
       // 生成可分享的链接 - 使用固定域名
-      const shareableLink = `https://zhongyue-manage.starlogic.tech/contract/view/${encryptedCode}`
+      const shareableLink = `https://manage.zhongyuekuaiji.cn/contract/view/${encryptedCode}`
 
       // 6. 关闭模态框并显示成功消息
       setSignModalVisible(false)
