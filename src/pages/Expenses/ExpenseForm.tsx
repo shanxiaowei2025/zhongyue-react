@@ -217,7 +217,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 使用setTimeout将状态更新推迟到下一个事件循环，避免循环引用
         setTimeout(() => {
           setFeeFieldsCache(values)
-          setTabFeeSums(newTabFeeSums)
+        setTabFeeSums(newTabFeeSums)
         }, 0)
         
       } catch (error) {
@@ -282,10 +282,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 更新费用缓存，确保计算时公积金费用为0 - 使用setTimeout避免循环引用
       setTimeout(() => {
-        setFeeFieldsCache(prev => ({
-          ...prev,
-          housingFundAgencyFee: 0,
-        }))
+      setFeeFieldsCache(prev => ({
+        ...prev,
+        housingFundAgencyFee: 0,
+      }))
       }, 0)
 
       console.log('公积金选项已关闭，已清空相关字段')
@@ -403,7 +403,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         })
         // 使用setTimeout避免循环引用
         setTimeout(() => {
-          setFeeFieldsCache(initialFeeValues)
+        setFeeFieldsCache(initialFeeValues)
         }, 0)
 
         // 初始化标签页费用合计
@@ -429,7 +429,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         // 使用setTimeout避免循环引用
         setTimeout(() => {
-          setTabFeeSums(initialTabFeeSums)
+        setTabFeeSums(initialTabFeeSums)
         }, 0)
 
         // 标记表单已初始化
@@ -437,10 +437,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         // 标记表单已初始化，费用计算将通过useEffect触发
         console.log('编辑模式：表单初始化完成', { 
-          formInitialized: formInitializedRef.current, 
-          visible,
-          initialTabFeeSums 
-        })
+            formInitialized: formInitializedRef.current, 
+            visible,
+            initialTabFeeSums 
+          })
       } else {
         // 添加模式，设置默认值
         const today = dayjs()
@@ -461,20 +461,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         })
         // 使用setTimeout避免循环引用
         setTimeout(() => {
-          setFeeFieldsCache(initialFeeValues)
+        setFeeFieldsCache(initialFeeValues)
         }, 0)
 
         // 新建模式下重置所有标签页费用为0 - 使用setTimeout避免循环引用
         setTimeout(() => {
-          setTabFeeSums({
-            '1': 0,
-            '2': 0,
-            '3': 0,
-            '4': 0,
-            '5': 0,
-            '6': 0,
-            '7': 0,
-          })
+        setTabFeeSums({
+          '1': 0,
+          '2': 0,
+          '3': 0,
+          '4': 0,
+          '5': 0,
+          '6': 0,
+          '7': 0,
+        })
         }, 0)
 
         // 标记表单已初始化
@@ -493,7 +493,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   useEffect(() => {
     if (formInitializedRef.current && visible) {
       // 直接调用计算函数，不使用setTimeout避免循环引用
-      calculateFees()
+        calculateFees()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formInitializedRef.current ? 1 : 0, visible]) // 仅在初始化完成时执行一次

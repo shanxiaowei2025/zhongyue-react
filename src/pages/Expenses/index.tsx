@@ -295,9 +295,20 @@ const Expenses: React.FC = () => {
 
   // 表单字段变化时的处理函数
   const handleFormFieldChange = () => {
-    setIsSearching(true)
-    debouncedSearch()
-  }
+    // 获取当前表单值
+    const currentValues = form.getFieldsValue();
+    
+    // 特殊处理dateRange字段，确保当它被清空时能正确设置为undefined
+    if (currentValues.dateRange === null || 
+        (Array.isArray(currentValues.dateRange) && 
+         (currentValues.dateRange.length === 0 || 
+          currentValues.dateRange.some((date: any) => !date)))) {
+      form.setFieldValue('dateRange', undefined);
+    }
+    
+    setIsSearching(true);
+    debouncedSearch();
+  };
 
   // 监听加载状态变化
   useEffect(() => {
@@ -338,7 +349,7 @@ const Expenses: React.FC = () => {
 
   // 重置搜索条件
   const handleReset = () => {
-    form.resetFields()
+    form.resetFields();
     // 重置所有查询参数
     setSearchParams({
       companyName: '',
@@ -348,10 +359,15 @@ const Expenses: React.FC = () => {
       dateRange: undefined,
       page: 1,
       pageSize: 10,
-    })
-    // 直接触发搜索，不使用防抖
-    // 因为重置是用户主动操作，应该立即生效
-  }
+    });
+    
+    // 直接触发重新获取数据，不使用防抖
+    // 使用下一个事件循环确保状态已更新
+    setTimeout(() => {
+      fetchExpenses();
+      setIsSearching(false); // 确保重置loading状态
+    }, 0);
+  };
 
   // 表格页码改变
   const handleTableChange = (pagination: any) => {

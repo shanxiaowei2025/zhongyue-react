@@ -55,14 +55,19 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
     if (params.dateRange && Array.isArray(params.dateRange)) {
       queryParams.chargeDateStart = Array.isArray(params.dateRange[0])
         ? params.dateRange[0][0]
-        : params.dateRange[0].format?.('YYYY-MM-DD') || params.dateRange[0]
+        : params.dateRange[0]?.format?.('YYYY-MM-DD') || params.dateRange[0];
 
       queryParams.chargeDateEnd = Array.isArray(params.dateRange[1])
         ? params.dateRange[1][0]
-        : params.dateRange[1].format?.('YYYY-MM-DD') || params.dateRange[1]
+        : params.dateRange[1]?.format?.('YYYY-MM-DD') || params.dateRange[1];
 
       // 删除原始dateRange参数，避免发送不必要的数据
-      delete queryParams.dateRange
+      delete queryParams.dateRange;
+    } else {
+      // 确保当dateRange为undefined或null时，删除可能存在的日期参数
+      delete queryParams.dateRange;
+      delete queryParams.chargeDateStart;
+      delete queryParams.chargeDateEnd;
     }
 
     // 确保page和pageSize参数是有效的数字
