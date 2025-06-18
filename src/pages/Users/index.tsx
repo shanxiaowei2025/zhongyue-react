@@ -30,7 +30,7 @@ interface ApiUser {
   password: string
   isActive: boolean
   phone: string
-  email: string
+  idCardNumber?: string
   roles: string[]
   dept_id?: number
   dept_name?: string
@@ -260,7 +260,7 @@ const Users = () => {
 
         form.setFieldsValue({
           username: record.username,
-          email: record.email,
+          idCardNumber: record.idCardNumber,
           phone: record.phone,
           isActive: record.isActive,
           dept_id: deptPath, // 设置完整的部门路径
@@ -381,9 +381,9 @@ const Users = () => {
       width: 120,
     },
     {
-      title: '邮箱',
-      dataIndex: 'email',
-      key: 'email',
+      title: '身份证号',
+      dataIndex: 'idCardNumber',
+      key: 'idCardNumber',
       width: 180,
     },
     {
@@ -539,14 +539,14 @@ const Users = () => {
           )}
 
           <Form.Item
-            name="email"
-            label="邮箱"
+            name="idCardNumber"
+            label="身份证号"
             rules={[
-              { required: true, message: '请输入邮箱' },
-              { type: 'email', message: '请输入有效的邮箱地址' },
+              { required: false, message: '请输入身份证号' },
+              { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入有效的身份证号' },
             ]}
           >
-            <Input />
+            <Input placeholder="请输入身份证号" />
           </Form.Item>
 
           <Form.Item
