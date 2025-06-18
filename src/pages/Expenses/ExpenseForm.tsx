@@ -139,6 +139,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 使用本地状态缓存最近的费用值，减少从表单获取值的频率
   const [feeFieldsCache, setFeeFieldsCache] = useState<Record<string, any>>({})
 
+  // 添加状态跟踪代理日期的时长
+  const [agencyDurationYears, setAgencyDurationYears] = useState<number>(0)
+
   // 共用的InputNumber解析函数
   const parseNumberInput = (value: string | number | null | undefined): number => {
     if (value === null || value === undefined || value === '') return 0
@@ -244,6 +247,29 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const administrativeLicenseFeeValue = Form.useWatch('administrativeLicenseFee', form)
   const otherBusinessFeeValue = Form.useWatch('otherBusinessFee', form)
 
+  // 监听代理日期字段变化
+  const agencyStartDate = Form.useWatch('agencyStartDate', form)
+  const agencyEndDate = Form.useWatch('agencyEndDate', form)
+
+  // 计算代理日期时长
+  useEffect(() => {
+    if (agencyStartDate && agencyEndDate && dayjs.isDayjs(agencyStartDate) && dayjs.isDayjs(agencyEndDate)) {
+      // 计算开始日期和结束日期之间的年数
+      const startDate = agencyStartDate.startOf('day')
+      const endDate = agencyEndDate.startOf('day')
+      
+      // 计算年数差异（精确到小数点后两位）
+      const yearsDiff = endDate.diff(startDate, 'year', true).toFixed(2)
+      const years = parseFloat(yearsDiff)
+      
+      console.log('代理时长计算：', { startDate: startDate.format('YYYY-MM-DD'), endDate: endDate.format('YYYY-MM-DD'), years })
+      
+      setAgencyDurationYears(years)
+    } else {
+      setAgencyDurationYears(0)
+    }
+  }, [agencyStartDate, agencyEndDate])
+
   // 统一监听所有费用字段变化
   useEffect(() => {
     if (formInitializedRef.current) {
@@ -337,6 +363,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
             formData[dateField] = dayjs(formData[dateField])
           }
         })
+
+        // 确保赠送代理时长字段正确设置
+        if (formData.giftAgencyDuration === null || formData.giftAgencyDuration === undefined) {
+          formData.giftAgencyDuration = '';
+        }
+
+        // 确保社保业务类型字段正确设置
+        if (formData.socialInsuranceBusinessType === null || formData.socialInsuranceBusinessType === undefined) {
+          formData.socialInsuranceBusinessType = '';
+        }
 
         // 处理contractImage
         if (expense.contractImage) {
@@ -550,6 +586,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           formattedValues[field] = formattedValues[field].format('YYYY-MM-DD')
         }
       })
+
+      // 确保 giftAgencyDuration 字段在未显示时为空字符串
+      if (agencyDurationYears < 2) {
+        formattedValues.giftAgencyDuration = '';
+      } else if (!formattedValues.giftAgencyDuration) {
+        // 如果显示了但未选择，则默认为"无赠送"
+        formattedValues.giftAgencyDuration = '';
+      }
+
+      // 确保 socialInsuranceBusinessType 字段在未选择时为空字符串
+      if (!formattedValues.socialInsuranceBusinessType) {
+        formattedValues.socialInsuranceBusinessType = '';
+      }
 
       // 处理费用字段，确保它们是有效的数值
       feeFields.forEach(field => {
@@ -1138,7 +1187,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           />
                         </Form.Item>
 
-                        <Form.Item label="代理日期" style={{ gridColumn: 'span 2' }}>
+                        <Form.Item label="代理日期" style={{ gridColumn: agencyDurationYears >= 2 ? 'span 1' : 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="agencyStartDate" noStyle>
                               <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
@@ -1149,6 +1198,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                           </Space>
                         </Form.Item>
+                        
+                        {/* 赠送代理时长字段，仅当代理时长大于等于两年时显示 */}
+                        {agencyDurationYears >= 2 && (
+                          <Form.Item name="giftAgencyDuration" label="赠送代理时长">
+                            <Select placeholder="请选择赠送代理时长">
+                              <Select.Option value="两年赠一季度">两年赠一季度</Select.Option>
+                              <Select.Option value="两年赠半年">两年赠半年</Select.Option>
+                              <Select.Option value="两年赠一年">两年赠一年</Select.Option>
+                            </Select>
+                          </Form.Item>
+                        )}
 
                         <Form.Item name="accountingSoftwareFee" label="记账软件费">
                           <InputNumber
@@ -1209,6 +1269,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           gap: '16px',
                         }}
                       >
+                        <Form.Item name="socialInsuranceBusinessType" label="业务类型">
+                          <Select placeholder="请选择业务类型">
+                            <Select.Option value="新增">新增</Select.Option>
+                            <Select.Option value="续费">续费</Select.Option>
+                          </Select>
+                        </Form.Item>
+
                         <Form.Item name="insuranceTypes" label="参保险种">
                           <Select
                             placeholder="请选择或输入参保险种"
