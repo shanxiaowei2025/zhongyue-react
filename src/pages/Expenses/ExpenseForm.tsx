@@ -15,6 +15,7 @@ import {
   Checkbox,
   AutoComplete,
   Spin,
+  Tooltip,
 } from 'antd'
 import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
@@ -36,6 +37,7 @@ import { BUSINESS_STATUS_MAP } from '../../constants'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
+import { getMaxDatesNextDay } from '../../api/expense'
 import './expenses.css'
 
 // 定义状态标签映射
@@ -43,6 +45,64 @@ const STATUS_LABELS = {
   [ExpenseStatus.Pending]: '未审核',
   [ExpenseStatus.Approved]: '已审核',
   [ExpenseStatus.Rejected]: '已退回',
+}
+
+// 自定义受限的日期选择器组件，只允许修改日期的"日"部分
+interface RestrictedDatePickerProps {
+  value?: Dayjs
+  onChange?: (value: Dayjs | null) => void
+  placeholder?: string
+  isRestricted?: boolean // 是否限制年月编辑
+  style?: React.CSSProperties
+  fieldName?: string // 字段名称，用于显示提示
+}
+
+const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
+  value,
+  onChange,
+  placeholder,
+  isRestricted = false,
+  style,
+  fieldName = '日期',
+}) => {
+  // 如果是受限模式且有值，则只允许选择同年同月的日期
+  const disabledDate = (current: Dayjs) => {
+    if (!isRestricted || !value) {
+      return false
+    }
+    
+    // 只允许选择相同年月的日期
+    return current.year() !== value.year() || current.month() !== value.month()
+  }
+
+  const datePicker = (
+    <DatePicker
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      style={style}
+      disabledDate={disabledDate}
+      // 如果是受限模式，不显示年月选择器
+      picker={isRestricted ? 'date' : 'date'}
+      showToday={false}
+      // 如果是受限模式（有自动填写值），则不允许清空
+      allowClear={!isRestricted}
+    />
+  )
+
+  // 如果是受限模式，包装工具提示
+  if (isRestricted) {
+    return (
+      <Tooltip 
+        title={`该${fieldName}已根据历史数据自动填写，年月不可修改，不可清空`}
+        placement="top"
+      >
+        {datePicker}
+      </Tooltip>
+    )
+  }
+
+  return datePicker
 }
 
 interface ExpenseFormProps {
@@ -142,12 +202,78 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 添加状态跟踪代理日期的时长
   const [agencyDurationYears, setAgencyDurationYears] = useState<number>(0)
 
+  // 自动填写开始日期相关状态
+  const [autoFillDates, setAutoFillDates] = useState<Record<string, string | null>>({})
+  const [loadingAutoFill, setLoadingAutoFill] = useState(false)
+
   // 共用的InputNumber解析函数
   const parseNumberInput = (value: string | number | null | undefined): number => {
     if (value === null || value === undefined || value === '') return 0
     const parsed = typeof value === 'string' ? parseFloat(value) : Number(value)
     return isNaN(parsed) ? 0 : parsed
   }
+
+  // 防抖函数：自动填写开始日期
+  const fetchAndFillDates = useDebounce(
+    async (companyName?: string, unifiedSocialCreditCode?: string) => {
+      // 只有在创建模式下才自动填写
+      if (mode !== 'add') return
+      
+      // 至少需要一个查询条件
+      if (!companyName && !unifiedSocialCreditCode) return
+
+      try {
+        setLoadingAutoFill(true)
+        const params: { companyName?: string; unifiedSocialCreditCode?: string } = {}
+        
+        if (companyName) params.companyName = companyName
+        if (unifiedSocialCreditCode) params.unifiedSocialCreditCode = unifiedSocialCreditCode
+
+        const response = await getMaxDatesNextDay(params)
+        
+        if (response.code === 0 && response.data?.dates) {
+          const dates = response.data.dates
+          setAutoFillDates(dates)
+
+          // 自动填写有值的日期字段
+          const fieldsToUpdate: Record<string, any> = {}
+          
+          if (dates.agencyStartDate) {
+            fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
+          }
+          if (dates.accountingSoftwareStartDate) {
+            fieldsToUpdate.accountingSoftwareStartDate = dayjs(dates.accountingSoftwareStartDate)
+          }
+          if (dates.invoiceSoftwareStartDate) {
+            fieldsToUpdate.invoiceSoftwareStartDate = dayjs(dates.invoiceSoftwareStartDate)
+          }
+          if (dates.socialInsuranceStartDate) {
+            fieldsToUpdate.socialInsuranceStartDate = dayjs(dates.socialInsuranceStartDate)
+          }
+          if (dates.housingFundStartDate) {
+            fieldsToUpdate.housingFundStartDate = dayjs(dates.housingFundStartDate)
+          }
+          if (dates.statisticalStartDate) {
+            fieldsToUpdate.statisticalStartDate = dayjs(dates.statisticalStartDate)
+          }
+          if (dates.addressStartDate) {
+            fieldsToUpdate.addressStartDate = dayjs(dates.addressStartDate)
+          }
+
+          // 批量更新表单字段
+          if (Object.keys(fieldsToUpdate).length > 0) {
+            form.setFieldsValue(fieldsToUpdate)
+          }
+        }
+      } catch (error) {
+        // 静默处理错误，不显示错误消息
+        console.warn('获取最大日期失败:', error)
+      } finally {
+        setLoadingAutoFill(false)
+      }
+    },
+    800 // 800ms 防抖延迟
+  )
 
   // 防抖函数：计算总费用和标签页费用 - 使用更简单的方法避免循环引用
   const calculateFees = useDebounce(
@@ -513,6 +639,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         })
         }, 0)
 
+        // 重置自动填写状态
+        setAutoFillDates({})
+
         // 标记表单已初始化
         formInitializedRef.current = true
 
@@ -533,6 +662,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formInitializedRef.current ? 1 : 0, visible]) // 仅在初始化完成时执行一次
+
+  // 处理表单值变化，用于自动填写开始日期
+  const handleFormValuesChange = useCallback((changedValues: any, allValues: any) => {
+    // 只有在创建模式下才自动填写
+    if (mode !== 'add') return
+
+    // 检查是否改变了企业名称或统一社会信用代码
+    if (changedValues.companyName !== undefined || changedValues.unifiedSocialCreditCode !== undefined) {
+      const companyName = allValues.companyName
+      const unifiedSocialCreditCode = allValues.unifiedSocialCreditCode
+      
+      // 至少需要一个有值才触发
+      if (companyName || unifiedSocialCreditCode) {
+        fetchAndFillDates(companyName, unifiedSocialCreditCode)
+      }
+    }
+  }, [mode, fetchAndFillDates])
 
   // 跟踪新上传的附件
   const [uploadedFiles, setUploadedFiles] = useState<{
@@ -737,6 +883,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       }
     }
 
+    // 重置自动填写状态
+    setAutoFillDates({})
+    setLoadingAutoFill(false)
+    
     form.resetFields()
     onCancel()
   }
@@ -856,7 +1006,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     >
       {visible && ( // 只有在modal可见时才渲染表单，避免React警告
         <>
-          <Form form={form} layout="vertical">
+          <Form form={form} layout="vertical" onValuesChange={handleFormValuesChange}>
             {/* 固定在顶部的状态栏 */}
             <div
               style={{
@@ -1190,7 +1340,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="代理日期" style={{ gridColumn: agencyDurationYears >= 2 ? 'span 1' : 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="agencyStartDate" noStyle>
-                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                              <RestrictedDatePicker 
+                                placeholder="开始日期" 
+                                style={{ width: '100%' }} 
+                                isRestricted={!!autoFillDates.agencyStartDate}
+                                fieldName="代理开始日期"
+                              />
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="agencyEndDate" noStyle>
@@ -1224,7 +1379,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="记账软件日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="accountingSoftwareStartDate" noStyle>
-                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                              <RestrictedDatePicker 
+                                placeholder="开始日期" 
+                                style={{ width: '100%' }} 
+                                isRestricted={!!autoFillDates.accountingSoftwareStartDate}
+                                fieldName="记账软件开始日期"
+                              />
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="accountingSoftwareEndDate" noStyle>
@@ -1247,7 +1407,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="开票软件日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="invoiceSoftwareStartDate" noStyle>
-                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                              <RestrictedDatePicker 
+                                placeholder="开始日期" 
+                                style={{ width: '100%' }} 
+                                isRestricted={!!autoFillDates.invoiceSoftwareStartDate}
+                                fieldName="开票软件开始日期"
+                              />
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="invoiceSoftwareEndDate" noStyle>
@@ -1319,7 +1484,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="社保日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="socialInsuranceStartDate" noStyle>
-                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                              <RestrictedDatePicker 
+                                placeholder="开始日期" 
+                                style={{ width: '100%' }} 
+                                isRestricted={!!autoFillDates.socialInsuranceStartDate}
+                                fieldName="社保开始日期"
+                              />
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="socialInsuranceEndDate" noStyle>
@@ -1378,9 +1548,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                 <Form.Item label="公积金日期" style={{ gridColumn: 'span 2' }}>
                                   <Space style={{ width: '100%' }}>
                                     <Form.Item name="housingFundStartDate" noStyle>
-                                      <DatePicker
+                                      <RestrictedDatePicker
                                         placeholder="开始日期"
                                         style={{ width: '100%' }}
+                                        isRestricted={!!autoFillDates.housingFundStartDate}
+                                        fieldName="公积金开始日期"
                                       />
                                     </Form.Item>
                                     <span>至</span>
@@ -1424,7 +1596,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="统计日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="statisticalStartDate" noStyle>
-                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                              <RestrictedDatePicker 
+                                placeholder="开始日期" 
+                                style={{ width: '100%' }} 
+                                isRestricted={!!autoFillDates.statisticalStartDate}
+                                fieldName="统计开始日期"
+                              />
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="statisticalEndDate" noStyle>
@@ -1514,7 +1691,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="addressStartDate" noStyle>
-                              <DatePicker placeholder="开始日期" style={{ width: '100%' }} />
+                              <RestrictedDatePicker 
+                                placeholder="开始日期" 
+                                style={{ width: '100%' }} 
+                                isRestricted={!!autoFillDates.addressStartDate}
+                                fieldName="地址开始日期"
+                              />
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="addressEndDate" noStyle>

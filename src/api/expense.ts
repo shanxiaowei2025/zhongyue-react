@@ -102,3 +102,25 @@ export const exportExpenseCSV = (params?: Partial<ExpenseQueryParams>) => {
   // 以blob格式获取CSV数据
   return request.get<Blob>('/expense/export/csv', params, 'blob')
 }
+
+// 获取最大日期的下一天（用于自动填写开始日期）
+export const getMaxDatesNextDay = (params: { companyName?: string; unifiedSocialCreditCode?: string }) => {
+  return request.get<{
+    data: {
+      companyName: string
+      unifiedSocialCreditCode: string
+      dates: {
+        agencyStartDate: string | null
+        accountingSoftwareStartDate: string | null
+        invoiceSoftwareStartDate: string | null
+        socialInsuranceStartDate: string | null
+        housingFundStartDate: string | null
+        statisticalStartDate: string | null
+        addressStartDate: string | null
+      }
+    }
+    code: number
+    message: string
+    timestamp: number
+  }>('/expense/max-dates-next-day', params)
+}
