@@ -6,7 +6,9 @@ import type {
   ServiceHistoryResponse,
   ExpenseContributionQueryParams,
   ExpenseContributionResponse,
-  Enterprise
+  Enterprise,
+  CustomerQueryParams,
+  CustomerSearchResponse
 } from '../types/enterpriseService'
 import type { ApiResponse } from '../types'
 
@@ -16,6 +18,14 @@ import type { ApiResponse } from '../types'
  */
 export const getEnterpriseList = (params: EnterpriseQueryParams) => {
   return request.get<EnterpriseListResponse>('/enterprise-service/customer', params)
+}
+
+/**
+ * 搜索客户信息（支持模糊查询和分页）
+ * @param params 查询参数
+ */
+export const searchCustomers = (params: CustomerQueryParams) => {
+  return request.get<CustomerSearchResponse>('/enterprise-service/customer', params)
 }
 
 /**

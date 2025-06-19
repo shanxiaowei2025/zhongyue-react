@@ -15,6 +15,8 @@ import {
   Tooltip,
   Modal,
   message,
+  AutoComplete,
+  Spin,
 } from 'antd'
 import {
   SearchOutlined,
@@ -23,6 +25,7 @@ import {
   EyeOutlined,
   CheckCircleOutlined,
   EditOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
@@ -43,13 +46,12 @@ import type {
   InspectorConfirmationDto,
   CreateFinancialSelfInspectionDto,
 } from '../../types/financialSelfInspection'
-import { getEnterpriseByNameOrCode } from '../../api/enterpriseService'
-import type { Enterprise } from '../../types/enterpriseService'
+import { getEnterpriseByNameOrCode, searchCustomers } from '../../api/enterpriseService'
+import type { Enterprise, CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
 import { useAuthStore } from '../../store/auth'
 
 const { Title } = Typography
 const { RangePicker } = DatePicker
-const { TabPane } = Tabs
 
 // 智能文本渲染组件 - 只在文本被截断时显示tooltip
 const EllipsisText: React.FC<{
@@ -162,6 +164,22 @@ const FinancialSelfInspection: React.FC = () => {
   
   // 企业信息查询状态
   const [enterpriseSearchLoading, setEnterpriseSearchLoading] = useState<boolean>(false)
+
+  // 企业搜索相关状态
+  const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
+  const [customerOptions, setCustomerOptions] = useState<CustomerSearchOption[]>([])
+  const [customerSearchValue, setCustomerSearchValue] = useState<string>('')
+  const [customerPage, setCustomerPage] = useState<number>(1)
+  const [customerTotal, setCustomerTotal] = useState<number>(0)
+  const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
+
+  // 统一社会信用代码搜索相关状态
+  const [codeSearchLoading, setCodeSearchLoading] = useState<boolean>(false)
+  const [codeOptions, setCodeOptions] = useState<CustomerSearchOption[]>([])
+  const [codeSearchValue, setCodeSearchValue] = useState<string>('')
+  const [codePage, setCodePage] = useState<number>(1)
+  const [codeTotal, setCodeTotal] = useState<number>(0)
+  const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
 
   // 检查用户是否有整改权限（记账会计、管理员、超级管理员）
   const hasRectificationPermission = () => {
@@ -438,24 +456,25 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
-  // 根据企业名称或统一社会信用代码查询企业信息
+  // 查询企业信息（根据名称或代码）
   const handleEnterpriseSearch = async (value: string, field: 'companyName' | 'unifiedSocialCreditCode') => {
-    if (!value || value.trim() === '') {
+    if (!value || !value.trim()) {
       return
     }
 
     try {
       setEnterpriseSearchLoading(true)
-      const params = field === 'companyName' 
-        ? { companyName: value.trim() }
-        : { unifiedSocialCreditCode: value.trim() }
+      
+      const params = {
+        [field]: value.trim()
+      }
       
       const response = await getEnterpriseByNameOrCode(params)
       
-      if (response.code === 0 && response.data?.data && response.data.data.length > 0) {
-        const enterprise = response.data.data[0] // 取第一个匹配的企业
+      if (response.code === 0 && response.data && response.data.data && response.data.data.length > 0) {
+        const enterprise = response.data.data[0]
         
-        // 自动填入相关字段
+        // 自动填入相关信息
         createForm.setFieldsValue({
           companyName: enterprise.companyName,
           unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
@@ -465,14 +484,248 @@ const FinancialSelfInspection: React.FC = () => {
         
         message.success('企业信息已自动填入')
       } else {
-        message.warning('未找到相关企业信息')
+        // 如果没有找到完全匹配的结果，尝试模糊搜索
+        if (field === 'companyName') {
+          handleCustomerSearch(value.trim(), true)
+        } else {
+          message.warning('未找到匹配的企业信息')
+        }
       }
     } catch (error) {
       console.error('查询企业信息失败:', error)
       message.error('查询企业信息失败')
+      
+      // 如果查询失败且是企业名称搜索，尝试模糊搜索
+      if (field === 'companyName') {
+        handleCustomerSearch(value.trim(), true)
+      }
     } finally {
       setEnterpriseSearchLoading(false)
     }
+  }
+
+  // 搜索客户信息（模糊搜索）
+  const handleCustomerSearch = async (searchValue: string, resetPage: boolean = false) => {
+    if (!searchValue || !searchValue.trim()) {
+      setCustomerOptions([])
+      setCustomerTotal(0)
+      setHasMoreCustomers(false)
+      return
+    }
+
+    try {
+      setCustomerSearchLoading(true)
+      
+      const currentPage = resetPage ? 1 : customerPage
+      
+      const params: CustomerQueryParams = {
+        page: currentPage,
+        pageSize: 20, // 每次加载20条数据
+        companyName: searchValue.trim()
+      }
+      
+      const response = await searchCustomers(params)
+      
+      if (response.code === 0 && response.data) {
+        const { data: enterprises, total } = response.data
+        
+        // 转换为选项格式
+        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+          value: enterprise.companyName,
+          label: (
+            <div style={{ padding: '4px 0' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                {enterprise.companyName}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {enterprise.unifiedSocialCreditCode}
+              </div>
+              {(enterprise.bookkeepingAccountant || enterprise.consultantAccountant) && (
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  {enterprise.bookkeepingAccountant && `记账: ${enterprise.bookkeepingAccountant}`}
+                  {enterprise.bookkeepingAccountant && enterprise.consultantAccountant && ' | '}
+                  {enterprise.consultantAccountant && `顾问: ${enterprise.consultantAccountant}`}
+                </div>
+              )}
+            </div>
+          ),
+          enterprise
+        }))
+        
+        if (resetPage) {
+          setCustomerOptions(newOptions)
+          setCustomerPage(1)
+        } else {
+          setCustomerOptions(prev => [...prev, ...newOptions])
+        }
+        
+        setCustomerTotal(total)
+        setHasMoreCustomers(currentPage * 20 < total)
+        
+        if (resetPage) {
+          setCustomerPage(2) // 下次请求第二页
+        } else {
+          setCustomerPage(currentPage + 1)
+        }
+      } else {
+        if (resetPage) {
+          setCustomerOptions([])
+          setCustomerTotal(0)
+          setHasMoreCustomers(false)
+        }
+      }
+    } catch (error) {
+      console.error('搜索客户信息失败:', error)
+      if (resetPage) {
+        setCustomerOptions([])
+        setCustomerTotal(0)
+        setHasMoreCustomers(false)
+      }
+    } finally {
+      setCustomerSearchLoading(false)
+    }
+  }
+
+  // 加载更多客户数据
+  const handleLoadMoreCustomers = () => {
+    if (!customerSearchLoading && hasMoreCustomers && customerSearchValue) {
+      handleCustomerSearch(customerSearchValue, false)
+    }
+  }
+
+  // 选择客户时自动填入信息
+  const handleCustomerSelect = (value: string, option: any) => {
+    const enterprise = option.enterprise
+    if (enterprise) {
+      createForm.setFieldsValue({
+        companyName: enterprise.companyName,
+        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+        bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
+        consultantAccountant: enterprise.consultantAccountant || '',
+      })
+      message.success('企业信息已自动填入')
+    }
+  }
+
+  // 重置客户搜索状态
+  const resetCustomerSearch = () => {
+    setCustomerOptions([])
+    setCustomerSearchValue('')
+    setCustomerPage(1)
+    setCustomerTotal(0)
+    setHasMoreCustomers(false)
+  }
+
+  // 搜索统一社会信用代码（模糊搜索）
+  const handleCodeSearch = async (searchValue: string, resetPage: boolean = false) => {
+    if (!searchValue || !searchValue.trim()) {
+      setCodeOptions([])
+      setCodeTotal(0)
+      setHasMoreCodes(false)
+      return
+    }
+
+    try {
+      setCodeSearchLoading(true)
+      
+      const currentPage = resetPage ? 1 : codePage
+      
+      const params: CustomerQueryParams = {
+        page: currentPage,
+        pageSize: 20, // 每次加载20条数据
+        unifiedSocialCreditCode: searchValue.trim()
+      }
+      
+      const response = await searchCustomers(params)
+      
+      if (response.code === 0 && response.data) {
+        const { data: enterprises, total } = response.data
+        
+        // 转换为选项格式
+        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+          value: enterprise.unifiedSocialCreditCode,
+          label: (
+            <div style={{ padding: '4px 0' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                {enterprise.unifiedSocialCreditCode}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {enterprise.companyName}
+              </div>
+              {(enterprise.bookkeepingAccountant || enterprise.consultantAccountant) && (
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  {enterprise.bookkeepingAccountant && `记账: ${enterprise.bookkeepingAccountant}`}
+                  {enterprise.bookkeepingAccountant && enterprise.consultantAccountant && ' | '}
+                  {enterprise.consultantAccountant && `顾问: ${enterprise.consultantAccountant}`}
+                </div>
+              )}
+            </div>
+          ),
+          enterprise
+        }))
+        
+        if (resetPage) {
+          setCodeOptions(newOptions)
+          setCodePage(1)
+        } else {
+          setCodeOptions(prev => [...prev, ...newOptions])
+        }
+        
+        setCodeTotal(total)
+        setHasMoreCodes(currentPage * 20 < total)
+        
+        if (resetPage) {
+          setCodePage(2) // 下次请求第二页
+        } else {
+          setCodePage(currentPage + 1)
+        }
+      } else {
+        if (resetPage) {
+          setCodeOptions([])
+          setCodeTotal(0)
+          setHasMoreCodes(false)
+        }
+      }
+    } catch (error) {
+      console.error('搜索统一社会信用代码失败:', error)
+      if (resetPage) {
+        setCodeOptions([])
+        setCodeTotal(0)
+        setHasMoreCodes(false)
+      }
+    } finally {
+      setCodeSearchLoading(false)
+    }
+  }
+
+  // 加载更多统一社会信用代码数据
+  const handleLoadMoreCodes = () => {
+    if (!codeSearchLoading && hasMoreCodes && codeSearchValue) {
+      handleCodeSearch(codeSearchValue, false)
+    }
+  }
+
+  // 选择统一社会信用代码时自动填入信息
+  const handleCodeSelect = (value: string, option: any) => {
+    const enterprise = option.enterprise
+    if (enterprise) {
+      createForm.setFieldsValue({
+        companyName: enterprise.companyName,
+        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+        bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
+        consultantAccountant: enterprise.consultantAccountant || '',
+      })
+      message.success('企业信息已自动填入')
+    }
+  }
+
+  // 重置统一社会信用代码搜索状态
+  const resetCodeSearch = () => {
+    setCodeOptions([])
+    setCodeSearchValue('')
+    setCodePage(1)
+    setCodeTotal(0)
+    setHasMoreCodes(false)
   }
 
   // 打开新建自查记录弹窗
@@ -496,6 +749,8 @@ const FinancialSelfInspection: React.FC = () => {
   const handleCloseCreateModal = () => {
     setCreateModalVisible(false)
     createForm.resetFields()
+    resetCustomerSearch() // 重置客户搜索状态
+    resetCodeSearch() // 重置统一社会信用代码搜索状态
   }
 
   // 提交新建自查记录
@@ -731,6 +986,235 @@ const FinancialSelfInspection: React.FC = () => {
     },
   ]
 
+  // 定义Tab项目
+  const tabItems = [
+    {
+      key: 'submitted',
+      label: '我提交的',
+      children: (
+        <>
+          {/* 搜索表单 */}
+          <Form
+            form={submittedForm}
+            layout="vertical"
+            className="mb-4"
+            initialValues={submittedSearchParams}
+          >
+            <Row gutter={16}>
+              <Col span={6}>
+                <Form.Item label="企业名称" name="companyName">
+                  <Input
+                    placeholder="请输入企业名称"
+                    value={submittedSearchParams.companyName}
+                    onChange={(e) =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        companyName: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
+                  <Input
+                    placeholder="请输入统一社会信用代码"
+                    value={submittedSearchParams.unifiedSocialCreditCode}
+                    onChange={(e) =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        unifiedSocialCreditCode: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="记账会计" name="bookkeepingAccountant">
+                  <Input
+                    placeholder="请输入记账会计"
+                    value={submittedSearchParams.bookkeepingAccountant}
+                    onChange={(e) =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="顾问会计" name="consultantAccountant">
+                  <Input
+                    placeholder="请输入顾问会计"
+                    value={submittedSearchParams.consultantAccountant}
+                    onChange={(e) =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        consultantAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row>
+              <Col span={24}>
+                <Space>
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    onClick={handleSubmittedSearch}
+                  >
+                    搜索
+                  </Button>
+                  <Button icon={<ReloadOutlined />} onClick={handleSubmittedReset}>
+                    重置
+                  </Button>
+                  <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />}
+                    onClick={handleOpenCreateModal}
+                  >
+                    新建自查记录
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Form>
+
+          {/* 数据表格 */}
+          <Table
+            columns={submittedColumns}
+            dataSource={submittedData}
+            rowKey="id"
+            loading={loading}
+            scroll={{ x: 1300 }}
+            pagination={{
+              current: submittedCurrent,
+              pageSize: submittedPageSize,
+              total: submittedTotal,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            }}
+            onChange={handleSubmittedTableChange}
+          />
+        </>
+      )
+    },
+    {
+      key: 'responsible',
+      label: '我负责的',
+      children: (
+        <>
+          {/* 搜索表单 */}
+          <Form
+            form={responsibleForm}
+            layout="vertical"
+            className="mb-4"
+            initialValues={responsibleSearchParams}
+          >
+            <Row gutter={16}>
+              <Col span={6}>
+                <Form.Item label="企业名称" name="companyName">
+                  <Input
+                    placeholder="请输入企业名称"
+                    value={responsibleSearchParams.companyName}
+                    onChange={(e) =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        companyName: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
+                  <Input
+                    placeholder="请输入统一社会信用代码"
+                    value={responsibleSearchParams.unifiedSocialCreditCode}
+                    onChange={(e) =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        unifiedSocialCreditCode: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="抽查人" name="inspector">
+                  <Input
+                    placeholder="请输入抽查人"
+                    value={responsibleSearchParams.inspector}
+                    onChange={(e) =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        inspector: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="记账会计" name="bookkeepingAccountant">
+                  <Input
+                    placeholder="请输入记账会计"
+                    value={responsibleSearchParams.bookkeepingAccountant}
+                    onChange={(e) =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row>
+              <Col span={24}>
+                <Space>
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    onClick={handleResponsibleSearch}
+                  >
+                    搜索
+                  </Button>
+                  <Button icon={<ReloadOutlined />} onClick={handleResponsibleReset}>
+                    重置
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Form>
+
+          {/* 数据表格 */}
+          <Table
+            columns={responsibleColumns}
+            dataSource={responsibleData}
+            rowKey="id"
+            loading={loading}
+            scroll={{ x: 1350 }}
+            pagination={{
+              current: responsibleCurrent,
+              pageSize: responsiblePageSize,
+              total: responsibleTotal,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            }}
+            onChange={handleResponsibleTableChange}
+          />
+        </>
+      )
+    }
+  ]
+
   return (
     <div className="financial-self-inspection-page">
       <div className="mb-6">
@@ -740,222 +1224,7 @@ const FinancialSelfInspection: React.FC = () => {
       </div>
 
       <Card>
-        <Tabs activeKey={activeTab} onChange={handleTabChange}>
-          <TabPane tab="我提交的" key="submitted">
-            {/* 搜索表单 */}
-            <Form
-              form={submittedForm}
-              layout="vertical"
-              className="mb-4"
-              initialValues={submittedSearchParams}
-            >
-              <Row gutter={16}>
-                <Col span={6}>
-                  <Form.Item label="企业名称" name="companyName">
-                    <Input
-                      placeholder="请输入企业名称"
-                      value={submittedSearchParams.companyName}
-                      onChange={(e) =>
-                        setSubmittedSearchParams({
-                          ...submittedSearchParams,
-                          companyName: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
-                    <Input
-                      placeholder="请输入统一社会信用代码"
-                      value={submittedSearchParams.unifiedSocialCreditCode}
-                      onChange={(e) =>
-                        setSubmittedSearchParams({
-                          ...submittedSearchParams,
-                          unifiedSocialCreditCode: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="记账会计" name="bookkeepingAccountant">
-                    <Input
-                      placeholder="请输入记账会计"
-                      value={submittedSearchParams.bookkeepingAccountant}
-                      onChange={(e) =>
-                        setSubmittedSearchParams({
-                          ...submittedSearchParams,
-                          bookkeepingAccountant: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="顾问会计" name="consultantAccountant">
-                    <Input
-                      placeholder="请输入顾问会计"
-                      value={submittedSearchParams.consultantAccountant}
-                      onChange={(e) =>
-                        setSubmittedSearchParams({
-                          ...submittedSearchParams,
-                          consultantAccountant: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={24}>
-                  <Space>
-                    <Button
-                      type="primary"
-                      icon={<SearchOutlined />}
-                      onClick={handleSubmittedSearch}
-                    >
-                      搜索
-                    </Button>
-                    <Button icon={<ReloadOutlined />} onClick={handleSubmittedReset}>
-                      重置
-                    </Button>
-                    <Button 
-                      type="primary" 
-                      icon={<PlusOutlined />}
-                      onClick={handleOpenCreateModal}
-                    >
-                      新建自查记录
-                    </Button>
-                  </Space>
-                </Col>
-              </Row>
-            </Form>
-
-            {/* 数据表格 */}
-            <Table
-              columns={submittedColumns}
-              dataSource={submittedData}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 1300 }}
-              pagination={{
-                current: submittedCurrent,
-                pageSize: submittedPageSize,
-                total: submittedTotal,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
-              }}
-              onChange={handleSubmittedTableChange}
-            />
-          </TabPane>
-
-          <TabPane tab="我负责的" key="responsible">
-            {/* 搜索表单 */}
-            <Form
-              form={responsibleForm}
-              layout="vertical"
-              className="mb-4"
-              initialValues={responsibleSearchParams}
-            >
-              <Row gutter={16}>
-                <Col span={6}>
-                  <Form.Item label="企业名称" name="companyName">
-                    <Input
-                      placeholder="请输入企业名称"
-                      value={responsibleSearchParams.companyName}
-                      onChange={(e) =>
-                        setResponsibleSearchParams({
-                          ...responsibleSearchParams,
-                          companyName: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
-                    <Input
-                      placeholder="请输入统一社会信用代码"
-                      value={responsibleSearchParams.unifiedSocialCreditCode}
-                      onChange={(e) =>
-                        setResponsibleSearchParams({
-                          ...responsibleSearchParams,
-                          unifiedSocialCreditCode: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="抽查人" name="inspector">
-                    <Input
-                      placeholder="请输入抽查人"
-                      value={responsibleSearchParams.inspector}
-                      onChange={(e) =>
-                        setResponsibleSearchParams({
-                          ...responsibleSearchParams,
-                          inspector: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="记账会计" name="bookkeepingAccountant">
-                    <Input
-                      placeholder="请输入记账会计"
-                      value={responsibleSearchParams.bookkeepingAccountant}
-                      onChange={(e) =>
-                        setResponsibleSearchParams({
-                          ...responsibleSearchParams,
-                          bookkeepingAccountant: e.target.value,
-                        })
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={24}>
-                  <Space>
-                    <Button
-                      type="primary"
-                      icon={<SearchOutlined />}
-                      onClick={handleResponsibleSearch}
-                    >
-                      搜索
-                    </Button>
-                    <Button icon={<ReloadOutlined />} onClick={handleResponsibleReset}>
-                      重置
-                    </Button>
-                  </Space>
-                </Col>
-              </Row>
-            </Form>
-
-            {/* 数据表格 */}
-            <Table
-              columns={responsibleColumns}
-              dataSource={responsibleData}
-              rowKey="id"
-              loading={loading}
-              scroll={{ x: 1350 }}
-              pagination={{
-                current: responsibleCurrent,
-                pageSize: responsiblePageSize,
-                total: responsibleTotal,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
-              }}
-              onChange={handleResponsibleTableChange}
-            />
-          </TabPane>
-        </Tabs>
+        <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} />
       </Card>
 
       {/* 整改弹窗 */}
@@ -1002,195 +1271,331 @@ const FinancialSelfInspection: React.FC = () => {
               maxLength={500}
             />
           </Form.Item>
-                  </Form>
-        </Modal>
+        </Form>
+      </Modal>
 
-        {/* 抽查人确认弹窗 */}
-        <Modal
-          title="抽查人确认"
-          open={confirmationModalVisible}
-          onOk={handleSubmitConfirmation}
-          onCancel={handleCloseConfirmationModal}
-          confirmLoading={confirmationLoading}
-          width={600}
-          destroyOnClose
+      {/* 抽查人确认弹窗 */}
+      <Modal
+        title="抽查人确认"
+        open={confirmationModalVisible}
+        onOk={handleSubmitConfirmation}
+        onCancel={handleCloseConfirmationModal}
+        confirmLoading={confirmationLoading}
+        width={600}
+        destroyOnClose
+      >
+        <Form
+          form={confirmationForm}
+          layout="vertical"
+          preserve={false}
         >
-          <Form
-            form={confirmationForm}
-            layout="vertical"
-            preserve={false}
+          <Form.Item
+            label="确认日期"
+            name="inspectorConfirmation"
+            rules={[
+              { required: true, message: '请选择确认日期' },
+            ]}
           >
-            <Form.Item
-              label="确认日期"
-              name="inspectorConfirmation"
-              rules={[
-                { required: true, message: '请选择确认日期' },
-              ]}
-            >
-              <DatePicker
-                style={{ width: '100%' }}
-                placeholder="请选择确认日期"
-                format="YYYY-MM-DD"
-              />
-            </Form.Item>
-            
-            <Form.Item
-              label="备注"
-              name="remarks"
-              rules={[
-                { max: 500, message: '备注不能超过500个字符' },
-              ]}
-            >
-              <Input.TextArea
-                rows={4}
-                placeholder="请输入备注信息（可选）..."
-                showCount
-                maxLength={500}
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
+            <DatePicker
+              style={{ width: '100%' }}
+              placeholder="请选择确认日期"
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+          
+          <Form.Item
+            label="备注"
+            name="remarks"
+            rules={[
+              { max: 500, message: '备注不能超过500个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请输入备注信息（可选）..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
-        {/* 新建自查记录弹窗 */}
-        <Modal
-          title="新建自查记录"
-          open={createModalVisible}
-          onOk={handleSubmitCreate}
-          onCancel={handleCloseCreateModal}
-          confirmLoading={createLoading}
-          width={800}
+      {/* 新建自查记录弹窗 */}
+      <Modal
+        title="新建自查记录"
+        open={createModalVisible}
+        onOk={handleSubmitCreate}
+        onCancel={handleCloseCreateModal}
+        confirmLoading={createLoading}
+        width={800}
+      >
+        <Form
+          form={createForm}
+          layout="vertical"
+          preserve={false}
+          initialValues={{
+            inspector: user?.username || ''
+          }}
         >
-          <Form
-            form={createForm}
-            layout="vertical"
-            preserve={false}
-            initialValues={{
-              inspector: user?.username || ''
-            }}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="抽查日期"
+                name="inspectionDate"
+                rules={[
+                  { required: true, message: '请选择抽查日期' },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: '100%' }}
+                  placeholder="请选择抽查日期"
+                  format="YYYY-MM-DD"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="企业名称"
+                name="companyName"
+                rules={[
+                  { required: true, message: '请输入企业名称' },
+                  { max: 100, message: '企业名称不能超过100个字符' },
+                ]}
+                extra="输入企业名称进行搜索，选择后将自动填入相关信息"
+              >
+                <AutoComplete
+                  placeholder="请输入企业名称进行搜索"
+                  options={customerOptions}
+                  value={customerSearchValue}
+                  onSearch={(value) => {
+                    setCustomerSearchValue(value)
+                    if (value && value.trim()) {
+                      handleCustomerSearch(value.trim(), true)
+                    } else {
+                      resetCustomerSearch()
+                    }
+                  }}
+                  onSelect={(value, option) => {
+                    handleCustomerSelect(value, option)
+                  }}
+                  onChange={(value) => {
+                    setCustomerSearchValue(value)
+                    // 如果输入值为空，重置搜索状态
+                    if (!value || !value.trim()) {
+                      resetCustomerSearch()
+                    }
+                  }}
+                  notFoundContent={
+                    customerSearchLoading ? (
+                      <div style={{ textAlign: 'center', padding: '12px' }}>
+                        <Spin size="small" />
+                        <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                      </div>
+                    ) : customerSearchValue && customerOptions.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                        暂无匹配结果
+                      </div>
+                    ) : null
+                  }
+                  dropdownRender={(menu) => (
+                    <div>
+                      {menu}
+                      {hasMoreCustomers && (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '8px 12px',
+                            borderTop: '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            color: '#1890ff'
+                          }}
+                          onClick={handleLoadMoreCustomers}
+                        >
+                          {customerSearchLoading ? (
+                            <>
+                              <LoadingOutlined style={{ marginRight: '4px' }} />
+                              加载中...
+                            </>
+                          ) : (
+                            '加载更多'
+                          )}
+                        </div>
+                      )}
+                      {customerTotal > 0 && (
+                        <div style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0'
+                        }}>
+                          共找到 {customerTotal} 条结果
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  filterOption={false} // 禁用本地过滤，使用服务器端搜索
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="统一社会信用代码"
+                name="unifiedSocialCreditCode"
+                rules={[
+                  { len: 18, message: '统一社会信用代码必须为18位' },
+                  { pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, message: '请输入正确的统一社会信用代码格式' },
+                ]}
+                extra="输入统一社会信用代码进行搜索，选择后将自动填入相关信息（可选）"
+              >
+                <AutoComplete
+                  placeholder="请输入统一社会信用代码进行搜索"
+                  options={codeOptions}
+                  value={codeSearchValue}
+                  onSearch={(value) => {
+                    setCodeSearchValue(value)
+                    if (value && value.trim()) {
+                      handleCodeSearch(value.trim(), true)
+                    } else {
+                      resetCodeSearch()
+                    }
+                  }}
+                  onSelect={(value, option) => {
+                    handleCodeSelect(value, option)
+                  }}
+                  onChange={(value) => {
+                    setCodeSearchValue(value)
+                    // 如果输入值为空，重置搜索状态
+                    if (!value || !value.trim()) {
+                      resetCodeSearch()
+                    }
+                  }}
+                  notFoundContent={
+                    codeSearchLoading ? (
+                      <div style={{ textAlign: 'center', padding: '12px' }}>
+                        <Spin size="small" />
+                        <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                      </div>
+                    ) : codeSearchValue && codeOptions.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                        暂无匹配结果
+                      </div>
+                    ) : null
+                  }
+                  dropdownRender={(menu) => (
+                    <div>
+                      {menu}
+                      {hasMoreCodes && (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '8px 12px',
+                            borderTop: '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            color: '#1890ff'
+                          }}
+                          onClick={handleLoadMoreCodes}
+                        >
+                          {codeSearchLoading ? (
+                            <>
+                              <LoadingOutlined style={{ marginRight: '4px' }} />
+                              加载中...
+                            </>
+                          ) : (
+                            '加载更多'
+                          )}
+                        </div>
+                      )}
+                      {codeTotal > 0 && (
+                        <div style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0'
+                        }}>
+                          共找到 {codeTotal} 条结果
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  filterOption={false} // 禁用本地过滤，使用服务器端搜索
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="记账会计"
+                name="bookkeepingAccountant"
+                extra="此字段将根据企业信息自动填入，无法编辑（可选）"
+              >
+                <Input placeholder="记账会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="顾问会计"
+                name="consultantAccountant"
+                extra="此字段将根据企业信息自动填入，无法编辑（可选）"
+              >
+                <Input placeholder="顾问会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="抽查人"
+                name="inspector"
+                rules={[
+                  { required: true, message: '抽查人不能为空' },
+                ]}
+                extra="此字段自动填入当前登录用户，无法编辑"
+              >
+                <Input placeholder="抽查人自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            label="问题"
+            name="problem"
+            rules={[
+              { required: true, message: '请输入问题描述' },
+              { max: 500, message: '问题描述不能超过500个字符' },
+            ]}
           >
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="抽查日期"
-                  name="inspectionDate"
-                  rules={[
-                    { required: true, message: '请选择抽查日期' },
-                  ]}
-                >
-                  <DatePicker
-                    style={{ width: '100%' }}
-                    placeholder="请选择抽查日期"
-                    format="YYYY-MM-DD"
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="企业名称"
-                  name="companyName"
-                  rules={[
-                    { required: true, message: '请输入企业名称' },
-                    { max: 100, message: '企业名称不能超过100个字符' },
-                  ]}
-                  extra="输入企业名称后，将自动填入相关信息"
-                >
-                  <Input 
-                    placeholder="请输入企业名称，输入完成后点击其他区域自动查询" 
-                    onBlur={(e) => handleEnterpriseSearch(e.target.value, 'companyName')}
-                    disabled={enterpriseSearchLoading}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
+            <Input.TextArea
+              rows={3}
+              placeholder="请详细描述发现的问题..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
 
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="统一社会信用代码"
-                  name="unifiedSocialCreditCode"
-                  rules={[
-                    { len: 18, message: '统一社会信用代码必须为18位' },
-                    { pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, message: '请输入正确的统一社会信用代码格式' },
-                  ]}
-                  extra="输入统一社会信用代码后，将自动填入相关信息（可选）"
-                >
-                  <Input 
-                    placeholder="请输入统一社会信用代码，输入完成后点击其他区域自动查询" 
-                    onBlur={(e) => handleEnterpriseSearch(e.target.value, 'unifiedSocialCreditCode')}
-                    disabled={enterpriseSearchLoading}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="记账会计"
-                  name="bookkeepingAccountant"
-                  extra="此字段将根据企业信息自动填入，无法编辑（可选）"
-                >
-                  <Input placeholder="记账会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="顾问会计"
-                  name="consultantAccountant"
-                  extra="此字段将根据企业信息自动填入，无法编辑（可选）"
-                >
-                  <Input placeholder="顾问会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="抽查人"
-                  name="inspector"
-                  rules={[
-                    { required: true, message: '抽查人不能为空' },
-                  ]}
-                  extra="此字段自动填入当前登录用户，无法编辑"
-                >
-                  <Input placeholder="抽查人自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item
-              label="问题"
-              name="problem"
-              rules={[
-                { required: true, message: '请输入问题描述' },
-                { max: 500, message: '问题描述不能超过500个字符' },
-              ]}
-            >
-              <Input.TextArea
-                rows={3}
-                placeholder="请详细描述发现的问题..."
-                showCount
-                maxLength={500}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="解决方案"
-              name="solution"
-              rules={[
-                { required: true, message: '请输入解决方案' },
-                { max: 500, message: '解决方案不能超过500个字符' },
-              ]}
-            >
-              <Input.TextArea
-                rows={3}
-                placeholder="请详细描述解决方案..."
-                showCount
-                maxLength={500}
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
-      </div>
-    )
-  }
+          <Form.Item
+            label="解决方案"
+            name="solution"
+            rules={[
+              { required: true, message: '请输入解决方案' },
+              { max: 500, message: '解决方案不能超过500个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="请详细描述解决方案..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  )
+}
 
 export default FinancialSelfInspection 
