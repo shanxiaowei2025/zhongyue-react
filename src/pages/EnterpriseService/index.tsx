@@ -232,8 +232,6 @@ const EnterpriseService: React.FC = () => {
 
   return (
     <div className="enterprise-service">
-      <Title level={2}>企业服务</Title>
-      
       <Card className="mb-4">
         <Form layout="vertical">
           <Row gutter={16}>

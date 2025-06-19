@@ -15,7 +15,8 @@ import {
   message,
   Upload,
   Tag,
-
+  AutoComplete,
+  Spin,
 } from 'antd'
 import {
   SearchOutlined,
@@ -24,6 +25,7 @@ import {
   EyeOutlined,
   UploadOutlined,
   DownloadOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import type { UploadFile, UploadProps } from 'antd/es/upload'
@@ -36,12 +38,14 @@ import {
   createTaxVerification,
 } from '../../api/taxVerification'
 import { uploadFile } from '../../api/upload'
+import { searchCustomers } from '../../api/enterpriseService'
 import type {
   TaxVerification,
   TaxVerificationQueryParams,
   CreateTaxVerificationDto,
   TaxVerificationAttachment,
 } from '../../types/taxVerification'
+import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
 
 const { Title } = Typography
 const { RangePicker } = DatePicker
@@ -114,6 +118,22 @@ const TaxReview: React.FC = () => {
   const [createFileList, setCreateFileList] = useState<UploadFile[]>([])
   const [uploadLoading, setUploadLoading] = useState<boolean>(false)
 
+  // 企业名称搜索相关状态
+  const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
+  const [customerOptions, setCustomerOptions] = useState<CustomerSearchOption[]>([])
+  const [customerSearchValue, setCustomerSearchValue] = useState<string>('')
+  const [customerPage, setCustomerPage] = useState<number>(1)
+  const [customerTotal, setCustomerTotal] = useState<number>(0)
+  const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
+
+  // 统一社会信用代码搜索相关状态
+  const [codeSearchLoading, setCodeSearchLoading] = useState<boolean>(false)
+  const [codeOptions, setCodeOptions] = useState<CustomerSearchOption[]>([])
+  const [codeSearchValue, setCodeSearchValue] = useState<string>('')
+  const [codePage, setCodePage] = useState<number>(1)
+  const [codeTotal, setCodeTotal] = useState<number>(0)
+  const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
+
   // 加载数据
   const loadData = async () => {
     try {
@@ -169,6 +189,224 @@ const TaxReview: React.FC = () => {
   const handleTableChange = (pagination: TablePaginationConfig) => {
     if (pagination.current) setCurrent(pagination.current)
     if (pagination.pageSize) setPageSize(pagination.pageSize)
+  }
+
+  // 搜索企业名称（模糊搜索）
+  const handleCustomerSearch = async (searchValue: string, resetPage: boolean = false) => {
+    if (!searchValue || !searchValue.trim()) {
+      setCustomerOptions([])
+      setCustomerTotal(0)
+      setHasMoreCustomers(false)
+      return
+    }
+
+    try {
+      setCustomerSearchLoading(true)
+      
+      const currentPage = resetPage ? 1 : customerPage
+      
+      const params: CustomerQueryParams = {
+        page: currentPage,
+        pageSize: 20, // 每次加载20条数据
+        companyName: searchValue.trim()
+      }
+      
+      const response = await searchCustomers(params)
+      
+      if (response.code === 0 && response.data) {
+        const { data: enterprises, total } = response.data
+        
+        // 转换为选项格式
+        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+          value: enterprise.companyName,
+          label: (
+            <div style={{ padding: '4px 0' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                {enterprise.companyName}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {enterprise.unifiedSocialCreditCode}
+              </div>
+              {enterprise.taxBureau && (
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  所属分局: {enterprise.taxBureau}
+                </div>
+              )}
+            </div>
+          ),
+          enterprise
+        }))
+        
+        if (resetPage) {
+          setCustomerOptions(newOptions)
+          setCustomerPage(1)
+        } else {
+          setCustomerOptions(prev => [...prev, ...newOptions])
+        }
+        
+        setCustomerTotal(total)
+        setHasMoreCustomers(currentPage * 20 < total)
+        
+        if (resetPage) {
+          setCustomerPage(2) // 下次请求第二页
+        } else {
+          setCustomerPage(currentPage + 1)
+        }
+      } else {
+        if (resetPage) {
+          setCustomerOptions([])
+          setCustomerTotal(0)
+          setHasMoreCustomers(false)
+        }
+      }
+    } catch (error) {
+      console.error('搜索企业信息失败:', error)
+      if (resetPage) {
+        setCustomerOptions([])
+        setCustomerTotal(0)
+        setHasMoreCustomers(false)
+      }
+    } finally {
+      setCustomerSearchLoading(false)
+    }
+  }
+
+  // 加载更多企业数据
+  const handleLoadMoreCustomers = () => {
+    if (!customerSearchLoading && hasMoreCustomers && customerSearchValue) {
+      handleCustomerSearch(customerSearchValue, false)
+    }
+  }
+
+  // 选择企业时自动填入信息
+  const handleCustomerSelect = (value: string, option: any) => {
+    const enterprise = option.enterprise
+    if (enterprise) {
+      createForm.setFieldsValue({
+        companyName: enterprise.companyName,
+        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+        taxBureau: enterprise.taxBureau || '',
+      })
+      message.success('企业信息已自动填入')
+    }
+  }
+
+  // 重置企业搜索状态
+  const resetCustomerSearch = () => {
+    setCustomerOptions([])
+    setCustomerSearchValue('')
+    setCustomerPage(1)
+    setCustomerTotal(0)
+    setHasMoreCustomers(false)
+  }
+
+  // 搜索统一社会信用代码（模糊搜索）
+  const handleCodeSearch = async (searchValue: string, resetPage: boolean = false) => {
+    if (!searchValue || !searchValue.trim()) {
+      setCodeOptions([])
+      setCodeTotal(0)
+      setHasMoreCodes(false)
+      return
+    }
+
+    try {
+      setCodeSearchLoading(true)
+      
+      const currentPage = resetPage ? 1 : codePage
+      
+      const params: CustomerQueryParams = {
+        page: currentPage,
+        pageSize: 20, // 每次加载20条数据
+        unifiedSocialCreditCode: searchValue.trim()
+      }
+      
+      const response = await searchCustomers(params)
+      
+      if (response.code === 0 && response.data) {
+        const { data: enterprises, total } = response.data
+        
+        // 转换为选项格式
+        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+          value: enterprise.unifiedSocialCreditCode,
+          label: (
+            <div style={{ padding: '4px 0' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                {enterprise.unifiedSocialCreditCode}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {enterprise.companyName}
+              </div>
+              {enterprise.taxBureau && (
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  所属分局: {enterprise.taxBureau}
+                </div>
+              )}
+            </div>
+          ),
+          enterprise
+        }))
+        
+        if (resetPage) {
+          setCodeOptions(newOptions)
+          setCodePage(1)
+        } else {
+          setCodeOptions(prev => [...prev, ...newOptions])
+        }
+        
+        setCodeTotal(total)
+        setHasMoreCodes(currentPage * 20 < total)
+        
+        if (resetPage) {
+          setCodePage(2) // 下次请求第二页
+        } else {
+          setCodePage(currentPage + 1)
+        }
+      } else {
+        if (resetPage) {
+          setCodeOptions([])
+          setCodeTotal(0)
+          setHasMoreCodes(false)
+        }
+      }
+    } catch (error) {
+      console.error('搜索统一社会信用代码失败:', error)
+      if (resetPage) {
+        setCodeOptions([])
+        setCodeTotal(0)
+        setHasMoreCodes(false)
+      }
+    } finally {
+      setCodeSearchLoading(false)
+    }
+  }
+
+  // 加载更多统一社会信用代码数据
+  const handleLoadMoreCodes = () => {
+    if (!codeSearchLoading && hasMoreCodes && codeSearchValue) {
+      handleCodeSearch(codeSearchValue, false)
+    }
+  }
+
+  // 选择统一社会信用代码时自动填入信息
+  const handleCodeSelect = (value: string, option: any) => {
+    const enterprise = option.enterprise
+    if (enterprise) {
+      createForm.setFieldsValue({
+        companyName: enterprise.companyName,
+        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+        taxBureau: enterprise.taxBureau || '',
+      })
+      message.success('企业信息已自动填入')
+    }
+  }
+
+  // 重置统一社会信用代码搜索状态
+  const resetCodeSearch = () => {
+    setCodeOptions([])
+    setCodeSearchValue('')
+    setCodePage(1)
+    setCodeTotal(0)
+    setHasMoreCodes(false)
   }
 
   // 文件上传配置
@@ -237,6 +475,8 @@ const TaxReview: React.FC = () => {
     setCreateModalVisible(false)
     createForm.resetFields()
     setCreateFileList([])
+    resetCustomerSearch() // 重置企业搜索状态
+    resetCodeSearch() // 重置统一社会信用代码搜索状态
   }
 
   // 提交新建
@@ -382,12 +622,6 @@ const TaxReview: React.FC = () => {
 
   return (
     <div className="tax-review-page">
-      <div className="mb-6">
-        <Title level={2} className="!mb-0">
-          税务核查
-        </Title>
-      </div>
-
       <Card>
         {/* 搜索表单 */}
         <Form
@@ -439,20 +673,20 @@ const TaxReview: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={6}>
-              <Form.Item label="风险期责任会计" name="responsibleAccountant">
-                <Input
-                  placeholder="请输入风险期责任会计"
-                  value={searchParams.responsibleAccountant}
-                  onChange={(e) =>
-                    setSearchParams({
-                      ...searchParams,
-                      responsibleAccountant: e.target.value,
-                    })
-                  }
-                />
-              </Form.Item>
-            </Col>
+                         <Col span={6}>
+               <Form.Item label="风险期责任会计" name="responsibleAccountant">
+                 <Input
+                   placeholder="请输入风险期责任会计"
+                   value={searchParams.responsibleAccountant}
+                   onChange={(e) =>
+                     setSearchParams({
+                       ...searchParams,
+                       responsibleAccountant: e.target.value,
+                     })
+                   }
+                 />
+               </Form.Item>
+             </Col>
           </Row>
           <Row>
             <Col span={24}>
@@ -522,8 +756,81 @@ const TaxReview: React.FC = () => {
                   { required: true, message: '请输入企业名称' },
                   { max: 100, message: '企业名称不能超过100个字符' },
                 ]}
+                extra="输入企业名称进行搜索，选择后将自动填入相关信息"
               >
-                <Input placeholder="请输入企业名称" />
+                <AutoComplete
+                  placeholder="请输入企业名称进行搜索"
+                  options={customerOptions}
+                  value={customerSearchValue}
+                  onSearch={(value) => {
+                    setCustomerSearchValue(value)
+                    if (value && value.trim()) {
+                      handleCustomerSearch(value.trim(), true)
+                    } else {
+                      resetCustomerSearch()
+                    }
+                  }}
+                  onSelect={(value, option) => {
+                    handleCustomerSelect(value, option)
+                  }}
+                  onChange={(value) => {
+                    setCustomerSearchValue(value)
+                    // 如果输入值为空，重置搜索状态
+                    if (!value || !value.trim()) {
+                      resetCustomerSearch()
+                    }
+                  }}
+                  notFoundContent={
+                    customerSearchLoading ? (
+                      <div style={{ textAlign: 'center', padding: '12px' }}>
+                        <Spin size="small" />
+                        <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                      </div>
+                    ) : customerSearchValue && customerOptions.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                        暂无匹配结果
+                      </div>
+                    ) : null
+                  }
+                  dropdownRender={(menu) => (
+                    <div>
+                      {menu}
+                      {hasMoreCustomers && (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '8px 12px',
+                            borderTop: '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            color: '#1890ff'
+                          }}
+                          onClick={handleLoadMoreCustomers}
+                        >
+                          {customerSearchLoading ? (
+                            <>
+                              <LoadingOutlined style={{ marginRight: '4px' }} />
+                              加载中...
+                            </>
+                          ) : (
+                            '加载更多'
+                          )}
+                        </div>
+                      )}
+                      {customerTotal > 0 && (
+                        <div style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0'
+                        }}>
+                          共找到 {customerTotal} 条结果
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  filterOption={false} // 禁用本地过滤，使用服务器端搜索
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -531,11 +838,84 @@ const TaxReview: React.FC = () => {
                 label="统一社会信用代码"
                 name="unifiedSocialCreditCode"
                 rules={[
-                  { required: true, message: '请输入统一社会信用代码' },
                   { len: 18, message: '统一社会信用代码必须为18位' },
+                  { pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, message: '请输入正确的统一社会信用代码格式' },
                 ]}
+                extra="输入统一社会信用代码进行搜索，选择后将自动填入相关信息（可选）"
               >
-                <Input placeholder="请输入统一社会信用代码" />
+                <AutoComplete
+                  placeholder="请输入统一社会信用代码进行搜索"
+                  options={codeOptions}
+                  value={codeSearchValue}
+                  onSearch={(value) => {
+                    setCodeSearchValue(value)
+                    if (value && value.trim()) {
+                      handleCodeSearch(value.trim(), true)
+                    } else {
+                      resetCodeSearch()
+                    }
+                  }}
+                  onSelect={(value, option) => {
+                    handleCodeSelect(value, option)
+                  }}
+                  onChange={(value) => {
+                    setCodeSearchValue(value)
+                    // 如果输入值为空，重置搜索状态
+                    if (!value || !value.trim()) {
+                      resetCodeSearch()
+                    }
+                  }}
+                  notFoundContent={
+                    codeSearchLoading ? (
+                      <div style={{ textAlign: 'center', padding: '12px' }}>
+                        <Spin size="small" />
+                        <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                      </div>
+                    ) : codeSearchValue && codeOptions.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                        暂无匹配结果
+                      </div>
+                    ) : null
+                  }
+                  dropdownRender={(menu) => (
+                    <div>
+                      {menu}
+                      {hasMoreCodes && (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '8px 12px',
+                            borderTop: '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            color: '#1890ff'
+                          }}
+                          onClick={handleLoadMoreCodes}
+                        >
+                          {codeSearchLoading ? (
+                            <>
+                              <LoadingOutlined style={{ marginRight: '4px' }} />
+                              加载中...
+                            </>
+                          ) : (
+                            '加载更多'
+                          )}
+                        </div>
+                      )}
+                      {codeTotal > 0 && (
+                        <div style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0'
+                        }}>
+                          共找到 {codeTotal} 条结果
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  filterOption={false} // 禁用本地过滤，使用服务器端搜索
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -545,12 +925,9 @@ const TaxReview: React.FC = () => {
               <Form.Item
                 label="所属分局"
                 name="taxBureau"
-                rules={[
-                  { required: true, message: '请输入所属分局' },
-                  { max: 50, message: '所属分局不能超过50个字符' },
-                ]}
+                extra="此字段将根据企业信息自动填入，无法编辑（可选）"
               >
-                <Input placeholder="请输入所属分局" />
+                <Input placeholder="所属分局将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
               </Form.Item>
             </Col>
             <Col span={12}>

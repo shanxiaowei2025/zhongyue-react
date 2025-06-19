@@ -1217,12 +1217,6 @@ const FinancialSelfInspection: React.FC = () => {
 
   return (
     <div className="financial-self-inspection-page">
-      <div className="mb-6">
-        <Title level={2} className="!mb-0">
-          账务自查
-        </Title>
-      </div>
-
       <Card>
         <Tabs activeKey={activeTab} onChange={handleTabChange} items={tabItems} />
       </Card>
