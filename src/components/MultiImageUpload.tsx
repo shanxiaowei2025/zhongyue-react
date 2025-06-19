@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Upload, Button, message, Modal, Spin, Input, Form, Space, Card, Image } from 'antd'
+import { Upload, Button, message, Modal, Spin, Input, Form, Space, Card, Image, Popconfirm } from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -324,7 +324,17 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                       ? [<EyeOutlined key="preview" onClick={() => handlePreview(item)} />]
                       : [
                           <EyeOutlined key="preview" onClick={() => handlePreview(item)} />,
-                          <DeleteOutlined key="delete" onClick={() => handleRemove(item)} />,
+                          <Popconfirm
+                            key="delete"
+                            title="确认删除"
+                            description="删除后将无法恢复，是否确认删除？"
+                            onConfirm={() => handleRemove(item)}
+                            okText="确认"
+                            okType='danger'
+                            cancelText="取消"
+                          >
+                            <DeleteOutlined key="delete-icon" />
+                          </Popconfirm>,
                         ]
                   }
                 >

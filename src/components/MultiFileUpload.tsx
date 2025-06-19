@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Upload, Button, message, Modal, Spin, Image, Space, Card, Typography, Empty } from 'antd'
+import { Upload, Button, message, Modal, Spin, Image, Space, Card, Typography, Empty, Popconfirm } from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -336,11 +336,19 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                 actions={[
                   <EyeOutlined key="preview" onClick={() => handlePreview(file)} />,
                   !disabled && (
-                    <DeleteOutlined
+                    <Popconfirm
                       key="delete"
-                      onClick={() => handleRemove(file)}
-                      className="text-red-500"
-                    />
+                      title="确认删除"
+                      description="删除后将无法恢复，是否确认删除？"
+                      onConfirm={() => handleRemove(file)}
+                      okText="确认"
+                      okType='danger'
+                      cancelText="取消"
+                    >
+                      <DeleteOutlined
+                        className="text-red-500"
+                      />
+                    </Popconfirm>
                   ),
                 ].filter(Boolean)}
               >

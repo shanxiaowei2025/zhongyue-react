@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Upload, Button, message, Modal, Spin, Image, Space } from 'antd'
+import { Upload, Button, message, Modal, Spin, Image, Space, Popconfirm } from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -337,20 +337,28 @@ const FileUpload: React.FC<FileUploadProps> = ({
         </Upload>
 
         {value && (
-          <div className="file-actions mt-2">
+          <div className="image-actions mt-2">
             <Button type="text" icon={<EyeOutlined />} onClick={handlePreview} size="small">
               预览
             </Button>
             {!disabled && (
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleRemove}
-                size="small"
+              <Popconfirm
+                title="确认删除"
+                description="删除后将无法恢复，是否确认删除？"
+                onConfirm={handleRemove}
+                okText="确认"
+                okType='danger'
+                cancelText="取消"
               >
-                删除
-              </Button>
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  size="small"
+                >
+                  删除
+                </Button>
+              </Popconfirm>
             )}
           </div>
         )}
