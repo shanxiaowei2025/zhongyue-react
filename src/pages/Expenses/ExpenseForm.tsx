@@ -38,6 +38,7 @@ import { deleteFile, buildImageUrl } from '../../utils/upload'
 import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
 import { getMaxDatesNextDay } from '../../api/expense'
+import { useAuthStore } from '../../store/auth'
 import './expenses.css'
 
 // 定义状态标签映射
@@ -55,6 +56,9 @@ interface RestrictedDatePickerProps {
   isRestricted?: boolean // 是否限制年月编辑
   style?: React.CSSProperties
   fieldName?: string // 字段名称，用于显示提示
+  mode?: 'add' | 'edit' // 表单模式
+  hasPermission?: boolean // 用户是否有完全编辑权限
+  hasAutoFillValue?: boolean // 是否有自动填写值
 }
 
 const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
@@ -64,15 +68,37 @@ const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
   isRestricted = false,
   style,
   fieldName = '日期',
+  mode = 'add',
+  hasPermission = true,
+  hasAutoFillValue = false,
 }) => {
+  // 计算最终是否受限
+  // 创建模式：只有自动填写的字段才受限
+  // 编辑模式：如果用户没有完全编辑权限，则所有开始日期字段都受限
+  const finalIsRestricted = mode === 'add' ? hasAutoFillValue : (!hasPermission || hasAutoFillValue)
+  
   // 如果是受限模式且有值，则只允许选择同年同月的日期
   const disabledDate = (current: Dayjs) => {
-    if (!isRestricted || !value) {
+    if (!finalIsRestricted || !value) {
       return false
     }
     
     // 只允许选择相同年月的日期
     return current.year() !== value.year() || current.month() !== value.month()
+  }
+
+  // 生成提示信息
+  const getTooltipTitle = () => {
+    if (mode === 'add' && hasAutoFillValue) {
+      return `该${fieldName}已根据历史数据自动填写，年月不可修改，不可清空`
+    }
+    if (mode === 'edit' && !hasPermission) {
+      return `您没有完全编辑权限，该${fieldName}的年月不可修改，不可清空`
+    }
+    if (mode === 'edit' && hasAutoFillValue) {
+      return `该${fieldName}已根据历史数据自动填写，年月不可修改，不可清空`
+    }
+    return `该${fieldName}年月不可修改，不可清空`
   }
 
   const datePicker = (
@@ -83,18 +109,18 @@ const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
       style={style}
       disabledDate={disabledDate}
       // 如果是受限模式，不显示年月选择器
-      picker={isRestricted ? 'date' : 'date'}
+      picker={finalIsRestricted ? 'date' : 'date'}
       showToday={false}
-      // 如果是受限模式（有自动填写值），则不允许清空
-      allowClear={!isRestricted}
+      // 如果是受限模式，则不允许清空
+      allowClear={!finalIsRestricted}
     />
   )
 
   // 如果是受限模式，包装工具提示
-  if (isRestricted) {
+  if (finalIsRestricted) {
     return (
       <Tooltip 
-        title={`该${fieldName}已根据历史数据自动填写，年月不可修改，不可清空`}
+        title={getTooltipTitle()}
         placement="top"
       >
         {datePicker}
@@ -137,6 +163,9 @@ type FormData = Omit<ExpenseFormData, keyof FormDateFields> & FormDateFields
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCancel }) => {
   const [form] = Form.useForm<FormData>()
   const [activeTab, setActiveTab] = useState('1')
+  
+  // 获取当前用户信息
+  const { user } = useAuthStore()
   const [tabFeeSums, setTabFeeSums] = useState<Record<string, number>>({
     '1': 0, // 代理记账
     '2': 0, // 社保代理
@@ -205,6 +234,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 自动填写开始日期相关状态
   const [autoFillDates, setAutoFillDates] = useState<Record<string, string | null>>({})
   const [loadingAutoFill, setLoadingAutoFill] = useState(false)
+
+  // 检查用户是否有完全编辑日期的权限（管理员、超级管理员、费用审核员）
+  const hasFullDateEditPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+    
+    // 允许完全编辑的角色
+    const adminRoles = ['super_admin', 'admin', 'expense_auditor', '超级管理员', '管理员', '费用审核员']
+    
+    return user.roles.some(role => adminRoles.includes(role))
+  }
 
   // 共用的InputNumber解析函数
   const parseNumberInput = (value: string | number | null | undefined): number => {
@@ -1343,8 +1384,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <RestrictedDatePicker 
                                 placeholder="开始日期" 
                                 style={{ width: '100%' }} 
-                                isRestricted={!!autoFillDates.agencyStartDate}
                                 fieldName="代理开始日期"
+                                mode={mode}
+                                hasPermission={hasFullDateEditPermission()}
+                                hasAutoFillValue={!!autoFillDates.agencyStartDate}
                               />
                             </Form.Item>
                             <span>至</span>
@@ -1382,8 +1425,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <RestrictedDatePicker 
                                 placeholder="开始日期" 
                                 style={{ width: '100%' }} 
-                                isRestricted={!!autoFillDates.accountingSoftwareStartDate}
                                 fieldName="记账软件开始日期"
+                                mode={mode}
+                                hasPermission={hasFullDateEditPermission()}
+                                hasAutoFillValue={!!autoFillDates.accountingSoftwareStartDate}
                               />
                             </Form.Item>
                             <span>至</span>
@@ -1410,8 +1455,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <RestrictedDatePicker 
                                 placeholder="开始日期" 
                                 style={{ width: '100%' }} 
-                                isRestricted={!!autoFillDates.invoiceSoftwareStartDate}
                                 fieldName="开票软件开始日期"
+                                mode={mode}
+                                hasPermission={hasFullDateEditPermission()}
+                                hasAutoFillValue={!!autoFillDates.invoiceSoftwareStartDate}
                               />
                             </Form.Item>
                             <span>至</span>
@@ -1487,8 +1534,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <RestrictedDatePicker 
                                 placeholder="开始日期" 
                                 style={{ width: '100%' }} 
-                                isRestricted={!!autoFillDates.socialInsuranceStartDate}
                                 fieldName="社保开始日期"
+                                mode={mode}
+                                hasPermission={hasFullDateEditPermission()}
+                                hasAutoFillValue={!!autoFillDates.socialInsuranceStartDate}
                               />
                             </Form.Item>
                             <span>至</span>
@@ -1551,8 +1600,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                       <RestrictedDatePicker
                                         placeholder="开始日期"
                                         style={{ width: '100%' }}
-                                        isRestricted={!!autoFillDates.housingFundStartDate}
                                         fieldName="公积金开始日期"
+                                        mode={mode}
+                                        hasPermission={hasFullDateEditPermission()}
+                                        hasAutoFillValue={!!autoFillDates.housingFundStartDate}
                                       />
                                     </Form.Item>
                                     <span>至</span>
@@ -1599,8 +1650,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <RestrictedDatePicker 
                                 placeholder="开始日期" 
                                 style={{ width: '100%' }} 
-                                isRestricted={!!autoFillDates.statisticalStartDate}
                                 fieldName="统计开始日期"
+                                mode={mode}
+                                hasPermission={hasFullDateEditPermission()}
+                                hasAutoFillValue={!!autoFillDates.statisticalStartDate}
                               />
                             </Form.Item>
                             <span>至</span>
@@ -1694,8 +1747,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <RestrictedDatePicker 
                                 placeholder="开始日期" 
                                 style={{ width: '100%' }} 
-                                isRestricted={!!autoFillDates.addressStartDate}
                                 fieldName="地址开始日期"
+                                mode={mode}
+                                hasPermission={hasFullDateEditPermission()}
+                                hasAutoFillValue={!!autoFillDates.addressStartDate}
                               />
                             </Form.Item>
                             <span>至</span>
