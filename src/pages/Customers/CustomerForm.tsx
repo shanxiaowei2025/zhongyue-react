@@ -89,8 +89,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   insuredPersonnel: 'tax',
   personalIncomeTaxPassword: 'tax',
   personalIncomeTaxStaff: 'tax',
-  enterpriseInfoSheetNumber: 'tax',
-  sealStorageNumber: 'tax',
+  // 删除了 enterpriseInfoSheetNumber 和 sealStorageNumber
   invoicingSoftware: 'tax',
   invoicingNotes: 'tax',
 
@@ -110,6 +109,12 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   taxOfficerTaxPassword: 'personnel',
   invoiceOfficerName: 'personnel',
   invoiceOfficerTaxPassword: 'personnel',
+
+  // 档案存放信息标签页字段
+  sealStorageNumber: 'archive',
+  paperArchiveNumber: 'archive',
+  onlineBankingStorageNumber: 'archive',
+  archiveStorageRemarks: 'archive',
 
   // 图片资料标签页字段
   legalPersonIdImages: 'images',
@@ -1729,14 +1734,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input />
           </Form.Item>
 
-          <Form.Item name="enterpriseInfoSheetNumber" label="企业信息表编号">
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="sealStorageNumber" label="章存放编号">
-            <Input />
-          </Form.Item>
-
           <Form.Item name="invoicingSoftware" label="开票软件">
             <Input />
           </Form.Item>
@@ -1832,6 +1829,60 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             </Form.Item>
           </div>
         </>
+      ),
+    },
+    {
+      key: 'archive',
+      label: '档案存放信息',
+      children: (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+          <Form.Item name="sealStorageNumber" label="印章存放档案编号">
+            {mode === 'view' ? (
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[32px]">
+                {form.getFieldValue('sealStorageNumber') || '-'}
+              </div>
+            ) : (
+              <Input placeholder="请输入印章存放档案编号" />
+            )}
+          </Form.Item>
+
+          <Form.Item name="paperArchiveNumber" label="纸质资料档案编号">
+            {mode === 'view' ? (
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[32px]">
+                {form.getFieldValue('paperArchiveNumber') || '-'}
+              </div>
+            ) : (
+              <Input placeholder="请输入纸质资料档案编号" />
+            )}
+          </Form.Item>
+
+          <Form.Item name="onlineBankingStorageNumber" label="网银托管存放编号">
+            {mode === 'view' ? (
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[32px]">
+                {form.getFieldValue('onlineBankingStorageNumber') || '-'}
+              </div>
+            ) : (
+              <Input placeholder="请输入网银托管存放编号" />
+            )}
+          </Form.Item>
+
+          <Form.Item 
+            name="archiveStorageRemarks" 
+            label="档案存放备注" 
+            className="col-span-1 md:col-span-2"
+          >
+            {mode === 'view' ? (
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[80px]">
+                {form.getFieldValue('archiveStorageRemarks') || '-'}
+              </div>
+            ) : (
+              <Input.TextArea 
+                rows={3} 
+                placeholder="请输入档案存放相关备注信息" 
+              />
+            )}
+          </Form.Item>
+        </div>
       ),
     },
     {

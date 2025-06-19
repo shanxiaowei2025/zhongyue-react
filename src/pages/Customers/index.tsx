@@ -1939,12 +1939,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="个税申报人员">
             {displayCustomer.personalIncomeTaxStaff || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="企业信息表编号">
-            {displayCustomer.enterpriseInfoSheetNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="章存放编号">
-            {displayCustomer.sealStorageNumber || '-'}
-          </Descriptions.Item>
           <Descriptions.Item label="开票软件">
             {displayCustomer.invoicingSoftware || '-'}
           </Descriptions.Item>
@@ -2046,6 +2040,31 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             </Descriptions.Item>
           </Descriptions>
         </>
+      ),
+    },
+    {
+      key: 'archive',
+      label: '档案存放信息',
+      children: (
+        <Descriptions
+          bordered
+          column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+          size={isMobile ? 'small' : 'default'}
+          className={isMobile ? 'text-sm' : ''}
+        >
+          <Descriptions.Item label="印章存放档案编号">
+            {displayCustomer.sealStorageNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="纸质资料档案编号">
+            {displayCustomer.paperArchiveNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="网银托管存放编号">
+            {displayCustomer.onlineBankingStorageNumber || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="档案存放备注" span={2}>
+            {displayCustomer.archiveStorageRemarks || '-'}
+          </Descriptions.Item>
+        </Descriptions>
       ),
     },
     {

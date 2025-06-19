@@ -249,8 +249,13 @@ export interface Customer {
   tripartiteAgreementAccount: string
   personalIncomeTaxPassword: string
   personalIncomeTaxStaff: string
-  enterpriseInfoSheetNumber: string
-  sealStorageNumber: string
+  // 删除了 enterpriseInfoSheetNumber 字段
+  // 删除了 sealStorageNumber 字段，移动到档案存放信息中
+  // 新增档案存放信息字段
+  sealStorageNumber?: string // 印章存放档案编号 (从税务信息移动过来)
+  paperArchiveNumber?: string // 纸质资料档案编号
+  onlineBankingStorageNumber?: string // 网银托管存放编号
+  archiveStorageRemarks?: string // 档案存放备注
   enterpriseStatus?: 'normal' | 'abnormal' | 'cancelled' | 'revoked'
   businessStatus?: 'normal' | 'logged_out' | 'logging_out' | 'lost' | 'waiting_transfer'
   createTime: string
