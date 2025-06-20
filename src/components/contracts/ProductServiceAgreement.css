@@ -645,6 +645,110 @@
   box-shadow: none;
 }
 
+/* AutoComplete 组件样式 - 与其他输入框保持一致 */
+.product-service-agreement .ant-select.ant-select-auto-complete {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid #000;
+  border-radius: 0;
+  box-shadow: none;
+  height: 32px;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.product-service-agreement .ant-select.ant-select-auto-complete .ant-select-selector {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 8px;
+  height: 30px;
+  align-items: center;
+}
+
+.product-service-agreement .ant-select.ant-select-auto-complete .ant-select-selection-search-input {
+  background-color: transparent;
+  border: none;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  height: 22px;
+  padding: 0;
+}
+
+.product-service-agreement .ant-select.ant-select-auto-complete:hover .ant-select-selector,
+.product-service-agreement .ant-select.ant-select-auto-complete.ant-select-focused .ant-select-selector {
+  border: none;
+  border-bottom: 1px solid #000;
+  box-shadow: none;
+}
+
+.product-service-agreement .ant-select.ant-select-auto-complete .ant-select-arrow {
+  display: none;
+}
+
+/* AutoComplete placeholder 样式 */
+.product-service-agreement .ant-select.ant-select-auto-complete .ant-select-selection-placeholder {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  color: #999;
+  padding: 0;
+}
+
+/* AutoComplete 下拉菜单样式 */
+.product-service-agreement .ant-select-dropdown {
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.product-service-agreement .ant-select-dropdown .ant-select-item {
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  padding: 8px 12px;
+}
+
+.product-service-agreement .ant-select-dropdown .ant-select-item-option-selected {
+  background-color: #f5f5f5;
+}
+
+.product-service-agreement .ant-select-dropdown .ant-select-item-option-active {
+  background-color: #e6f7ff;
+}
+
+/* 确保 AutoComplete 在错误状态下也保持一致的样式 */
+.product-service-agreement .ant-select.ant-select-auto-complete.ant-select-status-error .ant-select-selector {
+  border: none;
+  border-bottom: 1px solid #ff4d4f;
+  box-shadow: none;
+}
+
+/* AutoComplete 禁用状态样式 */
+.product-service-agreement .ant-select.ant-select-auto-complete.ant-select-disabled .ant-select-selector {
+  background-color: #f5f5f5;
+  color: #999;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+/* AutoComplete 作为 party-company-input 时的特定样式覆盖 */
+.product-service-agreement .party-company-input.ant-select.ant-select-auto-complete {
+  flex: 1;
+  max-width: 300px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.product-service-agreement .party-company-input.ant-select.ant-select-auto-complete .ant-select-selector {
+  padding: 4px 8px;
+  height: 30px;
+  background-color: transparent;
+  border: none;
+}
+
 /* 打印样式 */
 @media print {
   .product-service-agreement {
