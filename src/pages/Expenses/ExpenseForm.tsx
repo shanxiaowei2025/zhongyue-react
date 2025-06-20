@@ -1131,11 +1131,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   <Input placeholder="请输入企业名称" />
                 </Form.Item>
 
-                <Form.Item name="unifiedSocialCreditCode" label="统一社会信用代码">
+                <Form.Item 
+                  name="unifiedSocialCreditCode" 
+                  label="统一社会信用代码"
+                  rules={[{ required: true, message: '请输入统一社会信用代码' }]}
+                >
                   <Input placeholder="请输入统一社会信用代码" />
                 </Form.Item>
 
-                <Form.Item name="companyType" label="企业类型">
+                <Form.Item 
+                  name="companyType" 
+                  label="企业类型"
+                  rules={[{ required: true, message: '请选择企业类型' }]}
+                >
                   <Select placeholder="请选择企业类型">
                     <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
                     <Select.Option value="小规模（个体）">小规模（个体）</Select.Option>
@@ -1158,14 +1166,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         {office.name}
                       </Select.Option>
                     ))}
+                    <Select.Option value="其他">其他</Select.Option>
                   </Select>
                 </Form.Item>
 
-                <Form.Item name="chargeDate" label="收费日期">
+                <Form.Item 
+                  name="chargeDate" 
+                  label="收费日期"
+                  rules={[{ required: true, message: '请选择收费日期' }]}
+                >
                   <DatePicker style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item name="chargeMethod" label="收费方式">
+                <Form.Item 
+                  name="chargeMethod" 
+                  label="收费方式"
+                  rules={[{ required: true, message: '请选择收费方式' }]}
+                >
                   <Select
                     placeholder="请选择收费方式"
                     allowClear
@@ -1345,14 +1362,44 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           gap: '16px',
                         }}
                       >
-                        <Form.Item name="businessType" label="业务类型">
+                        <Form.Item 
+                          name="businessType" 
+                          label="业务类型"
+                          dependencies={['agencyFee']}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                if (agencyFee > 0 && !value) {
+                                  return Promise.reject(new Error('代理费有值时，业务类型为必填'))
+                                }
+                                return Promise.resolve()
+                              }
+                            })
+                          ]}
+                        >
                           <Select placeholder="请选择业务类型">
                             <Select.Option value="新增">新增</Select.Option>
                             <Select.Option value="续费">续费</Select.Option>
                           </Select>
                         </Form.Item>
 
-                        <Form.Item name="agencyType" label="代理类型">
+                        <Form.Item 
+                          name="agencyType" 
+                          label="代理类型"
+                          dependencies={['agencyFee']}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                if (agencyFee > 0 && !value) {
+                                  return Promise.reject(new Error('代理费有值时，代理类型为必填'))
+                                }
+                                return Promise.resolve()
+                              }
+                            })
+                          ]}
+                        >
                           <Select placeholder="请选择代理类型">
                             <Select.Option value="代理记账">代理记账</Select.Option>
                             <Select.Option value="代理申报">代理申报</Select.Option>
@@ -1360,7 +1407,22 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           </Select>
                         </Form.Item>
 
-                        <Form.Item name="contractType" label="合同类型">
+                        <Form.Item 
+                          name="contractType" 
+                          label="合同类型"
+                          dependencies={['agencyFee']}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                if (agencyFee > 0 && !value) {
+                                  return Promise.reject(new Error('代理费有值时，合同类型为必填'))
+                                }
+                                return Promise.resolve()
+                              }
+                            })
+                          ]}
+                        >
                           <Select placeholder="请选择合同类型">
                             <Select.Option value="纸质合同">纸质合同</Select.Option>
                             <Select.Option value="电子合同">电子合同</Select.Option>
