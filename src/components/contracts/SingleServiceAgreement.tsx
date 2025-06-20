@@ -1,9 +1,12 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { Checkbox, Input, DatePicker, message } from 'antd'
+import { Checkbox, Input, DatePicker, message, AutoComplete, Spin } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
+import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
+import { searchCustomers } from '../../api/enterpriseService'
 import type { CreateContractDto } from '../../types/contract'
+import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
 import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
 import styles from './SingleServiceAgreement.module.css'
 
@@ -81,6 +84,14 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
     })
 
     const { createContractData } = useContractDetail()
+
+    // 企业搜索相关状态
+    const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
+    const [customerOptions, setCustomerOptions] = useState<CustomerSearchOption[]>([])
+    const [customerSearchValue, setCustomerSearchValue] = useState<string>('')
+    const [customerPage, setCustomerPage] = useState<number>(1)
+    const [customerTotal, setCustomerTotal] = useState<number>(0)
+    const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
 
     // 清除字段验证错误
     const clearValidationError = (fieldName: string) => {
@@ -170,6 +181,11 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
 
         setCheckedItems(newCheckedItems)
         setItemAmounts(newItemAmounts)
+
+        // 同步自动补全搜索状态
+        if (contractData.partyACompany) {
+          setCustomerSearchValue(contractData.partyACompany)
+        }
       }
     }, [contractData, signatory])
 
@@ -180,6 +196,114 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       }
       return ''
     }, [formData.totalCost])
+
+    // 搜索客户信息（模糊搜索）
+    const handleCustomerSearch = async (searchValue: string, resetPage: boolean = false) => {
+      if (!searchValue || !searchValue.trim()) {
+        setCustomerOptions([])
+        setCustomerTotal(0)
+        setHasMoreCustomers(false)
+        return
+      }
+
+      try {
+        setCustomerSearchLoading(true)
+        
+        const currentPage = resetPage ? 1 : customerPage
+        
+        const params: CustomerQueryParams = {
+          page: currentPage,
+          pageSize: 20, // 每次加载20条数据
+          companyName: searchValue.trim()
+        }
+        
+        const response = await searchCustomers(params)
+        
+        if (response.code === 0 && response.data) {
+          const { data: enterprises, total } = response.data
+          
+          // 转换为选项格式
+          const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+            value: enterprise.companyName,
+            label: (
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                  {enterprise.companyName}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  {enterprise.unifiedSocialCreditCode}
+                </div>
+                {(enterprise as any).registeredAddress && (
+                  <div style={{ fontSize: '12px', color: '#999' }}>
+                    地址: {(enterprise as any).registeredAddress}
+                  </div>
+                )}
+              </div>
+            ),
+            enterprise
+          }))
+          
+          if (resetPage) {
+            setCustomerOptions(newOptions)
+            setCustomerPage(1)
+          } else {
+            setCustomerOptions(prev => [...prev, ...newOptions])
+          }
+          
+          setCustomerTotal(total)
+          setHasMoreCustomers(currentPage * 20 < total)
+          
+          if (resetPage) {
+            setCustomerPage(2) // 下次请求第二页
+          } else {
+            setCustomerPage(currentPage + 1)
+          }
+        } else {
+          if (resetPage) {
+            setCustomerOptions([])
+            setCustomerTotal(0)
+            setHasMoreCustomers(false)
+          }
+        }
+      } catch (error) {
+        console.error('搜索客户信息失败:', error)
+        if (resetPage) {
+          setCustomerOptions([])
+          setCustomerTotal(0)
+          setHasMoreCustomers(false)
+        }
+      } finally {
+        setCustomerSearchLoading(false)
+      }
+    }
+
+    // 加载更多客户数据
+    const handleLoadMoreCustomers = () => {
+      if (!customerSearchLoading && hasMoreCustomers && customerSearchValue) {
+        handleCustomerSearch(customerSearchValue, false)
+      }
+    }
+
+    // 选择客户时自动填入信息
+    const handleCustomerSelect = (value: string, option: any) => {
+      const enterprise = option.enterprise
+      if (enterprise) {
+        handleFormChange('partyACompany', enterprise.companyName)
+        if ((enterprise as any).registeredAddress) {
+          handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
+        }
+        message.success('企业信息已自动填入')
+      }
+    }
+
+    // 重置客户搜索状态
+    const resetCustomerSearch = () => {
+      setCustomerOptions([])
+      setCustomerSearchValue('')
+      setCustomerPage(1)
+      setCustomerTotal(0)
+      setHasMoreCustomers(false)
+    }
 
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
@@ -597,15 +721,86 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           <div className={styles.partyBlock}>
             <div className={styles.partyHeader}>
               <span className={styles.partyLabel}>【委托方】（甲方）：</span>
-              <Input
-                className={`${styles.partyCompanyName} ${styles.inputField} ${validationErrors.partyACompany ? styles.error : ''}`}
-                placeholder="请输入甲方公司名称"
-                value={formData.partyACompany || ''}
-                onChange={e => handleFormChange('partyACompany', e.target.value)}
-                bordered={false}
-                style={{
-                  borderBottomColor: validationErrors.partyACompany ? '#ff4d4f' : undefined,
+              <AutoComplete
+                className={styles.inputField}
+                placeholder="请输入甲方公司名称进行搜索"
+                options={customerOptions}
+                value={customerSearchValue || formData.partyACompany || ''}
+                onSearch={(value) => {
+                  setCustomerSearchValue(value)
+                  if (value && value.trim()) {
+                    handleCustomerSearch(value.trim(), true)
+                  } else {
+                    resetCustomerSearch()
+                  }
                 }}
+                onSelect={(value, option) => {
+                  handleCustomerSelect(value, option)
+                }}
+                onChange={(value) => {
+                  setCustomerSearchValue(value)
+                  handleFormChange('partyACompany', value)
+                  // 如果输入值为空，重置搜索状态
+                  if (!value || !value.trim()) {
+                    resetCustomerSearch()
+                  }
+                }}
+                style={{
+                  fontWeight: 'bold',
+                  borderBottomColor: validationErrors.partyACompany ? '#ff4d4f' : '#000',
+                  width: 'auto',
+                  minWidth: '300px',
+                }}
+                notFoundContent={
+                  customerSearchLoading ? (
+                    <div style={{ textAlign: 'center', padding: '12px' }}>
+                      <Spin size="small" />
+                      <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                    </div>
+                  ) : customerSearchValue && customerOptions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                      暂无匹配结果
+                    </div>
+                  ) : null
+                }
+                dropdownRender={(menu) => (
+                  <div>
+                    {menu}
+                    {hasMoreCustomers && (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '8px 12px',
+                          borderTop: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          color: '#1890ff'
+                        }}
+                        onClick={handleLoadMoreCustomers}
+                      >
+                        {customerSearchLoading ? (
+                          <>
+                            <LoadingOutlined style={{ marginRight: '4px' }} />
+                            加载中...
+                          </>
+                        ) : (
+                          '加载更多'
+                        )}
+                      </div>
+                    )}
+                    {customerTotal > 0 && (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '4px 12px',
+                        fontSize: '12px',
+                        color: '#999',
+                        borderTop: '1px solid #f0f0f0'
+                      }}>
+                        共找到 {customerTotal} 条结果
+                      </div>
+                    )}
+                  </div>
+                )}
+                filterOption={false} // 禁用本地过滤，使用服务器端搜索
               />
             </div>
 
