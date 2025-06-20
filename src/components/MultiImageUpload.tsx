@@ -302,7 +302,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                   size="small"
                   className="image-card"
                   cover={
-                    <div className="image-container h-32 overflow-hidden flex items-center justify-center bg-gray-50">
+                    <div className="image-container h-32 overflow-hidden !flex items-center justify-center bg-gray-50">
                       {imageErrors[item.key] ? (
                         <div className="flex flex-col items-center justify-center text-gray-400">
                           <FileImageOutlined style={{ fontSize: 30 }} />
@@ -419,7 +419,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                   </div>
                 )}
               </Upload>
-              <div className="text-gray-500 text-xs mt-1">支持 JPG、PNG 格式，文件小于 5MB</div>
+              <div className="text-gray-500 text-xs mt-1">支持 JPG、PNG 格式</div>
             </Form.Item>
           </Form>
         </Spin>

@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { Upload, Button, message, Modal, Spin, Image, Space, Card, Typography, Empty, Popconfirm } from 'antd'
+import {
+  Upload,
+  Button,
+  message,
+  Modal,
+  Spin,
+  Image,
+  Space,
+  Card,
+  Typography,
+  Empty,
+  Popconfirm,
+} from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -342,12 +354,10 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                       description="删除后将无法恢复，是否确认删除？"
                       onConfirm={() => handleRemove(file)}
                       okText="确认"
-                      okType='danger'
+                      okType="danger"
                       cancelText="取消"
                     >
-                      <DeleteOutlined
-                        className="text-red-500"
-                      />
+                      <DeleteOutlined className="text-red-500" />
                     </Popconfirm>
                   ),
                 ].filter(Boolean)}
@@ -370,7 +380,9 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                         <div className="hidden">{getFileIcon(file.fileName)}</div>
                       </div>
                     ) : (
-                      getFileIcon(file.fileName)
+                      <div className="w-16 h-16 flex items-center justify-center overflow-hidden">
+                        {getFileIcon(file.fileName)}
+                      </div>
                     )}
                   </div>
                   <Text ellipsis={{ tooltip: file.fileName }} className="w-full text-center">

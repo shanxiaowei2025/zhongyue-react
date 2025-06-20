@@ -13,7 +13,6 @@ import {
   Tooltip,
   Modal,
   message,
-  Upload,
   Tag,
   AutoComplete,
   Spin,
@@ -23,12 +22,10 @@ import {
   ReloadOutlined,
   PlusOutlined,
   EyeOutlined,
-  UploadOutlined,
   DownloadOutlined,
   LoadingOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
-import type { UploadFile, UploadProps } from 'antd/es/upload'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
@@ -46,6 +43,7 @@ import type {
   TaxVerificationAttachment,
 } from '../../types/taxVerification'
 import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
+import MultiFileUpload from '../../components/MultiFileUpload'
 
 const { Title } = Typography
 const { RangePicker } = DatePicker
@@ -114,9 +112,8 @@ const TaxReview: React.FC = () => {
   const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
   const [createLoading, setCreateLoading] = useState<boolean>(false)
 
-  // 文件上传状态
-  const [createFileList, setCreateFileList] = useState<UploadFile[]>([])
-  const [uploadLoading, setUploadLoading] = useState<boolean>(false)
+  // 文件上传状态 - 使用MultiFileUpload的FileItem类型
+  const [attachmentFiles, setAttachmentFiles] = useState<Array<{ fileName: string; url: string }>>([])
 
   // 企业名称搜索相关状态
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
@@ -409,72 +406,18 @@ const TaxReview: React.FC = () => {
     setHasMoreCodes(false)
   }
 
-  // 文件上传配置
-  const uploadProps: UploadProps = {
-    name: 'file',
-    multiple: true,
-    customRequest: async ({ file, onSuccess, onError }) => {
-      try {
-        setUploadLoading(true)
-        
-        const response = await uploadFile(file as File)
-        
-        if (response.code === 0) {
-          onSuccess?.(response.data)
-          message.success(`${(file as File).name} 上传成功`)
-        } else {
-          onError?.(new Error(response.message))
-          message.error(`${(file as File).name} 上传失败`)
-        }
-      } catch (error) {
-        onError?.(error as Error)
-        message.error(`${(file as File).name} 上传失败`)
-      } finally {
-        setUploadLoading(false)
-      }
-    },
-    accept: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.csv',
-    beforeUpload: (file) => {
-      const isValidType = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'text/csv',
-      ].includes(file.type)
-      
-      if (!isValidType) {
-        message.error('只支持上传 PDF、Word、Excel、图片、CSV 文件')
-        return false
-      }
-      
-      const isLt10M = file.size / 1024 / 1024 < 10
-      if (!isLt10M) {
-        message.error('文件大小不能超过 10MB')
-        return false
-      }
-      
-      return true
-    },
-  }
-
   // 打开新建弹窗
   const handleOpenCreateModal = () => {
     setCreateModalVisible(true)
     createForm.resetFields()
-    setCreateFileList([])
+    setAttachmentFiles([])
   }
 
   // 关闭新建弹窗
   const handleCloseCreateModal = () => {
     setCreateModalVisible(false)
     createForm.resetFields()
-    setCreateFileList([])
+    setAttachmentFiles([])
     resetCustomerSearch() // 重置企业搜索状态
     resetCodeSearch() // 重置统一社会信用代码搜索状态
   }
@@ -486,9 +429,9 @@ const TaxReview: React.FC = () => {
       setCreateLoading(true)
 
       // 处理附件
-      const attachments: TaxVerificationAttachment[] = createFileList.map(file => ({
-        name: file.name,
-        url: file.response?.url || '',
+      const attachments: TaxVerificationAttachment[] = attachmentFiles.map(file => ({
+        name: file.fileName,
+        url: file.url,
       }))
 
       const createData: CreateTaxVerificationDto = {
@@ -1010,17 +953,14 @@ const TaxReview: React.FC = () => {
           </Form.Item>
 
           <Form.Item label="附件">
-            <Upload
-              {...uploadProps}
-              fileList={createFileList}
-              onChange={({ fileList }) => setCreateFileList(fileList)}
-            >
-              <Button icon={<UploadOutlined />} loading={uploadLoading}>
-                上传附件
-              </Button>
-            </Upload>
+            <MultiFileUpload
+              label="附件"
+              value={attachmentFiles}
+              onChange={(files) => setAttachmentFiles(files)}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.csv"
+            />
             <div style={{ marginTop: 8, color: '#666', fontSize: 12 }}>
-              支持上传 PDF、Word、Excel、图片、CSV 文件，单个文件不超过 10MB
+              支持上传 PDF、Word、Excel、图片、CSV 文件
             </div>
           </Form.Item>
         </Form>
