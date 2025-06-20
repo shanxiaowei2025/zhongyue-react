@@ -927,7 +927,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     // 重置自动填写状态
     setAutoFillDates({})
     setLoadingAutoFill(false)
-    
+
     form.resetFields()
     onCancel()
   }

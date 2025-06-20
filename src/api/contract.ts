@@ -77,3 +77,13 @@ export const getSignedContractByCode = (encryptedCode: string) => {
     }>
   >(`/contract/get-image/${encryptedCode}`)
 }
+
+// 获取代理记账合同的委托日期
+export const getAgencyContractDates = (params: { companyName?: string; unifiedSocialCreditCode?: string }) => {
+  return request.get<
+    ApiResponse<{
+      agencyStartDate: string
+      agencyEndDate: string
+    }>
+  >('/contract/getAgency/agencyDates', params)
+}
