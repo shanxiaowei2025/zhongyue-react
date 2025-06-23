@@ -39,6 +39,10 @@ export default defineConfig(({ mode }) => {
         '@': '/src',
       },
     },
+    optimizeDeps: {
+      // 预构建 dayjs 及其 locale 模块
+      include: ['dayjs', 'dayjs/locale/zh-cn'],
+    },
     build: {
       // 启用source map，方便调试
       sourcemap: mode !== 'production',
@@ -48,6 +52,14 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: true,
       // 配置Rollup选项
       rollupOptions: {
+        // 静音 dayjs locale 导入警告
+        onwarn(warning, warn) {
+          // 忽略 dayjs locale 相关的解析警告
+          if (warning.code === 'UNRESOLVED_IMPORT' && warning.message?.includes('dayjs/locale')) {
+            return
+          }
+          warn(warning)
+        },
         output: {
           // 自定义构建后静态资源的目录
           assetFileNames: 'assets/[name].[hash].[ext]',
@@ -61,7 +73,7 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
             // 将Ant Design单独打包
             'antd-vendor': ['antd', '@ant-design/icons'],
-            // 工具库单独打包
+            // 工具库单独打包 (包含 dayjs 及其 locale)
             'utils-vendor': ['axios', 'dayjs', 'formik', 'yup', 'zustand']
           }
         }

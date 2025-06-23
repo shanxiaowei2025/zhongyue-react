@@ -8,7 +8,7 @@ import './index.css'
 import { useAuthStore } from './store/auth'
 import PasswordExpiredModal from './components/PasswordExpiredModal'
 import dayjs from 'dayjs'
-import 'dayjs/locale/zh-CN'
+import 'dayjs/locale/zh-cn'
 
 dayjs.locale('zh-cn')
 
