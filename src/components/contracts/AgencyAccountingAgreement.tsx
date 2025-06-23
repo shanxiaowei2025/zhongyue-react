@@ -116,6 +116,7 @@ const AgencyAccountingAgreement = forwardRef<
       accountingSoftwareFee: '',
       invoicingSoftwareFee: '',
       accountBookFee: '',
+      currentChargeFee: '',
     })
 
     const { createContractData } = useContractDetail()
@@ -165,6 +166,9 @@ const AgencyAccountingAgreement = forwardRef<
             ? String(contractData.invoicingSoftwareFee)
             : '',
           accountBookFee: contractData.accountBookFee ? String(contractData.accountBookFee) : '',
+          currentChargeFee: contractData.currentChargeFee
+            ? String(contractData.currentChargeFee)
+            : '',
         }
         setAmountDisplayValues(newAmountDisplayValues)
 
@@ -1063,6 +1067,18 @@ const AgencyAccountingAgreement = forwardRef<
               元。其中包括凭证、账簿、差旅费报销单、费用粘贴单、工资表、财务报表、纳税申报表等。（以上费用以实际到账执行）
             </p>
 
+            <p>
+              人民币本次收费总金额
+              <Input
+                placeholder="本次收费金额"
+                value={amountDisplayValues.currentChargeFee}
+                onChange={e => handleFormAmountChange('currentChargeFee', e.target.value)}
+                onBlur={e => handleFormAmountBlur('currentChargeFee', e.target.value)}
+                className={styles.inlineFeeInput}
+              />
+              元。
+            </p>
+            
             <div>
               代理记账服务费支付方式：
               <Radio.Group

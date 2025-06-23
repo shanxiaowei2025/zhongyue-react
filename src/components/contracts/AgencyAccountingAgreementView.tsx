@@ -405,6 +405,12 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             元。其中包括凭证、账簿、差旅费报销单、费用粘贴单、工资表、财务报表、纳税申报表等。（以上费用以实际到账执行）
           </p>
 
+          <p>
+            人民币本次收费总金额
+            <span className={styles.feeValue}>{formatCurrency(contractData.currentChargeFee)}</span>
+            元。
+          </p>
+
           <div>
             代理记账服务费支付方式：
             <span className={styles.paymentMethod}>{paymentMethod || '对公'}</span>

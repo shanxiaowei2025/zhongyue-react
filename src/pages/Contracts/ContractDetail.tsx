@@ -81,6 +81,7 @@ const ContractDetail: React.FC = () => {
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [signLinkModalVisible, setSignLinkModalVisible] = useState(false)
   const [signUrl, setSignUrl] = useState<string>('')
+  const [hasProcessedGenerateLink, setHasProcessedGenerateLink] = useState(false)
 
   // 获取合同详情数据
   const {
@@ -103,11 +104,14 @@ const ContractDetail: React.FC = () => {
     if (
       params.get('generateLink') === 'true' &&
       contractData &&
-      contractData.contractStatus === '0'
+      contractData.contractStatus === '0' &&
+      !hasProcessedGenerateLink &&
+      !isGeneratingLink
     ) {
+      setHasProcessedGenerateLink(true)
       handleGenerateSignLink()
     }
-  }, [location.search, contractData])
+  }, [location.search, contractData, hasProcessedGenerateLink, isGeneratingLink])
 
   // 返回合同列表
   const handleBack = () => {
@@ -1475,14 +1479,21 @@ const ContractDetail: React.FC = () => {
       const tokenResponse = (await generateContractToken(contractId)) as any
       const { token } = tokenResponse.data
 
-      // 生成签署页面链接
+      // 生成签署页面链接，包含甲方公司名称
       const url = `https://manage.zhongyuekuaiji.cn/contract-sign/${token}`
-      setSignUrl(url)
+      const companyName = contractData.partyACompany || '未知公司'
+      const signUrlWithCompany = `【${companyName}】合同签署链接：\n${url}`
+      setSignUrl(signUrlWithCompany)
       setSignLinkModalVisible(true)
 
       // 关闭loading提示并显示成功消息
       message.destroy('contractImageGen')
       message.success('签署链接生成成功')
+      
+      // 清除URL参数中的generateLink标志，防止刷新页面时重复调用
+      const currentUrl = new URL(window.location.href)
+      currentUrl.searchParams.delete('generateLink')
+      window.history.replaceState({}, '', currentUrl.toString())
     } catch (error: any) {
       console.error('生成签署链接失败:', error)
       // 关闭loading提示
@@ -1494,9 +1505,6 @@ const ContractDetail: React.FC = () => {
       } else {
         message.error('生成签署链接失败，请重试')
       }
-
-      // 刷新合同详情页面
-      refreshContractDetail()
     } finally {
       setIsGeneratingLink(false)
     }
@@ -1740,16 +1748,16 @@ const ContractDetail: React.FC = () => {
         ]}
       >
         <div className="py-4">
-          <p className="mb-4">请将以下链接发送给对方进行合同签署：</p>
+          <p className="mb-4">请将以下内容发送给对方进行合同签署：</p>
           <Input.TextArea
             value={signUrl}
             readOnly
-            rows={3}
+            rows={4}
             className="mb-2"
             onClick={e => (e.target as HTMLTextAreaElement).select()}
           />
           <p className="text-gray-500 text-sm mt-4">
-            提示：链接有效期为30分钟，请及时将链接发送给签署方。
+            提示：链接有效期为7天，请及时将链接发送给签署方。点击文本框可全选内容。
           </p>
         </div>
       </Modal>

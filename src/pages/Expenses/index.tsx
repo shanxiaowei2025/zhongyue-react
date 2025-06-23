@@ -42,6 +42,12 @@ const { RangePicker } = DatePicker
 // 搜索防抖延迟时间（毫秒）
 const DEBOUNCE_DELAY = 500
 
+// 业务类型选项
+const BUSINESS_TYPE_OPTIONS = [
+  { label: '新增', value: '新增' },
+  { label: '续费', value: '续费' },
+]
+
 // 状态映射为显示文本
 const STATUS_LABELS = {
   [ExpenseStatus.Pending]: '未审核',
@@ -79,6 +85,14 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
       // 检查是否为有效数字
       return !isNaN(numValue) ? `¥${numValue.toFixed(2)}` : '¥0.00'
     },
+  },
+  {
+    title: '业务类型',
+    dataIndex: 'businessType',
+    key: 'businessType',
+    width: 120,
+    ellipsis: true,
+    render: (value: string) => value || '-',
   },
   {
     title: '收费日期',
@@ -151,6 +165,7 @@ const Expenses: React.FC = () => {
     unifiedSocialCreditCode: string
     status?: ExpenseStatus
     salesperson: string
+    businessType: string
     dateRange?: any // 使用any类型避免typescript错误
     page: number
     pageSize: number
@@ -159,6 +174,7 @@ const Expenses: React.FC = () => {
     unifiedSocialCreditCode: '',
     status: undefined,
     salesperson: '',
+    businessType: '',
     dateRange: undefined,
     page: 1,
     pageSize: 10,
@@ -186,6 +202,7 @@ const Expenses: React.FC = () => {
     unifiedSocialCreditCode: savedState.unifiedSocialCreditCode || '',
     status: savedState.status !== undefined ? savedState.status : undefined,
     salesperson: savedState.salesperson || '',
+    businessType: savedState.businessType || '',
     dateRange: initialDateRange,
     page: Number(savedState.page) || 1,
     pageSize: Number(savedState.pageSize) || 10,
@@ -227,6 +244,7 @@ const Expenses: React.FC = () => {
       unifiedSocialCreditCode: searchParams.unifiedSocialCreditCode,
       status: searchParams.status,
       salesperson: searchParams.salesperson,
+      businessType: searchParams.businessType,
       dateRange: searchParams.dateRange,
     })
   }, [form, searchParams])
@@ -239,6 +257,7 @@ const Expenses: React.FC = () => {
       unifiedSocialCreditCode: searchParams.unifiedSocialCreditCode,
       status: searchParams.status,
       salesperson: searchParams.salesperson,
+      businessType: searchParams.businessType,
       page: searchParams.page,
       pageSize: searchParams.pageSize,
       dateRange: searchParams.dateRange
@@ -260,6 +279,7 @@ const Expenses: React.FC = () => {
     searchParams.unifiedSocialCreditCode,
     searchParams.status,
     searchParams.salesperson,
+    searchParams.businessType,
     searchParams.page,
     searchParams.pageSize,
     searchParams.dateRange,
@@ -277,6 +297,7 @@ const Expenses: React.FC = () => {
       unifiedSocialCreditCode: values.unifiedSocialCreditCode,
       status: values.status,
       salesperson: values.salesperson,
+      businessType: values.businessType,
       page: 1,
     }
 
@@ -356,6 +377,7 @@ const Expenses: React.FC = () => {
       unifiedSocialCreditCode: '',
       status: undefined,
       salesperson: '',
+      businessType: '',
       dateRange: undefined,
       page: 1,
       pageSize: 10,
@@ -757,7 +779,7 @@ const Expenses: React.FC = () => {
           onFinish={handleSearch}
           onValuesChange={handleFormFieldChange}
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full mb-4">
             <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
               <Input placeholder="输入企业名称" allowClear />
             </Form.Item>
@@ -782,11 +804,20 @@ const Expenses: React.FC = () => {
               <Input placeholder="输入业务员" allowClear />
             </Form.Item>
 
+            <Form.Item name="businessType" label="业务类型" className="m-0 w-full">
+              <Select placeholder="选择业务类型" allowClear>
+                {BUSINESS_TYPE_OPTIONS.map(option => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
             <Form.Item
               name="dateRange"
               label="收费日期"
-              className="m-0 w-full"
-              style={{ gridColumn: 'span 2' }}
+              className="m-0 w-full lg:col-span-2"
             >
               <RangePicker
                 allowClear

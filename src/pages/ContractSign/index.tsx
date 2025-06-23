@@ -111,6 +111,7 @@ interface SignatureResponseData {
   message: string
   contractId: number
   encryptedCode: string
+  partyACompany: string
 }
 
 interface ContractSignProps {}
@@ -312,19 +313,24 @@ const ContractSign: React.FC<ContractSignProps> = () => {
         throw new Error('签名保存失败: 未返回encryptedCode')
       }
 
-      // 提取 encryptedCode
+      // 提取 encryptedCode 和 partyACompany
       const encryptedCode = saveResponse.data.data.encryptedCode
+      const partyACompany = saveResponse.data.data.partyACompany || '未知公司'
       console.log('获取到加密码:', encryptedCode)
+      console.log('获取到甲方公司:', partyACompany)
 
       // 生成可分享的链接 - 使用固定域名
       const shareableLink = `https://manage.zhongyuekuaiji.cn/contract/view/${encryptedCode}`
+      
+      // 生成包含公司名称的完整分享内容
+      const shareableContent = `【${partyACompany}】合同查看链接：\n${shareableLink}`
 
       // 6. 关闭模态框并显示成功消息
       setSignModalVisible(false)
       // 解除屏幕锁定
       unlockScreenOrientation()
 
-      // 显示成功模态框，包含可复制的链接
+      // 显示成功模态框，包含可复制的链接和公司名称
       Modal.success({
         title: '签署成功',
         content: (
@@ -332,23 +338,23 @@ const ContractSign: React.FC<ContractSignProps> = () => {
             <p>合同已成功签署，感谢您的配合！</p>
             <div className="mt-4">
               <p className="mb-2 text-sm text-gray-600">
-                您可以复制以下链接查看或分享已签名的合同：
+                您可以复制以下内容查看或分享已签名的合同：
               </p>
               <div className="flex items-center">
-                <input
-                  type="text"
+                <textarea
                   readOnly
-                  value={shareableLink}
-                  className="flex-1 border p-2 rounded-l text-sm"
-                  onClick={e => (e.target as HTMLInputElement).select()}
+                  value={shareableContent}
+                  className="flex-1 border p-2 rounded-l text-sm resize-none"
+                  rows={3}
+                  onClick={e => (e.target as HTMLTextAreaElement).select()}
                 />
                 <Button
                   type="primary"
                   size="middle"
-                  className="rounded-l-none"
+                  className="rounded-l-none self-stretch"
                   onClick={() => {
-                    navigator.clipboard.writeText(shareableLink)
-                    message.success('链接已复制到剪贴板')
+                    navigator.clipboard.writeText(shareableContent)
+                    message.success('内容已复制到剪贴板')
                   }}
                 >
                   复制

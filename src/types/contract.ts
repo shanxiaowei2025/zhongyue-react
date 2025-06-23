@@ -61,6 +61,7 @@ export interface Contract {
   accountingSoftwareFee?: number
   invoicingSoftwareFee?: number
   accountBookFee?: number
+  currentChargeFee?: number
   paymentMethod?: string
   contractStatus?: ContractStatus
   contractSignature?: string
@@ -141,6 +142,7 @@ export interface CreateContractDto {
   accountingSoftwareFee?: number
   invoicingSoftwareFee?: number
   accountBookFee?: number
+  currentChargeFee?: number
   paymentMethod?: string
   contractStatus?: ContractStatus
   remarks?: string
