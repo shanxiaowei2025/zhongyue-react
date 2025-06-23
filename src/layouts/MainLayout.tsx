@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 // 扩展Window接口，添加自定义方法
 declare global {
@@ -41,7 +41,83 @@ interface TabItem {
   closable: boolean
 }
 
-// 创建tabs存储，用于保持组件状态
+interface ModuleState {
+  lastPath: string        // 最后访问的路径
+  defaultPath: string     // 默认路径
+  label: string          // 模块名称
+  icon: React.ReactNode  // 图标
+}
+
+// 模块配置
+const MODULE_CONFIG: Record<string, {
+  defaultPath: string
+  label: string
+  icon: React.ReactNode
+  pathPatterns: string[]
+}> = {
+  '/contracts': {
+    defaultPath: '/contracts',
+    label: '合同管理',
+    icon: <FileTextOutlined />,
+    pathPatterns: ['/contracts']
+  },
+  '/customers': {
+    defaultPath: '/customers',
+    label: '客户管理',
+    icon: <ShopOutlined />,
+    pathPatterns: ['/customers']
+  },
+  '/expenses': {
+    defaultPath: '/expenses',
+    label: '费用管理',
+    icon: <DollarOutlined />,
+    pathPatterns: ['/expenses']
+  },
+  '/enterprise-service': {
+    defaultPath: '/enterprise-service',
+    label: '企业服务详情',
+    icon: <AppstoreOutlined />,
+    pathPatterns: ['/enterprise-service']
+  },
+  '/financial-self-inspection': {
+    defaultPath: '/financial-self-inspection',
+    label: '账务自查',
+    icon: <AuditOutlined />,
+    pathPatterns: ['/financial-self-inspection']
+  },
+  '/tax-review': {
+    defaultPath: '/tax-review',
+    label: '税务核查',
+    icon: <FileDoneOutlined />,
+    pathPatterns: ['/tax-review']
+  },
+  '/users': {
+    defaultPath: '/users',
+    label: '用户管理',
+    icon: <UserOutlined />,
+    pathPatterns: ['/users']
+  },
+  '/roles': {
+    defaultPath: '/roles',
+    label: '角色管理',
+    icon: <TeamOutlined />,
+    pathPatterns: ['/roles']
+  },
+  '/permissions': {
+    defaultPath: '/permissions',
+    label: '权限管理',
+    icon: <LockOutlined />,
+    pathPatterns: ['/permissions']
+  },
+  '/departments': {
+    defaultPath: '/departments',
+    label: '部门管理',
+    icon: <ApartmentOutlined />,
+    pathPatterns: ['/departments']
+  },
+}
+
+// 创建增强版tabs存储，支持模块状态保持
 const useTabsStore = () => {
   const [tabs, setTabs] = useState<TabItem[]>([
     { key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false },
@@ -52,6 +128,91 @@ const useTabsStore = () => {
   const [cachedViews] = useState<Record<string, boolean>>({
     '/': true,
   })
+
+  // 模块状态映射，支持持久化存储
+  const [moduleStates, setModuleStates] = useState<Record<string, ModuleState>>(() => {
+    // 尝试从 localStorage 恢复状态
+    const savedStates = localStorage.getItem('moduleStates')
+    if (savedStates) {
+      try {
+        const parsed = JSON.parse(savedStates)
+        // 确保所有模块都有完整的状态
+        const initialStates: Record<string, ModuleState> = {}
+        Object.entries(MODULE_CONFIG).forEach(([moduleKey, config]) => {
+          initialStates[moduleKey] = {
+            lastPath: parsed[moduleKey]?.lastPath || config.defaultPath,
+            defaultPath: config.defaultPath,
+            label: config.label,
+            icon: config.icon,
+          }
+        })
+        console.log('📋 已从本地存储恢复模块状态:', initialStates)
+        return initialStates
+      } catch (error) {
+        console.warn('⚠️ 恢复模块状态失败，使用默认状态:', error)
+      }
+    }
+
+    // 初始化默认模块状态
+    const initialStates: Record<string, ModuleState> = {}
+    Object.entries(MODULE_CONFIG).forEach(([moduleKey, config]) => {
+      initialStates[moduleKey] = {
+        lastPath: config.defaultPath,
+        defaultPath: config.defaultPath,
+        label: config.label,
+        icon: config.icon,
+      }
+    })
+    return initialStates
+  })
+
+  // 更新模块状态并持久化保存
+  const updateModuleState = useCallback((moduleKey: string, path: string) => {
+    setModuleStates(prevStates => {
+      // 检查是否真的需要更新（避免不必要的状态更新）
+      if (prevStates[moduleKey]?.lastPath === path) {
+        return prevStates
+      }
+      
+      const newStates = {
+        ...prevStates,
+        [moduleKey]: {
+          ...prevStates[moduleKey],
+          lastPath: path,
+        }
+      }
+      
+      // 持久化保存到 localStorage（只保存必要的数据）
+      const statesToSave: Record<string, { lastPath: string }> = {}
+      Object.entries(newStates).forEach(([key, state]) => {
+        statesToSave[key] = { lastPath: state.lastPath }
+      })
+      
+      try {
+        localStorage.setItem('moduleStates', JSON.stringify(statesToSave))
+      } catch (error) {
+        console.warn('⚠️ 保存模块状态失败:', error)
+      }
+      
+      return newStates
+    })
+  }, [])
+
+  // 获取模块的目标路径
+  const getModuleTargetPath = useCallback((moduleKey: string): string => {
+    const moduleState = moduleStates[moduleKey]
+    return moduleState ? moduleState.lastPath : moduleKey
+  }, [moduleStates])
+
+  // 识别路径属于哪个模块
+  const identifyModule = useCallback((pathname: string): string | null => {
+    for (const [moduleKey, config] of Object.entries(MODULE_CONFIG)) {
+      if (config.pathPatterns.some(pattern => pathname.startsWith(pattern))) {
+        return moduleKey
+      }
+    }
+    return null
+  }, [])
 
   // 添加新标签
   const addTab = (newTab: TabItem) => {
@@ -90,7 +251,18 @@ const useTabsStore = () => {
   // 检查视图是否被缓存
   const isCached = (key: string) => !!cachedViews[key]
 
-  return { tabs, activeKey, setActiveKey, addTab, removeTab, isCached }
+  return { 
+    tabs, 
+    activeKey, 
+    setActiveKey, 
+    addTab, 
+    removeTab, 
+    isCached,
+    moduleStates,
+    updateModuleState,
+    getModuleTargetPath,
+    identifyModule
+  }
 }
 
 const MainLayout = () => {
@@ -114,6 +286,18 @@ const MainLayout = () => {
     { id: 3, title: '任务提醒', content: '您有3个待处理的任务' },
   ])
 
+  // 检查用户是否有企业服务权限
+  const hasEnterpriseServicePermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+    
+    // 允许访问企业服务的角色
+    const allowedRoles = ['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']
+    
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
   // 基础菜单项
   const baseMenuItems: MenuProps['items'] = [
     {
@@ -136,7 +320,8 @@ const MainLayout = () => {
       icon: <FileTextOutlined />,
       label: '合同管理',
     },
-    {
+    // 根据用户角色决定是否显示企业服务菜单
+    ...(hasEnterpriseServicePermission() ? [{
       key: 'enterprise',
       icon: <AppstoreOutlined />,
       label: '企业服务',
@@ -157,7 +342,7 @@ const MainLayout = () => {
           label: '税务核查',
         },
       ],
-    },
+    }] : []),
   ]
 
   // 系统管理菜单项
@@ -236,9 +421,16 @@ const MainLayout = () => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // 跟踪路由变化，添加新标签
+  // 跟踪路由变化，添加新标签并更新模块状态
   useEffect(() => {
     const { pathname } = location
+
+    // 识别当前路径属于哪个模块并更新状态
+    const moduleKey = tabsStore.identifyModule(pathname)
+    if (moduleKey) {
+      tabsStore.updateModuleState(moduleKey, pathname)
+      console.log(`📌 模块 ${moduleKey} 状态已更新为: ${pathname}`)
+    }
 
     // 特殊处理企业详情页
     if (pathname.startsWith('/enterprise-service/detail/')) {
@@ -266,6 +458,41 @@ const MainLayout = () => {
       return
     }
 
+    // 特殊处理合同详情页
+    if (pathname.startsWith('/contracts/detail/')) {
+      const contractId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `合同详情 - #${contractId}`,
+        icon: <FileTextOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理合同编辑页
+    if (pathname.startsWith('/contracts/edit/')) {
+      const contractId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `编辑合同 - #${contractId}`,
+        icon: <FileTextOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理合同创建页
+    if (pathname === '/contracts/create') {
+      tabsStore.addTab({
+        key: pathname,
+        label: '创建合同',
+        icon: <FileTextOutlined />,
+        closable: true,
+      })
+      return
+    }
+
     // 特殊处理账务自查详情页
     if (pathname.startsWith('/financial-self-inspection/detail/')) {
       const recordId = pathname.split('/').pop()
@@ -285,6 +512,18 @@ const MainLayout = () => {
         key: pathname,
         label: `我负责的账务自查 - #${recordId}`,
         icon: <AuditOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理税务核查详情页
+    if (pathname.startsWith('/tax-review/') && pathname !== '/tax-review') {
+      const recordId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `税务核查详情 - #${recordId}`,
+        icon: <FileDoneOutlined />,
         closable: true,
       })
       return
@@ -362,7 +601,7 @@ const MainLayout = () => {
     },
   ]
 
-  // 定义全局导航函数，用于从其他组件调用
+  // 定义全局导航函数，用于从其他组件调用，支持智能导航
   React.useEffect(() => {
     // 定义全局函数，用于从其他组件激活特定tab并跳转
     window.activateMenuTab = (mainTabPath: string, targetPath: string) => {
@@ -372,7 +611,10 @@ const MainLayout = () => {
       )
 
       if (targetMenuItem) {
-        // 检查合同管理tab是否已经存在
+        // 智能导航：获取模块的最后访问路径
+        const smartTargetPath = tabsStore.getModuleTargetPath(mainTabPath)
+        
+        // 检查tab是否已经存在
         const tabExists = tabsStore.tabs.some(tab => tab.key === mainTabPath)
 
         if (!tabExists) {
@@ -389,9 +631,14 @@ const MainLayout = () => {
         // 先切换到主tab
         tabsStore.setActiveKey(mainTabPath)
 
+        // 智能导航：优先使用保存的状态路径，否则使用传入的目标路径
+        const finalTargetPath = smartTargetPath !== mainTabPath ? smartTargetPath : targetPath
+        
+        console.log(`🎯 全局智能导航：${mainTabPath} → ${finalTargetPath}`)
+
         // 再导航到目标路径
         setTimeout(() => {
-          navigate(targetPath)
+          navigate(finalTargetPath)
         }, 100)
         return true
       }
@@ -433,12 +680,24 @@ const MainLayout = () => {
       setNotifications(notifications.filter(n => n.id !== parseInt(key)))
     } else if (key === 'system') {
       // 系统管理主菜单，默认跳转到用户管理
-      navigate('/users')
+      const targetPath = tabsStore.getModuleTargetPath('/users')
+      console.log(`🎯 系统管理：跳转到 ${targetPath}`)
+      navigate(targetPath)
     } else if (key === 'enterprise') {
       // 企业服务主菜单，默认跳转到企业服务管理
-      navigate('/enterprise-service')
+      const targetPath = tabsStore.getModuleTargetPath('/enterprise-service')
+      console.log(`🎯 企业服务：跳转到 ${targetPath}`)
+      navigate(targetPath)
     } else {
-      navigate(key)
+      // 核心改进：智能导航到模块的最后访问路径
+      const targetPath = tabsStore.getModuleTargetPath(key)
+      
+      // 如果路径不同，说明有历史状态，显示智能跳转提示
+      if (targetPath !== key) {
+        console.log(`🎯 智能导航：${key} → ${targetPath}`)
+      }
+      
+      navigate(targetPath)
       if (isMobile) {
         setDrawerVisible(false)
       }
@@ -566,6 +825,39 @@ const MainLayout = () => {
           </div>
 
           <div className="flex items-center">
+            {/* 开发模式下显示模块状态调试信息 */}
+            {process.env.NODE_ENV === 'development' && !isMobile && (
+              <Tooltip 
+                title={
+                  <div style={{ maxWidth: '300px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>📋 模块状态保持</div>
+                    {Object.entries(tabsStore.moduleStates).map(([key, state]) => (
+                      <div key={key} style={{ fontSize: '12px', marginBottom: '4px' }}>
+                        <strong>{state.label}:</strong> {state.lastPath}
+                      </div>
+                    ))}
+                    <div style={{ marginTop: '8px', fontSize: '11px', color: '#999' }}>
+                      点击不同模块菜单查看智能导航效果
+                    </div>
+                  </div>
+                }
+                placement="bottomRight"
+              >
+                <Button
+                  type="text"
+                  style={{ 
+                    fontSize: '12px', 
+                    padding: '4px 8px',
+                    height: 'auto',
+                    color: '#1890ff'
+                  }}
+                  className="mx-2"
+                >
+                  📋 状态保持
+                </Button>
+              </Tooltip>
+            )}
+
             {/* 帮助按钮 */}
             {!isMobile && (
               <Tooltip title="帮助中心">

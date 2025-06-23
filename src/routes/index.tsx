@@ -114,31 +114,59 @@ const routes: RouteObject[] = [
       },
       {
         path: 'enterprise-service',
-        element: <EnterpriseService />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <EnterpriseService />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'enterprise-service/detail/:id',
-        element: <EnterpriseDetail />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <EnterpriseDetail />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'financial-self-inspection',
-        element: <FinancialSelfInspection />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <FinancialSelfInspection />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'financial-self-inspection/detail/:id',
-        element: <FinancialSelfInspectionDetail />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <FinancialSelfInspectionDetail />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'financial-self-inspection/responsible-detail/:id',
-        element: <FinancialSelfInspectionResponsibleDetail />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <FinancialSelfInspectionResponsibleDetail />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'tax-review',
-        element: <TaxReview />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <TaxReview />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'tax-review/:id',
-        element: <TaxReviewDetail />,
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+            <TaxReviewDetail />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'profile',
