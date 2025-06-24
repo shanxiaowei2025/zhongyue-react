@@ -7,6 +7,7 @@ export interface User {
   email: string
   avatar: string
   phone: string
+  idCardNumber?: string
   sex: 0 | 1
   status: 0 | 1
   dept_id?: number

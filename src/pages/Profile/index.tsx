@@ -43,7 +43,7 @@ const Profile = () => {
         // 设置表单初始值
         profileForm.setFieldsValue({
           username: response.data.username,
-          email: response.data.email,
+          idCardNumber: response.data.idCardNumber || '',
           phone: response.data.phone || '',
         })
       } else {
@@ -61,7 +61,8 @@ const Profile = () => {
     setLoading(true)
     try {
       const response = await updateUserProfile(0, {
-        email: values.email,
+        email: user?.email, // 保留原有邮箱值
+        idCardNumber: values.idCardNumber,
         phone: values.phone,
       })
 
@@ -73,7 +74,7 @@ const Profile = () => {
         if (user) {
           setUser({
             ...user,
-            email: values.email || user.email,
+            idCardNumber: values.idCardNumber || user.idCardNumber,
             phone: values.phone || user.phone,
           })
         }
@@ -219,10 +220,10 @@ const Profile = () => {
                   <Descriptions.Item label="用户名" span={3}>
                     {userProfile.username}
                   </Descriptions.Item>
-                  <Descriptions.Item label="电子邮箱" span={3}>
+                  <Descriptions.Item label="身份证号" span={3}>
                     <div className="flex items-center">
-                      <MailOutlined className="mr-2" />
-                      {userProfile.email || '未设置'}
+                      <UserOutlined className="mr-2" />
+                      {userProfile.idCardNumber || '未设置'}
                     </div>
                   </Descriptions.Item>
                   <Descriptions.Item label="手机号码" span={3}>
@@ -251,14 +252,17 @@ const Profile = () => {
                   <Input prefix={<UserOutlined />} placeholder="用户名" disabled />
                 </Form.Item>
                 <Form.Item
-                  name="email"
-                  label="邮箱"
+                  name="idCardNumber"
+                  label="身份证号"
                   rules={[
-                    { required: true, message: '请输入邮箱' },
-                    { type: 'email', message: '请输入有效的邮箱地址' },
+                    { 
+                      pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, 
+                      message: '请输入有效的身份证号码',
+                      validateTrigger: 'onBlur' 
+                    },
                   ]}
                 >
-                  <Input prefix={<MailOutlined />} placeholder="邮箱" />
+                  <Input prefix={<UserOutlined />} placeholder="身份证号（选填）" />
                 </Form.Item>
                 <Form.Item
                   name="phone"

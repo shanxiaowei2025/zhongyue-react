@@ -928,6 +928,7 @@ const MainLayout = () => {
             }))}
             className="tabs-container px-4"
             hideAdd
+            destroyInactiveTabPane={false}
           />
         </div>
 

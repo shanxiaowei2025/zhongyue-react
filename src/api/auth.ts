@@ -39,6 +39,7 @@ export const getUserProfile = () => {
       permissions: string[]
       phone: string | null
       email: string
+      idCardNumber?: string
       avatar: string
       passwordUpdatedAt?: string
     }>
@@ -52,6 +53,7 @@ export interface UpdateUserParams {
   isActive?: boolean
   phone?: string
   email?: string
+  idCardNumber?: string
 }
 
 /**
@@ -62,6 +64,7 @@ export const updateUserProfile = (id: number, data: UpdateUserParams) => {
   return request.put<ApiResponse<any>>('/auth/profile', {
     email: data.email,
     phone: data.phone,
+    idCardNumber: data.idCardNumber,
   })
 }
 
