@@ -53,6 +53,7 @@ interface SingleServiceAgreementProps {
 export interface SingleServiceAgreementRef {
   validateForm: () => boolean
   handleSubmit: () => Promise<void>
+  getFormData: () => Record<string, any>
 }
 
 const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServiceAgreementProps>(
@@ -619,10 +620,25 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       }
     }
 
+    // 获取当前表单数据
+    const getFormData = () => {
+      const serviceData = collectServiceData()
+      return {
+        ...formData,
+        checkedItems,
+        itemAmounts,
+        validationErrors,
+        amountDisplayValues,
+        customerSearchValue,
+        ...serviceData,
+      }
+    }
+
     // 暴露方法给父组件
     useImperativeHandle(ref, () => ({
       validateForm,
       handleSubmit,
+      getFormData,
     }))
 
     // 渲染带金额输入框的复选框

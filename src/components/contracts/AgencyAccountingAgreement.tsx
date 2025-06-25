@@ -88,6 +88,7 @@ interface AgencyAccountingAgreementProps {
 export interface AgencyAccountingAgreementRef {
   validateForm: () => boolean
   handleSubmit: () => Promise<void>
+  getFormData: () => Record<string, any>
 }
 
 const AgencyAccountingAgreement = forwardRef<
@@ -589,10 +590,23 @@ const AgencyAccountingAgreement = forwardRef<
       }
     }
 
+    // 获取当前表单数据
+    const getFormData = () => {
+      return {
+        ...formData,
+        selectedServices,
+        otherBusiness,
+        amountDisplayValues,
+        customerSearchValue,
+        codeSearchValue,
+      }
+    }
+
     // 暴露方法给父组件
     useImperativeHandle(ref, () => ({
       validateForm,
       handleSubmit,
+      getFormData,
     }))
 
     return (

@@ -68,6 +68,7 @@ interface ProductServiceAgreementProps {
 export interface ProductServiceAgreementRef {
   validateForm: () => boolean
   handleSubmit: () => Promise<void>
+  getFormData: () => Record<string, any>
 }
 
 const ProductServiceAgreement = forwardRef<
@@ -688,9 +689,23 @@ const ProductServiceAgreement = forwardRef<
       return categoryKeys.some(key => checkedItems[key])
     }
 
+    // 获取当前表单数据
+    const getFormData = () => {
+      const serviceData = collectServiceData()
+      return {
+        ...formData,
+        checkedItems,
+        itemAmounts,
+        amountDisplayValues,
+        customerSearchValue,
+        ...serviceData,
+      }
+    }
+
     useImperativeHandle(ref, () => ({
       validateForm,
       handleSubmit,
+      getFormData,
     }))
 
     return (

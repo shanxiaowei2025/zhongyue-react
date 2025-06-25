@@ -206,6 +206,31 @@ const useTabsStore = () => {
 
   // 识别路径属于哪个模块
   const identifyModule = useCallback((pathname: string): string | null => {
+    // 排除特殊路径，这些路径不应该被视为模块页面
+    const specialPaths = [
+      '/contracts/create',
+      '/contracts/detail/',
+      '/contracts/edit/',
+      '/enterprise-service/detail/',
+      '/financial-self-inspection/detail/',
+      '/financial-self-inspection/responsible-detail/',
+      '/tax-review/',
+      '/profile'
+    ]
+    
+    // 检查是否是特殊路径
+    const isSpecialPath = specialPaths.some(specialPath => {
+      if (specialPath.endsWith('/')) {
+        return pathname.startsWith(specialPath)
+      }
+      return pathname === specialPath
+    })
+    
+    // 如果是特殊路径，不识别为任何模块
+    if (isSpecialPath) {
+      return null
+    }
+    
     for (const [moduleKey, config] of Object.entries(MODULE_CONFIG)) {
       if (config.pathPatterns.some(pattern => pathname.startsWith(pattern))) {
         return moduleKey
