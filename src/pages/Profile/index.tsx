@@ -4,7 +4,6 @@ import {
   UserOutlined,
   LockOutlined,
   UploadOutlined,
-  MailOutlined,
   PhoneOutlined,
 } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
@@ -61,7 +60,6 @@ const Profile = () => {
     setLoading(true)
     try {
       const response = await updateUserProfile(0, {
-        email: user?.email, // 保留原有邮箱值
         idCardNumber: values.idCardNumber,
         phone: values.phone,
       })
@@ -195,7 +193,7 @@ const Profile = () => {
                 </div>
                 <div>
                   <h2 className="text-lg font-medium">{userProfile?.username || user?.username}</h2>
-                  <p className="text-gray-500">{userProfile?.email || user?.email}</p>
+                  <p className="text-gray-500">用户ID: {userProfile?.id || user?.id}</p>
                   <div className="mt-1">
                     {userProfile?.roles &&
                       userProfile.roles.map((role: string) => (
