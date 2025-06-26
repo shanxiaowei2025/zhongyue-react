@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 declare global {
   interface Window {
     activateMenuTab?: (mainTabPath: string, targetPath: string) => boolean
+    closeTab?: (tabKey: string) => boolean
   }
 }
 import { Layout, Menu, Avatar, Dropdown, Button, Drawer, Badge, Tooltip, message, Tabs } from 'antd'
@@ -694,11 +695,27 @@ const MainLayout = () => {
       return false
     }
 
+    // 定义全局函数，用于从其他组件关闭标签页
+    window.closeTab = (tabKey: string) => {
+      // 检查标签页是否存在
+      const tabExists = tabsStore.tabs.some(tab => tab.key === tabKey)
+      
+      if (tabExists) {
+        console.log(`🗑️ 全局关闭标签页: ${tabKey}`)
+        tabsStore.removeTab(tabKey)
+        return true
+      }
+      
+      console.warn(`⚠️ 尝试关闭不存在的标签页: ${tabKey}`)
+      return false
+    }
+
     // 清理函数
     return () => {
       delete window.activateMenuTab
+      delete window.closeTab
     }
-  }, [menuItems, navigate])
+  }, [menuItems, navigate, tabsStore])
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (key === 'logout') {

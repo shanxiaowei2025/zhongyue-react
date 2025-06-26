@@ -1543,7 +1543,26 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           gap: '16px',
                         }}
                       >
-                        <Form.Item name="socialInsuranceBusinessType" label="业务类型">
+                        <Form.Item 
+                          name="socialInsuranceBusinessType" 
+                          label="业务类型"
+                          dependencies={['socialInsuranceAgencyFee']}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const socialInsuranceAgencyFee = getFieldValue('socialInsuranceAgencyFee')
+                                const fee = parseNumberInput(socialInsuranceAgencyFee)
+                                
+                                // 如果社保代理费有值且大于0，则业务类型必填
+                                if (fee > 0 && (!value || value.trim() === '')) {
+                                  return Promise.reject(new Error('社保代理费有值时，业务类型必填'))
+                                }
+                                
+                                return Promise.resolve()
+                              },
+                            }),
+                          ]}
+                        >
                           <Select placeholder="请选择业务类型">
                             <Select.Option value="新增">新增</Select.Option>
                             <Select.Option value="续费">续费</Select.Option>

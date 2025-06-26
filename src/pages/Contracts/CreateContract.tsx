@@ -15,6 +15,13 @@ import SingleServiceAgreement, {
   type SingleServiceAgreementRef,
 } from '../../components/contracts/SingleServiceAgreement'
 
+// 声明全局Window接口扩展
+declare global {
+  interface Window {
+    closeTab?: (tabKey: string) => boolean
+  }
+}
+
 interface LocationState {
   signatory: string
   contractType: string
@@ -369,11 +376,26 @@ const CreateContract: React.FC = () => {
         return
       }
 
-      // 提交成功后清理数据并返回合同列表
+      // 提交成功后清理数据，关闭标签页并返回合同列表
       clearStorageData()
+      message.success('合同创建成功！', 2)
+      
       setTimeout(() => {
+        // 先跳转到合同列表页，确保标签页存在
         navigate('/contracts')
-      }, 1500)
+        
+        // 延迟关闭创建合同标签页，确保跳转完成
+        setTimeout(() => {
+          if (window.closeTab) {
+            const success = window.closeTab('/contracts/create')
+            if (success) {
+              console.log('✅ 创建合同标签页已关闭，已返回合同列表')
+            } else {
+              console.warn('⚠️ 创建合同标签页关闭失败')
+            }
+          }
+        }, 200)
+      }, 800)
     } catch (error) {
       console.error('提交合同失败:', error)
       message.error('提交合同失败，请检查填写内容后重试')

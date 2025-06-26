@@ -1,6 +1,5 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { Form, Input, DatePicker, Checkbox, Radio, Select, message, AutoComplete, Spin } from 'antd'
-import type { RadioChangeEvent } from 'antd'
+import { Form, Input, DatePicker, Checkbox, Select, message, AutoComplete, Spin } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
@@ -655,8 +654,8 @@ const AgencyAccountingAgreement = forwardRef<
         entrustmentEndDate: formData.entrustmentEndDate || '',
         
         // 签约日期
-        partyASignDate: formData.partyASignDate || '',
-        partyBSignDate: formData.partyBSignDate || '',
+        partyASignDate: formData.partyASignDate || null,
+        partyBSignDate: formData.partyBSignDate || null,
         
         // 费用信息
         totalAgencyAccountingFee: formData.totalAgencyAccountingFee || 0,
@@ -665,7 +664,6 @@ const AgencyAccountingAgreement = forwardRef<
         invoicingSoftwareFee: formData.invoicingSoftwareFee || 0,
         accountBookFee: formData.accountBookFee || 0,
         currentChargeFee: formData.currentChargeFee || 0,
-        paymentMethod: formData.paymentMethod || '', // 支付方式
         
         // 服务相关
         selectedServices,
@@ -691,7 +689,6 @@ const AgencyAccountingAgreement = forwardRef<
         partyALegalPerson: data.partyALegalPerson,
         partyASignDate: data.partyASignDate,
         partyBSignDate: data.partyBSignDate,
-        paymentMethod: data.paymentMethod,
         totalFields: Object.keys(data).length
       })
       
@@ -1189,18 +1186,6 @@ const AgencyAccountingAgreement = forwardRef<
               元。
             </p>
             
-            <div>
-              代理记账服务费支付方式：
-              <Radio.Group
-                value={formData.paymentMethod || '对公'}
-                onChange={e => handleFormChange('paymentMethod', e.target.value)}
-                className={styles.inlinePaymentMethod}
-              >
-                <Radio value="对公">对公</Radio>
-                <Radio value="现金">现金</Radio>
-              </Radio.Group>
-            </div>
-
             <p>于合同生效日起 3 日内一次付清。</p>
           </div>
         </div>

@@ -694,8 +694,8 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         partyBPhone: formData.partyBPhone || '',
         
         // 签约日期
-        partyASignDate: formData.partyASignDate || '',
-        partyBSignDate: formData.partyBSignDate || '',
+        partyASignDate: formData.partyASignDate || null,
+        partyBSignDate: formData.partyBSignDate || null,
         
         // 服务相关
         checkedItems,
