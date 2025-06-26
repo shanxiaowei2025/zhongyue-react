@@ -252,10 +252,31 @@ const useTabsStore = () => {
     cachedViews[newTab.key] = true
   }
 
+  // 清理合同表单缓存数据
+  const clearContractFormCache = (tabKey: string) => {
+    try {
+      // 检查是否是合同创建或编辑页面
+      if (tabKey === '/contracts/create' || tabKey.startsWith('/contracts/edit/')) {
+        sessionStorage.removeItem('contractCreateParams')
+        sessionStorage.removeItem('contractCreateData')
+        sessionStorage.removeItem('lastFormSaveTime')
+        console.log('🧹 清理合同表单缓存数据:', { 
+          tabKey, 
+          cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime'] 
+        })
+      }
+    } catch (error) {
+      console.error('清理合同表单缓存失败:', error)
+    }
+  }
+
   // 移除标签
   const removeTab = (targetKey: string) => {
     // 找出要删除的标签索引
     const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
+
+    // 在关闭标签前清理合同表单缓存数据
+    clearContractFormCache(targetKey)
 
     // 删除标签
     const newTabs = tabs.filter(tab => tab.key !== targetKey)

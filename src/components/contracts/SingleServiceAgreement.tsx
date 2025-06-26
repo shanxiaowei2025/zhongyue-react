@@ -122,6 +122,17 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       if (value && value.toString().trim()) {
         clearValidationError(fieldName)
       }
+      
+      // 触发自定义事件通知CreateContract.tsx进行自动保存
+      // 所有字段变化都触发自动保存
+      console.log(`💾 [单项服务合同] ${fieldName} 字段变化，触发自动保存:`, value)
+      // 延迟触发，确保状态已更新
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field: fieldName, value, contractType: '单项服务合同' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 当contractData变化时，更新表单数据和勾选状态
@@ -186,6 +197,31 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         // 同步自动补全搜索状态
         if (contractData.partyACompany) {
           setCustomerSearchValue(contractData.partyACompany)
+        }
+        
+        // 特别处理日期字段，确保它们能正确恢复
+        if (contractData.partyASignDate || contractData.partyBSignDate) {
+          console.log('📅 SingleServiceAgreement: 恢复日期字段:')
+          if (contractData.partyASignDate) {
+            console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
+          }
+          if (contractData.partyBSignDate) {
+            console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
+          }
+          
+          // 立即设置日期字段，不使用延迟
+          setFormData(prev => {
+            const newData = {
+              ...prev,
+              partyASignDate: contractData.partyASignDate || prev.partyASignDate,
+              partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
+            }
+            console.log('📅 立即更新 formData 日期字段:', {
+              partyASignDate: newData.partyASignDate,
+              partyBSignDate: newData.partyBSignDate
+            })
+            return newData
+          })
         }
       }
     }, [contractData, signatory])
@@ -326,6 +362,15 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           [itemKey]: '',
         }))
       }
+      
+      // 触发自动保存
+      console.log(`💾 [单项服务合同] 复选框变化，触发自动保存: ${itemKey}=${checked}`)
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field: `checkbox_${itemKey}`, value: checked, contractType: '单项服务合同' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 处理金额输入变化
@@ -336,6 +381,15 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         ...prev,
         [itemKey]: formattedValue,
       }))
+      
+      // 触发自动保存
+      console.log(`💾 [单项服务合同] 金额变化，触发自动保存: ${itemKey}=${formattedValue}`)
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field: `amount_${itemKey}`, value: formattedValue, contractType: '单项服务合同' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 处理表单金额字段变化
@@ -623,15 +677,65 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
     // 获取当前表单数据
     const getFormData = () => {
       const serviceData = collectServiceData()
-      return {
-        ...formData,
+      // 明确返回所有重要字段，确保缓存完整性
+      const data = {
+        // 基础合同信息
+        signatory: formData.signatory || signatory,
+        contractType: formData.contractType || '单项服务合同',
+        
+        // 甲方信息
+        partyACompany: formData.partyACompany || '',
+        partyAAddress: formData.partyAAddress || '',
+        partyAPhone: formData.partyAPhone || '',
+        partyAContact: formData.partyAContact || '',
+        
+        // 乙方信息
+        partyBContact: formData.partyBContact || '',
+        partyBPhone: formData.partyBPhone || '',
+        
+        // 签约日期
+        partyASignDate: formData.partyASignDate || '',
+        partyBSignDate: formData.partyBSignDate || '',
+        
+        // 服务相关
         checkedItems,
         itemAmounts,
         validationErrors,
         amountDisplayValues,
         customerSearchValue,
+        
+        // 业务地址
+        businessEstablishmentAddress: formData.businessEstablishmentAddress || '',
+        
+        // 备注信息
+        businessRemark: formData.businessRemark || '',
+        bankRemark: formData.bankRemark || '',
+        licenseRemark: formData.licenseRemark || '',
+        otherRemark: formData.otherRemark || '',
+        
+        // 服务费用
+        businessServiceFee: formData.businessServiceFee || 0,
+        bankServiceFee: formData.bankServiceFee || 0,
+        licenseServiceFee: formData.licenseServiceFee || 0,
+        otherServiceFee: formData.otherServiceFee || 0,
+        
+        // 包含其他所有formData字段（确保不遗漏）
+        ...formData,
+        
+        // 服务数据
         ...serviceData,
       }
+      
+      console.log('📋 [单项服务合同] getFormData 返回数据:', {
+        partyAAddress: data.partyAAddress,
+        partyAPhone: data.partyAPhone,
+        partyAContact: data.partyAContact,
+        partyASignDate: data.partyASignDate,
+        partyBSignDate: data.partyBSignDate,
+        totalFields: Object.keys(data).length
+      })
+      
+      return data
     }
 
     // 暴露方法给父组件
@@ -1358,13 +1462,25 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                   <DatePicker
                     format="YYYY年MM月DD日"
                     placeholder="选择日期"
-                    value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
-                    onChange={date =>
-                      handleFormChange(
-                        'partyASignDate',
-                        date ? date.format('YYYY-MM-DD') : undefined
-                      )
-                    }
+                    value={(() => {
+                      if (!formData.partyASignDate) {
+                        console.log('🗓️ [单项服务] 甲方签署日期为空:', formData.partyASignDate)
+                        return undefined
+                      }
+                      try {
+                        const dayjsValue = dayjs(formData.partyASignDate)
+                        console.log('🗓️ [单项服务] 甲方签署日期解析:', formData.partyASignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        return dayjsValue.isValid() ? dayjsValue : undefined
+                      } catch (error) {
+                        console.error('🗓️ [单项服务] 甲方签署日期解析失败:', formData.partyASignDate, error)
+                        return undefined
+                      }
+                    })()}
+                    onChange={date => {
+                      const formatted = date ? date.format('YYYY-MM-DD') : undefined
+                      console.log('🗓️ [单项服务] 甲方签署日期更改:', date, '->', formatted)
+                      handleFormChange('partyASignDate', formatted)
+                    }}
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #000' }}
                     bordered={false}
                     suffixIcon={null}
@@ -1396,13 +1512,25 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                   <DatePicker
                     format="YYYY年MM月DD日"
                     placeholder="选择日期"
-                    value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
-                    onChange={date =>
-                      handleFormChange(
-                        'partyBSignDate',
-                        date ? date.format('YYYY-MM-DD') : undefined
-                      )
-                    }
+                    value={(() => {
+                      if (!formData.partyBSignDate) {
+                        console.log('🗓️ [单项服务] 乙方签署日期为空:', formData.partyBSignDate)
+                        return undefined
+                      }
+                      try {
+                        const dayjsValue = dayjs(formData.partyBSignDate)
+                        console.log('🗓️ [单项服务] 乙方签署日期解析:', formData.partyBSignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        return dayjsValue.isValid() ? dayjsValue : undefined
+                      } catch (error) {
+                        console.error('🗓️ [单项服务] 乙方签署日期解析失败:', formData.partyBSignDate, error)
+                        return undefined
+                      }
+                    })()}
+                    onChange={date => {
+                      const formatted = date ? date.format('YYYY-MM-DD') : undefined
+                      console.log('🗓️ [单项服务] 乙方签署日期更改:', date, '->', formatted)
+                      handleFormChange('partyBSignDate', formatted)
+                    }}
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #000' }}
                     bordered={false}
                     suffixIcon={null}

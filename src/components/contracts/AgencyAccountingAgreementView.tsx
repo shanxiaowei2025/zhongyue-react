@@ -379,7 +379,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       <div className={styles.agreementSection}>
         <div className={styles.sectionTitle}>五、协议的终止</div>
         <div className={styles.sectionContent + ' ' + styles.agreementTermination}>
-          <p>(一)协议期满，本协议自然终止，双方如续续约，须另定协议。</p>
+          <p>(一)协议期满，本协议自然终止，双方如需续约，须另定协议。</p>
           <p>(二)经双方协商一致后，可提前终止协议。</p>
         </div>
       </div>

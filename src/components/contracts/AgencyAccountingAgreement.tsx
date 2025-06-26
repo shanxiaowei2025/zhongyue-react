@@ -190,6 +190,31 @@ const AgencyAccountingAgreement = forwardRef<
         if (contractData.partyACreditCode) {
           setCodeSearchValue(contractData.partyACreditCode)
         }
+        
+        // 特别处理日期字段，确保它们能正确恢复
+        if (contractData.partyASignDate || contractData.partyBSignDate) {
+          console.log('📅 AgencyAccountingAgreement: 恢复日期字段:')
+          if (contractData.partyASignDate) {
+            console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
+          }
+          if (contractData.partyBSignDate) {
+            console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
+          }
+          
+          // 立即设置日期字段，不使用延迟
+          setFormData(prev => {
+            const newData = {
+              ...prev,
+              partyASignDate: contractData.partyASignDate || prev.partyASignDate,
+              partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
+            }
+            console.log('📅 立即更新 formData 日期字段:', {
+              partyASignDate: newData.partyASignDate,
+              partyBSignDate: newData.partyBSignDate
+            })
+            return newData
+          })
+        }
       }
     }, [contractData, signatory])
 
@@ -465,6 +490,17 @@ const AgencyAccountingAgreement = forwardRef<
         ...prev,
         [field]: value,
       }))
+      
+      // 触发自定义事件通知CreateContract.tsx进行自动保存
+      // 所有字段变化都触发自动保存
+      console.log(`💾 [代理记账合同] ${field} 字段变化，触发自动保存:`, value)
+      // 延迟触发，确保状态已更新
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field, value, contractType: '代理记账合同' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 处理金额输入变化
@@ -592,14 +628,74 @@ const AgencyAccountingAgreement = forwardRef<
 
     // 获取当前表单数据
     const getFormData = () => {
-      return {
-        ...formData,
+      // 明确返回所有重要字段，确保缓存完整性
+      const data = {
+        // 基础合同信息
+        signatory: formData.signatory || signatory,
+        contractType: formData.contractType || '代理记账合同',
+        
+        // 甲方信息
+        partyACompany: formData.partyACompany || '',
+        partyACreditCode: formData.partyACreditCode || '',
+        partyAAddress: formData.partyAAddress || '',
+        partyAPhone: formData.partyAPhone || '',
+        partyAContact: formData.partyAContact || '',
+        partyAPostalCode: formData.partyAPostalCode || '', // 甲方邮编字段（修正名称）
+        partyALegalPerson: formData.partyALegalPerson || '', // 甲方法定代表人
+        
+        // 乙方信息
+        partyBAddress: formData.partyBAddress || '',
+        partyBPhone: formData.partyBPhone || '',
+        partyBContact: formData.partyBContact || '',
+        partyBPostalCode: formData.partyBPostalCode || '', // 乙方邮编字段
+        partyBLegalPerson: formData.partyBLegalPerson || '', // 乙方法定代表人
+        
+        // 委托期间
+        entrustmentStartDate: formData.entrustmentStartDate || '',
+        entrustmentEndDate: formData.entrustmentEndDate || '',
+        
+        // 签约日期
+        partyASignDate: formData.partyASignDate || '',
+        partyBSignDate: formData.partyBSignDate || '',
+        
+        // 费用信息
+        totalAgencyAccountingFee: formData.totalAgencyAccountingFee || 0,
+        agencyAccountingFee: formData.agencyAccountingFee || 0,
+        accountingSoftwareFee: formData.accountingSoftwareFee || 0,
+        invoicingSoftwareFee: formData.invoicingSoftwareFee || 0,
+        accountBookFee: formData.accountBookFee || 0,
+        currentChargeFee: formData.currentChargeFee || 0,
+        paymentMethod: formData.paymentMethod || '', // 支付方式
+        
+        // 服务相关
         selectedServices,
         otherBusiness,
+        declarationService: selectedServices.map(value => ({ value })),
+        
+        // 签名相关
+        partyAStampImage: formData.partyAStampImage || '',
+        
+        // 其他重要字段
         amountDisplayValues,
         customerSearchValue,
         codeSearchValue,
+        
+        // 包含其他所有formData字段（确保不遗漏）
+        ...formData,
       }
+      
+      console.log('📋 [代理记账合同] getFormData 返回数据:', {
+        partyAAddress: data.partyAAddress,
+        partyAPhone: data.partyAPhone,
+        partyAPostalCode: data.partyAPostalCode,
+        partyALegalPerson: data.partyALegalPerson,
+        partyASignDate: data.partyASignDate,
+        partyBSignDate: data.partyBSignDate,
+        paymentMethod: data.paymentMethod,
+        totalFields: Object.keys(data).length
+      })
+      
+      return data
     }
 
     // 暴露方法给父组件
@@ -1337,10 +1433,25 @@ const AgencyAccountingAgreement = forwardRef<
                   <DatePicker
                     placeholder="请选择日期"
                     format="YYYY年MM月DD日"
-                    value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
-                    onChange={date =>
-                      handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))
-                    }
+                    value={(() => {
+                      if (!formData.partyASignDate) {
+                        console.log('🗓️ [代理记账] 甲方签署日期为空:', formData.partyASignDate)
+                        return undefined
+                      }
+                      try {
+                        const dayjsValue = dayjs(formData.partyASignDate)
+                        console.log('🗓️ [代理记账] 甲方签署日期解析:', formData.partyASignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        return dayjsValue.isValid() ? dayjsValue : undefined
+                      } catch (error) {
+                        console.error('🗓️ [代理记账] 甲方签署日期解析失败:', formData.partyASignDate, error)
+                        return undefined
+                      }
+                    })()}
+                    onChange={date => {
+                      const formatted = date?.format('YYYY-MM-DD')
+                      console.log('🗓️ [代理记账] 甲方签署日期更改:', date, '->', formatted)
+                      handleFormChange('partyASignDate', formatted)
+                    }}
                     style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>
@@ -1351,10 +1462,25 @@ const AgencyAccountingAgreement = forwardRef<
                   <DatePicker
                     placeholder="请选择日期"
                     format="YYYY年MM月DD日"
-                    value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
-                    onChange={date =>
-                      handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))
-                    }
+                    value={(() => {
+                      if (!formData.partyBSignDate) {
+                        console.log('🗓️ [代理记账] 乙方签署日期为空:', formData.partyBSignDate)
+                        return undefined
+                      }
+                      try {
+                        const dayjsValue = dayjs(formData.partyBSignDate)
+                        console.log('🗓️ [代理记账] 乙方签署日期解析:', formData.partyBSignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        return dayjsValue.isValid() ? dayjsValue : undefined
+                      } catch (error) {
+                        console.error('🗓️ [代理记账] 乙方签署日期解析失败:', formData.partyBSignDate, error)
+                        return undefined
+                      }
+                    })()}
+                    onChange={date => {
+                      const formatted = date?.format('YYYY-MM-DD')
+                      console.log('🗓️ [代理记账] 乙方签署日期更改:', date, '->', formatted)
+                      handleFormChange('partyBSignDate', formatted)
+                    }}
                     style={{ width: '100%', fontSize: '12px' }}
                   />
                 </div>

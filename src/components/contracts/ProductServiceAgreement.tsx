@@ -111,6 +111,14 @@ const ProductServiceAgreement = forwardRef<
     // 当contractData变化时，更新表单数据和勾选状态
     useEffect(() => {
       if (contractData && Object.keys(contractData).length > 0) {
+        console.log('🔄 ProductServiceAgreement: 收到新的contractData，更新表单状态')
+        
+        // 特别记录甲方公司名称，作为关键字段重点跟踪
+        if (contractData.partyACompany) {
+          console.log('🏢 甲方公司名称:', contractData.partyACompany)
+        }
+        
+        // 更新表单主数据
         setFormData(prev => ({
           ...prev,
           signatory,
@@ -166,10 +174,49 @@ const ProductServiceAgreement = forwardRef<
         setCheckedItems(newCheckedItems)
         setItemAmounts(newItemAmounts)
 
-        // 同步自动补全搜索状态
+        // 同步自动补全搜索状态 - 特别重要的字段
         if (contractData.partyACompany) {
           setCustomerSearchValue(contractData.partyACompany)
+        } else if (contractData.customerSearchValue) {
+          // 如果没有公司名但有搜索值，使用搜索值
+          setCustomerSearchValue(contractData.customerSearchValue)
+          // 并同步更新到表单数据
+          setFormData(prev => ({ 
+            ...prev, 
+            partyACompany: contractData.customerSearchValue 
+          }))
         }
+        
+        // 特别处理日期字段，确保它们能正确恢复
+        if (contractData.partyASignDate || contractData.partyBSignDate) {
+          console.log('📅 ProductServiceAgreement: 恢复日期字段:')
+          if (contractData.partyASignDate) {
+            console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
+          }
+          if (contractData.partyBSignDate) {
+            console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
+          }
+          
+          // 立即设置日期字段，不使用延迟
+          setFormData(prev => {
+            const newData = {
+              ...prev,
+              partyASignDate: contractData.partyASignDate || prev.partyASignDate,
+              partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
+            }
+            console.log('📅 立即更新 formData 日期字段:', {
+              partyASignDate: newData.partyASignDate,
+              partyBSignDate: newData.partyBSignDate
+            })
+            return newData
+          })
+        }
+        
+        // 数据加载完成后触发一个事件，通知其他组件
+        setTimeout(() => {
+          const event = new Event('productServiceDataLoaded', { bubbles: true })
+          document.dispatchEvent(event)
+        }, 100)
       }
     }, [contractData, signatory])
 
@@ -305,6 +352,17 @@ const ProductServiceAgreement = forwardRef<
         ...prev,
         [field]: value,
       }))
+      
+      // 触发自定义事件通知CreateContract.tsx进行自动保存
+      // 所有字段变化都触发自动保存
+      console.log(`💾 [产品服务协议] ${field} 字段变化，触发自动保存:`, value)
+      // 延迟触发，确保状态已更新
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field, value, contractType: '产品服务协议' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 处理勾选框状态变化
@@ -321,6 +379,15 @@ const ProductServiceAgreement = forwardRef<
           [itemKey]: '',
         }))
       }
+      
+      // 触发自动保存
+      console.log(`💾 [产品服务协议] 复选框变化，触发自动保存: ${itemKey}=${checked}`)
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field: `checkbox_${itemKey}`, value: checked, contractType: '产品服务协议' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 处理金额输入变化
@@ -331,6 +398,15 @@ const ProductServiceAgreement = forwardRef<
         ...prev,
         [itemKey]: formattedValue,
       }))
+      
+      // 触发自动保存
+      console.log(`💾 [产品服务协议] 金额变化，触发自动保存: ${itemKey}=${formattedValue}`)
+      setTimeout(() => {
+        const event = new CustomEvent('contractFormFieldChange', {
+          detail: { field: `amount_${itemKey}`, value: formattedValue, contractType: '产品服务协议' }
+        })
+        document.dispatchEvent(event)
+      }, 50)
     }
 
     // 处理表单金额字段变化
@@ -692,15 +768,94 @@ const ProductServiceAgreement = forwardRef<
     // 获取当前表单数据
     const getFormData = () => {
       const serviceData = collectServiceData()
-      return {
-        ...formData,
+      // 明确返回所有重要字段，确保缓存完整性
+      const data = {
+        // 基础合同信息
+        signatory: formData.signatory || signatory,
+        contractType: formData.contractType || '产品服务协议',
+        
+        // 甲方信息
+        partyACompany: formData.partyACompany || '',
+        partyAAddress: formData.partyAAddress || '',
+        partyAPhone: formData.partyAPhone || '',
+        partyAContact: formData.partyAContact || '',
+        
+        // 乙方信息
+        partyBContact: formData.partyBContact || '',
+        partyBPhone: formData.partyBPhone || '',
+        
+        // 签约日期
+        partyASignDate: formData.partyASignDate || '',
+        partyBSignDate: formData.partyBSignDate || '',
+        
+        // 服务相关
         checkedItems,
         itemAmounts,
         amountDisplayValues,
         customerSearchValue,
+        
+        // 业务地址
+        businessEstablishmentAddress: formData.businessEstablishmentAddress || '',
+        
+        // 备注信息
+        businessRemark: formData.businessRemark || '',
+        taxRemark: formData.taxRemark || '',
+        bankRemark: formData.bankRemark || '',
+        socialRemark: formData.socialRemark || '',
+        licenseRemark: formData.licenseRemark || '',
+        otherRemark: formData.otherRemark || '',
+        
+        // 服务费用
+        businessServiceFee: formData.businessServiceFee || 0,
+        taxServiceFee: formData.taxServiceFee || 0,
+        bankServiceFee: formData.bankServiceFee || 0,
+        socialServiceFee: formData.socialServiceFee || 0,
+        licenseServiceFee: formData.licenseServiceFee || 0,
+        otherServiceFee: formData.otherServiceFee || 0,
+        
+        // 包含其他所有formData字段（确保不遗漏）
+        ...formData,
+        
+        // 服务数据
         ...serviceData,
       }
+      
+      console.log('📋 [产品服务协议] getFormData 返回数据:', {
+        partyAAddress: data.partyAAddress,
+        partyAPhone: data.partyAPhone,
+        partyAContact: data.partyAContact,
+        partyASignDate: data.partyASignDate,
+        partyBSignDate: data.partyBSignDate,
+        totalFields: Object.keys(data).length
+      })
+      
+      return data
     }
+
+    // 监听客户数据同步事件
+    useEffect(() => {
+      const handleSyncCustomerData = (event: any) => {
+        try {
+          const customerName = event.detail?.customerName
+          if (customerName && customerName !== customerSearchValue) {
+            console.log('🔄 收到客户数据同步事件，强制同步客户名称:', customerName)
+            setCustomerSearchValue(customerName)
+            // 如果公司名字段不存在或为空，也同步更新它
+            if (!formData.partyACompany) {
+              handleFormChange('partyACompany', customerName)
+            }
+          }
+        } catch (error) {
+          console.error('同步客户数据失败:', error)
+        }
+      }
+
+      document.addEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
+      
+      return () => {
+        document.removeEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
+      }
+    }, [customerSearchValue, formData.partyACompany])
 
     useImperativeHandle(ref, () => ({
       validateForm,
@@ -752,30 +907,37 @@ const ProductServiceAgreement = forwardRef<
           <div className="party-block">
             <div className="party-header">
               <span className="party-label">【委托方】（甲方）：</span>
-              <AutoComplete
-                className="party-company-input"
-                placeholder="请输入甲方公司名称进行搜索"
-                options={customerOptions}
-                value={customerSearchValue || formData.partyACompany || ''}
-                onSearch={(value) => {
-                  setCustomerSearchValue(value)
-                  if (value && value.trim()) {
-                    handleCustomerSearch(value.trim(), true)
-                  } else {
-                    resetCustomerSearch()
-                  }
-                }}
-                onSelect={(value, option) => {
-                  handleCustomerSelect(value, option)
-                }}
-                onChange={(value) => {
-                  setCustomerSearchValue(value)
-                  handleFormChange('partyACompany', value)
-                  // 如果输入值为空，重置搜索状态
-                  if (!value || !value.trim()) {
-                    resetCustomerSearch()
-                  }
-                }}
+                              <AutoComplete
+                  className="party-company-input"
+                  placeholder="请输入甲方公司名称进行搜索"
+                  options={customerOptions}
+                  value={customerSearchValue || formData.partyACompany || ''}
+                  onSearch={(value) => {
+                    setCustomerSearchValue(value)
+                    if (value && value.trim()) {
+                      handleCustomerSearch(value.trim(), true)
+                    } else {
+                      resetCustomerSearch()
+                    }
+                  }}
+                  onSelect={(value, option) => {
+                    handleCustomerSelect(value, option)
+                  }}
+                  onChange={(value) => {
+                    setCustomerSearchValue(value)
+                    handleFormChange('partyACompany', value)
+                    // 如果输入值为空，重置搜索状态
+                    if (!value || !value.trim()) {
+                      resetCustomerSearch()
+                    }
+                  }}
+                  // 确保组件焦点获取时同步值
+                  onFocus={() => {
+                    // 如果有公司名称但没有搜索值，同步它们
+                    if (formData.partyACompany && !customerSearchValue) {
+                      setCustomerSearchValue(formData.partyACompany)
+                    }
+                  }}
                 notFoundContent={
                   customerSearchLoading ? (
                     <div style={{ textAlign: 'center', padding: '12px' }}>
@@ -1604,10 +1766,25 @@ const ProductServiceAgreement = forwardRef<
                   <DatePicker
                     placeholder="选择日期"
                     format="YYYY年MM月DD日"
-                    value={formData.partyASignDate ? dayjs(formData.partyASignDate) : undefined}
-                    onChange={date =>
-                      handleFormChange('partyASignDate', date?.format('YYYY-MM-DD'))
-                    }
+                    value={(() => {
+                      if (!formData.partyASignDate) {
+                        console.log('🗓️ 甲方签署日期为空:', formData.partyASignDate)
+                        return undefined
+                      }
+                      try {
+                        const dayjsValue = dayjs(formData.partyASignDate)
+                        console.log('🗓️ 甲方签署日期解析:', formData.partyASignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        return dayjsValue.isValid() ? dayjsValue : undefined
+                      } catch (error) {
+                        console.error('🗓️ 甲方签署日期解析失败:', formData.partyASignDate, error)
+                        return undefined
+                      }
+                    })()}
+                    onChange={date => {
+                      const formatted = date?.format('YYYY-MM-DD')
+                      console.log('🗓️ 甲方签署日期更改:', date, '->', formatted)
+                      handleFormChange('partyASignDate', formatted)
+                    }}
                   />
                 </div>
               </div>
@@ -1639,10 +1816,25 @@ const ProductServiceAgreement = forwardRef<
                   <DatePicker
                     placeholder="选择日期"
                     format="YYYY年MM月DD日"
-                    value={formData.partyBSignDate ? dayjs(formData.partyBSignDate) : undefined}
-                    onChange={date =>
-                      handleFormChange('partyBSignDate', date?.format('YYYY-MM-DD'))
-                    }
+                    value={(() => {
+                      if (!formData.partyBSignDate) {
+                        console.log('🗓️ 乙方签署日期为空:', formData.partyBSignDate)
+                        return undefined
+                      }
+                      try {
+                        const dayjsValue = dayjs(formData.partyBSignDate)
+                        console.log('🗓️ 乙方签署日期解析:', formData.partyBSignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        return dayjsValue.isValid() ? dayjsValue : undefined
+                      } catch (error) {
+                        console.error('🗓️ 乙方签署日期解析失败:', formData.partyBSignDate, error)
+                        return undefined
+                      }
+                    })()}
+                    onChange={date => {
+                      const formatted = date?.format('YYYY-MM-DD')
+                      console.log('🗓️ 乙方签署日期更改:', date, '->', formatted)
+                      handleFormChange('partyBSignDate', formatted)
+                    }}
                   />
                 </div>
               </div>

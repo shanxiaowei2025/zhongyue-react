@@ -391,9 +391,28 @@ const Contracts: React.FC = () => {
     }
   }
 
+  // 清空合同表单缓存数据
+  const clearContractFormCache = () => {
+    try {
+      sessionStorage.removeItem('contractCreateParams')
+      sessionStorage.removeItem('contractCreateData')
+      sessionStorage.removeItem('lastFormSaveTime')
+      console.log('🧹 创建新合同：清空表单缓存数据', {
+        signatory: selectedSignatory,
+        contractType: selectedContractType,
+        cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime']
+      })
+    } catch (error) {
+      console.error('清空合同表单缓存失败:', error)
+    }
+  }
+
   // 确认创建合同
   const handleConfirmCreate = () => {
     if (selectedSignatory && selectedContractType) {
+      // 在跳转前清空旧的合同表单缓存数据
+      clearContractFormCache()
+
       // 跳转到合同创建页面，传递选择的参数
       navigate('/contracts/create', {
         state: {

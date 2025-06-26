@@ -3,6 +3,7 @@ import { Card, Button, Space, Breadcrumb, Divider, Alert, message } from 'antd'
 import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
+import { useDebounce } from '../../hooks/useDebounce'
 import type { CreateContractDto } from '../../types/contract'
 import ProductServiceAgreement, {
   type ProductServiceAgreementRef,
@@ -41,12 +42,13 @@ const CreateContract: React.FC = () => {
     try {
       // 恢复合同参数
       const savedParams = sessionStorage.getItem(getStorageKey('params'))
+      let paramsLoaded = false;
       if (savedParams) {
         const params = JSON.parse(savedParams)
         if (params.signatory && params.contractType) {
           setContractParams(params)
           console.log('🔄 从 sessionStorage 恢复合同创建参数:', params)
-          return true // 返回成功标志
+          paramsLoaded = true;
         }
       }
 
@@ -54,10 +56,28 @@ const CreateContract: React.FC = () => {
       const savedData = sessionStorage.getItem(getStorageKey('data'))
       if (savedData) {
         const data = JSON.parse(savedData)
-        setSavedContractData(data)
-        console.log('🔄 从 sessionStorage 恢复合同表单数据:', data)
+        if (Object.keys(data).length > 0) {
+          // 强制设置甲方公司名称等关键字段，确保它们在UI中正确显示
+          if (data.partyACompany) {
+            console.log('🎯 恢复关键字段：甲方公司名', data.partyACompany)
+          }
+          if (data.partyASignDate) {
+            console.log('🎯 恢复关键字段：甲方签署日期', data.partyASignDate)
+          }
+          if (data.partyBSignDate) {
+            console.log('🎯 恢复关键字段：乙方签署日期', data.partyBSignDate)
+          }
+          setSavedContractData(data)
+          console.log('🔄 从 sessionStorage 恢复合同表单数据:', data)
+          
+          // 创建一个假的事件来触发数据保存和恢复机制
+          setTimeout(() => {
+            const event = new Event('formDataRestored', { bubbles: true })
+            document.dispatchEvent(event)
+          }, 200);
+        }
       }
-      return false // 没有找到参数
+      return paramsLoaded // 返回参数恢复状态
     } catch (error) {
       console.error('恢复 sessionStorage 数据失败:', error)
       return false
@@ -96,6 +116,14 @@ const CreateContract: React.FC = () => {
       }
       if (data) {
         sessionStorage.setItem(getStorageKey('data'), JSON.stringify(data))
+        // 记录保存时间
+        const now = new Date()
+        const formattedTime = now.toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        })
+        sessionStorage.setItem('lastFormSaveTime', formattedTime)
       }
     } catch (error) {
       console.error('保存到 sessionStorage 失败:', error)
@@ -159,17 +187,38 @@ const CreateContract: React.FC = () => {
         } catch (error) {
           console.error('定期检查恢复失败:', error)
         }
+      } else {
+        // 参数正常，检查表单数据是否完整恢复
+        try {
+          const savedData = sessionStorage.getItem(getStorageKey('data'))
+          if (savedData && Object.keys(savedContractData).length === 0) {
+            const data = JSON.parse(savedData)
+            if (Object.keys(data).length > 0) {
+              console.log('🔄 定期检查：恢复丢失的表单数据')
+              setSavedContractData(data)
+              
+              // 特别关注日期字段的恢复
+              if (data.partyASignDate || data.partyBSignDate) {
+                console.log('🕒 定期检查：发现并恢复日期字段')
+                console.log('  甲方签署日期:', data.partyASignDate)
+                console.log('  乙方签署日期:', data.partyBSignDate)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('表单数据恢复失败:', error)
+        }
       }
     }, 5000) // 每5秒检查一次
 
     return () => clearInterval(intervalCheck)
-  }, [])
+  }, [contractParams?.signatory, contractParams?.contractType, savedContractData])
 
   // 监听页面可见性变化，当页面重新可见时保存表单数据和恢复状态
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // 页面隐藏时保存当前表单数据
+        // 页面隐藏时立即保存当前表单数据（不使用防抖）
         saveCurrentFormData()
       } else if (document.visibilityState === 'visible') {
         // 页面可见时检查并恢复状态
@@ -185,6 +234,25 @@ const CreateContract: React.FC = () => {
       if (!contractParams?.signatory || !contractParams?.contractType) {
         console.log('🔄 窗口重新聚焦，检查并恢复状态')
         setTimeout(() => forceRecoverState(), 100)
+      } else {
+        // 有参数时，确保表单内容也被恢复
+        const savedData = sessionStorage.getItem(getStorageKey('data'))
+        if (savedData) {
+          try {
+            const data = JSON.parse(savedData)
+            setSavedContractData(data)
+            console.log('🔄 窗口聚焦时恢复表单数据')
+            
+            // 日期字段特殊处理日志
+            if (data.partyASignDate || data.partyBSignDate) {
+              console.log('🕒 窗口聚焦：恢复日期字段')
+              console.log('  甲方签署日期:', data.partyASignDate)
+              console.log('  乙方签署日期:', data.partyBSignDate)
+            }
+          } catch (error) {
+            console.error('恢复表单数据失败:', error)
+          }
+        }
       }
     }
 
@@ -202,7 +270,7 @@ const CreateContract: React.FC = () => {
     if (!contractParams?.contractType) return
 
     try {
-      let currentData = {}
+      let currentData: Record<string, any> = {}
       
       // 根据合同类型获取当前表单数据
       if (contractParams.contractType === '产品服务协议' && productServiceAgreementRef.current) {
@@ -214,13 +282,35 @@ const CreateContract: React.FC = () => {
       }
 
       if (Object.keys(currentData).length > 0) {
+        // 确保重要字段不会为undefined
+        currentData = {
+          ...currentData,
+          partyACompany: currentData.partyACompany || currentData.customerSearchValue || '',
+          partyAAddress: currentData.partyAAddress || '',
+          partyAContact: currentData.partyAContact || '',
+          partyAPhone: currentData.partyAPhone || '',
+          partyBContact: currentData.partyBContact || '',
+          partyBPhone: currentData.partyBPhone || '',
+        }
+
         saveToStorage(undefined, currentData)
         console.log('💾 自动保存表单数据:', currentData)
+        
+        // 特别监控日期字段的保存
+        if (currentData.partyASignDate) {
+          console.log('📅 保存甲方签署日期:', currentData.partyASignDate)
+        }
+        if (currentData.partyBSignDate) {
+          console.log('📅 保存乙方签署日期:', currentData.partyBSignDate)
+        }
       }
     } catch (error) {
       console.error('保存表单数据失败:', error)
     }
   }
+  
+  // 使用防抖的保存表单数据方法
+  const debouncedSaveFormData = useDebounce(saveCurrentFormData, 500, [contractParams?.contractType])
 
   // 组件卸载时的清理逻辑 - 只保存数据，不自动清理
   useEffect(() => {
@@ -316,6 +406,71 @@ const CreateContract: React.FC = () => {
   ]
 
   // 渲染合同内容
+  // 监听合同表单的更改事件，通过事件委托来捕获
+  useEffect(() => {
+    // 只有在有合同类型和签署方时才监听
+    if (!contractParams?.contractType || !contractParams?.signatory) return
+    
+    // 监听整个文档的变更事件，通过事件委托来捕获表单变化
+    const handleFormChange = () => {
+      // 使用防抖保存表单数据
+      debouncedSaveFormData()
+    }
+    
+    // 监听数据恢复事件，用于触发额外的恢复操作
+    const handleDataRestored = () => {
+      console.log('📣 监听到表单数据恢复事件，触发额外恢复操作')
+      
+      // 如果需要，可以在这里添加额外的恢复操作
+      // 例如，强制更新某些特定表单字段或触发其他操作
+      
+      // 对于产品服务协议，强制同步客户信息
+      if (contractParams.contractType === '产品服务协议' && 
+          productServiceAgreementRef.current && 
+          savedContractData.partyACompany) {
+        const syncEvent = new CustomEvent('syncCustomerData', {
+          detail: {
+            customerName: savedContractData.partyACompany,
+          }
+        })
+        document.dispatchEvent(syncEvent)
+      }
+    }
+
+    // 监听 input, select, textarea 元素的 change 事件
+    document.addEventListener('change', handleFormChange)
+    document.addEventListener('input', handleFormChange)
+    document.addEventListener('formDataRestored', handleDataRestored)
+    
+    // 监听合同组件的自定义表单变化事件（特别针对DatePicker等Antd组件）
+    const handleContractFormFieldChange = (event: any) => {
+      const { field, value, contractType } = event.detail || {}
+      console.log(`📅 [CreateContract] 收到合同字段变化事件: ${field}=${value} (${contractType})`)
+      // 触发自动保存
+      debouncedSaveFormData()
+    }
+    document.addEventListener('contractFormFieldChange', handleContractFormFieldChange)
+    
+    // 强制初始恢复
+    setTimeout(() => {
+      const event = new Event('formDataRestored', { bubbles: true })
+      document.dispatchEvent(event)
+    }, 500)
+    
+    // 定期自动保存表单（备份方案）
+    const autoSaveInterval = setInterval(() => {
+      saveCurrentFormData()
+    }, 60000) // 每1分钟自动保存一次
+    
+    return () => {
+      document.removeEventListener('change', handleFormChange)
+      document.removeEventListener('input', handleFormChange)
+      document.removeEventListener('formDataRestored', handleDataRestored)
+      document.removeEventListener('contractFormFieldChange', handleContractFormFieldChange)
+      clearInterval(autoSaveInterval)
+    }
+  }, [contractParams?.contractType, contractParams?.signatory, debouncedSaveFormData, savedContractData])
+
   const renderContractContent = () => {
     if (!contractParams?.contractType) {
       return (
@@ -491,13 +646,26 @@ const CreateContract: React.FC = () => {
               <div>SessionStorage Params: {sessionStorage.getItem(getStorageKey('params')) ? '✅ 存在' : '❌ 不存在'}</div>
               <div>SessionStorage Data: {sessionStorage.getItem(getStorageKey('data')) ? '✅ 存在' : '❌ 不存在'}</div>
               <div>Current State: signatory={contractParams?.signatory || 'null'}, type={contractParams?.contractType || 'null'}</div>
+              <div>Saved Data Keys: {Object.keys(savedContractData).length > 0 ? Object.keys(savedContractData).join(', ') : '无'}</div>
+              {savedContractData.partyASignDate && (
+                <div>甲方签署日期: {savedContractData.partyASignDate}</div>
+              )}
+              {savedContractData.partyBSignDate && (
+                <div>乙方签署日期: {savedContractData.partyBSignDate}</div>
+              )}
               <div className="mt-1 space-x-2">
                 <Button size="small" onClick={forceRecoverState}>
                   强制恢复状态
                 </Button>
+                <Button size="small" onClick={saveCurrentFormData} type="primary">
+                  立即保存表单
+                </Button>
                 <Button size="small" onClick={clearStorageData} danger>
                   清除保存数据
                 </Button>
+              </div>
+              <div className="mt-2 text-xs text-gray-500">
+                上次保存时间: {sessionStorage.getItem('lastFormSaveTime') || '未保存'}
               </div>
             </div>
           )}
