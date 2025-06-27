@@ -98,10 +98,17 @@ const AgencyAccountingAgreement = forwardRef<
     { signatory, contractData = {}, onSubmit, onUpdate, isSubmitting = false, mode = 'create' },
     ref
   ) => {
-    // 状态管理
+    // 获取当前签约方配置
+    const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
+    
+    // 状态管理（初始化时包含乙方默认值）
     const [formData, setFormData] = useState<Record<string, any>>({
       signatory,
       contractType: '代理记账合同',
+      // 设置乙方默认值
+      partyBAddress: config?.address || '',
+      partyBPhone: config?.phone || '',
+      partyBLegalPerson: '刘菲',
       ...contractData,
     })
 
@@ -141,78 +148,109 @@ const AgencyAccountingAgreement = forwardRef<
     const [codeTotal, setCodeTotal] = useState<number>(0)
     const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
 
-    // 当contractData变化时，更新表单数据
+    // 当contractData变化时，更新表单数据（只在初始化或明确需要重置时）
     useEffect(() => {
       if (contractData && Object.keys(contractData).length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          signatory,
-          contractType: '代理记账合同',
-          ...contractData,
-        }))
-
-        // 初始化金额显示值
-        const newAmountDisplayValues: Record<string, string> = {
-          totalAgencyAccountingFee: contractData.totalAgencyAccountingFee
-            ? String(contractData.totalAgencyAccountingFee)
-            : '',
-          agencyAccountingFee: contractData.agencyAccountingFee
-            ? String(contractData.agencyAccountingFee)
-            : '',
-          accountingSoftwareFee: contractData.accountingSoftwareFee
-            ? String(contractData.accountingSoftwareFee)
-            : '',
-          invoicingSoftwareFee: contractData.invoicingSoftwareFee
-            ? String(contractData.invoicingSoftwareFee)
-            : '',
-          accountBookFee: contractData.accountBookFee ? String(contractData.accountBookFee) : '',
-          currentChargeFee: contractData.currentChargeFee
-            ? String(contractData.currentChargeFee)
-            : '',
-        }
-        setAmountDisplayValues(newAmountDisplayValues)
-
-        // 设置申报服务选项
-        if (Array.isArray(contractData.declarationService)) {
-          setSelectedServices(contractData.declarationService.map((item: any) => item.value))
-        }
-
-        // 设置其他业务
-        if (contractData.otherBusiness) {
-          setOtherBusiness(contractData.otherBusiness)
-        }
-
-        // 同步自动补全搜索状态
-        if (contractData.partyACompany) {
-          setCustomerSearchValue(contractData.partyACompany)
-        }
-        if (contractData.partyACreditCode) {
-          setCodeSearchValue(contractData.partyACreditCode)
-        }
+        console.log('🔄 [代理记账合同] contractData 变化，当前 formData 状态:', {
+          currentPartyAAddress: formData.partyAAddress,
+          newPartyAAddress: contractData.partyAAddress,
+          isFormEmpty: Object.keys(formData).length === 0 || (!formData.partyACompany && !formData.partyAAddress)
+        })
         
-        // 特别处理日期字段，确保它们能正确恢复
-        if (contractData.partyASignDate || contractData.partyBSignDate) {
-          console.log('📅 AgencyAccountingAgreement: 恢复日期字段:')
-          if (contractData.partyASignDate) {
-            console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
+        // 只有在表单为空或者是初始状态时才完全覆盖数据
+        // 这样可以避免在验证失败时清空用户输入的数据
+        const isInitialLoad = Object.keys(formData).length === 0 || 
+                             (!formData.partyACompany && !formData.partyAAddress && !formData.partyAPhone)
+        
+        if (isInitialLoad) {
+          console.log('📝 [代理记账合同] 初始化或重置表单数据')
+          setFormData(prev => ({
+            ...prev,
+            signatory,
+            contractType: '代理记账合同',
+            ...contractData,
+          }))
+        } else {
+          console.log('⚠️ [代理记账合同] 表单已有数据，跳过覆盖以保护用户输入')
+          // 只更新一些安全的非用户输入字段
+          setFormData(prev => ({
+            ...prev,
+            signatory,
+            contractType: '代理记账合同',
+            // 只更新一些系统级别的字段，不覆盖用户输入
+            ...(contractData.id && { id: contractData.id }),
+            ...(contractData.contractNumber && { contractNumber: contractData.contractNumber }),
+            ...(contractData.createTime && { createTime: contractData.createTime }),
+            ...(contractData.updateTime && { updateTime: contractData.updateTime }),
+          }))
+        }
+
+        // 初始化金额显示值和其他状态（只在初始化时全量更新）
+        if (isInitialLoad) {
+          const newAmountDisplayValues: Record<string, string> = {
+            totalAgencyAccountingFee: contractData.totalAgencyAccountingFee
+              ? String(contractData.totalAgencyAccountingFee)
+              : '',
+            agencyAccountingFee: contractData.agencyAccountingFee
+              ? String(contractData.agencyAccountingFee)
+              : '',
+            accountingSoftwareFee: contractData.accountingSoftwareFee
+              ? String(contractData.accountingSoftwareFee)
+              : '',
+            invoicingSoftwareFee: contractData.invoicingSoftwareFee
+              ? String(contractData.invoicingSoftwareFee)
+              : '',
+            accountBookFee: contractData.accountBookFee ? String(contractData.accountBookFee) : '',
+            currentChargeFee: contractData.currentChargeFee
+              ? String(contractData.currentChargeFee)
+              : '',
           }
-          if (contractData.partyBSignDate) {
-            console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
+          setAmountDisplayValues(newAmountDisplayValues)
+
+          // 设置申报服务选项
+          if (Array.isArray(contractData.declarationService)) {
+            setSelectedServices(contractData.declarationService.map((item: any) => item.value))
+          }
+
+          // 设置其他业务
+          if (contractData.otherBusiness) {
+            setOtherBusiness(contractData.otherBusiness)
+          }
+
+          // 同步自动补全搜索状态
+          if (contractData.partyACompany) {
+            setCustomerSearchValue(contractData.partyACompany)
+          }
+          if (contractData.partyACreditCode) {
+            setCodeSearchValue(contractData.partyACreditCode)
           }
           
-          // 立即设置日期字段，不使用延迟
-          setFormData(prev => {
-            const newData = {
-              ...prev,
-              partyASignDate: contractData.partyASignDate || prev.partyASignDate,
-              partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
+          // 特别处理日期字段，确保它们能正确恢复
+          if (contractData.partyASignDate || contractData.partyBSignDate) {
+            console.log('📅 AgencyAccountingAgreement: 恢复日期字段:')
+            if (contractData.partyASignDate) {
+              console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
             }
-            console.log('📅 立即更新 formData 日期字段:', {
-              partyASignDate: newData.partyASignDate,
-              partyBSignDate: newData.partyBSignDate
+            if (contractData.partyBSignDate) {
+              console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
+            }
+            
+            // 立即设置日期字段，不使用延迟
+            setFormData(prev => {
+              const newData = {
+                ...prev,
+                partyASignDate: contractData.partyASignDate || prev.partyASignDate,
+                partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
+              }
+              console.log('📅 立即更新 formData 日期字段:', {
+                partyASignDate: newData.partyASignDate,
+                partyBSignDate: newData.partyBSignDate
+              })
+              return newData
             })
-            return newData
-          })
+          }
+        } else {
+          console.log('⚠️ [代理记账合同] 跳过状态重置，保护用户当前输入')
         }
       }
     }, [contractData, signatory])
@@ -477,8 +515,6 @@ const AgencyAccountingAgreement = forwardRef<
       return ''
     }, [formData.totalAgencyAccountingFee])
 
-    const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
-
     if (!config) {
       return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
     }
@@ -552,12 +588,117 @@ const AgencyAccountingAgreement = forwardRef<
 
     // 表单验证
     const validateForm = (): boolean => {
-      // 必填字段验证
-      if (!formData.partyACompany) {
-        message.error('请填写甲方公司名称')
+      console.log('🔍 [代理记账合同] 表单验证开始:', {
+        'formData.partyACompany': formData.partyACompany,
+        'customerSearchValue': customerSearchValue,
+        'formData.partyACreditCode': formData.partyACreditCode,
+        'codeSearchValue': codeSearchValue
+      })
+      
+      // 甲方基本信息必填验证（使用表单数据状态）
+      if (!formData.partyACompany || !formData.partyACompany.trim()) {
+        console.error('❌ [代理记账合同] 甲方名称验证失败:', { 
+          formData: formData.partyACompany, 
+          searchValue: customerSearchValue
+        })
+        message.error('请填写甲方名称')
         return false
       }
 
+      if (!formData.partyACreditCode || !formData.partyACreditCode.trim()) {
+        console.error('❌ [代理记账合同] 统一社会信用代码验证失败:', { 
+          formData: formData.partyACreditCode, 
+          searchValue: codeSearchValue
+        })
+        message.error('请填写统一社会信用代码')
+        return false
+      }
+
+      if (!formData.partyAAddress || !formData.partyAAddress.trim()) {
+        console.error('❌ [代理记账合同] 甲方地址验证失败:', { 
+          formData: formData.partyAAddress,
+          addressValue: formData.partyAAddress
+        })
+        message.error('请填写甲方地址')
+        return false
+      }
+
+      if (!formData.partyAPhone || !formData.partyAPhone.trim()) {
+        message.error('请填写甲方电话')
+        return false
+      }
+
+      if (!formData.partyAContact || !formData.partyAContact.trim()) {
+        message.error('请填写甲方联系人')
+        return false
+      }
+
+      if (!formData.partyALegalPerson || !formData.partyALegalPerson.trim()) {
+        message.error('请填写甲方法定代表人')
+        return false
+      }
+
+      if (!formData.partyAPostalCode || !formData.partyAPostalCode.trim()) {
+        message.error('请填写甲方邮编')
+        return false
+      }
+
+      if (!formData.partyASignDate) {
+        message.error('请选择甲方签约日期')
+        return false
+      }
+
+      // 乙方基本信息必填验证（考虑默认值）
+      const partyBAddress = formData.partyBAddress || config.address
+      if (!partyBAddress || !partyBAddress.trim()) {
+        console.error('❌ [代理记账合同] 乙方地址验证失败:', { 
+          formData: formData.partyBAddress,
+          configAddress: config.address,
+          finalValue: partyBAddress
+        })
+        message.error('请填写乙方地址')
+        return false
+      }
+
+      const partyBPhone = formData.partyBPhone || config.phone
+      if (!partyBPhone || !partyBPhone.trim()) {
+        console.error('❌ [代理记账合同] 乙方电话验证失败:', { 
+          formData: formData.partyBPhone,
+          configPhone: config.phone,
+          finalValue: partyBPhone
+        })
+        message.error('请填写乙方电话')
+        return false
+      }
+
+      if (!formData.partyBContact || !formData.partyBContact.trim()) {
+        message.error('请填写乙方联系人')
+        return false
+      }
+
+      // 乙方法定代表人有默认值 '刘菲'
+      const partyBLegalPerson = formData.partyBLegalPerson || '刘菲'
+      if (!partyBLegalPerson || !partyBLegalPerson.trim()) {
+        console.error('❌ [代理记账合同] 乙方法定代表人验证失败:', { 
+          formData: formData.partyBLegalPerson,
+          defaultValue: '刘菲',
+          finalValue: partyBLegalPerson
+        })
+        message.error('请填写乙方法定代表人')
+        return false
+      }
+
+      if (!formData.partyBPostalCode || !formData.partyBPostalCode.trim()) {
+        message.error('请填写乙方邮编')
+        return false
+      }
+
+      if (!formData.partyBSignDate) {
+        message.error('请选择乙方签约日期')
+        return false
+      }
+
+      // 委托期间验证
       if (!formData.entrustmentStartDate || !formData.entrustmentEndDate) {
         message.error('请选择委托开始和结束日期')
         return false
@@ -569,7 +710,29 @@ const AgencyAccountingAgreement = forwardRef<
         return false
       }
 
-      // 基本验证通过
+      // 验证通过，检查状态一致性（调试用）
+      console.log('🔄 [代理记账合同] 验证通过，检查状态一致性:', {
+        partyACompany: { formData: formData.partyACompany, searchValue: customerSearchValue },
+        partyACreditCode: { formData: formData.partyACreditCode, searchValue: codeSearchValue }
+      })
+      
+      // 同步乙方默认值到表单数据
+      if (!formData.partyBAddress && config.address) {
+        console.log('🔄 [代理记账合同] 同步乙方地址默认值:', config.address)
+        setFormData(prev => ({...prev, partyBAddress: config.address}))
+      }
+      
+      if (!formData.partyBPhone && config.phone) {
+        console.log('🔄 [代理记账合同] 同步乙方电话默认值:', config.phone)
+        setFormData(prev => ({...prev, partyBPhone: config.phone}))
+      }
+      
+      if (!formData.partyBLegalPerson) {
+        console.log('🔄 [代理记账合同] 同步乙方法定代表人默认值: 刘菲')
+        setFormData(prev => ({...prev, partyBLegalPerson: '刘菲'}))
+      }
+
+      console.log('✅ [代理记账合同] 表单验证通过，数据同步完成')
       return true
     }
 
@@ -642,12 +805,12 @@ const AgencyAccountingAgreement = forwardRef<
         partyAPostalCode: formData.partyAPostalCode || '', // 甲方邮编字段（修正名称）
         partyALegalPerson: formData.partyALegalPerson || '', // 甲方法定代表人
         
-        // 乙方信息
-        partyBAddress: formData.partyBAddress || '',
-        partyBPhone: formData.partyBPhone || '',
+        // 乙方信息（包含默认值）
+        partyBAddress: formData.partyBAddress || config.address || '',
+        partyBPhone: formData.partyBPhone || config.phone || '',
         partyBContact: formData.partyBContact || '',
         partyBPostalCode: formData.partyBPostalCode || '', // 乙方邮编字段
-        partyBLegalPerson: formData.partyBLegalPerson || '', // 乙方法定代表人
+        partyBLegalPerson: formData.partyBLegalPerson || '刘菲', // 乙方法定代表人（默认值）
         
         // 委托期间
         entrustmentStartDate: formData.entrustmentStartDate || '',
@@ -714,7 +877,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyContent}>
               <AutoComplete
                 className={styles.companyInput}
-                placeholder="请输入甲方公司名称进行搜索"
+                placeholder="*请输入甲方公司名称进行搜索"
                 options={customerOptions}
                 value={customerSearchValue || formData.partyACompany || ''}
                 onSearch={(value) => {
@@ -729,10 +892,15 @@ const AgencyAccountingAgreement = forwardRef<
                   handleCustomerSelect(value, option)
                 }}
                 onChange={(value) => {
-                  setCustomerSearchValue(value)
-                  handleFormChange('partyACompany', value)
+                  console.log('🔄 [甲方名称] onChange 触发:', { value, currentSearchValue: customerSearchValue, currentFormData: formData.partyACompany })
+                  
+                  // 同步更新两个状态
+                  setCustomerSearchValue(value || '')
+                  handleFormChange('partyACompany', value || '')
+                  
                   // 如果输入值为空，重置搜索状态
                   if (!value || !value.trim()) {
+                    console.log('🧹 [甲方名称] 清空操作，重置搜索状态')
                     resetCustomerSearch()
                   }
                 }}
@@ -794,7 +962,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>统一社会信用代码：</div>
             <div className={styles.partyContent}>
               <AutoComplete
-                placeholder="请输入甲方统一社会信用代码进行搜索"
+                placeholder="*请输入甲方统一社会信用代码进行搜索"
                 options={codeOptions}
                 value={codeSearchValue || formData.partyACreditCode || ''}
                 onSearch={(value) => {
@@ -809,10 +977,15 @@ const AgencyAccountingAgreement = forwardRef<
                   handleCodeSelect(value, option)
                 }}
                 onChange={(value) => {
-                  setCodeSearchValue(value)
-                  handleFormChange('partyACreditCode', value)
+                  console.log('🔄 [统一社会信用代码] onChange 触发:', { value, currentSearchValue: codeSearchValue, currentFormData: formData.partyACreditCode })
+                  
+                  // 同步更新两个状态
+                  setCodeSearchValue(value || '')
+                  handleFormChange('partyACreditCode', value || '')
+                  
                   // 如果输入值为空，重置搜索状态
                   if (!value || !value.trim()) {
+                    console.log('🧹 [统一社会信用代码] 清空操作，重置搜索状态')
                     resetCodeSearch()
                   }
                 }}
@@ -875,7 +1048,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>地址：</div>
             <div className={styles.partyContent}>
               <Input
-                placeholder="请填写甲方地址"
+                placeholder="*请填写甲方地址"
                 value={formData.partyAAddress || ''}
                 onChange={e => handleFormChange('partyAAddress', e.target.value)}
                 className={styles.addressInput}
@@ -887,7 +1060,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>电话：</div>
             <div className={styles.partyContent}>
               <Input
-                placeholder="请填写甲方电话"
+                placeholder="*请填写甲方电话"
                 value={formData.partyAPhone || ''}
                 onChange={e => handleFormChange('partyAPhone', e.target.value)}
                 className={styles.phoneInput}
@@ -899,7 +1072,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>联系人：</div>
             <div className={styles.partyContent}>
               <Input
-                placeholder="请填写甲方联系人"
+                placeholder="*请填写甲方联系人"
                 value={formData.partyAContact || ''}
                 onChange={e => handleFormChange('partyAContact', e.target.value)}
                 className={styles.contactInput}
@@ -925,7 +1098,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>地址：</div>
             <div className={styles.partyContent}>
               <Input
-                placeholder="请填写乙方地址"
+                placeholder="*请填写乙方地址"
                 value={formData.partyBAddress || config.address}
                 onChange={e => handleFormChange('partyBAddress', e.target.value)}
                 className={styles.addressInput}
@@ -937,7 +1110,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>电话：</div>
             <div className={styles.partyContent}>
               <Input
-                placeholder="请填写乙方电话"
+                placeholder="*请填写乙方电话"
                 value={formData.partyBPhone || config.phone}
                 onChange={e => handleFormChange('partyBPhone', e.target.value)}
                 className={styles.phoneInput}
@@ -949,7 +1122,7 @@ const AgencyAccountingAgreement = forwardRef<
             <div className={styles.partyLabel}>业务人：</div>
             <div className={styles.partyContent}>
               <Input
-                placeholder="请填写乙方业务人"
+                placeholder="*请填写乙方业务人"
                 value={formData.partyBContact || ''}
                 onChange={e => handleFormChange('partyBContact', e.target.value)}
                 className={styles.businessPersonInput}
@@ -1286,7 +1459,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>法定代表人：</div>
                   <Input
-                    placeholder="请输入法定代表人"
+                    placeholder="*请输入法定代表人"
                     value={formData.partyALegalPerson || ''}
                     onChange={e => handleFormChange('partyALegalPerson', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1297,7 +1470,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>法定代表人：</div>
                   <Input
-                    placeholder="请输入法定代表人"
+                    placeholder="*请输入法定代表人"
                     value={formData.partyBLegalPerson || '刘菲'}
                     onChange={e => handleFormChange('partyBLegalPerson', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1312,7 +1485,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>联系人：</div>
                   <Input
-                    placeholder="请输入联系人"
+                    placeholder="*请输入联系人"
                     value={formData.partyAContact || ''}
                     onChange={e => handleFormChange('partyAContact', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1323,7 +1496,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>联系人：</div>
                   <Input
-                    placeholder="请输入联系人"
+                    placeholder="*请输入联系人"
                     value={formData.partyBContact || ''}
                     onChange={e => handleFormChange('partyBContact', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1338,7 +1511,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>地址：</div>
                   <Input
-                    placeholder="请输入地址"
+                    placeholder="*请输入地址"
                     value={formData.partyAAddress || ''}
                     onChange={e => handleFormChange('partyAAddress', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1349,7 +1522,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>地址：</div>
                   <Input
-                    placeholder="请输入地址"
+                    placeholder="*请输入地址"
                     value={formData.partyBAddress || config.address}
                     onChange={e => handleFormChange('partyBAddress', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1364,7 +1537,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>邮编：</div>
                   <Input
-                    placeholder="请输入邮编"
+                    placeholder="*请输入邮编"
                     value={formData.partyAPostalCode || ''}
                     onChange={e => handleFormChange('partyAPostalCode', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1375,7 +1548,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>邮编：</div>
                   <Input
-                    placeholder="请输入邮编"
+                    placeholder="*请输入邮编"
                     value={formData.partyBPostalCode || ''}
                     onChange={e => handleFormChange('partyBPostalCode', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1390,7 +1563,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>电话：</div>
                   <Input
-                    placeholder="请输入电话"
+                    placeholder="*请输入电话"
                     value={formData.partyAPhone || ''}
                     onChange={e => handleFormChange('partyAPhone', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1401,7 +1574,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>电话：</div>
                   <Input
-                    placeholder="请输入电话"
+                    placeholder="*请输入电话"
                     value={formData.partyBPhone || config.phone}
                     onChange={e => handleFormChange('partyBPhone', e.target.value)}
                     style={{ width: '100%', fontSize: '12px' }}
@@ -1416,7 +1589,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>签约日期：</div>
                   <DatePicker
-                    placeholder="请选择日期"
+                    placeholder="*请选择日期"
                     format="YYYY年MM月DD日"
                     value={(() => {
                       if (!formData.partyASignDate) {
@@ -1445,7 +1618,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureField}>
                   <div className={styles.signatureLabel}>签约日期：</div>
                   <DatePicker
-                    placeholder="请选择日期"
+                    placeholder="*请选择日期"
                     format="YYYY年MM月DD日"
                     value={(() => {
                       if (!formData.partyBSignDate) {
