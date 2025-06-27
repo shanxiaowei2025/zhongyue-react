@@ -557,6 +557,34 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         hasErrors = true
       }
 
+      // 甲方联系人必填验证
+      if (!formData.partyAContact?.trim()) {
+        setValidationError('partyAContact')
+        message.error('请填写甲方联系人')
+        hasErrors = true
+      }
+
+      // 甲方联系电话必填验证
+      if (!formData.partyAPhone?.trim()) {
+        setValidationError('partyAPhone')
+        message.error('请填写甲方联系电话')
+        hasErrors = true
+      }
+
+      // 乙方联系人必填验证
+      if (!formData.partyBContact?.trim()) {
+        setValidationError('partyBContact')
+        message.error('请填写乙方联系人')
+        hasErrors = true
+      }
+
+      // 乙方联系电话必填验证
+      if (!formData.partyBPhone?.trim()) {
+        setValidationError('partyBPhone')
+        message.error('请填写乙方联系电话')
+        hasErrors = true
+      }
+
       if (!formData.totalCost || formData.totalCost <= 0) {
         setValidationError('totalCost')
         message.error('请填写费用总计')
@@ -939,8 +967,11 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <span className={styles.detailLabel}>联系人：</span>
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
-                  style={{ width: '200px' }}
-                  placeholder="请输入联系人"
+                  style={{ 
+                    width: '200px',
+                    borderBottomColor: validationErrors.partyAContact ? '#ff4d4f' : undefined
+                  }}
+                  placeholder="*请输入联系人"
                   value={formData.partyAContact || ''}
                   onChange={e => handleFormChange('partyAContact', e.target.value)}
                   bordered={false}
@@ -950,7 +981,10 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 </span>
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
-                  placeholder="请输入联系电话"
+                  style={{
+                    borderBottomColor: validationErrors.partyAPhone ? '#ff4d4f' : undefined
+                  }}
+                  placeholder="*请输入联系电话"
                   value={formData.partyAPhone || ''}
                   onChange={e => handleFormChange('partyAPhone', e.target.value)}
                   bordered={false}
@@ -975,8 +1009,11 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <span className={styles.detailLabel}>联系人：</span>
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
-                  style={{ width: '200px' }}
-                  placeholder="请输入乙方联系人"
+                  style={{ 
+                    width: '200px',
+                    borderBottomColor: validationErrors.partyBContact ? '#ff4d4f' : undefined
+                  }}
+                  placeholder="*请输入乙方联系人"
                   value={formData.partyBContact || ''}
                   onChange={e => handleFormChange('partyBContact', e.target.value)}
                   bordered={false}
@@ -986,7 +1023,10 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 </span>
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
-                  placeholder="请输入乙方联系电话"
+                  style={{
+                    borderBottomColor: validationErrors.partyBPhone ? '#ff4d4f' : undefined
+                  }}
+                  placeholder="*请输入乙方联系电话"
                   value={formData.partyBPhone || ''}
                   onChange={e => handleFormChange('partyBPhone', e.target.value)}
                   bordered={false}

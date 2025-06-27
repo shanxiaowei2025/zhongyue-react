@@ -604,6 +604,26 @@ const ProductServiceAgreement = forwardRef<
         return false
       }
 
+      if (!formData.partyAContact?.trim()) {
+        message.error('请填写甲方联系人')
+        return false
+      }
+
+      if (!formData.partyAPhone?.trim()) {
+        message.error('请填写甲方联系电话')
+        return false
+      }
+
+      if (!formData.partyBContact?.trim()) {
+        message.error('请填写乙方联系人')
+        return false
+      }
+
+      if (!formData.partyBPhone?.trim()) {
+        message.error('请填写乙方联系电话')
+        return false
+      }
+
       if (!formData.totalCost || formData.totalCost <= 0) {
         message.error('请填写费用总计')
         return false
@@ -1009,7 +1029,7 @@ const ProductServiceAgreement = forwardRef<
                     className="contact-input"
                     value={formData.partyAContact || ''}
                     onChange={e => handleFormChange('partyAContact', e.target.value)}
-                    placeholder="联系人"
+                    placeholder="*联系人"
                   />
                 </div>
                 <div className="contact-item">
@@ -1018,7 +1038,7 @@ const ProductServiceAgreement = forwardRef<
                     className="phone-input"
                     value={formData.partyAPhone || ''}
                     onChange={e => handleFormChange('partyAPhone', e.target.value)}
-                    placeholder="联系电话"
+                    placeholder="*联系电话"
                   />
                 </div>
               </div>
@@ -1045,7 +1065,7 @@ const ProductServiceAgreement = forwardRef<
                     className="contact-input"
                     value={formData.partyBContact || ''}
                     onChange={e => handleFormChange('partyBContact', e.target.value)}
-                    placeholder="联系人"
+                    placeholder="*联系人"
                   />
                 </div>
                 <div className="contact-item">
@@ -1054,7 +1074,7 @@ const ProductServiceAgreement = forwardRef<
                     className="phone-input"
                     value={formData.partyBPhone || ''}
                     onChange={e => handleFormChange('partyBPhone', e.target.value)}
-                    placeholder="联系电话"
+                    placeholder="*联系电话"
                   />
                 </div>
               </div>

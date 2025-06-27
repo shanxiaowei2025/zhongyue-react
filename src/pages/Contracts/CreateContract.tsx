@@ -32,6 +32,7 @@ const CreateContract: React.FC = () => {
   const location = useLocation()
   const state = location.state as LocationState
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmittingInProgress, setIsSubmittingInProgress] = useState(false) // 新增：标记提交进行中
   const [contractParams, setContractParams] = useState<{signatory?: string, contractType?: string}>({})
   const [savedContractData, setSavedContractData] = useState<any>({})
   const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
@@ -181,6 +182,12 @@ const CreateContract: React.FC = () => {
   // 定期检查并恢复状态（防止意外丢失）
   useEffect(() => {
     const intervalCheck = setInterval(() => {
+      // 如果正在提交，跳过恢复逻辑
+      if (isSubmittingInProgress) {
+        console.log('⏸️ 提交进行中，跳过定期检查恢复')
+        return
+      }
+
       if (!contractParams?.signatory || !contractParams?.contractType) {
         try {
           const savedParams = sessionStorage.getItem(getStorageKey('params'))
@@ -219,15 +226,22 @@ const CreateContract: React.FC = () => {
     }, 5000) // 每5秒检查一次
 
     return () => clearInterval(intervalCheck)
-  }, [contractParams?.signatory, contractParams?.contractType, savedContractData])
+  }, [contractParams?.signatory, contractParams?.contractType, savedContractData, isSubmittingInProgress])
 
   // 监听页面可见性变化，当页面重新可见时保存表单数据和恢复状态
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         // 页面隐藏时立即保存当前表单数据（不使用防抖）
-        saveCurrentFormData()
+        if (!isSubmittingInProgress) {
+          saveCurrentFormData()
+        }
       } else if (document.visibilityState === 'visible') {
+        // 如果正在提交，跳过恢复逻辑
+        if (isSubmittingInProgress) {
+          console.log('⏸️ 提交进行中，跳过页面可见性恢复')
+          return
+        }
         // 页面可见时检查并恢复状态
         if (!contractParams?.signatory || !contractParams?.contractType) {
           console.log('🔄 页面重新可见，检查并恢复状态')
@@ -237,6 +251,12 @@ const CreateContract: React.FC = () => {
     }
 
     const handleFocus = () => {
+      // 如果正在提交，跳过恢复逻辑
+      if (isSubmittingInProgress) {
+        console.log('⏸️ 提交进行中，跳过窗口聚焦恢复')
+        return
+      }
+
       // 窗口重新获得焦点时也尝试恢复状态
       if (!contractParams?.signatory || !contractParams?.contractType) {
         console.log('🔄 窗口重新聚焦，检查并恢复状态')
@@ -270,7 +290,7 @@ const CreateContract: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [contractParams])
+  }, [contractParams, isSubmittingInProgress])
 
   // 保存当前表单数据
   const saveCurrentFormData = () => {
@@ -352,6 +372,8 @@ const CreateContract: React.FC = () => {
   const handleContractSubmit = async () => {
     try {
       setIsSubmitting(true)
+      setIsSubmittingInProgress(true) // 标记提交进行中，暂停所有自动恢复逻辑
+      console.log('🚀 开始提交合同，暂停自动恢复逻辑')
 
       if (contractParams?.contractType === '产品服务协议') {
         if (!productServiceAgreementRef.current) {
@@ -401,6 +423,8 @@ const CreateContract: React.FC = () => {
       message.error('提交合同失败，请检查填写内容后重试')
     } finally {
       setIsSubmitting(false)
+      setIsSubmittingInProgress(false) // 提交结束，恢复自动恢复逻辑
+      console.log('🔚 合同提交结束，恢复自动恢复逻辑')
     }
   }
 
