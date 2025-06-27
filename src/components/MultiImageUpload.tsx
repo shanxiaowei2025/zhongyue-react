@@ -7,9 +7,33 @@ import {
   PlusOutlined,
   LoadingOutlined,
   FileImageOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FileTextOutlined,
+  FileJpgOutlined,
 } from '@ant-design/icons'
 import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
 import type { ImageType } from '../types'
+
+// 定义文件类型图标映射
+const FILE_ICONS: Record<string, React.ReactNode> = {
+  pdf: <FilePdfOutlined />,
+  doc: <FileWordOutlined />,
+  docx: <FileWordOutlined />,
+  xls: <FileExcelOutlined />,
+  xlsx: <FileExcelOutlined />,
+  csv: <FileTextOutlined />,
+  jpg: <FileJpgOutlined />,
+  jpeg: <FileJpgOutlined />,
+  png: <FileImageOutlined />,
+  gif: <FileImageOutlined />,
+  bmp: <FileImageOutlined />,
+  webp: <FileImageOutlined />,
+  txt: <FileTextOutlined />,
+  default: <FileOutlined />,
+}
 
 interface MultiImageUploadProps {
   title?: string
@@ -73,19 +97,68 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     url: imageData.fileName ? buildImageUrl(imageData.fileName) : imageData.url || '',
   }))
 
+  // 判断文件类型
+  const getFileType = (fileName: string): string => {
+    if (!fileName) return 'default'
+    const extension = fileName.split('.').pop()?.toLowerCase() || 'default'
+    return FILE_ICONS[extension] ? extension : 'default'
+  }
+
+  // 判断是否为图片
+  const checkIsImage = (fileName: string): boolean => {
+    if (!fileName) return false
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    const extension = fileName.split('.').pop()?.toLowerCase() || ''
+    return imageExtensions.includes(extension)
+  }
+
+  // 获取文件图标
+  const getFileIcon = (fileName: string) => {
+    const fileType = getFileType(fileName)
+    return FILE_ICONS[fileType] || FILE_ICONS.default
+  }
+
+  // 获取文件扩展名
+  const getFileExtension = (fileName: string) => {
+    if (!fileName) return ''
+    return fileName.split('.').pop()?.toUpperCase() || ''
+  }
+
   const beforeUpload = (file: File) => {
-    const isImage = file.type.startsWith('image/')
-    if (!isImage) {
-      message.error('只能上传图片文件！')
+    // 支持的文件格式：图片、PDF、Word、Excel、CSV
+    const allowedTypes = [
+      // 图片格式
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+      // PDF格式
+      'application/pdf',
+      // Word格式
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      // Excel格式  
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      // CSV格式
+      'text/csv', 'application/csv'
+    ]
+
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv']
+    
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
+    const isAllowedType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)
+    
+    if (!isAllowedType) {
+      message.error('只能上传图片、PDF、Word、Excel、CSV格式的文件！')
       return false
     }
 
-    // 显示文件预览
-    const reader = new FileReader()
-    reader.onload = e => {
-      setFilePreview(e.target?.result as string)
+    // 显示文件预览（仅对图片显示预览）
+    if (checkIsImage(file.name)) {
+      const reader = new FileReader()
+      reader.onload = e => {
+        setFilePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setFilePreview(null) // 非图片文件不显示预览
     }
-    reader.readAsDataURL(file)
 
     setSelectedFile(file)
     return false // 阻止自动上传
@@ -277,14 +350,14 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
               onClick={() => setIsAddModalVisible(true)}
               size="small"
             >
-              添加图片
+              添加文件
             </Button>
           )}
         </div>
 
         {imageList.length === 0 ? (
           <div className="text-center p-4 bg-gray-50 rounded border border-dashed">
-            暂无图片{!disabled && '，请点击上方按钮添加'}
+            暂无文件{!disabled && '，请点击上方按钮添加'}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -306,9 +379,9 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                       {imageErrors[item.key] ? (
                         <div className="flex flex-col items-center justify-center text-gray-400">
                           <FileImageOutlined style={{ fontSize: 30 }} />
-                          <span className="mt-2">图片加载失败</span>
+                          <span className="mt-2">文件加载失败</span>
                         </div>
-                      ) : (
+                      ) : checkIsImage(item.fileName) ? (
                         <img
                           src={imgUrl}
                           alt={item.key}
@@ -316,6 +389,11 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                           onError={() => handleImageError(item.key)}
                           crossOrigin="anonymous"
                         />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-gray-600">
+                          <div style={{ fontSize: 40 }}>{getFileIcon(item.fileName)}</div>
+                          <span className="mt-2 text-xs">{getFileExtension(item.fileName)}</span>
+                        </div>
                       )}
                     </div>
                   }
@@ -356,25 +434,53 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         width={800}
       >
         <div className="flex justify-center">
-          <Image
-            alt={previewTitle}
-            src={previewImage}
-            style={{ maxWidth: '100%' }}
-            preview={false}
-            fallback="/images/image-placeholder.svg"
-            crossOrigin="anonymous"
-            onError={() => {
-              const currentKey = previewTitle
-              handleImageError(currentKey)
-            }}
-          />
+          {value[previewTitle] && checkIsImage(value[previewTitle].fileName || '') ? (
+            // 图片预览
+            <Image
+              alt={previewTitle}
+              src={previewImage}
+              style={{ maxWidth: '100%' }}
+              preview={false}
+              fallback="/images/image-placeholder.svg"
+              crossOrigin="anonymous"
+              onError={() => {
+                const currentKey = previewTitle
+                handleImageError(currentKey)
+              }}
+            />
+          ) : (
+            // 非图片文件预览
+            <div className="flex flex-col items-center justify-center p-8">
+              <div className="text-6xl mb-4">
+                {value[previewTitle]?.fileName ? getFileIcon(value[previewTitle].fileName) : <FileOutlined />}
+              </div>
+              <div className="text-xl font-bold">{value[previewTitle]?.fileName || '未知文件'}</div>
+              <div className="text-gray-500 mb-4">
+                {value[previewTitle]?.fileName ? getFileExtension(value[previewTitle].fileName) : ''}
+              </div>
+              <Space>
+                <Button 
+                  type="primary" 
+                  onClick={() => {
+                    const fileData = value[previewTitle]
+                    if (fileData) {
+                      const url = fileData.fileName ? buildImageUrl(fileData.fileName) : fileData.url
+                      if (url) window.open(url, '_blank')
+                    }
+                  }}
+                >
+                  下载文件
+                </Button>
+              </Space>
+            </div>
+          )}
         </div>
       </Modal>
 
-      {/* 添加图片模态框 */}
+      {/* 添加文件模态框 */}
       <Modal
         open={isAddModalVisible}
-        title="添加图片"
+        title="添加文件"
         onCancel={() => {
           setIsAddModalVisible(false)
           setNewImageLabel('')
@@ -388,9 +494,9 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       >
         <Spin spinning={loading}>
           <Form layout="vertical">
-            <Form.Item label="图片标签" required>
+            <Form.Item label="文件标签" required>
               <Input
-                placeholder="请输入图片标签（如：股东信息、税务登记证等）"
+                placeholder="请输入文件标签（如：股东信息、税务登记证、合同文件等）"
                 value={newImageLabel}
                 onChange={e => setNewImageLabel(e.target.value)}
                 maxLength={20}
@@ -398,12 +504,12 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
               />
             </Form.Item>
 
-            <Form.Item label="上传图片" required>
+            <Form.Item label="上传文件" required>
               <Upload
                 listType="picture-card"
                 showUploadList={false}
                 beforeUpload={beforeUpload}
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
               >
                 {filePreview ? (
                   <div className="relative w-full h-full">
@@ -412,14 +518,22 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                       <UploadOutlined className="text-white text-2xl" />
                     </div>
                   </div>
+                ) : selectedFile && !checkIsImage(selectedFile.name) ? (
+                  <div className="relative w-full h-full flex flex-col items-center justify-center">
+                    <div className="text-4xl mb-2">{getFileIcon(selectedFile.name)}</div>
+                    <div className="text-xs text-center">{selectedFile.name}</div>
+                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <UploadOutlined className="text-white text-2xl" />
+                    </div>
+                  </div>
                 ) : (
                   <div>
                     <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>选择图片</div>
+                    <div style={{ marginTop: 8 }}>选择文件</div>
                   </div>
                 )}
               </Upload>
-              <div className="text-gray-500 text-xs mt-1">支持 JPG、PNG 格式</div>
+              <div className="text-gray-500 text-xs mt-1">支持图片、PDF、Word、Excel、CSV格式</div>
             </Form.Item>
           </Form>
         </Spin>

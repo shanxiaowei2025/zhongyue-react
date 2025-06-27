@@ -29,6 +29,12 @@ import {
   DownloadOutlined,
   UploadOutlined,
   FileExcelOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileTextOutlined,
+  FileImageOutlined,
+  FileJpgOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Customer, ImageType } from '../../types'
@@ -1472,59 +1478,128 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     }
   }
 
-  // 渲染单张图片
+  // 定义文件类型图标映射
+  const FILE_ICONS: Record<string, React.ReactNode> = {
+    pdf: <FilePdfOutlined />,
+    doc: <FileWordOutlined />,
+    docx: <FileWordOutlined />,
+    xls: <FileExcelOutlined />,
+    xlsx: <FileExcelOutlined />,
+    csv: <FileTextOutlined />,
+    jpg: <FileJpgOutlined />,
+    jpeg: <FileJpgOutlined />,
+    png: <FileImageOutlined />,
+    gif: <FileImageOutlined />,
+    bmp: <FileImageOutlined />,
+    webp: <FileImageOutlined />,
+    txt: <FileTextOutlined />,
+    default: <FileOutlined />,
+  }
+
+  // 判断文件类型
+  const getFileType = (fileName: string): string => {
+    if (!fileName) return 'default'
+    const extension = fileName.split('.').pop()?.toLowerCase() || 'default'
+    return FILE_ICONS[extension] ? extension : 'default'
+  }
+
+  // 判断是否为图片
+  const checkIsImage = (fileName: string): boolean => {
+    if (!fileName) return false
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    const extension = fileName.split('.').pop()?.toLowerCase() || ''
+    return imageExtensions.includes(extension)
+  }
+
+  // 获取文件图标
+  const getFileIcon = (fileName: string) => {
+    const fileType = getFileType(fileName)
+    return FILE_ICONS[fileType] || FILE_ICONS.default
+  }
+
+  // 获取文件扩展名
+  const getFileExtension = (fileName: string) => {
+    if (!fileName) return ''
+    return fileName.split('.').pop()?.toUpperCase() || ''
+  }
+
+  // 渲染单张文件（图片或其他文件）
   const renderImage = (image: ImageType | undefined, label: string) => {
     if (!image || !image.url) {
-      return <div className="no-image-placeholder">暂无图片</div>
+      return <div className="no-image-placeholder">暂无文件</div>
     }
 
     try {
       // 使用fileName构建完整URL
-      const imageUrl = image.fileName ? buildImageUrl(image.fileName) : image.url || ''
+      const fileUrl = image.fileName ? buildImageUrl(image.fileName) : image.url || ''
 
       // 确保URL是有效的
-      if (!imageUrl || imageUrl === 'undefined' || imageUrl === 'null') {
-        return <div className="no-image-placeholder">图片链接无效</div>
+      if (!fileUrl || fileUrl === 'undefined' || fileUrl === 'null') {
+        return <div className="no-image-placeholder">文件链接无效</div>
       }
 
-      const handlePreviewClick = (e: React.MouseEvent) => {
-        // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
-        const targetElement = e.target as HTMLElement
-        const imgElement =
-          targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
-        if (imgElement && imgElement.classList.contains('opacity-60')) {
-          return
+      // 检查是否为图片文件
+      const isImage = image.fileName ? checkIsImage(image.fileName) : true // 兼容旧数据，默认当作图片处理
+
+      if (isImage) {
+        // 图片文件 - 显示图片预览
+        const handlePreviewClick = (e: React.MouseEvent) => {
+          // 如果点击的是已经加载失败的图片（有opacity-60类），不执行预览
+          const targetElement = e.target as HTMLElement
+          const imgElement =
+            targetElement.tagName === 'IMG' ? targetElement : targetElement.querySelector('img')
+          if (imgElement && imgElement.classList.contains('opacity-60')) {
+            return
+          }
+
+          setImagePreview({ visible: true, url: fileUrl })
         }
 
-        setImagePreview({ visible: true, url: imageUrl })
-      }
+        return (
+          <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
+            <img
+              src={fileUrl}
+              alt={label}
+              className="w-full h-24 object-cover rounded-md border border-gray-200"
+              onError={e => {
+                ;(e.target as HTMLImageElement).onerror = null
+                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                ;(e.target as HTMLImageElement).className =
+                  'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
+                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
+              }}
+            />
+          </div>
+        )
+      } else {
+        // 非图片文件 - 显示文件图标和下载功能
+        const handleDownloadClick = () => {
+          window.open(fileUrl, '_blank')
+        }
 
-      return (
-        <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
-          <img
-            src={imageUrl}
-            alt={label}
-            className="w-full h-24 object-cover rounded-md border border-gray-200"
-            onError={e => {
-              ;(e.target as HTMLImageElement).onerror = null
-              ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-              ;(e.target as HTMLImageElement).className =
-                'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
-              ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
-            }}
-          />
-        </div>
-      )
+        return (
+          <div className="customer-file-preview cursor-pointer border border-gray-200 rounded-md p-4 h-24 flex flex-col items-center justify-center hover:border-blue-500 hover:shadow-md transition-all" 
+               onClick={handleDownloadClick}>
+            <div className="text-2xl mb-1 text-gray-600">
+              {image.fileName ? getFileIcon(image.fileName) : <FileOutlined />}
+            </div>
+            <div className="text-xs text-gray-500 text-center">
+              {image.fileName ? getFileExtension(image.fileName) : '文件'}
+            </div>
+            <div className="text-xs text-blue-500 mt-1">点击下载</div>
+          </div>
+        )
+      }
     } catch (err) {
-      console.error('渲染图片出错:', err)
-      return <div className="no-image-placeholder">图片处理异常</div>
+      console.error('渲染文件出错:', err)
+      return <div className="no-image-placeholder">文件处理异常</div>
     }
   }
 
-  // 渲染图片集合
+  // 渲染文件集合
   const renderImages = (images: Record<string, ImageType> | undefined) => {
     if (!images || Object.keys(images).length === 0) {
-      return <div className="no-image-placeholder">暂无图片</div>
+      return <div className="no-image-placeholder">暂无文件</div>
     }
 
     return (
@@ -1594,7 +1669,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     )
   }
 
-  // 渲染附件中的图片
+  // 渲染附件中的文件
   const renderAttachmentImages = (images: Record<string, ImageType>, isMobile: boolean) => {
     if (!images || typeof images !== 'object' || Object.keys(images).length === 0) {
       return <div className="text-gray-500">无附件</div>
@@ -1603,36 +1678,70 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     return (
       <div className="flex flex-wrap gap-2">
         {Object.entries(images).map(([key, img], index) => {
-          const imageData = img as ImageType
-          const imageUrl = imageData.url || '#'
+          const fileData = img as ImageType
+          const fileUrl = fileData.url || '#'
+          
+          // 检查是否为图片文件
+          const isImage = fileData.fileName ? checkIsImage(fileData.fileName) : true // 兼容旧数据
 
-          return (
-            <div key={index} className="mb-2 flex flex-col items-center">
-              <div className="relative group">
-                <Image
-                  src={imageUrl}
-                  alt={key}
-                  width={isMobile ? 80 : 100}
-                  height={isMobile ? 80 : 100}
-                  className="object-cover rounded border border-gray-200"
-                  style={{ objectFit: 'cover' }}
-                  fallback="/images/image-placeholder.svg"
-                  preview={{
-                    src: imageUrl,
-                    mask: <div className="text-white">预览</div>,
-                  }}
-                />
+          if (isImage) {
+            // 图片文件 - 使用 Image 组件预览
+            return (
+              <div key={index} className="mb-2 flex flex-col items-center">
+                <div className="relative group">
+                  <Image
+                    src={fileUrl}
+                    alt={key}
+                    width={isMobile ? 80 : 100}
+                    height={isMobile ? 80 : 100}
+                    className="object-cover rounded border border-gray-200"
+                    style={{ objectFit: 'cover' }}
+                    fallback="/images/image-placeholder.svg"
+                    preview={{
+                      src: fileUrl,
+                      mask: <div className="text-white">预览</div>,
+                    }}
+                  />
+                </div>
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
+                >
+                  {key}
+                </a>
               </div>
-              <a
-                href={imageUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
-              >
-                {key}
-              </a>
-            </div>
-          )
+            )
+          } else {
+            // 非图片文件 - 显示文件图标
+            return (
+              <div key={index} className="mb-2 flex flex-col items-center">
+                <div 
+                  className="relative group cursor-pointer border border-gray-200 rounded p-2 hover:border-blue-500 hover:shadow-md transition-all"
+                  style={{ width: isMobile ? 80 : 100, height: isMobile ? 80 : 100 }}
+                  onClick={() => window.open(fileUrl, '_blank')}
+                >
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="text-xl mb-1 text-gray-600">
+                      {fileData.fileName ? getFileIcon(fileData.fileName) : <FileOutlined />}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center">
+                      {fileData.fileName ? getFileExtension(fileData.fileName) : '文件'}
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
+                >
+                  {key}
+                </a>
+              </div>
+            )
+          }
         })}
       </div>
     )
@@ -2069,7 +2178,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     },
     {
       key: 'images',
-      label: '图片资料',
+      label: '文件资料',
       children: (
         <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
           <div>
@@ -2115,12 +2224,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">其他人员身份证照片</h3>
+            <h3 className="font-medium mb-2">其他人员身份证资料</h3>
             {renderImages(displayCustomer.otherIdImages)}
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">补充资料照片</h3>
+            <h3 className="font-medium mb-2">补充资料文件</h3>
             {renderImages(displayCustomer.supplementaryImages)}
           </div>
         </div>
