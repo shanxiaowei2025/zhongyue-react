@@ -1690,49 +1690,51 @@ const ContractDetail: React.FC = () => {
       {/* 面包屑导航 */}
       <Breadcrumb className="mb-4" items={breadcrumbItems} />
 
-      {/* 头部操作区域 */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-              返回列表
-            </Button>
-            <h2 className="text-xl font-semibold m-0">合同详情</h2>
-          </div>
-          <Space>
-            {contractData && contractData.contractStatus === '0' && (
-              <>
-                <Button icon={<EditOutlined />} onClick={handleEdit}>
-                  编辑合同
-                </Button>
+      {/* 头部操作区域 - 添加 sticky 吸附效果 */}
+      <div className="mb-4 sticky -top-6 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="py-3 px-4 -mx-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+                返回列表
+              </Button>
+              <h2 className="text-xl font-semibold m-0">合同详情</h2>
+            </div>
+            <Space>
+              {contractData && contractData.contractStatus === '0' && (
+                <>
+                  <Button icon={<EditOutlined />} onClick={handleEdit}>
+                    编辑合同
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<LinkOutlined />}
+                    loading={isGeneratingLink}
+                    onClick={handleGenerateSignLink}
+                  >
+                    生成签署链接
+                  </Button>
+                </>
+              )}
+              {contractData && contractData.contractStatus === '1' && (
                 <Button
-                  type="primary"
                   icon={<LinkOutlined />}
-                  loading={isGeneratingLink}
-                  onClick={handleGenerateSignLink}
+                  onClick={handleGetViewLink}
                 >
-                  生成签署链接
+                  获取查看链接
                 </Button>
-              </>
-            )}
-            {contractData && contractData.contractStatus === '1' && (
-              <Button
-                icon={<LinkOutlined />}
-                onClick={handleGetViewLink}
-              >
-                获取查看链接
-              </Button>
-            )}
-            {contractData && (
-              <Button
-                icon={<DownloadOutlined />}
-                loading={isExporting}
-                onClick={handleDownloadContract}
-              >
-                {isExporting ? '导出中...' : '下载合同'}
-              </Button>
-            )}
-          </Space>
+              )}
+              {contractData && (
+                <Button
+                  icon={<DownloadOutlined />}
+                  loading={isExporting}
+                  onClick={handleDownloadContract}
+                >
+                  {isExporting ? '导出中...' : '下载合同'}
+                </Button>
+              )}
+            </Space>
+          </div>
         </div>
       </div>
 
