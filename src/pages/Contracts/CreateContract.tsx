@@ -620,30 +620,32 @@ const CreateContract: React.FC = () => {
       {/* 面包屑导航 */}
       <Breadcrumb className="mb-4" items={breadcrumbItems} />
 
-      {/* 头部操作区域 */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-              返回列表
-            </Button>
-            <h2 className="text-xl font-semibold m-0">创建合同</h2>
+      {/* 头部操作区域 - 添加 sticky 吸附效果 */}
+      <div className="mb-4 sticky -top-6 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="py-3 px-4 -mx-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+                返回列表
+              </Button>
+              <h2 className="text-xl font-semibold m-0">创建合同</h2>
+            </div>
+            <Space>
+              <Button
+                type="primary"
+                loading={isSubmitting}
+                disabled={
+                  !contractParams?.contractType ||
+                  (contractParams.contractType !== '产品服务协议' &&
+                    contractParams.contractType !== '代理记账合同' &&
+                    contractParams.contractType !== '单项服务合同')
+                }
+                onClick={handleContractSubmit}
+              >
+                {isSubmitting ? '提交中...' : '提交合同'}
+              </Button>
+            </Space>
           </div>
-          <Space>
-            <Button
-              type="primary"
-              loading={isSubmitting}
-              disabled={
-                !contractParams?.contractType ||
-                (contractParams.contractType !== '产品服务协议' &&
-                  contractParams.contractType !== '代理记账合同' &&
-                  contractParams.contractType !== '单项服务合同')
-              }
-              onClick={handleContractSubmit}
-            >
-              {isSubmitting ? '提交中...' : '提交合同'}
-            </Button>
-          </Space>
         </div>
       </div>
 
