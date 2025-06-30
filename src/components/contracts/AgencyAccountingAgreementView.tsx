@@ -411,11 +411,6 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             元。
           </p>
 
-          <div>
-            代理记账服务费支付方式：
-            <span className={styles.paymentMethod}>{paymentMethod || '对公'}</span>
-          </div>
-
           <p>于合同生效日起 3 日内一次付清。</p>
         </div>
       </div>
