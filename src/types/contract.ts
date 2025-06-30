@@ -66,6 +66,7 @@ export interface Contract {
   contractStatus?: ContractStatus
   contractSignature?: string
   contractImage?: string
+  encryptedCode?: string
   createTime: string
   updateTime: string
   submitter?: string

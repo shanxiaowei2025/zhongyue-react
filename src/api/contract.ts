@@ -78,6 +78,18 @@ export const getSignedContractByCode = (encryptedCode: string) => {
   >(`/contract/get-image/${encryptedCode}`)
 }
 
+// 获取已签署合同的查看链接
+export const getContractViewLink = (contractId: number) => {
+  return request.get<
+    ApiResponse<{
+      encryptedCode: string
+      partyACompany: string
+      shareableLink: string
+      shareableContent: string
+    }>
+  >(`/contract/${contractId}/view-link`)
+}
+
 // 获取代理记账合同的委托日期
 export const getAgencyContractDates = (params: { companyName?: string; unifiedSocialCreditCode?: string }) => {
   return request.get<

@@ -83,6 +83,7 @@ const ContractDetail: React.FC = () => {
   const [signUrl, setSignUrl] = useState<string>('')
   const [hasProcessedGenerateLink, setHasProcessedGenerateLink] = useState(false)
 
+
   // 获取合同详情数据
   const {
     data: contractData,
@@ -1518,6 +1519,69 @@ const ContractDetail: React.FC = () => {
       .catch(() => message.error('复制失败，请手动复制'))
   }
 
+  // 获取已签署合同的查看链接
+  const handleGetViewLink = async () => {
+    if (!contractData) {
+      message.error('合同数据不存在')
+      return
+    }
+
+    if (!contractData.encryptedCode) {
+      message.error('该合同暂无查看链接')
+      return
+    }
+
+    try {
+      // 生成可分享的链接 - 使用固定域名
+      const shareableLink = `https://manage.zhongyuekuaiji.cn/contract/view/${contractData.encryptedCode}`
+      
+      // 生成包含公司名称的完整分享内容
+      const partyACompany = contractData.partyACompany || '未知公司'
+      const shareableContent = `【${partyACompany}】合同查看链接：\n${shareableLink}`
+
+      // 显示成功模态框，与合同签署页面保持一致
+      Modal.success({
+        title: '获取成功',
+        content: (
+          <div>
+            <p>已获取合同查看链接！</p>
+            <div className="mt-4">
+              <p className="mb-2 text-sm text-gray-600">
+                您可以复制以下内容查看或分享已签名的合同：
+              </p>
+              <div className="flex items-center">
+                <textarea
+                  readOnly
+                  value={shareableContent}
+                  className="flex-1 border p-2 rounded-l text-sm resize-none"
+                  rows={3}
+                  onClick={e => (e.target as HTMLTextAreaElement).select()}
+                />
+                <Button
+                  type="primary"
+                  size="middle"
+                  className="rounded-l-none self-stretch"
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareableContent)
+                    message.success('内容已复制到剪贴板')
+                  }}
+                >
+                  复制
+                </Button>
+              </div>
+            </div>
+          </div>
+        ),
+        okText: '关闭',
+      })
+    } catch (error: any) {
+      console.error('获取查看链接失败:', error)
+      message.error('获取查看链接失败，请重试')
+    }
+  }
+
+
+
   // 面包屑导航配置
   const breadcrumbItems = [
     {
@@ -1651,6 +1715,14 @@ const ContractDetail: React.FC = () => {
                 </Button>
               </>
             )}
+            {contractData && contractData.contractStatus === '1' && (
+              <Button
+                icon={<LinkOutlined />}
+                onClick={handleGetViewLink}
+              >
+                获取查看链接
+              </Button>
+            )}
             {contractData && (
               <Button
                 icon={<DownloadOutlined />}
@@ -1761,6 +1833,8 @@ const ContractDetail: React.FC = () => {
           </p>
         </div>
       </Modal>
+
+
     </div>
   )
 }
