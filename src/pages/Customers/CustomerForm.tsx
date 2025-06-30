@@ -12,8 +12,8 @@ import {
   Switch,
   Checkbox,
   Table,
-  Upload,
   Popconfirm,
+  Popover,
 } from 'antd'
 import type {
   Customer,
@@ -24,14 +24,13 @@ import type {
 } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
-import type { UploadFile } from 'antd/es/upload/interface'
-import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons'
+import { PlusOutlined, DeleteOutlined, InfoCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import ImageUpload from '../../components/ImageUpload'
 import MultiImageUpload from '../../components/MultiImageUpload'
+import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
-import useSWR from 'swr'
 import { mutate } from 'swr'
 import { useBranchOffices } from '../../hooks/useDepartments'
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
@@ -1017,8 +1016,49 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input disabled={mode === 'edit' || mode === 'view'} />
           </Form.Item>
 
-          <Form.Item name="customerLevel" label="客户分级">
-            <Input placeholder="请输入客户分级" />
+          <Form.Item 
+            name="customerLevel" 
+            label={
+              <div className="flex items-center gap-2">
+                <span>客户分级</span>
+                <Popover
+                  content={<CustomerLevelTipComponent />}
+                  trigger={['click']}
+                  placement="rightTop"
+                  overlayStyle={{ maxWidth: '95vw' }}
+                >
+                  <Button 
+                    type="link" 
+                    size="small" 
+                    icon={<QuestionCircleOutlined />}
+                    className="p-0 h-auto"
+                  >
+                    查看分级说明
+                  </Button>
+                </Popover>
+              </div>
+            }
+          >
+            <Select placeholder="请选择客户分级" allowClear>
+              {(['AA', 'AB', 'AC', 'AD', 'BA', 'BB', 'BC', 'BD', 'CA', 'CB', 'CC', 'CD', 'DA', 'DB', 'DC', 'DD'] as const).map((level) => (
+                <Select.Option key={level} value={level}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{level}</span>
+                    <Popover
+                      content={<CustomerLevelTipComponent level={level} />}
+                      trigger={['hover']}
+                      placement="right"
+                      overlayStyle={{ maxWidth: '90vw' }}
+                    >
+                      <InfoCircleOutlined 
+                        className="text-blue-500 ml-2 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Popover>
+                  </div>
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item name="taxNumber" label="税号">

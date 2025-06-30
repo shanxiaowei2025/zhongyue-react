@@ -17,6 +17,7 @@ import {
   Upload,
   Form,
   Tooltip,
+  Popover,
 } from 'antd'
 import {
   PlusOutlined,
@@ -41,6 +42,7 @@ import type { Customer, ImageType } from '../../types'
 import type { TabsProps } from 'antd'
 import type { UploadProps } from 'antd'
 import CustomerForm from './CustomerForm'
+import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
 import {
   BUSINESS_STATUS_MAP,
   ENTERPRISE_STATUS_MAP,
@@ -763,7 +765,13 @@ export default function Customers() {
       key: 'customerLevel',
       width: isMobile ? 120 : 150,
       responsive: ['md'],
-      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 100 : 130} />,
+      render: (text: string) => (
+        <CustomerLevelDisplay 
+          level={text}
+          maxWidth={isMobile ? 100 : 130}
+          placement="right"
+        />
+      ),
     },
     {
       title: '企业类型',
@@ -1766,7 +1774,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             {displayCustomer.unifiedSocialCreditCode || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="客户分级">
-            {displayCustomer.customerLevel || '-'}
+            <CustomerLevelDisplay level={displayCustomer.customerLevel} />
           </Descriptions.Item>
           <Descriptions.Item label="税号">{displayCustomer.taxNumber || '-'}</Descriptions.Item>
           <Descriptions.Item label="企业类型">
