@@ -28,6 +28,7 @@ import { PlusOutlined, DeleteOutlined, InfoCircleOutlined, QuestionCircleOutline
 import ImageUpload from '../../components/ImageUpload'
 import MultiImageUpload from '../../components/MultiImageUpload'
 import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
+import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
@@ -1043,7 +1044,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               {(['AA', 'AB', 'AC', 'AD', 'BA', 'BB', 'BC', 'BD', 'CA', 'CB', 'CC', 'CD', 'DA', 'DB', 'DC', 'DD'] as const).map((level) => (
                 <Select.Option key={level} value={level}>
                   <div className="flex items-center justify-between w-full">
-                    <span>{level}</span>
+                    <CustomerLevelDisplay 
+                      level={level}
+                      showPopover={false}
+                    />
                     <Popover
                       content={<CustomerLevelTipComponent level={level} />}
                       trigger={['hover']}

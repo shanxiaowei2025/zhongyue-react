@@ -1009,15 +1009,23 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="客户分级" className="mb-2">
-                <Input
-                  placeholder="请输入客户分级"
-                  value={searchParams.customerLevel}
-                  onChange={e =>
-                    setSearchParams({ ...searchParams, customerLevel: e.target.value })
-                  }
-                  className="w-40"
+                <Select
+                  placeholder="请选择客户分级"
+                  value={searchParams.customerLevel || undefined}
+                  onChange={value => setSearchParams({ ...searchParams, customerLevel: value })}
                   allowClear
-                />
+                  className="w-40"
+                >
+                  {(['AA', 'AB', 'AC', 'AD', 'BA', 'BB', 'BC', 'BD', 'CA', 'CB', 'CC', 'CD', 'DA', 'DB', 'DC', 'DD'] as const).map((level) => (
+                    <Select.Option key={level} value={level}>
+                      <CustomerLevelDisplay 
+                        level={level}
+                        showPopover={false}
+                        maxWidth={100}
+                      />
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
 
               <Form.Item label="顾问会计" className="mb-2">
