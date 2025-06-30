@@ -1,5 +1,769 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+# 表单处理模式与最佳实践
+
+## 表单架构设计
+
+项目中的表单处理主要采用以下技术栈：
+- **Ant Design Form** - 基础表单组件和验证
+- **React Hook Form + Yup** - 高性能表单处理和验证
+- **Zustand** - 复杂表单状态管理
+- **自定义 Hooks** - 表单逻辑复用
+
+## 基础表单模式
+
+### 简单表单使用 Ant Design Form
+```tsx
+// 适用于简单表单，字段较少，逻辑简单
+import React from 'react';
+import { Form, Input, Button, Select, message } from 'antd';
+import type { FormProps } from 'antd';
+
+interface CustomerFormData {
+  companyName: string;
+  unifiedSocialCreditCode: string;
+  enterpriseType: string;
+  contactPerson: string;
+  contactPhone: string;
+}
+
+const CustomerForm: React.FC<{
+  initialValues?: Partial<CustomerFormData>;
+  onSubmit: (values: CustomerFormData) => Promise<void>;
+}> = ({ initialValues, onSubmit }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit: FormProps<CustomerFormData>['onFinish'] = async (values) => {
+    try {
+      setLoading(true);
+      await onSubmit(values);
+      message.success('保存成功');
+      form.resetFields();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '保存失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitFailed: FormProps<CustomerFormData>['onFinishFailed'] = (errorInfo) => {
+    console.error('表单验证失败:', errorInfo);
+    message.error('请检查表单信息');
+  };
+
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={initialValues}
+      onFinish={handleSubmit}
+      onFinishFailed={handleSubmitFailed}
+      autoComplete="off"
+    >
+      <Form.Item
+        label="公司名称"
+        name="companyName"
+        rules={[
+          { required: true, message: '请输入公司名称' },
+          { max: 100, message: '公司名称不能超过100个字符' },
+        ]}
+      >
+        <Input placeholder="请输入公司名称" />
+      </Form.Item>
+
+      <Form.Item
+        label="统一社会信用代码"
+        name="unifiedSocialCreditCode"
+        rules={[
+          { required: true, message: '请输入统一社会信用代码' },
+          { 
+            pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/,
+            message: '请输入正确的统一社会信用代码格式'
+          },
+        ]}
+      >
+        <Input placeholder="请输入统一社会信用代码" />
+      </Form.Item>
+
+      <Form.Item
+        label="企业类型"
+        name="enterpriseType"
+        rules={[{ required: true, message: '请选择企业类型' }]}
+      >
+        <Select placeholder="请选择企业类型">
+          <Select.Option value="有限责任公司">有限责任公司</Select.Option>
+          <Select.Option value="股份有限公司">股份有限公司</Select.Option>
+          <Select.Option value="个人独资企业">个人独资企业</Select.Option>
+          <Select.Option value="合伙企业">合伙企业</Select.Option>
+        </Select>
+      </Form.Item>
+
+      <Form.Item
+        label="联系人"
+        name="contactPerson"
+        rules={[
+          { required: true, message: '请输入联系人' },
+          { max: 20, message: '联系人姓名不能超过20个字符' },
+        ]}
+      >
+        <Input placeholder="请输入联系人" />
+      </Form.Item>
+
+      <Form.Item
+        label="联系电话"
+        name="contactPhone"
+        rules={[
+          { required: true, message: '请输入联系电话' },
+          { 
+            pattern: /^1[3-9]\d{9}$/,
+            message: '请输入正确的手机号码格式'
+          },
+        ]}
+      >
+        <Input placeholder="请输入联系电话" />
+      </Form.Item>
+
+      <Form.Item>
+        <Button type="primary" htmlType="submit" loading={loading} block>
+          保存
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
+```
+
+### 复杂表单使用 React Hook Form
+```tsx
+// 适用于复杂表单，字段多，有复杂验证逻辑
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { Input, Select, Button, Form, message } from 'antd';
+
+// 验证模式定义
+const contractFormSchema = yup.object({
+  customerId: yup.string().required('请选择客户'),
+  contractType: yup.string().required('请选择合同类型'),
+  serviceItems: yup.array()
+    .of(yup.object({
+      serviceType: yup.string().required('请选择服务类型'),
+      price: yup.number()
+        .positive('价格必须大于0')
+        .required('请输入价格'),
+      description: yup.string().max(500, '描述不能超过500个字符'),
+    }))
+    .min(1, '至少添加一个服务项目'),
+  startDate: yup.date().required('请选择开始日期'),
+  endDate: yup.date()
+    .required('请选择结束日期')
+    .min(yup.ref('startDate'), '结束日期不能早于开始日期'),
+  totalAmount: yup.number()
+    .positive('总金额必须大于0')
+    .required('请输入总金额'),
+});
+
+type ContractFormData = yup.InferType<typeof contractFormSchema>;
+
+const ContractForm: React.FC<{
+  initialValues?: Partial<ContractFormData>;
+  onSubmit: (values: ContractFormData) => Promise<void>;
+}> = ({ initialValues, onSubmit }) => {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isDirty, isValid },
+    watch,
+    setValue,
+    reset,
+  } = useForm<ContractFormData>({
+    resolver: yupResolver(contractFormSchema),
+    defaultValues: initialValues,
+    mode: 'onChange', // 实时验证
+  });
+
+  // 监听服务项目变化，自动计算总金额
+  const serviceItems = watch('serviceItems');
+  React.useEffect(() => {
+    if (serviceItems && serviceItems.length > 0) {
+      const total = serviceItems.reduce((sum, item) => sum + (item.price || 0), 0);
+      setValue('totalAmount', total);
+    }
+  }, [serviceItems, setValue]);
+
+  const onSubmitHandler = async (data: ContractFormData) => {
+    try {
+      await onSubmit(data);
+      message.success('合同保存成功');
+      reset();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '保存失败');
+    }
+  };
+
+  return (
+    <Form layout="vertical" className="contract-form">
+      <Form.Item
+        label="客户"
+        validateStatus={errors.customerId ? 'error' : ''}
+        help={errors.customerId?.message}
+      >
+        <Controller
+          name="customerId"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              placeholder="请选择客户"
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={[
+                // 客户选项
+              ]}
+            />
+          )}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="合同类型"
+        validateStatus={errors.contractType ? 'error' : ''}
+        help={errors.contractType?.message}
+      >
+        <Controller
+          name="contractType"
+          control={control}
+          render={({ field }) => (
+            <Select {...field} placeholder="请选择合同类型">
+              <Select.Option value="代理记账合同">代理记账合同</Select.Option>
+              <Select.Option value="产品服务协议">产品服务协议</Select.Option>
+              <Select.Option value="单项服务协议">单项服务协议</Select.Option>
+            </Select>
+          )}
+        />
+      </Form.Item>
+
+      {/* 动态服务项目 */}
+      <Form.Item label="服务项目">
+        <ServiceItemsField control={control} errors={errors.serviceItems} />
+      </Form.Item>
+
+      <Form.Item
+        label="总金额"
+        validateStatus={errors.totalAmount ? 'error' : ''}
+        help={errors.totalAmount?.message}
+      >
+        <Controller
+          name="totalAmount"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              type="number"
+              placeholder="请输入总金额"
+              addonAfter="元"
+              readOnly // 自动计算，只读
+            />
+          )}
+        />
+      </Form.Item>
+
+      <Form.Item>
+        <Button
+          type="primary"
+          onClick={handleSubmit(onSubmitHandler)}
+          loading={isSubmitting}
+          disabled={!isDirty || !isValid}
+          block
+        >
+          保存合同
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
+```
+
+## 多步骤表单处理
+
+### 使用 Zustand 管理多步骤表单
+```tsx
+// 多步骤表单状态管理
+import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+
+interface StepFormState {
+  currentStep: number;
+  formData: Record<string, any>;
+  stepValidations: Record<number, boolean>;
+  
+  // 操作方法
+  setCurrentStep: (step: number) => void;
+  updateStepData: (step: number, data: Record<string, any>) => void;
+  setStepValidation: (step: number, isValid: boolean) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  canProceedToStep: (step: number) => boolean;
+  resetForm: () => void;
+}
+
+export const useStepFormStore = create<StepFormState>()(
+  subscribeWithSelector((set, get) => ({
+    currentStep: 0,
+    formData: {},
+    stepValidations: {},
+    
+    setCurrentStep: (step) => {
+      const { canProceedToStep } = get();
+      if (canProceedToStep(step)) {
+        set({ currentStep: step });
+      }
+    },
+    
+    updateStepData: (step, data) => {
+      set((state) => ({
+        formData: {
+          ...state.formData,
+          [step]: { ...state.formData[step], ...data },
+        },
+      }));
+    },
+    
+    setStepValidation: (step, isValid) => {
+      set((state) => ({
+        stepValidations: { ...state.stepValidations, [step]: isValid },
+      }));
+    },
+    
+    nextStep: () => {
+      const { currentStep, canProceedToStep } = get();
+      const nextStep = currentStep + 1;
+      if (canProceedToStep(nextStep)) {
+        set({ currentStep: nextStep });
+      }
+    },
+    
+    prevStep: () => {
+      set((state) => ({
+        currentStep: Math.max(0, state.currentStep - 1),
+      }));
+    },
+    
+    canProceedToStep: (step) => {
+      const { stepValidations, currentStep } = get();
+      
+      // 只能前进到下一步或当前步骤
+      if (step > currentStep + 1) return false;
+      
+      // 检查前面所有步骤是否已验证
+      for (let i = 0; i < step; i++) {
+        if (!stepValidations[i]) return false;
+      }
+      
+      return true;
+    },
+    
+    resetForm: () => {
+      set({
+        currentStep: 0,
+        formData: {},
+        stepValidations: {},
+      });
+    },
+  }))
+);
+
+// 多步骤表单组件
+const StepForm: React.FC = () => {
+  const {
+    currentStep,
+    formData,
+    setCurrentStep,
+    updateStepData,
+    setStepValidation,
+    nextStep,
+    prevStep,
+    canProceedToStep,
+  } = useStepFormStore();
+
+  const steps = [
+    { title: '基本信息', component: BasicInfoStep },
+    { title: '详细信息', component: DetailInfoStep },
+    { title: '确认提交', component: ConfirmStep },
+  ];
+
+  const CurrentStepComponent = steps[currentStep].component;
+
+  return (
+    <div className="step-form">
+      <Steps current={currentStep} className="mb-6">
+        {steps.map((step, index) => (
+          <Steps.Step
+            key={index}
+            title={step.title}
+            onClick={() => canProceedToStep(index) && setCurrentStep(index)}
+            style={{ cursor: canProceedToStep(index) ? 'pointer' : 'default' }}
+          />
+        ))}
+      </Steps>
+
+      <div className="step-content">
+        <CurrentStepComponent
+          data={formData[currentStep] || {}}
+          onDataChange={(data) => updateStepData(currentStep, data)}
+          onValidationChange={(isValid) => setStepValidation(currentStep, isValid)}
+        />
+      </div>
+
+      <div className="step-actions mt-6">
+        {currentStep > 0 && (
+          <Button onClick={prevStep}>上一步</Button>
+        )}
+        {currentStep < steps.length - 1 ? (
+          <Button
+            type="primary"
+            onClick={nextStep}
+            disabled={!canProceedToStep(currentStep + 1)}
+          >
+            下一步
+          </Button>
+        ) : (
+          <Button type="primary" onClick={handleFinalSubmit}>
+            提交
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+```
+
+## 表单验证模式
+
+### 自定义验证规则
+```tsx
+// 常用验证规则集合
+export const validationRules = {
+  // 统一社会信用代码验证
+  unifiedSocialCreditCode: {
+    pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/,
+    message: '请输入正确的统一社会信用代码格式',
+  },
+  
+  // 手机号验证
+  mobilePhone: {
+    pattern: /^1[3-9]\d{9}$/,
+    message: '请输入正确的手机号码格式',
+  },
+  
+  // 身份证号验证
+  idCard: {
+    pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/,
+    message: '请输入正确的身份证号码格式',
+  },
+  
+  // 邮箱验证
+  email: {
+    pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    message: '请输入正确的邮箱格式',
+  },
+  
+  // 金额验证
+  amount: {
+    pattern: /^(\d+|\d+\.\d{1,2})$/,
+    message: '请输入正确的金额格式（最多两位小数）',
+  },
+};
+
+// 异步验证示例
+const asyncValidationRules = {
+  // 检查统一社会信用代码是否已存在
+  checkCreditCodeUnique: async (value: string) => {
+    if (!value) return true;
+    
+    try {
+      const response = await checkCreditCodeExists(value);
+      return !response.exists;
+    } catch (error) {
+      return true; // 网络错误时不阻止提交
+    }
+  },
+  
+  // 检查用户名是否可用
+  checkUsernameAvailable: async (value: string) => {
+    if (!value || value.length < 3) return true;
+    
+    try {
+      const response = await checkUsernameExists(value);
+      return !response.exists;
+    } catch (error) {
+      return true;
+    }
+  },
+};
+
+// 在 React Hook Form 中使用异步验证
+const FormWithAsyncValidation: React.FC = () => {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    mode: 'onBlur', // 失去焦点时验证
+  });
+
+  return (
+    <Form layout="vertical">
+      <Form.Item
+        label="统一社会信用代码"
+        validateStatus={errors.creditCode ? 'error' : ''}
+        help={errors.creditCode?.message}
+      >
+        <Controller
+          name="creditCode"
+          control={control}
+          rules={{
+            required: '请输入统一社会信用代码',
+            pattern: validationRules.unifiedSocialCreditCode,
+            validate: {
+              unique: async (value) => {
+                const isUnique = await asyncValidationRules.checkCreditCodeUnique(value);
+                return isUnique || '该统一社会信用代码已存在';
+              },
+            },
+          }}
+          render={({ field }) => (
+            <Input
+              {...field}
+              placeholder="请输入统一社会信用代码"
+            />
+          )}
+        />
+      </Form.Item>
+    </Form>
+  );
+};
+```
+
+## 表单数据处理
+
+### 表单数据转换和格式化
+```tsx
+// 表单数据处理工具函数
+export const formUtils = {
+  // 清理表单数据，移除空值和无效值
+  cleanFormData: (data: Record<string, any>): Record<string, any> => {
+    const cleaned: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(data)) {
+      // 跳过空值、undefined、空字符串
+      if (value === null || value === undefined || value === '') {
+        continue;
+      }
+      
+      // 处理数组
+      if (Array.isArray(value)) {
+        const cleanedArray = value.filter(item => 
+          item !== null && item !== undefined && item !== ''
+        );
+        if (cleanedArray.length > 0) {
+          cleaned[key] = cleanedArray;
+        }
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    
+    return cleaned;
+  },
+  
+  // 格式化日期字段
+  formatDatesForSubmit: (data: Record<string, any>, dateFields: string[]) => {
+    const formatted = { ...data };
+    
+    dateFields.forEach(field => {
+      if (formatted[field] && dayjs.isDayjs(formatted[field])) {
+        formatted[field] = formatted[field].format('YYYY-MM-DD');
+      }
+    });
+    
+    return formatted;
+  },
+  
+  // 格式化数字字段
+  formatNumbersForSubmit: (data: Record<string, any>, numberFields: string[]) => {
+    const formatted = { ...data };
+    
+    numberFields.forEach(field => {
+      if (formatted[field] !== undefined) {
+        const num = parseFloat(formatted[field]);
+        formatted[field] = isNaN(num) ? 0 : num;
+      }
+    });
+    
+    return formatted;
+  },
+  
+  // 将服务器数据转换为表单数据
+  transformServerDataToForm: (serverData: any): any => {
+    const formData = { ...serverData };
+    
+    // 转换日期字段
+    if (formData.startDate) {
+      formData.startDate = dayjs(formData.startDate);
+    }
+    if (formData.endDate) {
+      formData.endDate = dayjs(formData.endDate);
+    }
+    
+    // 转换数组字段
+    if (typeof formData.serviceItems === 'string') {
+      try {
+        formData.serviceItems = JSON.parse(formData.serviceItems);
+      } catch {
+        formData.serviceItems = [];
+      }
+    }
+    
+    return formData;
+  },
+  
+  // 将表单数据转换为提交格式
+  transformFormDataForSubmit: (formData: any): any => {
+    let cleaned = formUtils.cleanFormData(formData);
+    cleaned = formUtils.formatDatesForSubmit(cleaned, ['startDate', 'endDate']);
+    cleaned = formUtils.formatNumbersForSubmit(cleaned, ['totalAmount', 'price']);
+    
+    return cleaned;
+  },
+};
+```
+
+## 表单组件化
+
+### 可复用表单字段组件
+```tsx
+// 客户选择字段组件
+interface CustomerSelectProps {
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+}
+
+export const CustomerSelect: React.FC<CustomerSelectProps> = ({
+  value,
+  onChange,
+  placeholder = '请选择客户',
+  disabled = false,
+}) => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setLoading(true);
+      try {
+        const response = await getCustomerList({ page: 1, pageSize: 100 });
+        setCustomers(response.data.items);
+      } catch (error) {
+        message.error('获取客户列表失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCustomers();
+  }, []);
+
+  return (
+    <Select
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      loading={loading}
+      showSearch
+      filterOption={(input, option) =>
+        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+      }
+      options={customers.map(customer => ({
+        value: customer.id,
+        label: customer.companyName,
+      }))}
+    />
+  );
+};
+
+// 在表单中使用
+const SomeForm: React.FC = () => {
+  return (
+    <Form layout="vertical">
+      <Form.Item label="客户" name="customerId" rules={[{ required: true }]}>
+        <CustomerSelect />
+      </Form.Item>
+    </Form>
+  );
+};
+```
+
+## 表单错误处理
+
+### 统一错误处理和用户反馈
+```tsx
+// 表单错误处理 Hook
+export const useFormErrorHandler = () => {
+  const handleFormError = useCallback((error: unknown, form?: FormInstance) => {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as any;
+      
+      // 处理字段级别错误
+      if (apiError.response?.data?.fieldErrors && form) {
+        const fieldErrors = apiError.response.data.fieldErrors;
+        const formFields = Object.keys(fieldErrors).map(field => ({
+          name: field,
+          errors: [fieldErrors[field]],
+        }));
+        form.setFields(formFields);
+        return;
+      }
+      
+      // 处理通用错误
+      if (apiError.response?.data?.message) {
+        message.error(apiError.response.data.message);
+        return;
+      }
+    }
+    
+    // 默认错误处理
+    const errorMessage = error instanceof Error ? error.message : '操作失败';
+    message.error(errorMessage);
+  }, []);
+  
+  return { handleFormError };
+};
+
+// 在表单组件中使用
+const FormWithErrorHandling: React.FC = () => {
+  const [form] = Form.useForm();
+  const { handleFormError } = useFormErrorHandler();
+  
+  const handleSubmit = async (values: any) => {
+    try {
+      await submitForm(values);
+      message.success('提交成功');
+    } catch (error) {
+      handleFormError(error, form);
+    }
+  };
+  
+  // ... 表单渲染
+};
+```

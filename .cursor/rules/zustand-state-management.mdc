@@ -1,5 +1,597 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+Description: Zustand 状态管理规范
+Globs: src/store/**/*.ts, src/store/**/*.tsx
+
+# Zustand 状态管理模式
+
+## 状态管理架构
+
+项目使用 Zustand 作为轻量级状态管理库，主要用于：
+- 用户认证状态管理 - [src/store/auth.ts](mdc:zhongyue-react/zhongyue-react/src/store/auth.ts)
+- 表单状态管理 - [src/store/contractForm.ts](mdc:zhongyue-react/zhongyue-react/src/store/contractForm.ts)  
+- 页面状态管理 - [src/store/pageStates.ts](mdc:zhongyue-react/zhongyue-react/src/store/pageStates.ts)
+
+## 基础 Store 设计模式
+
+### 认证状态管理
+```tsx
+// src/store/auth.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface User {
+  id: number;
+  username: string;
+  realName: string;
+  roles: string[];
+  departments: string[];
+}
+
+interface AuthState {
+  // 状态
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  
+  // 操作方法
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  updateUser: (user: Partial<User>) => void;
+  setLoading: (loading: boolean) => void;
+  
+  // 辅助方法
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
+  hasDepartment: (department: string) => boolean;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      // 初始状态
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      loading: false,
+      
+      // 登录操作
+      login: async (credentials) => {
+        set({ loading: true });
+        try {
+          const response = await loginAPI(credentials);
+          if (response.code === 0) {
+            const { user, access_token } = response.data;
+            set({
+              user,
+              token: access_token,
+              isAuthenticated: true,
+              loading: false,
+            });
+            // 将 token 存储到 localStorage
+            localStorage.setItem('access_token', access_token);
+          } else {
+            throw new Error(response.message);
+          }
+        } catch (error) {
+          set({ loading: false });
+          throw error;
+        }
+      },
+      
+      // 登出操作
+      logout: () => {
+        localStorage.removeItem('access_token');
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+        });
+      },
+      
+      // 更新用户信息
+      updateUser: (userData) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: { ...currentUser, ...userData }
+          });
+        }
+      },
+      
+      // 设置加载状态
+      setLoading: (loading) => set({ loading }),
+      
+      // 检查是否有指定角色
+      hasRole: (role) => {
+        const user = get().user;
+        return user?.roles.includes(role) || false;
+      },
+      
+      // 检查是否有任意一个角色
+      hasAnyRole: (roles) => {
+        const user = get().user;
+        if (!user) return false;
+        return roles.some(role => user.roles.includes(role));
+      },
+      
+      // 检查是否属于指定部门
+      hasDepartment: (department) => {
+        const user = get().user;
+        return user?.departments.includes(department) || false;
+      },
+    }),
+    {
+      name: 'auth-storage', // 持久化存储的键名
+      partialize: (state) => ({
+        // 只持久化部分状态，排除敏感信息
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);
+```
+
+### 表单状态管理
+```tsx
+// src/store/contractForm.ts
+import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+
+interface ContractFormState {
+  // 表单数据
+  formData: ContractFormData;
+  
+  // 表单状态
+  currentStep: number;
+  isValid: boolean;
+  isDirty: boolean;
+  errors: Record<string, string>;
+  
+  // 操作方法
+  updateFormData: (data: Partial<ContractFormData>) => void;
+  setCurrentStep: (step: number) => void;
+  validateForm: () => boolean;
+  resetForm: () => void;
+  setFieldError: (field: string, error: string) => void;
+  clearFieldError: (field: string) => void;
+  
+  // 辅助方法
+  canProceedToNextStep: () => boolean;
+  getStepValidation: (step: number) => boolean;
+}
+
+const initialFormData: ContractFormData = {
+  // 定义初始表单数据
+  customerId: '',
+  contractType: '',
+  serviceItems: [],
+  // ... 其他字段
+};
+
+export const useContractFormStore = create<ContractFormState>()(
+  subscribeWithSelector((set, get) => ({
+    // 初始状态
+    formData: initialFormData,
+    currentStep: 0,
+    isValid: false,
+    isDirty: false,
+    errors: {},
+    
+    // 更新表单数据
+    updateFormData: (data) => {
+      set((state) => ({
+        formData: { ...state.formData, ...data },
+        isDirty: true,
+      }));
+      
+      // 自动验证表单
+      get().validateForm();
+    },
+    
+    // 设置当前步骤
+    setCurrentStep: (step) => {
+      set({ currentStep: step });
+    },
+    
+    // 验证整个表单
+    validateForm: () => {
+      const { formData } = get();
+      const newErrors: Record<string, string> = {};
+      
+      // 执行验证逻辑
+      if (!formData.customerId) {
+        newErrors.customerId = '请选择客户';
+      }
+      
+      if (!formData.contractType) {
+        newErrors.contractType = '请选择合同类型';
+      }
+      
+      // 更多验证规则...
+      
+      const isValid = Object.keys(newErrors).length === 0;
+      
+      set({
+        errors: newErrors,
+        isValid,
+      });
+      
+      return isValid;
+    },
+    
+    // 重置表单
+    resetForm: () => {
+      set({
+        formData: initialFormData,
+        currentStep: 0,
+        isValid: false,
+        isDirty: false,
+        errors: {},
+      });
+    },
+    
+    // 设置字段错误
+    setFieldError: (field, error) => {
+      set((state) => ({
+        errors: { ...state.errors, [field]: error },
+        isValid: false,
+      }));
+    },
+    
+    // 清除字段错误
+    clearFieldError: (field) => {
+      set((state) => {
+        const newErrors = { ...state.errors };
+        delete newErrors[field];
+        return {
+          errors: newErrors,
+          isValid: Object.keys(newErrors).length === 0,
+        };
+      });
+    },
+    
+    // 检查是否可以进入下一步
+    canProceedToNextStep: () => {
+      const { currentStep } = get();
+      return get().getStepValidation(currentStep);
+    },
+    
+    // 获取特定步骤的验证状态
+    getStepValidation: (step) => {
+      const { formData, errors } = get();
+      
+      switch (step) {
+        case 0: // 基本信息步骤
+          return formData.customerId && !errors.customerId;
+        case 1: // 合同详情步骤
+          return formData.contractType && !errors.contractType;
+        // 更多步骤验证...
+        default:
+          return true;
+      }
+    },
+  }))
+);
+
+// 订阅表单数据变化，自动保存草稿
+useContractFormStore.subscribe(
+  (state) => state.formData,
+  (formData) => {
+    // 自动保存草稿到本地存储
+    localStorage.setItem('contract-form-draft', JSON.stringify(formData));
+  },
+  {
+    equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+  }
+);
+```
+
+### 页面状态管理
+```tsx
+// src/store/pageStates.ts
+import { create } from 'zustand';
+
+interface PageState {
+  // 列表页状态
+  currentPage: number;
+  pageSize: number;
+  searchKeyword: string;
+  filters: Record<string, any>;
+  sortField: string;
+  sortOrder: 'asc' | 'desc';
+  selectedRows: any[];
+  
+  // UI 状态
+  loading: boolean;
+  tableLoading: boolean;
+  modalVisible: boolean;
+  sidebarCollapsed: boolean;
+  
+  // 操作方法
+  setPageination: (page: number, pageSize: number) => void;
+  setSearchKeyword: (keyword: string) => void;
+  setFilters: (filters: Record<string, any>) => void;
+  setSorting: (field: string, order: 'asc' | 'desc') => void;
+  setSelectedRows: (rows: any[]) => void;
+  setLoading: (loading: boolean) => void;
+  setTableLoading: (loading: boolean) => void;
+  setModalVisible: (visible: boolean) => void;
+  toggleSidebar: () => void;
+  resetPageState: () => void;
+}
+
+export const usePageStore = create<PageState>((set) => ({
+  // 初始状态
+  currentPage: 1,
+  pageSize: 10,
+  searchKeyword: '',
+  filters: {},
+  sortField: '',
+  sortOrder: 'desc',
+  selectedRows: [],
+  loading: false,
+  tableLoading: false,
+  modalVisible: false,
+  sidebarCollapsed: false,
+  
+  // 设置分页
+  setPageination: (page, pageSize) => {
+    set({ currentPage: page, pageSize });
+  },
+  
+  // 设置搜索关键词
+  setSearchKeyword: (keyword) => {
+    set({ searchKeyword: keyword, currentPage: 1 }); // 搜索时重置到第一页
+  },
+  
+  // 设置过滤条件
+  setFilters: (filters) => {
+    set({ filters, currentPage: 1 }); // 过滤时重置到第一页
+  },
+  
+  // 设置排序
+  setSorting: (field, order) => {
+    set({ sortField: field, sortOrder: order });
+  },
+  
+  // 设置选中行
+  setSelectedRows: (rows) => {
+    set({ selectedRows: rows });
+  },
+  
+  // 设置加载状态
+  setLoading: (loading) => set({ loading }),
+  setTableLoading: (loading) => set({ tableLoading }),
+  
+  // 设置模态框状态
+  setModalVisible: (visible) => set({ modalVisible: visible }),
+  
+  // 切换侧边栏状态
+  toggleSidebar: () => {
+    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }));
+  },
+  
+  // 重置页面状态
+  resetPageState: () => {
+    set({
+      currentPage: 1,
+      pageSize: 10,
+      searchKeyword: '',
+      filters: {},
+      sortField: '',
+      sortOrder: 'desc',
+      selectedRows: [],
+      loading: false,
+      tableLoading: false,
+    });
+  },
+}));
+```
+
+## Zustand 最佳实践
+
+### 1. Store 拆分原则
+- **按功能域拆分**：不同的业务功能使用独立的 store
+- **按生命周期拆分**：临时状态和持久状态分开管理
+- **按访问频率拆分**：经常变化的状态和稳定状态分开
+
+### 2. 类型安全
+```tsx
+// 使用 TypeScript 严格类型定义
+interface StoreState {
+  data: DataType;
+  loading: boolean;
+  error: string | null;
+}
+
+// 为操作方法定义明确的参数类型
+interface StoreActions {
+  fetchData: (params: FetchParams) => Promise<void>;
+  updateData: (id: string, data: Partial<DataType>) => void;
+  clearError: () => void;
+}
+
+type Store = StoreState & StoreActions;
+
+export const useDataStore = create<Store>((set, get) => ({
+  // 实现
+}));
+```
+
+### 3. 中间件使用
+```tsx
+// 使用 persist 中间件持久化状态
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set, get) => ({
+      theme: 'light',
+      language: 'zh-CN',
+      setTheme: (theme) => set({ theme }),
+      setLanguage: (language) => set({ language }),
+    }),
+    {
+      name: 'settings-storage',
+      partialize: (state) => ({
+        theme: state.theme,
+        language: state.language,
+      }),
+    }
+  )
+);
+
+// 使用 subscribeWithSelector 中间件监听状态变化
+export const useNotificationStore = create<NotificationState>()(
+  subscribeWithSelector((set, get) => ({
+    notifications: [],
+    addNotification: (notification) => {
+      set((state) => ({
+        notifications: [...state.notifications, notification],
+      }));
+    },
+    removeNotification: (id) => {
+      set((state) => ({
+        notifications: state.notifications.filter(n => n.id !== id),
+      }));
+    },
+  }))
+);
+
+// 订阅特定状态变化
+useNotificationStore.subscribe(
+  (state) => state.notifications,
+  (notifications) => {
+    // 自动清理过期通知
+    notifications.forEach((notification) => {
+      if (notification.autoClose) {
+        setTimeout(() => {
+          useNotificationStore.getState().removeNotification(notification.id);
+        }, notification.duration || 3000);
+      }
+    });
+  }
+);
+```
+
+### 4. 异步操作处理
+```tsx
+// 在 store 中处理异步操作
+export const useDataStore = create<DataStore>((set, get) => ({
+  data: [],
+  loading: false,
+  error: null,
+  
+  fetchData: async (params) => {
+    set({ loading: true, error: null });
+    
+    try {
+      const response = await api.getData(params);
+      set({ 
+        data: response.data,
+        loading: false,
+      });
+    } catch (error) {
+      set({ 
+        loading: false,
+        error: error instanceof Error ? error.message : '获取数据失败',
+      });
+    }
+  },
+  
+  // 乐观更新
+  updateItemOptimistically: async (id, updates) => {
+    const { data } = get();
+    
+    // 立即更新 UI
+    set({
+      data: data.map(item => 
+        item.id === id ? { ...item, ...updates } : item
+      ),
+    });
+    
+    try {
+      // 发送 API 请求
+      await api.updateItem(id, updates);
+    } catch (error) {
+      // 如果失败，回滚更改
+      set({ data: data }); // 恢复原始数据
+      throw error;
+    }
+  },
+}));
+```
+
+### 5. 组件中使用 Store
+```tsx
+// 只订阅需要的状态片段，避免不必要的重渲染
+const CustomerList: React.FC = () => {
+  // 只订阅特定状态
+  const customers = useCustomerStore((state) => state.customers);
+  const loading = useCustomerStore((state) => state.loading);
+  
+  // 分别获取操作方法（不会触发重渲染）
+  const { fetchCustomers, deleteCustomer } = useCustomerStore();
+  
+  // 使用浅比较优化
+  const { searchKeyword, filters } = usePageStore(
+    (state) => ({
+      searchKeyword: state.searchKeyword,
+      filters: state.filters,
+    }),
+    shallow // 需要从 'zustand/shallow' 导入
+  );
+  
+  // ... 组件逻辑
+};
+
+// 在需要时才创建选择器
+const selectCustomerById = (id: string) => (state: CustomerStore) => 
+  state.customers.find(customer => customer.id === id);
+
+const CustomerDetail: React.FC<{ customerId: string }> = ({ customerId }) => {
+  const customer = useCustomerStore(selectCustomerById(customerId));
+  
+  // ... 组件逻辑
+};
+```
+
+## Store 调试和开发工具
+
+### 开发环境调试
+```tsx
+// 在开发环境启用调试工具
+export const useDebugStore = create<DebugState>()(
+  devtools(
+    (set, get) => ({
+      // store 实现
+    }),
+    {
+      name: 'debug-store', // 在 Redux DevTools 中显示的名称
+    }
+  )
+);
+
+// 添加日志中间件
+const log = (config) => (set, get, api) =>
+  config(
+    (...args) => {
+      console.log('  applying', args);
+      set(...args);
+      console.log('  new state', get());
+    },
+    get,
+    api
+  );
+
+export const useLoggedStore = create<State>()(
+  log((set, get) => ({
+    // store 实现
+  }))
+);
+```

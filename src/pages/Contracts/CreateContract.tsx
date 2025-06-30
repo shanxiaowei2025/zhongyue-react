@@ -4,6 +4,7 @@ import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/i
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
 import { useDebounce } from '../../hooks/useDebounce'
+import { useContractFormStore } from '../../store/contractForm'
 import type { CreateContractDto } from '../../types/contract'
 import ProductServiceAgreement, {
   type ProductServiceAgreementRef,
@@ -32,279 +33,40 @@ const CreateContract: React.FC = () => {
   const location = useLocation()
   const state = location.state as LocationState
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmittingInProgress, setIsSubmittingInProgress] = useState(false) // 新增：标记提交进行中
-  const [contractParams, setContractParams] = useState<{signatory?: string, contractType?: string}>({})
-  const [savedContractData, setSavedContractData] = useState<any>({})
+  const [isSubmittingInProgress, setIsSubmittingInProgress] = useState(false)
+  
+  // 使用zustand持久化存储
+  const {
+    contractType,
+    signatory,
+    formData,
+    setContractType,
+    setSignatory,
+    updateFormData,
+    clearForm,
+    clearAllFormCache,
+    lastUpdated
+  } = useContractFormStore()
+  
   const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
   const agencyAccountingAgreementRef = useRef<AgencyAccountingAgreementRef>(null)
   const singleServiceAgreementRef = useRef<SingleServiceAgreementRef>(null)
 
   const { createContractData } = useContractDetail()
 
-  // 从 sessionStorage 获取保存的数据
-  const getStorageKey = (type: 'params' | 'data') => {
-    return type === 'params' ? 'contractCreateParams' : 'contractCreateData'
-  }
-
-  const loadFromStorage = () => {
-    try {
-      // 恢复合同参数
-      const savedParams = sessionStorage.getItem(getStorageKey('params'))
-      let paramsLoaded = false;
-      if (savedParams) {
-        const params = JSON.parse(savedParams)
-        if (params.signatory && params.contractType) {
-          setContractParams(params)
-          console.log('🔄 从 sessionStorage 恢复合同创建参数:', params)
-          paramsLoaded = true;
-        }
-      }
-
-      // 恢复表单数据
-      const savedData = sessionStorage.getItem(getStorageKey('data'))
-      if (savedData) {
-        const data = JSON.parse(savedData)
-        if (Object.keys(data).length > 0) {
-          // 强制设置甲方公司名称等关键字段，确保它们在UI中正确显示
-          if (data.partyACompany) {
-            console.log('🎯 恢复关键字段：甲方公司名', data.partyACompany)
-          }
-          if (data.partyASignDate) {
-            console.log('🎯 恢复关键字段：甲方签署日期', data.partyASignDate)
-          }
-          if (data.partyBSignDate) {
-            console.log('🎯 恢复关键字段：乙方签署日期', data.partyBSignDate)
-          }
-          setSavedContractData(data)
-          console.log('🔄 从 sessionStorage 恢复合同表单数据:', data)
-          
-          // 创建一个假的事件来触发数据保存和恢复机制
-          setTimeout(() => {
-            const event = new Event('formDataRestored', { bubbles: true })
-            document.dispatchEvent(event)
-          }, 200);
-        }
-      }
-      return paramsLoaded // 返回参数恢复状态
-    } catch (error) {
-      console.error('恢复 sessionStorage 数据失败:', error)
-      return false
-    }
-  }
-
-  // 强制恢复状态的函数
-  const forceRecoverState = () => {
-    const success = loadFromStorage()
-    if (success) {
-      console.log('✅ 强制恢复状态成功')
-    } else {
-      console.warn('⚠️ 无法恢复状态，sessionStorage 中可能没有有效数据')
-    }
-  }
-
-  // 手动清理 sessionStorage 数据
-  const clearStorageData = () => {
-    try {
-      sessionStorage.removeItem(getStorageKey('params'))
-      sessionStorage.removeItem(getStorageKey('data'))
-      setContractParams({})
-      setSavedContractData({})
-      console.log('🧹 手动清理：已清除所有 sessionStorage 数据')
-      message.success('已清除保存的合同数据')
-    } catch (error) {
-      console.error('清理数据失败:', error)
-      message.error('清理数据失败')
-    }
-  }
-
-  const saveToStorage = (params?: any, data?: any) => {
-    try {
-      if (params) {
-        sessionStorage.setItem(getStorageKey('params'), JSON.stringify(params))
-      }
-      if (data) {
-        sessionStorage.setItem(getStorageKey('data'), JSON.stringify(data))
-        // 记录保存时间
-        const now = new Date()
-        const formattedTime = now.toLocaleTimeString('zh-CN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        })
-        sessionStorage.setItem('lastFormSaveTime', formattedTime)
-      }
-    } catch (error) {
-      console.error('保存到 sessionStorage 失败:', error)
-    }
-  }
-
-  // 初始化合同参数，支持从多个来源获取
-  useEffect(() => {
-    // 优先使用 location.state
-    if (state?.signatory && state?.contractType) {
-      const params = {
-        signatory: state.signatory,
-        contractType: state.contractType
-      }
-      setContractParams(params)
-      saveToStorage(params)
-      console.log('💾 保存新的合同创建参数:', params)
-      return
-    }
-
-    // 如果 location.state 不存在，尝试从 sessionStorage 恢复
-    loadFromStorage()
-  }, [state?.signatory, state?.contractType]) // 监听 state 变化
-
-  // 监控 contractParams 状态，确保不会意外丢失
-  useEffect(() => {
-    // 如果 contractParams 为空但 sessionStorage 中有数据，主动恢复
-    if ((!contractParams?.signatory || !contractParams?.contractType)) {
-      const timer = setTimeout(() => {
-        try {
-          const savedParams = sessionStorage.getItem(getStorageKey('params'))
-          if (savedParams) {
-            const params = JSON.parse(savedParams)
-            if (params.signatory && params.contractType) {
-              console.log('🔄 检测到参数丢失，主动恢复:', params)
-              setContractParams(params)
-            }
-          }
-        } catch (error) {
-          console.error('主动恢复参数失败:', error)
-        }
-      }, 100) // 短暂延迟确保组件稳定
-
-      return () => clearTimeout(timer)
-    }
-  }, [contractParams?.signatory, contractParams?.contractType])
-  
-  // 定期检查并恢复状态（防止意外丢失）
-  useEffect(() => {
-    const intervalCheck = setInterval(() => {
-      // 如果正在提交，跳过恢复逻辑
-      if (isSubmittingInProgress) {
-        console.log('⏸️ 提交进行中，跳过定期检查恢复')
-        return
-      }
-
-      if (!contractParams?.signatory || !contractParams?.contractType) {
-        try {
-          const savedParams = sessionStorage.getItem(getStorageKey('params'))
-          if (savedParams) {
-            const params = JSON.parse(savedParams)
-            if (params.signatory && params.contractType) {
-              console.log('🔄 定期检查：恢复丢失的参数:', params)
-              setContractParams(params)
-            }
-          }
-        } catch (error) {
-          console.error('定期检查恢复失败:', error)
-        }
-      } else {
-        // 参数正常，检查表单数据是否完整恢复
-        try {
-          const savedData = sessionStorage.getItem(getStorageKey('data'))
-          if (savedData && Object.keys(savedContractData).length === 0) {
-            const data = JSON.parse(savedData)
-            if (Object.keys(data).length > 0) {
-              console.log('🔄 定期检查：恢复丢失的表单数据')
-              setSavedContractData(data)
-              
-              // 特别关注日期字段的恢复
-              if (data.partyASignDate || data.partyBSignDate) {
-                console.log('🕒 定期检查：发现并恢复日期字段')
-                console.log('  甲方签署日期:', data.partyASignDate)
-                console.log('  乙方签署日期:', data.partyBSignDate)
-              }
-            }
-          }
-        } catch (error) {
-          console.error('表单数据恢复失败:', error)
-        }
-      }
-    }, 5000) // 每5秒检查一次
-
-    return () => clearInterval(intervalCheck)
-  }, [contractParams?.signatory, contractParams?.contractType, savedContractData, isSubmittingInProgress])
-
-  // 监听页面可见性变化，当页面重新可见时保存表单数据和恢复状态
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // 页面隐藏时立即保存当前表单数据（不使用防抖）
-        if (!isSubmittingInProgress) {
-          saveCurrentFormData()
-        }
-      } else if (document.visibilityState === 'visible') {
-        // 如果正在提交，跳过恢复逻辑
-        if (isSubmittingInProgress) {
-          console.log('⏸️ 提交进行中，跳过页面可见性恢复')
-          return
-        }
-        // 页面可见时检查并恢复状态
-        if (!contractParams?.signatory || !contractParams?.contractType) {
-          console.log('🔄 页面重新可见，检查并恢复状态')
-          forceRecoverState()
-        }
-      }
-    }
-
-    const handleFocus = () => {
-      // 如果正在提交，跳过恢复逻辑
-      if (isSubmittingInProgress) {
-        console.log('⏸️ 提交进行中，跳过窗口聚焦恢复')
-        return
-      }
-
-      // 窗口重新获得焦点时也尝试恢复状态
-      if (!contractParams?.signatory || !contractParams?.contractType) {
-        console.log('🔄 窗口重新聚焦，检查并恢复状态')
-        setTimeout(() => forceRecoverState(), 100)
-      } else {
-        // 有参数时，确保表单内容也被恢复
-        const savedData = sessionStorage.getItem(getStorageKey('data'))
-        if (savedData) {
-          try {
-            const data = JSON.parse(savedData)
-            setSavedContractData(data)
-            console.log('🔄 窗口聚焦时恢复表单数据')
-            
-            // 日期字段特殊处理日志
-            if (data.partyASignDate || data.partyBSignDate) {
-              console.log('🕒 窗口聚焦：恢复日期字段')
-              console.log('  甲方签署日期:', data.partyASignDate)
-              console.log('  乙方签署日期:', data.partyBSignDate)
-            }
-          } catch (error) {
-            console.error('恢复表单数据失败:', error)
-          }
-        }
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [contractParams, isSubmittingInProgress])
-
-  // 保存当前表单数据
+  // 保存当前表单数据到zustand存储
   const saveCurrentFormData = () => {
-    if (!contractParams?.contractType) return
+    if (!contractType) return
 
     try {
       let currentData: Record<string, any> = {}
       
       // 根据合同类型获取当前表单数据
-      if (contractParams.contractType === '产品服务协议' && productServiceAgreementRef.current) {
+      if (contractType === '产品服务协议' && productServiceAgreementRef.current) {
         currentData = productServiceAgreementRef.current.getFormData?.() || {}
-      } else if (contractParams.contractType === '代理记账合同' && agencyAccountingAgreementRef.current) {
+      } else if (contractType === '代理记账合同' && agencyAccountingAgreementRef.current) {
         currentData = agencyAccountingAgreementRef.current.getFormData?.() || {}
-      } else if (contractParams.contractType === '单项服务合同' && singleServiceAgreementRef.current) {
+      } else if (contractType === '单项服务合同' && singleServiceAgreementRef.current) {
         currentData = singleServiceAgreementRef.current.getFormData?.() || {}
       }
 
@@ -320,7 +82,7 @@ const CreateContract: React.FC = () => {
           partyBPhone: currentData.partyBPhone || '',
         }
 
-        saveToStorage(undefined, currentData)
+        updateFormData(currentData)
         console.log('💾 自动保存表单数据:', currentData)
         
         // 特别监控日期字段的保存
@@ -337,28 +99,54 @@ const CreateContract: React.FC = () => {
   }
   
   // 使用防抖的保存表单数据方法
-  const debouncedSaveFormData = useDebounce(saveCurrentFormData, 500, [contractParams?.contractType])
+  const debouncedSaveFormData = useDebounce(saveCurrentFormData, 500, [contractType])
+
+  // 初始化合同参数，支持从多个来源获取
+  useEffect(() => {
+    // 优先使用 location.state
+    if (state?.signatory && state?.contractType) {
+      setSignatory(state.signatory)
+      setContractType(state.contractType)
+      console.log('💾 保存新的合同创建参数:', { signatory: state.signatory, contractType: state.contractType })
+      return
+    }
+
+    // 否则zustand中已有存储的数据会自动加载
+    console.log('🔄 使用已存储的合同参数:', { signatory, contractType })
+  }, [state?.signatory, state?.contractType, setContractType, setSignatory, signatory, contractType])
 
   // 组件卸载时的清理逻辑 - 只保存数据，不自动清理
   useEffect(() => {
     // 监听 beforeunload 事件，在页面真正关闭时保存数据
     const handleBeforeUnload = () => {
       saveCurrentFormData()
-      // 在浏览器关闭/刷新时才清理数据
-      sessionStorage.removeItem(getStorageKey('params'))
-      sessionStorage.removeItem(getStorageKey('data'))
-      console.log('🧹 页面关闭：清理 sessionStorage 数据')
+      // 浏览器关闭/刷新时清理数据
+      clearAllFormCache()
+      console.log('🧹 页面关闭：清理所有表单数据')
+    }
+
+    // 监听标签页关闭事件
+    const handleTabClose = (event: any) => {
+      const { tabKey } = event.detail || {}
+      // 如果关闭的是创建合同标签页，清理表单缓存
+      if (tabKey === '/contracts/create') {
+        console.log('🗂️ 创建合同标签页关闭，清理表单缓存')
+        clearAllFormCache()
+      }
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
+    // 监听自定义的标签页关闭事件
+    document.addEventListener('tabClose', handleTabClose)
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      // 组件卸载时只保存数据，不清理参数
+      document.removeEventListener('tabClose', handleTabClose)
+      // 组件卸载时只保存数据，不清理
       saveCurrentFormData()
       console.log('💾 组件卸载：已保存表单数据，保留参数')
     }
-  }, [])
+  }, [clearForm, clearAllFormCache])
 
   // 返回合同列表 - 保留数据，下次可以继续编辑
   const handleBack = () => {
@@ -368,26 +156,38 @@ const CreateContract: React.FC = () => {
     navigate('/contracts')
   }
 
+  // 清除表单数据
+  const clearStorageData = () => {
+    try {
+      clearAllFormCache()
+      console.log('🧹 手动清理：已清除所有表单数据')
+      message.success('已清除保存的合同数据')
+    } catch (error) {
+      console.error('清理数据失败:', error)
+      message.error('清理数据失败')
+    }
+  }
+
   // 处理合同提交 - 通过ref调用
   const handleContractSubmit = async () => {
     try {
       setIsSubmitting(true)
       setIsSubmittingInProgress(true) // 标记提交进行中，暂停所有自动恢复逻辑
-      console.log('🚀 开始提交合同，暂停自动恢复逻辑')
+      console.log('🚀 开始提交合同')
 
-      if (contractParams?.contractType === '产品服务协议') {
+      if (contractType === '产品服务协议') {
         if (!productServiceAgreementRef.current) {
           message.error('合同组件未准备就绪')
           return
         }
         await productServiceAgreementRef.current.handleSubmit()
-      } else if (contractParams?.contractType === '代理记账合同') {
+      } else if (contractType === '代理记账合同') {
         if (!agencyAccountingAgreementRef.current) {
           message.error('合同组件未准备就绪')
           return
         }
         await agencyAccountingAgreementRef.current.handleSubmit()
-      } else if (contractParams?.contractType === '单项服务合同') {
+      } else if (contractType === '单项服务合同') {
         if (!singleServiceAgreementRef.current) {
           message.error('合同组件未准备就绪')
           return
@@ -399,7 +199,7 @@ const CreateContract: React.FC = () => {
       }
 
       // 提交成功后清理数据，关闭标签页并返回合同列表
-      clearStorageData()
+      clearAllFormCache()
       message.success('合同创建成功！', 2)
       
       setTimeout(() => {
@@ -423,8 +223,8 @@ const CreateContract: React.FC = () => {
       message.error('提交合同失败，请检查填写内容后重试')
     } finally {
       setIsSubmitting(false)
-      setIsSubmittingInProgress(false) // 提交结束，恢复自动恢复逻辑
-      console.log('🔚 合同提交结束，恢复自动恢复逻辑')
+      setIsSubmittingInProgress(false)
+      console.log('🔚 合同提交结束')
     }
   }
 
@@ -455,7 +255,7 @@ const CreateContract: React.FC = () => {
   // 监听合同表单的更改事件，通过事件委托来捕获
   useEffect(() => {
     // 只有在有合同类型和签署方时才监听
-    if (!contractParams?.contractType || !contractParams?.signatory) return
+    if (!contractType || !signatory) return
     
     // 监听整个文档的变更事件，通过事件委托来捕获表单变化
     const handleFormChange = () => {
@@ -465,18 +265,16 @@ const CreateContract: React.FC = () => {
     
     // 监听数据恢复事件，用于触发额外的恢复操作
     const handleDataRestored = () => {
-      console.log('📣 监听到表单数据恢复事件，触发额外恢复操作')
+      console.log('📣 监听到表单数据恢复事件')
       
       // 如果需要，可以在这里添加额外的恢复操作
-      // 例如，强制更新某些特定表单字段或触发其他操作
-      
       // 对于产品服务协议，强制同步客户信息
-      if (contractParams.contractType === '产品服务协议' && 
+      if (contractType === '产品服务协议' && 
           productServiceAgreementRef.current && 
-          savedContractData.partyACompany) {
+          formData.partyACompany) {
         const syncEvent = new CustomEvent('syncCustomerData', {
           detail: {
-            customerName: savedContractData.partyACompany,
+            customerName: formData.partyACompany,
           }
         })
         document.dispatchEvent(syncEvent)
@@ -490,8 +288,8 @@ const CreateContract: React.FC = () => {
     
     // 监听合同组件的自定义表单变化事件（特别针对DatePicker等Antd组件）
     const handleContractFormFieldChange = (event: any) => {
-      const { field, value, contractType } = event.detail || {}
-      console.log(`📅 [CreateContract] 收到合同字段变化事件: ${field}=${value} (${contractType})`)
+      const { field, value, contractType: eventContractType } = event.detail || {}
+      console.log(`📅 [CreateContract] 收到合同字段变化事件: ${field}=${value} (${eventContractType})`)
       // 触发自动保存
       debouncedSaveFormData()
     }
@@ -515,10 +313,10 @@ const CreateContract: React.FC = () => {
       document.removeEventListener('contractFormFieldChange', handleContractFormFieldChange)
       clearInterval(autoSaveInterval)
     }
-  }, [contractParams?.contractType, contractParams?.signatory, debouncedSaveFormData, savedContractData])
+  }, [contractType, signatory, debouncedSaveFormData, formData])
 
   const renderContractContent = () => {
-    if (!contractParams?.contractType) {
+    if (!contractType) {
       return (
         <div className="text-center py-8">
           <Alert 
@@ -535,7 +333,7 @@ const CreateContract: React.FC = () => {
       )
     }
 
-    if (!contractParams?.signatory) {
+    if (!signatory) {
       return (
         <div className="text-center py-8">
           <Alert 
@@ -552,15 +350,15 @@ const CreateContract: React.FC = () => {
       )
     }
 
-    switch (contractParams.contractType) {
+    switch (contractType) {
       case '产品服务协议':
         return (
           <ProductServiceAgreement
-            signatory={contractParams.signatory}
+            signatory={signatory}
             contractData={{
-              signatory: contractParams.signatory,
-              contractType: contractParams.contractType,
-              ...savedContractData
+              signatory: signatory,
+              contractType: contractType,
+              ...formData
             }}
             onSubmit={async contractData => {
               await createContractData(contractData)
@@ -572,11 +370,11 @@ const CreateContract: React.FC = () => {
       case '代理记账合同':
         return (
           <AgencyAccountingAgreement
-            signatory={contractParams.signatory}
+            signatory={signatory}
             contractData={{
-              signatory: contractParams.signatory,
-              contractType: contractParams.contractType,
-              ...savedContractData
+              signatory: signatory,
+              contractType: contractType,
+              ...formData
             }}
             onSubmit={async contractData => {
               await createContractData(contractData)
@@ -588,11 +386,11 @@ const CreateContract: React.FC = () => {
       case '单项服务合同':
         return (
           <SingleServiceAgreement
-            signatory={contractParams.signatory}
+            signatory={signatory}
             contractData={{
-              signatory: contractParams.signatory,
-              contractType: contractParams.contractType,
-              ...savedContractData
+              signatory: signatory,
+              contractType: contractType,
+              ...formData
             }}
             onSubmit={async contractData => {
               await createContractData(contractData)
@@ -606,7 +404,7 @@ const CreateContract: React.FC = () => {
           <div className="text-center py-8">
             <Alert
               message="不支持的合同类型"
-              description={`暂不支持 "${contractParams.contractType}" 类型的合同。`}
+              description={`暂不支持 "${contractType}" 类型的合同。`}
               type="error"
               showIcon
             />
@@ -635,10 +433,10 @@ const CreateContract: React.FC = () => {
                 type="primary"
                 loading={isSubmitting}
                 disabled={
-                  !contractParams?.contractType ||
-                  (contractParams.contractType !== '产品服务协议' &&
-                    contractParams.contractType !== '代理记账合同' &&
-                    contractParams.contractType !== '单项服务合同')
+                  !contractType ||
+                  (contractType !== '产品服务协议' &&
+                    contractType !== '代理记账合同' &&
+                    contractType !== '单项服务合同')
                 }
                 onClick={handleContractSubmit}
               >
@@ -655,16 +453,12 @@ const CreateContract: React.FC = () => {
           <div className="flex items-center">
             <span className="text-gray-600 w-24">签署方：</span>
             <span className="font-medium text-blue-600">
-              {contractParams?.signatory || (
+              {signatory || (
                 <span 
-                  className="text-orange-500 cursor-pointer"
-                  onClick={() => {
-                    console.log('🔄 手动触发状态恢复')
-                    forceRecoverState()
-                  }}
-                  title="点击尝试恢复状态"
+                  className="text-orange-500"
+                  title="未选择签署方"
                 >
-                  未选择 (点击恢复)
+                  未选择
                 </span>
               )}
             </span>
@@ -672,16 +466,12 @@ const CreateContract: React.FC = () => {
           <div className="flex items-center">
             <span className="text-gray-600 w-24">合同类型：</span>
             <span className="font-medium text-green-600">
-              {contractParams?.contractType || (
+              {contractType || (
                 <span 
-                  className="text-orange-500 cursor-pointer"
-                  onClick={() => {
-                    console.log('🔄 手动触发状态恢复')
-                    forceRecoverState()
-                  }}
-                  title="点击尝试恢复状态"
+                  className="text-orange-500"
+                  title="未选择合同类型"
                 >
-                  未选择 (点击恢复)
+                  未选择
                 </span>
               )}
             </span>
@@ -691,20 +481,16 @@ const CreateContract: React.FC = () => {
           {process.env.NODE_ENV === 'development' && (
             <div className="mt-2 p-2 bg-gray-100 rounded text-sm">
               <div className="text-gray-600">调试信息:</div>
-              <div>SessionStorage Params: {sessionStorage.getItem(getStorageKey('params')) ? '✅ 存在' : '❌ 不存在'}</div>
-              <div>SessionStorage Data: {sessionStorage.getItem(getStorageKey('data')) ? '✅ 存在' : '❌ 不存在'}</div>
-              <div>Current State: signatory={contractParams?.signatory || 'null'}, type={contractParams?.contractType || 'null'}</div>
-              <div>Saved Data Keys: {Object.keys(savedContractData).length > 0 ? Object.keys(savedContractData).join(', ') : '无'}</div>
-              {savedContractData.partyASignDate && (
-                <div>甲方签署日期: {savedContractData.partyASignDate}</div>
+              <div>Zustand 存储: {lastUpdated ? '✅ 存在' : '❌ 不存在'}</div>
+              <div>Current State: signatory={signatory || 'null'}, type={contractType || 'null'}</div>
+              <div>Saved Data Keys: {formData && Object.keys(formData).length > 0 ? Object.keys(formData).join(', ') : '无'}</div>
+              {formData && formData.partyASignDate && (
+                <div>甲方签署日期: {formData.partyASignDate}</div>
               )}
-              {savedContractData.partyBSignDate && (
-                <div>乙方签署日期: {savedContractData.partyBSignDate}</div>
+              {formData && formData.partyBSignDate && (
+                <div>乙方签署日期: {formData.partyBSignDate}</div>
               )}
               <div className="mt-1 space-x-2">
-                <Button size="small" onClick={forceRecoverState}>
-                  强制恢复状态
-                </Button>
                 <Button size="small" onClick={saveCurrentFormData} type="primary">
                   立即保存表单
                 </Button>
@@ -713,7 +499,7 @@ const CreateContract: React.FC = () => {
                 </Button>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                上次保存时间: {sessionStorage.getItem('lastFormSaveTime') || '未保存'}
+                上次保存时间: {lastUpdated ? new Date(lastUpdated).toLocaleTimeString('zh-CN') : '未保存'}
               </div>
             </div>
           )}

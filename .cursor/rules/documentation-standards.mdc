@@ -1,5 +1,302 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+Description: 文档规范指南
+Globs: src/**/*
+
+# 文档和注释标准
+
+## 代码注释规范
+
+### TypeScript/JavaScript 注释标准
+
+#### 函数和方法注释
+```tsx
+/**
+ * 创建客户信息
+ * @param customerData - 客户数据对象
+ * @param options - 可选配置项
+ * @returns Promise<Customer> 返回创建的客户信息
+ * @throws {ValidationError} 当客户数据验证失败时抛出
+ * @example
+ * ```tsx
+ * const customer = await createCustomer({
+ *   companyName: '测试公司',
+ *   unifiedSocialCreditCode: '91110000000000000X'
+ * });
+ * ```
+ */
+export const createCustomer = async (
+  customerData: CreateCustomerRequest,
+  options?: CreateOptions
+): Promise<Customer> => {
+  // 验证必填字段
+  if (!customerData.companyName) {
+    throw new ValidationError('公司名称不能为空');
+  }
+
+  // 检查统一社会信用代码格式
+  if (!isValidCreditCode(customerData.unifiedSocialCreditCode)) {
+    throw new ValidationError('统一社会信用代码格式不正确');
+  }
+
+  try {
+    const response = await api.post('/customers', customerData);
+    return response.data;
+  } catch (error) {
+    // 处理创建失败的情况
+    console.error('创建客户失败:', error);
+    throw error;
+  }
+};
+```
+
+#### 组件注释
+```tsx
+/**
+ * 客户表单组件
+ * 
+ * 用于创建和编辑客户信息的表单组件，支持以下功能：
+ * - 客户基本信息录入
+ * - 表单验证
+ * - 文件上传
+ * - 自动保存草稿
+ * 
+ * @param props - 组件属性
+ * @param props.initialValues - 初始表单数据（编辑模式时传入）
+ * @param props.onSubmit - 表单提交回调函数
+ * @param props.onCancel - 取消操作回调函数
+ * @param props.readonly - 是否为只读模式
+ * 
+ * @example
+ * ```tsx
+ * // 创建模式
+ * <CustomerForm onSubmit={handleCreate} onCancel={handleCancel} />
+ * 
+ * // 编辑模式
+ * <CustomerForm 
+ *   initialValues={customer} 
+ *   onSubmit={handleUpdate} 
+ *   onCancel={handleCancel} 
+ * />
+ * 
+ * // 只读模式
+ * <CustomerForm initialValues={customer} readonly />
+ * ```
+ */
+interface CustomerFormProps {
+  /** 初始表单数据（编辑模式时传入） */
+  initialValues?: Partial<Customer>;
+  /** 表单提交回调函数 */
+  onSubmit?: (values: CustomerFormData) => Promise<void>;
+  /** 取消操作回调函数 */
+  onCancel?: () => void;
+  /** 是否为只读模式 */
+  readonly?: boolean;
+}
+
+const CustomerForm: React.FC<CustomerFormProps> = ({
+  initialValues,
+  onSubmit,
+  onCancel,
+  readonly = false,
+}) => {
+  // 表单状态管理
+  const [form] = Form.useForm<CustomerFormData>();
+  const [loading, setLoading] = useState(false);
+
+  // 组件逻辑...
+};
+```
+
+### 复杂业务逻辑注释
+```tsx
+/**
+ * 计算合同总金额
+ * 
+ * 根据服务项目列表计算合同的总金额，包含以下计算规则：
+ * 1. 基础服务费：固定收费项目的总和
+ * 2. 按量计费：根据数量计算的服务费用
+ * 3. 折扣计算：VIP客户享受不同折扣
+ * 4. 税费计算：根据税率计算增值税
+ */
+const calculateContractAmount = (
+  serviceItems: ServiceItem[],
+  customer: Customer,
+  taxRate: number = 0.06
+): ContractAmount => {
+  // 1. 计算基础服务费
+  const baseServiceFee = serviceItems
+    .filter(item => item.chargeType === 'FIXED')
+    .reduce((sum, item) => sum + item.price, 0);
+
+  // 2. 计算按量服务费
+  const volumeServiceFee = serviceItems
+    .filter(item => item.chargeType === 'VOLUME')
+    .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // 3. 应用客户折扣
+  const subtotal = baseServiceFee + volumeServiceFee;
+  const discount = getCustomerDiscount(customer.level);
+  const discountedAmount = subtotal * (1 - discount);
+
+  // 4. 计算税费
+  const taxAmount = discountedAmount * taxRate;
+  const totalAmount = discountedAmount + taxAmount;
+
+  return {
+    baseServiceFee,
+    volumeServiceFee,
+    subtotal,
+    discount,
+    discountedAmount,
+    taxAmount,
+    totalAmount,
+  };
+};
+```
+
+## 类型定义注释
+
+### 接口和类型注释
+```tsx
+/**
+ * 客户信息接口
+ * 
+ * 定义系统中客户的完整信息结构
+ */
+interface Customer {
+  /** 客户唯一标识 */
+  id: number;
+  
+  /** 公司名称 */
+  companyName: string;
+  
+  /** 统一社会信用代码 */
+  unifiedSocialCreditCode: string;
+  
+  /** 
+   * 企业类型
+   * @example "有限责任公司" | "股份有限公司" | "个人独资企业"
+   */
+  enterpriseType: string;
+  
+  /** 
+   * 客户等级
+   * - VIP: VIP客户，享受最高优先级服务
+   * - PREMIUM: 高级客户，享受优先服务
+   * - STANDARD: 标准客户，常规服务
+   * - BASIC: 基础客户，基本服务
+   */
+  level: 'VIP' | 'PREMIUM' | 'STANDARD' | 'BASIC';
+  
+  /** 
+   * 客户状态
+   * - ACTIVE: 活跃状态，可正常提供服务
+   * - INACTIVE: 停用状态，暂停服务
+   * - PENDING: 待审核状态，等待审核通过
+   */
+  status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
+  
+  /** 联系人信息 */
+  contact: {
+    /** 联系人姓名 */
+    person: string;
+    /** 联系电话 */
+    phone: string;
+    /** 电子邮箱 */
+    email?: string;
+    /** 办公地址 */
+    address?: string;
+  };
+  
+  /** 创建时间 */
+  createdAt: string;
+  
+  /** 最后更新时间 */
+  updatedAt: string;
+}
+```
+
+## API 文档注释
+
+### API 接口注释
+```tsx
+/**
+ * 客户管理 API
+ * 
+ * 提供客户信息的增删改查功能
+ */
+export class CustomerAPI {
+  /**
+   * 获取客户列表
+   * 
+   * @param params - 查询参数
+   * @param params.page - 页码，从1开始
+   * @param params.pageSize - 每页数量，默认10条
+   * @param params.keyword - 搜索关键词，支持公司名称和统一社会信用代码
+   * @param params.status - 客户状态筛选
+   * @param params.level - 客户等级筛选
+   * @param params.enterpriseType - 企业类型筛选
+   * 
+   * @returns Promise<ApiResponse<PaginatedResponse<Customer>>> 分页的客户列表
+   * 
+   * @throws {ValidationError} 当查询参数验证失败时
+   * @throws {NetworkError} 当网络请求失败时
+   * 
+   * @example
+   * ```tsx
+   * // 获取第一页数据
+   * const response = await CustomerAPI.getList({ page: 1, pageSize: 10 });
+   * 
+   * // 搜索特定客户
+   * const response = await CustomerAPI.getList({
+   *   page: 1,
+   *   pageSize: 10,
+   *   keyword: '测试公司',
+   *   status: 'ACTIVE'
+   * });
+   * ```
+   */
+  static async getList(params: GetCustomerListParams): Promise<ApiResponse<PaginatedResponse<Customer>>> {
+    return api.get('/customers', params);
+  }
+}
+```
+
+## 中文注释规范
+
+项目中所有注释都应使用中文，包括：
+
+1. **业务逻辑注释** - 使用中文解释业务规则和处理逻辑
+2. **变量和函数说明** - 使用中文描述变量用途和函数功能
+3. **TODO 和 FIXME** - 使用中文说明待办事项和需要修复的问题
+4. **代码块注释** - 使用中文解释复杂代码段的作用
+
+```tsx
+// ✅ 好的中文注释示例
+/**
+ * 计算客户的折扣率
+ * 根据客户等级和历史消费金额确定折扣比例
+ */
+const getCustomerDiscount = (customer: Customer): number => {
+  // VIP客户享受最高折扣
+  if (customer.level === 'VIP') {
+    return 0.15; // 15% 折扣
+  }
+  
+  // 高级客户根据消费金额计算折扣
+  if (customer.level === 'PREMIUM') {
+    // 消费超过10万的给予10%折扣，否则给予5%折扣
+    return customer.totalSpent > 100000 ? 0.10 : 0.05;
+  }
+  
+  // 普通客户不享受折扣
+  return 0;
+};
+
+// TODO: 添加客户等级升级的自动计算逻辑
+// FIXME: 修复在极端情况下折扣计算可能出现的精度问题
+```

@@ -1,5 +1,911 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+Description: 错误处理最佳实践
+Globs: src/**/*.ts, src/**/*.tsx
+
+# 错误处理最佳实践
+
+## API 请求错误处理
+
+- 所有 API 请求应使用 try/catch 或 Promise 错误处理
+- 使用统一的错误处理机制，确保用户友好的错误提示
+- 在 [src/api/request.ts](mdc:zhongyue-react/zhongyue-react/src/api/request.ts) 中定义全局错误拦截器
+- 示例:
+
+```tsx
+// 组件中的错误处理
+const CustomerList = () => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getCustomerList(params);
+      setCustomers(data.items);
+    } catch (err) {
+      // 转换错误为用户友好的消息
+      setError(err instanceof Error ? err.message : '获取客户列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 组件其余部分
+};
+```
+
+## 表单验证错误处理
+
+- 使用 Yup 进行表单验证，提供详细的错误信息
+- 为表单字段提供清晰的错误提示
+- 示例:
+
+```tsx
+// 使用 Yup 进行表单验证
+const validationSchema = yup.object().shape({
+  name: yup.string().required('客户名称不能为空'),
+  email: yup.string().email('请输入有效的邮箱地址').required('邮箱不能为空'),
+  phone: yup.string().matches(/^1[3-9]\d{9}$/, '请输入有效的手机号码')
+});
+
+// 在表单中使用验证
+<Form.Item
+  name="email"
+  label="邮箱"
+  validateStatus={errors.email ? 'error' : undefined}
+  help={errors.email}
+>
+  <Input placeholder="请输入邮箱" />
+</Form.Item>
+```
+
+## 全局错误边界
+
+- 使用 React 错误边界捕获组件树中的 JavaScript 错误
+- 实现回退 UI，防止整个应用崩溃
+- 示例:
+
+```tsx
+// 错误边界组件
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // 可以将错误日志发送到服务端
+    console.error('ErrorBoundary caught an error', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div className="error-page">页面出错了，请刷新重试</div>;
+    }
+
+    return this.props.children;
+  }
+}
+
+// 在应用中使用
+<ErrorBoundary>
+  <App />
+</ErrorBoundary>
+```
+
+## 异步操作错误处理
+
+- 对所有异步操作（定时器、事件处理器等）进行错误处理
+- 使用 async/await 简化 Promise 错误处理
+- 示例:
+
+```tsx
+// 异步事件处理
+const handleSubmit = async (event) => {
+  try {
+    await saveCustomer(customerData);
+    message.success('保存成功');
+    navigate('/customers');
+  } catch (error) {
+    message.error('保存失败：' + (error instanceof Error ? error.message : '未知错误'));
+  }
+};
+```
+
+# 错误处理模式与最佳实践
+
+## 错误处理架构
+
+项目采用分层错误处理架构：
+- **HTTP层** - 网络请求错误拦截和处理
+- **业务层** - API响应错误和业务逻辑错误
+- **UI层** - 用户界面错误反馈和状态展示
+- **全局层** - 未捕获错误的兜底处理
+
+## HTTP层错误处理
+
+### Axios 拦截器统一处理
+```tsx
+// src/api/request.ts
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { message } from 'antd';
+
+// 错误类型定义
+interface ApiError {
+  code: number;
+  message: string;
+  data?: any;
+  timestamp?: string;
+}
+
+// HTTP 错误状态码映射
+const HTTP_ERROR_MESSAGES: Record<number, string> = {
+  400: '请求参数错误',
+  401: '登录已过期，请重新登录',
+  403: '权限不足，无法访问该资源',
+  404: '请求的资源不存在',
+  408: '请求超时，请稍后重试',
+  500: '服务器内部错误',
+  502: '网关错误',
+  503: '服务暂不可用',
+  504: '网关超时',
+};
+
+// 创建 axios 实例
+const api = axios.create({
+  baseURL: process.env.VITE_API_BASE_URL,
+  timeout: 10000,
+});
+
+// 响应拦截器
+api.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // 成功响应直接返回数据
+    return response.data;
+  },
+  (error: AxiosError) => {
+    // 处理网络错误
+    if (!error.response) {
+      const networkError = {
+        code: -1,
+        message: '网络连接失败，请检查网络设置',
+        type: 'NETWORK_ERROR',
+      };
+      message.error(networkError.message);
+      return Promise.reject(networkError);
+    }
+
+    const { status, data } = error.response;
+    
+    // 处理 HTTP 状态码错误
+    const httpError: ApiError = {
+      code: status,
+      message: HTTP_ERROR_MESSAGES[status] || `请求失败 (${status})`,
+      data: data,
+    };
+
+    // 特殊处理认证错误
+    if (status === 401) {
+      // 清除认证信息
+      localStorage.removeItem('access_token');
+      // 跳转到登录页（避免在登录页重复跳转）
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+      return Promise.reject(httpError);
+    }
+
+    // 处理业务错误（服务器返回的错误信息）
+    if (data && data.message) {
+      httpError.message = data.message;
+    }
+
+    // 显示错误提示（除了某些不需要提示的情况）
+    if (!shouldSuppressErrorMessage(error)) {
+      message.error(httpError.message);
+    }
+
+    return Promise.reject(httpError);
+  }
+);
+
+// 判断是否应该抑制错误提示
+const shouldSuppressErrorMessage = (error: AxiosError): boolean => {
+  // 对于某些API，不显示错误提示（比如权限检查接口）
+  const suppressPaths = ['/auth/check', '/permissions/validate'];
+  const requestUrl = error.config?.url || '';
+  
+  return suppressPaths.some(path => requestUrl.includes(path));
+};
+
+export default api;
+```
+
+## 业务层错误处理
+
+### API 错误分类和处理
+```tsx
+// src/utils/errorHandler.ts
+
+// 错误类型枚举
+export enum ErrorType {
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  AUTH_ERROR = 'AUTH_ERROR',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  BUSINESS_ERROR = 'BUSINESS_ERROR',
+  PERMISSION_ERROR = 'PERMISSION_ERROR',
+  SERVER_ERROR = 'SERVER_ERROR',
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+}
+
+// 业务错误代码映射
+export const BUSINESS_ERROR_CODES: Record<string, string> = {
+  'CUSTOMER_ALREADY_EXISTS': '客户已存在',
+  'INVALID_CREDIT_CODE': '无效的统一社会信用代码',
+  'CONTRACT_EXPIRED': '合同已过期',
+  'INSUFFICIENT_BALANCE': '余额不足',
+  'FILE_TOO_LARGE': '文件大小超出限制',
+  'INVALID_FILE_TYPE': '不支持的文件类型',
+  'DUPLICATE_SUBMISSION': '请勿重复提交',
+  'OPERATION_NOT_ALLOWED': '当前状态下不允许此操作',
+};
+
+// 错误分类器
+export class ErrorClassifier {
+  static classify(error: any): {
+    type: ErrorType;
+    message: string;
+    code?: string | number;
+    details?: any;
+  } {
+    // 网络错误
+    if (error.code === -1 || error.type === 'NETWORK_ERROR') {
+      return {
+        type: ErrorType.NETWORK_ERROR,
+        message: '网络连接失败，请检查网络设置',
+      };
+    }
+
+    // HTTP 状态码错误
+    if (typeof error.code === 'number') {
+      switch (error.code) {
+        case 401:
+          return {
+            type: ErrorType.AUTH_ERROR,
+            message: '登录已过期，请重新登录',
+            code: error.code,
+          };
+        case 403:
+          return {
+            type: ErrorType.PERMISSION_ERROR,
+            message: '权限不足，无法访问该资源',
+            code: error.code,
+          };
+        case 422:
+          return {
+            type: ErrorType.VALIDATION_ERROR,
+            message: error.message || '数据验证失败',
+            code: error.code,
+            details: error.data?.fieldErrors,
+          };
+        case 500:
+        case 502:
+        case 503:
+        case 504:
+          return {
+            type: ErrorType.SERVER_ERROR,
+            message: '服务器错误，请稍后重试',
+            code: error.code,
+          };
+      }
+    }
+
+    // 业务错误代码
+    if (error.data?.errorCode && BUSINESS_ERROR_CODES[error.data.errorCode]) {
+      return {
+        type: ErrorType.BUSINESS_ERROR,
+        message: BUSINESS_ERROR_CODES[error.data.errorCode],
+        code: error.data.errorCode,
+        details: error.data,
+      };
+    }
+
+    // 默认错误
+    return {
+      type: ErrorType.UNKNOWN_ERROR,
+      message: error.message || '操作失败，请稍后重试',
+      code: error.code,
+      details: error,
+    };
+  }
+}
+
+// 错误处理器
+export class ErrorHandler {
+  static handle(error: any, context?: string): {
+    type: ErrorType;
+    message: string;
+    shouldShowUser: boolean;
+    shouldLog: boolean;
+  } {
+    const classified = ErrorClassifier.classify(error);
+    
+    // 记录错误日志
+    if (this.shouldLogError(classified.type)) {
+      this.logError(error, context, classified);
+    }
+
+    // 确定是否向用户显示错误
+    const shouldShowUser = this.shouldShowToUser(classified.type);
+
+    return {
+      ...classified,
+      shouldShowUser,
+      shouldLog: this.shouldLogError(classified.type),
+    };
+  }
+
+  private static shouldShowToUser(errorType: ErrorType): boolean {
+    // 某些错误类型不向用户显示
+    const suppressedTypes = [ErrorType.AUTH_ERROR]; // 认证错误已通过拦截器处理
+    return !suppressedTypes.includes(errorType);
+  }
+
+  private static shouldLogError(errorType: ErrorType): boolean {
+    // 所有错误都应该记录日志，除了某些预期的错误
+    const nonLoggedTypes = [ErrorType.VALIDATION_ERROR];
+    return !nonLoggedTypes.includes(errorType);
+  }
+
+  private static logError(error: any, context?: string, classified?: any): void {
+    const logData = {
+      timestamp: new Date().toISOString(),
+      context,
+      error: {
+        type: classified?.type,
+        message: classified?.message,
+        code: classified?.code,
+        stack: error.stack,
+        details: classified?.details,
+      },
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+    };
+
+    // 发送到日志服务
+    console.error('Error logged:', logData);
+    
+    // 可以集成第三方日志服务
+    // this.sendToLogService(logData);
+  }
+}
+```
+
+## UI层错误处理
+
+### React 错误边界
+```tsx
+// src/components/ErrorBoundary.tsx
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Result, Button } from 'antd';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: ErrorInfo;
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // 更新 state 使下次渲染能够显示降级后的 UI
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // 记录错误信息
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // 调用外部错误处理回调
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+
+    // 发送错误报告
+    this.reportError(error, errorInfo);
+
+    this.setState({ error, errorInfo });
+  }
+
+  private reportError = (error: Error, errorInfo: ErrorInfo) => {
+    const errorReport = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+    };
+
+    // 发送错误报告到监控服务
+    console.error('React Error Boundary:', errorReport);
+  };
+
+  private handleReset = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
+  private handleReload = () => {
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      // 自定义降级 UI
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      return (
+        <div className="error-boundary">
+          <Result
+            status="500"
+            title="页面出现错误"
+            subTitle="抱歉，页面出现了错误。请尝试刷新页面或联系技术支持。"
+            extra={
+              <div className="space-x-2">
+                <Button type="primary" onClick={this.handleReset}>
+                  重新尝试
+                </Button>
+                <Button onClick={this.handleReload}>
+                  刷新页面
+                </Button>
+              </div>
+            }
+          />
+          
+          {process.env.NODE_ENV === 'development' && (
+            <div className="error-details mt-4 p-4 bg-gray-100 rounded">
+              <h3>错误详情（开发模式）：</h3>
+              <pre className="text-sm overflow-auto">
+                {this.state.error?.stack}
+              </pre>
+              <pre className="text-sm overflow-auto mt-2">
+                {this.state.errorInfo?.componentStack}
+              </pre>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// 使用方式
+const App: React.FC = () => {
+  return (
+    <ErrorBoundary onError={(error, errorInfo) => {
+      // 发送到错误监控服务
+      console.error('Global error caught:', error, errorInfo);
+    }}>
+      <Router>
+        <Routes>
+          {/* 路由配置 */}
+        </Routes>
+      </Router>
+    </ErrorBoundary>
+  );
+};
+```
+
+### 异步错误处理 Hook
+```tsx
+// src/hooks/useErrorHandler.ts
+import { useCallback } from 'react';
+import { message, Modal } from 'antd';
+import { ErrorHandler, ErrorType } from '../utils/errorHandler';
+
+interface UseErrorHandlerOptions {
+  showMessage?: boolean;
+  showModal?: boolean;
+  context?: string;
+}
+
+export const useErrorHandler = (options: UseErrorHandlerOptions = {}) => {
+  const {
+    showMessage = true,
+    showModal = false,
+    context,
+  } = options;
+
+  const handleError = useCallback((error: any, customMessage?: string) => {
+    const handled = ErrorHandler.handle(error, context);
+
+    // 自定义错误消息优先
+    const finalMessage = customMessage || handled.message;
+
+    // 显示消息提示
+    if (showMessage && handled.shouldShowUser) {
+      switch (handled.type) {
+        case ErrorType.VALIDATION_ERROR:
+          message.warning(finalMessage);
+          break;
+        case ErrorType.BUSINESS_ERROR:
+          message.error(finalMessage);
+          break;
+        case ErrorType.NETWORK_ERROR:
+        case ErrorType.SERVER_ERROR:
+          message.error(finalMessage);
+          break;
+        default:
+          message.error(finalMessage);
+      }
+    }
+
+    // 显示模态框（用于严重错误）
+    if (showModal && [ErrorType.SERVER_ERROR, ErrorType.UNKNOWN_ERROR].includes(handled.type)) {
+      Modal.error({
+        title: '系统错误',
+        content: finalMessage,
+        onOk: () => {
+          // 可以添加错误恢复逻辑
+        },
+      });
+    }
+
+    return handled;
+  }, [showMessage, showModal, context]);
+
+  return { handleError };
+};
+
+// 在组件中使用
+const CustomerForm: React.FC = () => {
+  const { handleError } = useErrorHandler({ context: 'CustomerForm' });
+
+  const handleSubmit = async (values: any) => {
+    try {
+      await createCustomer(values);
+      message.success('客户创建成功');
+    } catch (error) {
+      handleError(error, '创建客户失败');
+    }
+  };
+
+  // ...
+};
+```
+
+## 全局错误处理
+
+### 未捕获错误监听
+```tsx
+// src/utils/globalErrorHandler.ts
+
+interface ErrorReport {
+  message: string;
+  filename?: string;
+  lineno?: number;
+  colno?: number;
+  error?: Error;
+  timestamp: string;
+  url: string;
+  userAgent: string;
+  userId?: string;
+}
+
+class GlobalErrorHandler {
+  private static instance: GlobalErrorHandler;
+  private errorQueue: ErrorReport[] = [];
+  private reportUrl = process.env.VITE_ERROR_REPORT_URL;
+
+  private constructor() {
+    this.setupErrorListeners();
+  }
+
+  static getInstance(): GlobalErrorHandler {
+    if (!GlobalErrorHandler.instance) {
+      GlobalErrorHandler.instance = new GlobalErrorHandler();
+    }
+    return GlobalErrorHandler.instance;
+  }
+
+  private setupErrorListeners() {
+    // 监听JavaScript运行时错误
+    window.addEventListener('error', (event) => {
+      this.reportError({
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error,
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+      });
+    });
+
+    // 监听Promise未捕获的rejection
+    window.addEventListener('unhandledrejection', (event) => {
+      this.reportError({
+        message: `Unhandled Promise Rejection: ${event.reason}`,
+        error: event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+      });
+    });
+
+    // 监听资源加载错误
+    window.addEventListener('error', (event) => {
+      if (event.target !== window) {
+        this.reportError({
+          message: `Resource loading error: ${(event.target as any)?.src || (event.target as any)?.href}`,
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+        });
+      }
+    }, true);
+  }
+
+  private reportError(errorReport: ErrorReport) {
+    // 添加用户信息
+    const userInfo = this.getUserInfo();
+    const fullReport = { ...errorReport, ...userInfo };
+
+    // 控制台输出（开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Global Error Reported:', fullReport);
+    }
+
+    // 添加到队列
+    this.errorQueue.push(fullReport);
+
+    // 批量发送错误报告
+    this.flushErrorQueue();
+  }
+
+  private getUserInfo() {
+    try {
+      // 从认证状态获取用户信息
+      const userStr = localStorage.getItem('auth-storage');
+      if (userStr) {
+        const auth = JSON.parse(userStr);
+        return {
+          userId: auth.state?.user?.id,
+          username: auth.state?.user?.username,
+        };
+      }
+    } catch {
+      // 忽略解析错误
+    }
+    return {};
+  }
+
+  private async flushErrorQueue() {
+    if (this.errorQueue.length === 0 || !this.reportUrl) return;
+
+    const reports = [...this.errorQueue];
+    this.errorQueue = [];
+
+    try {
+      await fetch(this.reportUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ errors: reports }),
+      });
+    } catch (error) {
+      // 发送失败，重新加入队列
+      this.errorQueue.unshift(...reports);
+      console.error('Failed to send error reports:', error);
+    }
+  }
+
+  // 手动报告错误
+  public reportManualError(error: Error, context?: string) {
+    this.reportError({
+      message: `Manual Error Report${context ? ` (${context})` : ''}: ${error.message}`,
+      error,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+    });
+  }
+}
+
+// 初始化全局错误处理
+export const initGlobalErrorHandler = () => {
+  GlobalErrorHandler.getInstance();
+};
+
+export default GlobalErrorHandler;
+```
+
+## 特定场景错误处理
+
+### 表单验证错误
+```tsx
+// 表单字段错误处理
+export const handleFormValidationError = (error: any, form: FormInstance) => {
+  if (error.details?.fieldErrors) {
+    // 设置字段级别错误
+    const fieldErrors = Object.entries(error.details.fieldErrors).map(([field, message]) => ({
+      name: field,
+      errors: [message as string],
+    }));
+    
+    form.setFields(fieldErrors);
+  } else {
+    // 显示通用错误消息
+    message.error(error.message || '表单验证失败');
+  }
+};
+```
+
+### 文件上传错误
+```tsx
+// 文件上传错误处理
+export const handleUploadError = (error: any, file: File) => {
+  const { type, message: errorMessage } = ErrorHandler.handle(error, 'FileUpload');
+  
+  switch (type) {
+    case ErrorType.VALIDATION_ERROR:
+      if (error.code === 'FILE_TOO_LARGE') {
+        message.error(`文件"${file.name}"大小超出限制`);
+      } else if (error.code === 'INVALID_FILE_TYPE') {
+        message.error(`不支持的文件类型"${file.type}"`);
+      } else {
+        message.error(errorMessage);
+      }
+      break;
+    case ErrorType.NETWORK_ERROR:
+      message.error('文件上传失败，请检查网络连接');
+      break;
+    default:
+      message.error(`文件"${file.name}"上传失败：${errorMessage}`);
+  }
+};
+```
+
+## 错误恢复机制
+
+### 重试机制
+```tsx
+// src/utils/retry.ts
+interface RetryOptions {
+  maxAttempts: number;
+  delay: number;
+  backoff?: 'linear' | 'exponential';
+  retryCondition?: (error: any) => boolean;
+}
+
+export const withRetry = async <T>(
+  fn: () => Promise<T>,
+  options: RetryOptions
+): Promise<T> => {
+  const {
+    maxAttempts,
+    delay,
+    backoff = 'linear',
+    retryCondition = (error) => error.type === ErrorType.NETWORK_ERROR
+  } = options;
+
+  let lastError: any;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      // 检查是否应该重试
+      if (attempt === maxAttempts || !retryCondition(error)) {
+        throw error;
+      }
+
+      // 计算延迟时间
+      const currentDelay = backoff === 'exponential' 
+        ? delay * Math.pow(2, attempt - 1)
+        : delay * attempt;
+
+      // 等待后重试
+      await new Promise(resolve => setTimeout(resolve, currentDelay));
+    }
+  }
+
+  throw lastError;
+};
+
+// 使用示例
+const fetchDataWithRetry = () => withRetry(
+  () => api.get('/data'),
+  {
+    maxAttempts: 3,
+    delay: 1000,
+    backoff: 'exponential',
+    retryCondition: (error) => error.type === ErrorType.NETWORK_ERROR
+  }
+);
+```
+
+## 错误监控和分析
+
+### 错误统计和上报
+```tsx
+// src/utils/errorMonitoring.ts
+interface ErrorMetrics {
+  errorCount: number;
+  errorTypes: Record<ErrorType, number>;
+  errorPages: Record<string, number>;
+  lastErrors: ErrorReport[];
+}
+
+class ErrorMonitoring {
+  private metrics: ErrorMetrics = {
+    errorCount: 0,
+    errorTypes: {} as Record<ErrorType, number>,
+    errorPages: {},
+    lastErrors: [],
+  };
+
+  recordError(error: ErrorReport) {
+    this.metrics.errorCount++;
+    
+    // 统计错误类型
+    const errorType = ErrorClassifier.classify(error).type;
+    this.metrics.errorTypes[errorType] = (this.metrics.errorTypes[errorType] || 0) + 1;
+    
+    // 统计错误页面
+    const page = error.url.split('?')[0];
+    this.metrics.errorPages[page] = (this.metrics.errorPages[page] || 0) + 1;
+    
+    // 保留最近的错误
+    this.metrics.lastErrors.unshift(error);
+    if (this.metrics.lastErrors.length > 50) {
+      this.metrics.lastErrors.pop();
+    }
+  }
+
+  getMetrics(): ErrorMetrics {
+    return { ...this.metrics };
+  }
+
+  // 定期发送统计数据
+  sendMetrics() {
+    if (process.env.VITE_ANALYTICS_URL) {
+      fetch(process.env.VITE_ANALYTICS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.metrics),
+      }).catch(console.error);
+    }
+  }
+}
+
+export const errorMonitoring = new ErrorMonitoring();
+```

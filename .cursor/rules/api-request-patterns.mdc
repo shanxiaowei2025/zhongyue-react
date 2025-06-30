@@ -1,5 +1,433 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
+Description: API 请求模式与最佳实践
+Globs: src/api/**/*.ts, src/hooks/useRequest.ts
+
+# API 请求模式与最佳实践
+
+## API 层架构
+
+项目采用分层架构来管理API调用，主要文件包括：
+- [src/api/request.ts](mdc:zhongyue-react/zhongyue-react/src/api/request.ts) - 通用请求封装
+- [src/api/auth.ts](mdc:zhongyue-react/zhongyue-react/src/api/auth.ts) - 认证相关API
+- [src/api/contract.ts](mdc:zhongyue-react/zhongyue-react/src/api/contract.ts) - 合同相关API
+- [src/api/customer.ts](mdc:zhongyue-react/zhongyue-react/src/api/customer.ts) - 客户相关API
+- [src/api/expense.ts](mdc:zhongyue-react/zhongyue-react/src/api/expense.ts) - 费用相关API
+
+## 通用请求封装
+
+### 基础请求配置
+```tsx
+// src/api/request.ts
+import axios, { AxiosResponse, AxiosError } from 'axios';
+
+// 创建 axios 实例
+const api = axios.create({
+  baseURL: process.env.VITE_API_BASE_URL || 'http://localhost:3001',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 请求拦截器 - 添加认证 token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 响应拦截器 - 统一错误处理
+api.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response.data;
+  },
+  (error: AxiosError) => {
+    // 统一错误处理逻辑
+    if (error.response?.status === 401) {
+      // 清除 token，跳转登录页
+      localStorage.removeItem('access_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+```
+
+### 请求方法封装
+```tsx
+// 通用 GET 请求
+export const get = <T = any>(url: string, params?: Record<string, any>): Promise<ApiResponse<T>> => {
+  return api.get(url, { params });
+};
+
+// 通用 POST 请求
+export const post = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
+  return api.post(url, data);
+};
+
+// 通用 PUT 请求
+export const put = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
+  return api.put(url, data);
+};
+
+// 通用 DELETE 请求
+export const del = <T = any>(url: string): Promise<ApiResponse<T>> => {
+  return api.delete(url);
+};
+```
+
+## 类型安全的 API 调用
+
+### 通用响应类型
+```tsx
+// 通用 API 响应类型
+interface ApiResponse<T = any> {
+  code: number;
+  message: string;
+  data: T;
+  total?: number;
+}
+
+// 分页查询参数类型
+interface PaginationParams {
+  page: number;
+  pageSize: number;
+  [key: string]: any;
+}
+
+// 分页响应类型
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+```
+
+### 具体业务 API 示例
+```tsx
+// src/api/customer.ts
+import { get, post, put, del } from './request';
+import type { Customer, CreateCustomerRequest, UpdateCustomerRequest } from '../types';
+
+// 获取客户列表
+export const getCustomerList = (params: PaginationParams & {
+  keyword?: string;
+  enterpriseType?: string;
+}): Promise<ApiResponse<PaginatedResponse<Customer>>> => {
+  return get('/customers', params);
+};
+
+// 获取客户详情
+export const getCustomerDetail = (id: number): Promise<ApiResponse<Customer>> => {
+  return get(`/customers/${id}`);
+};
+
+// 创建客户
+export const createCustomer = (data: CreateCustomerRequest): Promise<ApiResponse<Customer>> => {
+  return post('/customers', data);
+};
+
+// 更新客户
+export const updateCustomer = (id: number, data: UpdateCustomerRequest): Promise<ApiResponse<Customer>> => {
+  return put(`/customers/${id}`, data);
+};
+
+// 删除客户
+export const deleteCustomer = (id: number): Promise<ApiResponse<void>> => {
+  return del(`/customers/${id}`);
+};
+
+// 导出客户数据
+export const exportCustomers = (params: {
+  keyword?: string;
+  enterpriseType?: string;
+}): Promise<Blob> => {
+  return api.get('/customers/export', { 
+    params, 
+    responseType: 'blob' 
+  });
+};
+```
+
+## 组件中的 API 使用模式
+
+### 使用自定义 Hook 封装 API 调用
+```tsx
+// src/hooks/useCustomer.ts
+import { useState, useEffect, useCallback } from 'react';
+import { getCustomerList, createCustomer, updateCustomer, deleteCustomer } from '../api/customer';
+import type { Customer, CreateCustomerRequest, UpdateCustomerRequest } from '../types';
+import { message } from 'antd';
+
+export const useCustomer = () => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // 获取客户列表
+  const fetchCustomers = useCallback(async (params = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getCustomerList(params);
+      if (response.code === 0) {
+        setCustomers(response.data.items);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '获取客户列表失败';
+      setError(errorMsg);
+      message.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  // 创建客户
+  const handleCreateCustomer = useCallback(async (data: CreateCustomerRequest) => {
+    try {
+      setLoading(true);
+      const response = await createCustomer(data);
+      if (response.code === 0) {
+        message.success('创建客户成功');
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '创建客户失败';
+      message.error(errorMsg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  // 更新客户
+  const handleUpdateCustomer = useCallback(async (id: number, data: UpdateCustomerRequest) => {
+    try {
+      setLoading(true);
+      const response = await updateCustomer(id, data);
+      if (response.code === 0) {
+        message.success('更新客户成功');
+        return response.data;
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '更新客户失败';
+      message.error(errorMsg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  // 删除客户
+  const handleDeleteCustomer = useCallback(async (id: number) => {
+    try {
+      setLoading(true);
+      const response = await deleteCustomer(id);
+      if (response.code === 0) {
+        message.success('删除客户成功');
+        // 从列表中移除已删除的客户
+        setCustomers(prev => prev.filter(customer => customer.id !== id));
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '删除客户失败';
+      message.error(errorMsg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  return {
+    customers,
+    loading,
+    error,
+    fetchCustomers,
+    createCustomer: handleCreateCustomer,
+    updateCustomer: handleUpdateCustomer,
+    deleteCustomer: handleDeleteCustomer,
+  };
+};
+```
+
+### 在组件中使用 API Hook
+```tsx
+// src/pages/Customers/index.tsx
+import React, { useEffect } from 'react';
+import { Table, Button, Space, Spin } from 'antd';
+import { useCustomer } from '../../hooks/useCustomer';
+import { usePermission } from '../../hooks/usePermission';
+
+const CustomersPage: React.FC = () => {
+  const {
+    customers,
+    loading,
+    error,
+    fetchCustomers,
+    deleteCustomer
+  } = useCustomer();
+  
+  const { customerPermissions } = usePermission();
+  
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+  
+  const handleDelete = async (id: number) => {
+    if (confirm('确认删除该客户吗？')) {
+      await deleteCustomer(id);
+    }
+  };
+  
+  if (loading && customers.length === 0) {
+    return <Spin size="large" />;
+  }
+  
+  const columns = [
+    {
+      title: '公司名称',
+      dataIndex: 'companyName',
+      key: 'companyName',
+    },
+    {
+      title: '统一社会信用代码',
+      dataIndex: 'unifiedSocialCreditCode',
+      key: 'unifiedSocialCreditCode',
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      render: (record: Customer) => (
+        <Space>
+          <Button type="link" onClick={() => navigate(`/customers/detail/${record.id}`)}>
+            查看
+          </Button>
+          {customerPermissions.canEdit && (
+            <Button type="link" onClick={() => navigate(`/customers/edit/${record.id}`)}>
+              编辑
+            </Button>
+          )}
+          {customerPermissions.canDelete && (
+            <Button type="link" danger onClick={() => handleDelete(record.id)}>
+              删除
+            </Button>
+          )}
+        </Space>
+      ),
+    },
+  ];
+  
+  return (
+    <div className="customers-page">
+      <div className="page-header">
+        <h1>客户管理</h1>
+        {customerPermissions.canCreate && (
+          <Button type="primary" onClick={() => navigate('/customers/create')}>
+            新增客户
+          </Button>
+        )}
+      </div>
+      <Table
+        columns={columns}
+        dataSource={customers}
+        loading={loading}
+        rowKey="id"
+        pagination={{
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条记录`,
+        }}
+      />
+    </div>
+  );
+};
+```
+
+## 错误处理最佳实践
+
+### 分层错误处理
+1. **HTTP层错误处理** - 在响应拦截器中处理网络错误、认证错误等
+2. **业务层错误处理** - 在API函数中处理业务逻辑错误
+3. **UI层错误处理** - 在组件中显示用户友好的错误信息
+
+### 错误类型定义
+```tsx
+// 错误类型定义
+interface ApiError {
+  code: number;
+  message: string;
+  details?: any;
+}
+
+// 错误处理工具函数
+export const handleApiError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return String(error.message);
+  }
+  
+  return '未知错误';
+};
+```
+
+## 文件上传 API 模式
+
+### 上传请求封装
+```tsx
+// src/api/upload.ts
+import { api } from './request';
+
+// 单文件上传
+export const uploadFile = (file: File, onProgress?: (progress: number) => void): Promise<ApiResponse<{ url: string }>> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return api.post('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    onUploadProgress: (progressEvent) => {
+      if (onProgress && progressEvent.total) {
+        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(progress);
+      }
+    },
+  });
+};
+
+// 多文件上传
+export const uploadFiles = (files: File[]): Promise<ApiResponse<{ urls: string[] }>> => {
+  const formData = new FormData();
+  files.forEach(file => {
+    formData.append('files', file);
+  });
+  
+  return api.post('/upload/multiple', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+```
