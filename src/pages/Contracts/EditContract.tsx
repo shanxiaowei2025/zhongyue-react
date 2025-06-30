@@ -211,33 +211,35 @@ const EditContract: React.FC = () => {
       {/* 面包屑导航 */}
       <Breadcrumb className="mb-4" items={breadcrumbItems} />
 
-      {/* 头部操作区域 */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
-              返回列表
-            </Button>
-            <h2 className="text-xl font-semibold m-0">编辑合同</h2>
+      {/* 头部操作区域 - 添加 sticky 吸附效果 */}
+      <div className="mb-4 sticky -top-6 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="py-3 px-4 -mx-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+                返回列表
+              </Button>
+              <h2 className="text-xl font-semibold m-0">编辑合同</h2>
+            </div>
+            <Space>
+              <Button onClick={handleBackToDetail} disabled={isSubmitting}>
+                查看详情
+              </Button>
+              <Button
+                type="primary"
+                loading={isSubmitting}
+                disabled={
+                  !contractData ||
+                  (contractData.contractType !== '产品服务协议' &&
+                    contractData.contractType !== '代理记账合同' &&
+                    contractData.contractType !== '单项服务合同')
+                }
+                onClick={handleContractUpdate}
+              >
+                {isSubmitting ? '更新中...' : '保存修改'}
+              </Button>
+            </Space>
           </div>
-          <Space>
-            <Button onClick={handleBackToDetail} disabled={isSubmitting}>
-              查看详情
-            </Button>
-            <Button
-              type="primary"
-              loading={isSubmitting}
-              disabled={
-                !contractData ||
-                (contractData.contractType !== '产品服务协议' &&
-                  contractData.contractType !== '代理记账合同' &&
-                  contractData.contractType !== '单项服务合同')
-              }
-              onClick={handleContractUpdate}
-            >
-              {isSubmitting ? '更新中...' : '保存修改'}
-            </Button>
-          </Space>
         </div>
       </div>
 
