@@ -1,9 +1,10 @@
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
+import React, { useState, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react'
 import { Checkbox, Input, DatePicker, message, AutoComplete, Spin } from 'antd'
 import type { CheckboxProps } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
+import { useContractFormStore } from '../../store/contractForm'
 import { searchCustomers } from '../../api/enterpriseService'
 import type { CreateContractDto } from '../../types/contract'
 import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
@@ -79,75 +80,82 @@ const ProductServiceAgreement = forwardRef<
     { signatory, contractData = {}, onSubmit, onUpdate, isSubmitting = false, mode = 'create' },
     ref
   ) => {
-    // 状态管理
-    const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({})
-    const [itemAmounts, setItemAmounts] = useState<Record<string, string>>({})
-    const [formData, setFormData] = useState<Record<string, any>>({
-      signatory,
-      contractType: '产品服务协议',
-      ...contractData,
-    })
+      // 使用store管理表单缓存 (仅创建模式)
+  const {
+    formData: cachedFormData,
+    updateFormField,
+    batchUpdateFormData,
+    setRestoring,
+    getCompleteFormData,
+  } = useContractFormStore()
 
-    // 金额字段的字符串状态（用于输入显示）
-    const [amountDisplayValues, setAmountDisplayValues] = useState<Record<string, string>>({
-      businessServiceFee: '',
-      taxServiceFee: '',
-      bankServiceFee: '',
-      socialSecurityServiceFee: '',
-      licenseServiceFee: '',
-      totalCost: '',
-    })
+  // 编辑模式下的本地状态（不使用缓存）
+  const [editModeFormData, setEditModeFormData] = useState<Record<string, any>>({})
+  const [isInitialized, setIsInitialized] = useState(false)
 
     const { createContractData } = useContractDetail()
 
     // 企业搜索相关状态
     const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
     const [customerOptions, setCustomerOptions] = useState<CustomerSearchOption[]>([])
-    const [customerSearchValue, setCustomerSearchValue] = useState<string>('')
     const [customerPage, setCustomerPage] = useState<number>(1)
     const [customerTotal, setCustomerTotal] = useState<number>(0)
     const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
 
-    // 当contractData变化时，更新表单数据和勾选状态
-    useEffect(() => {
+      // 根据模式决定数据来源
+  const formData = mode === 'edit' 
+    ? {
+        // 编辑模式：完全使用API数据和本地状态，不使用缓存
+        signatory,
+        contractType: '产品服务协议',
+        ...contractData,
+        ...editModeFormData, // 编辑过程中的本地修改
+      }
+    : {
+        // 创建模式：使用缓存数据
+        signatory,
+        contractType: '产品服务协议',
+        ...contractData,
+        ...cachedFormData,
+      }
+
+    // 便捷的getter函数
+    const checkedItems = formData.checkedItems || {}
+    const itemAmounts = formData.itemAmounts || {}
+    const amountDisplayValues = formData.amountDisplayValues || {
+      businessServiceFee: '',
+      taxServiceFee: '',
+      bankServiceFee: '',
+      socialSecurityServiceFee: '',
+      licenseServiceFee: '',
+      totalCost: '',
+    }
+    const customerSearchValue = formData.customerSearchValue || formData.partyACompany || ''
+
+      // 初始化表单数据
+  useEffect(() => {
+    if (mode === 'edit') {
+      // 编辑模式：直接使用API数据，不依赖store缓存
       if (contractData && Object.keys(contractData).length > 0) {
-        console.log('🔄 ProductServiceAgreement: 收到新的contractData，更新表单状态')
+        console.log('🔄 编辑模式：初始化表单数据（完全使用API数据）')
         
-        // 特别记录甲方公司名称，作为关键字段重点跟踪
-        if (contractData.partyACompany) {
-          console.log('🏢 甲方公司名称:', contractData.partyACompany)
-        }
+        // 特别记录重要字段
+        console.log('🔍 API数据详情:', {
+          partyACompany: contractData.partyACompany,
+          businessEstablishmentAddress: contractData.businessEstablishmentAddress,
+          businessOther: contractData.businessOther,
+          businessEstablishment: contractData.businessEstablishment,
+          businessChange: contractData.businessChange,
+          businessCancellation: contractData.businessCancellation,
+          businessMaterials: contractData.businessMaterials,
+          mode: mode,
+          dataSource: 'API'
+        })
         
-        // 更新表单主数据
-        setFormData(prev => ({
-          ...prev,
-          signatory,
-          contractType: '产品服务协议',
-          ...contractData,
-        }))
-
-        // 初始化金额显示值
-        const newAmountDisplayValues: Record<string, string> = {
-          businessServiceFee: contractData.businessServiceFee
-            ? String(contractData.businessServiceFee)
-            : '',
-          taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
-          bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
-          socialSecurityServiceFee: contractData.socialSecurityServiceFee
-            ? String(contractData.socialSecurityServiceFee)
-            : '',
-          licenseServiceFee: contractData.licenseServiceFee
-            ? String(contractData.licenseServiceFee)
-            : '',
-          totalCost: contractData.totalCost ? String(contractData.totalCost) : '',
-        }
-        setAmountDisplayValues(newAmountDisplayValues)
-
-        // 根据contractData中的服务项目数据初始化勾选状态和金额
+        // 处理服务项目数组数据，转换为勾选状态
         const newCheckedItems: Record<string, boolean> = {}
         const newItemAmounts: Record<string, string> = {}
-
-        // 处理各类服务项目数据
+        
         const serviceArrays = [
           contractData.businessEstablishment,
           contractData.businessChange,
@@ -171,54 +179,110 @@ const ProductServiceAgreement = forwardRef<
           }
         })
 
-        setCheckedItems(newCheckedItems)
-        setItemAmounts(newItemAmounts)
+        // 初始化金额显示值
+        const newAmountDisplayValues: Record<string, string> = {
+          businessServiceFee: contractData.businessServiceFee ? String(contractData.businessServiceFee) : '',
+          taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
+          bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
+          socialSecurityServiceFee: contractData.socialSecurityServiceFee ? String(contractData.socialSecurityServiceFee) : '',
+          licenseServiceFee: contractData.licenseServiceFee ? String(contractData.licenseServiceFee) : '',
+          totalCost: contractData.totalCost ? String(contractData.totalCost) : '',
+        }
+        
+        // 设置编辑模式的本地状态
+        setEditModeFormData({
+          checkedItems: newCheckedItems,
+          itemAmounts: newItemAmounts,
+          amountDisplayValues: newAmountDisplayValues,
+          customerSearchValue: contractData.partyACompany || '',
+        })
+        
+        setIsInitialized(true)
+        console.log('✅ 编辑模式：API数据初始化完成')
+      }
+    } else {
+      // 创建模式：使用原有的store逻辑
+      if (!isInitialized) {
+        console.log('🔄 创建模式：初始化表单数据（使用缓存）')
+        
+        // 开启恢复模式，防止初始化时触发缓存更新
+        setRestoring(true)
+        
+        const initData: Record<string, any> = {
+          signatory,
+          contractType: '产品服务协议',
+          ...contractData,
+        }
+        
+              // 特别记录重要字段
+      console.log('🔍 初始化数据详情:', {
+        partyACompany: initData.partyACompany,
+        businessEstablishmentAddress: initData.businessEstablishmentAddress,
+        businessOther: initData.businessOther,
+        businessEstablishment: initData.businessEstablishment,
+        businessChange: initData.businessChange,
+        businessCancellation: initData.businessCancellation,
+        businessMaterials: initData.businessMaterials,
+        mode: mode,
+        dataSource: mode === 'edit' ? 'API' : 'Props'
+      })
 
-        // 同步自动补全搜索状态 - 特别重要的字段
-        if (contractData.partyACompany) {
-          setCustomerSearchValue(contractData.partyACompany)
-        } else if (contractData.customerSearchValue) {
-          // 如果没有公司名但有搜索值，使用搜索值
-          setCustomerSearchValue(contractData.customerSearchValue)
-          // 并同步更新到表单数据
-          setFormData(prev => ({ 
-            ...prev, 
-            partyACompany: contractData.customerSearchValue 
-          }))
+        // 初始化金额显示值
+        const newAmountDisplayValues: Record<string, string> = {
+          businessServiceFee: initData.businessServiceFee ? String(initData.businessServiceFee) : '',
+          taxServiceFee: initData.taxServiceFee ? String(initData.taxServiceFee) : '',
+          bankServiceFee: initData.bankServiceFee ? String(initData.bankServiceFee) : '',
+          socialSecurityServiceFee: initData.socialSecurityServiceFee ? String(initData.socialSecurityServiceFee) : '',
+          licenseServiceFee: initData.licenseServiceFee ? String(initData.licenseServiceFee) : '',
+          totalCost: initData.totalCost ? String(initData.totalCost) : '',
         }
-        
-        // 特别处理日期字段，确保它们能正确恢复
-        if (contractData.partyASignDate || contractData.partyBSignDate) {
-          console.log('📅 ProductServiceAgreement: 恢复日期字段:')
-          if (contractData.partyASignDate) {
-            console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
-          }
-          if (contractData.partyBSignDate) {
-            console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
-          }
-          
-          // 立即设置日期字段，不使用延迟
-          setFormData(prev => {
-            const newData = {
-              ...prev,
-              partyASignDate: contractData.partyASignDate || prev.partyASignDate,
-              partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
-            }
-            console.log('📅 立即更新 formData 日期字段:', {
-              partyASignDate: newData.partyASignDate,
-              partyBSignDate: newData.partyBSignDate
+
+        // 初始化勾选状态和项目金额
+        const newCheckedItems: Record<string, boolean> = {}
+        const newItemAmounts: Record<string, string> = {}
+
+        // 处理各类服务项目数据
+        const serviceArrays = [
+          initData.businessEstablishment,
+          initData.businessChange,
+          initData.businessCancellation,
+          initData.businessOther,
+          initData.businessMaterials,
+          initData.taxMatters,
+          initData.bankMatters,
+          initData.socialSecurity,
+          initData.licenseBusiness,
+        ]
+
+        serviceArrays.forEach(serviceArray => {
+          if (Array.isArray(serviceArray)) {
+            serviceArray.forEach(item => {
+              if (item.itemKey) {
+                newCheckedItems[item.itemKey] = true
+                newItemAmounts[item.itemKey] = String(item.amount || '')
+              }
             })
-            return newData
-          })
-        }
+          }
+        })
+
+        // 同步到store
+        batchUpdateFormData({
+          ...initData,
+          checkedItems: newCheckedItems,
+          itemAmounts: newItemAmounts,
+          amountDisplayValues: newAmountDisplayValues,
+          customerSearchValue: initData.partyACompany || initData.customerSearchValue || '',
+        })
         
-        // 数据加载完成后触发一个事件，通知其他组件
+        // 关闭恢复模式
         setTimeout(() => {
-          const event = new Event('productServiceDataLoaded', { bubbles: true })
-          document.dispatchEvent(event)
+          setRestoring(false)
+          setIsInitialized(true)
+          console.log(`✅ ProductServiceAgreement: 初始化完成 (${mode}模式)`)
         }, 100)
       }
-    }, [contractData, signatory])
+    }
+  }, [contractData, signatory, isInitialized, setRestoring, batchUpdateFormData, mode])
 
     // 计算大写金额（避免useEffect无限循环）
     const totalCostInWords = React.useMemo(() => {
@@ -316,25 +380,33 @@ const ProductServiceAgreement = forwardRef<
     }
 
     // 选择客户时自动填入信息
-    const handleCustomerSelect = (value: string, option: any) => {
+    const handleCustomerSelect = useCallback((value: string, option: any) => {
       const enterprise = option.enterprise
       if (enterprise) {
-        handleFormChange('partyACompany', enterprise.companyName)
-        if ((enterprise as any).registeredAddress) {
-          handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
+        const updateData = {
+          partyACompany: enterprise.companyName,
+          customerSearchValue: enterprise.companyName,
+          partyAAddress: (enterprise as any).registeredAddress || formData.partyAAddress,
+        }
+        
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({ ...prev, ...updateData }))
+        } else {
+          // 创建模式：使用store缓存
+          batchUpdateFormData(updateData)
         }
         message.success('企业信息已自动填入')
       }
-    }
+    }, [mode, batchUpdateFormData, formData.partyAAddress])
 
     // 重置客户搜索状态
-    const resetCustomerSearch = () => {
+    const resetCustomerSearch = useCallback(() => {
       setCustomerOptions([])
-      setCustomerSearchValue('')
       setCustomerPage(1)
       setCustomerTotal(0)
       setHasMoreCustomers(false)
-    }
+    }, [])
 
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
@@ -347,90 +419,101 @@ const ProductServiceAgreement = forwardRef<
     }
 
     // 处理表单数据变化
-    const handleFormChange = (field: string, value: any) => {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value,
-      }))
-      
-      // 触发自定义事件通知CreateContract.tsx进行自动保存
-      // 所有字段变化都触发自动保存
-      console.log(`💾 [产品服务协议] ${field} 字段变化，触发自动保存:`, value)
-      // 延迟触发，确保状态已更新
-      setTimeout(() => {
-        const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field, value, contractType: '产品服务协议' }
-        })
-        document.dispatchEvent(event)
-      }, 50)
-    }
+    const handleFormChange = useCallback((field: string, value: any) => {
+      if (mode === 'edit') {
+        // 编辑模式：使用本地状态
+        setEditModeFormData(prev => ({ ...prev, [field]: value }))
+        console.log(`💾 [编辑模式] ${field} 字段变化:`, value)
+      } else {
+        // 创建模式：使用store缓存
+        updateFormField(field, value)
+        console.log(`💾 [创建模式] ${field} 字段变化:`, value)
+      }
+    }, [mode, updateFormField])
 
     // 处理勾选框状态变化
-    const handleCheckboxChange = (itemKey: string, checked: boolean) => {
-      setCheckedItems(prev => ({
-        ...prev,
-        [itemKey]: checked,
-      }))
-
+    const handleCheckboxChange = useCallback((itemKey: string, checked: boolean) => {
+      const newCheckedItems = { ...checkedItems, [itemKey]: checked }
+      const newItemAmounts = { ...itemAmounts }
+      
       // 如果取消勾选，清空对应金额
       if (!checked) {
-        setItemAmounts(prev => ({
-          ...prev,
-          [itemKey]: '',
-        }))
+        newItemAmounts[itemKey] = ''
       }
-      
-      // 触发自动保存
-      console.log(`💾 [产品服务协议] 复选框变化，触发自动保存: ${itemKey}=${checked}`)
-      setTimeout(() => {
-        const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field: `checkbox_${itemKey}`, value: checked, contractType: '产品服务协议' }
+
+      if (mode === 'edit') {
+        // 编辑模式：使用本地状态
+        setEditModeFormData(prev => ({
+          ...prev,
+          checkedItems: newCheckedItems,
+          itemAmounts: newItemAmounts,
+        }))
+        console.log(`💾 [编辑模式] 复选框变化: ${itemKey}=${checked}`)
+      } else {
+        // 创建模式：使用store缓存
+        batchUpdateFormData({
+          checkedItems: newCheckedItems,
+          itemAmounts: newItemAmounts,
         })
-        document.dispatchEvent(event)
-      }, 50)
-    }
+        console.log(`💾 [创建模式] 复选框变化: ${itemKey}=${checked}`)
+      }
+    }, [checkedItems, itemAmounts, mode, batchUpdateFormData])
 
     // 处理金额输入变化
-    const handleAmountChange = (itemKey: string, value: string) => {
+    const handleAmountChange = useCallback((itemKey: string, value: string) => {
       // 格式化金额输入，确保最多两位小数
       const formattedValue = formatAmount(value)
-      setItemAmounts(prev => ({
-        ...prev,
-        [itemKey]: formattedValue,
-      }))
-      
-      // 触发自动保存
-      console.log(`💾 [产品服务协议] 金额变化，触发自动保存: ${itemKey}=${formattedValue}`)
-      setTimeout(() => {
-        const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field: `amount_${itemKey}`, value: formattedValue, contractType: '产品服务协议' }
+      const newItemAmounts = { ...itemAmounts, [itemKey]: formattedValue }
+
+      if (mode === 'edit') {
+        // 编辑模式：使用本地状态
+        setEditModeFormData(prev => ({
+          ...prev,
+          itemAmounts: newItemAmounts,
+        }))
+        console.log(`💾 [编辑模式] 金额变化: ${itemKey}=${formattedValue}`)
+      } else {
+        // 创建模式：使用store缓存
+        batchUpdateFormData({
+          itemAmounts: newItemAmounts,
         })
-        document.dispatchEvent(event)
-      }, 50)
-    }
+        console.log(`💾 [创建模式] 金额变化: ${itemKey}=${formattedValue}`)
+      }
+    }, [itemAmounts, mode, batchUpdateFormData])
 
     // 处理表单金额字段变化
-    const handleFormAmountChange = (field: string, value: string) => {
+    const handleFormAmountChange = useCallback((field: string, value: string) => {
       // 格式化金额输入，确保最多两位小数
       const formattedValue = formatAmount(value)
 
       // 更新显示值（用户看到的）
-      setAmountDisplayValues(prev => ({
-        ...prev,
-        [field]: formattedValue,
-      }))
-    }
+      const newAmountDisplayValues = { ...amountDisplayValues, [field]: formattedValue }
+      
+      if (mode === 'edit') {
+        // 编辑模式：使用本地状态
+        setEditModeFormData(prev => ({
+          ...prev,
+          amountDisplayValues: newAmountDisplayValues,
+        }))
+      } else {
+        // 创建模式：使用store缓存
+        updateFormField('amountDisplayValues', newAmountDisplayValues)
+      }
+    }, [amountDisplayValues, mode, updateFormField])
 
     // 处理表单金额字段失焦
-    const handleFormAmountBlur = (field: string, value: string) => {
+    const handleFormAmountBlur = useCallback((field: string, value: string) => {
       const numericValue = parseAmount(value)
-
+      
       // 更新数值（用于计算和提交）
-      setFormData(prev => ({
-        ...prev,
-        [field]: numericValue,
-      }))
-    }
+      if (mode === 'edit') {
+        // 编辑模式：使用本地状态
+        setEditModeFormData(prev => ({ ...prev, [field]: numericValue }))
+      } else {
+        // 创建模式：使用store缓存
+        updateFormField(field, numericValue)
+      }
+    }, [mode, updateFormField])
 
     // 收集服务项目数据
     const collectServiceData = () => {
@@ -785,58 +868,14 @@ const ProductServiceAgreement = forwardRef<
       return categoryKeys.some(key => checkedItems[key])
     }
 
-    // 获取当前表单数据
-    const getFormData = () => {
+    // 获取当前表单数据（使用完整的缓存数据）
+    const getFormData = useCallback(() => {
       const serviceData = collectServiceData()
-      // 明确返回所有重要字段，确保缓存完整性
+      const completeData = getCompleteFormData()
+      
+      // 返回完整的表单数据
       const data = {
-        // 基础合同信息
-        signatory: formData.signatory || signatory,
-        contractType: formData.contractType || '产品服务协议',
-        
-        // 甲方信息
-        partyACompany: formData.partyACompany || '',
-        partyAAddress: formData.partyAAddress || '',
-        partyAPhone: formData.partyAPhone || '',
-        partyAContact: formData.partyAContact || '',
-        
-        // 乙方信息
-        partyBContact: formData.partyBContact || '',
-        partyBPhone: formData.partyBPhone || '',
-        
-        // 签约日期
-        partyASignDate: formData.partyASignDate || null,
-        partyBSignDate: formData.partyBSignDate || null,
-        
-        // 服务相关
-        checkedItems,
-        itemAmounts,
-        amountDisplayValues,
-        customerSearchValue,
-        
-        // 业务地址
-        businessEstablishmentAddress: formData.businessEstablishmentAddress || '',
-        
-        // 备注信息
-        businessRemark: formData.businessRemark || '',
-        taxRemark: formData.taxRemark || '',
-        bankRemark: formData.bankRemark || '',
-        socialRemark: formData.socialRemark || '',
-        licenseRemark: formData.licenseRemark || '',
-        otherRemark: formData.otherRemark || '',
-        
-        // 服务费用
-        businessServiceFee: formData.businessServiceFee || 0,
-        taxServiceFee: formData.taxServiceFee || 0,
-        bankServiceFee: formData.bankServiceFee || 0,
-        socialServiceFee: formData.socialServiceFee || 0,
-        licenseServiceFee: formData.licenseServiceFee || 0,
-        otherServiceFee: formData.otherServiceFee || 0,
-        
-        // 包含其他所有formData字段（确保不遗漏）
-        ...formData,
-        
-        // 服务数据
+        ...completeData,
         ...serviceData,
       }
       
@@ -850,32 +889,34 @@ const ProductServiceAgreement = forwardRef<
       })
       
       return data
+    }, [getCompleteFormData])
+
+      // 监听客户数据同步事件 (仅在创建模式下)
+  useEffect(() => {
+    // 编辑模式下跳过客户数据同步，避免覆盖API数据
+    if (mode === 'edit') return
+    
+    const handleSyncCustomerData = (event: any) => {
+      try {
+        const customerName = event.detail?.customerName
+        if (customerName && customerName !== customerSearchValue) {
+          console.log('🔄 收到客户数据同步事件，强制同步客户名称:', customerName)
+          batchUpdateFormData({
+            customerSearchValue: customerName,
+            partyACompany: customerName || formData.partyACompany,
+          })
+        }
+      } catch (error) {
+        console.error('同步客户数据失败:', error)
+      }
     }
 
-    // 监听客户数据同步事件
-    useEffect(() => {
-      const handleSyncCustomerData = (event: any) => {
-        try {
-          const customerName = event.detail?.customerName
-          if (customerName && customerName !== customerSearchValue) {
-            console.log('🔄 收到客户数据同步事件，强制同步客户名称:', customerName)
-            setCustomerSearchValue(customerName)
-            // 如果公司名字段不存在或为空，也同步更新它
-            if (!formData.partyACompany) {
-              handleFormChange('partyACompany', customerName)
-            }
-          }
-        } catch (error) {
-          console.error('同步客户数据失败:', error)
-        }
-      }
-
-      document.addEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
-      
-      return () => {
-        document.removeEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
-      }
-    }, [customerSearchValue, formData.partyACompany])
+    document.addEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
+    
+    return () => {
+      document.removeEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
+    }
+  }, [customerSearchValue, formData.partyACompany, batchUpdateFormData, mode])
 
     useImperativeHandle(ref, () => ({
       validateForm,
@@ -933,7 +974,7 @@ const ProductServiceAgreement = forwardRef<
                   options={customerOptions}
                   value={customerSearchValue || formData.partyACompany || ''}
                   onSearch={(value) => {
-                    setCustomerSearchValue(value)
+                    updateFormField('customerSearchValue', value)
                     if (value && value.trim()) {
                       handleCustomerSearch(value.trim(), true)
                     } else {
@@ -944,8 +985,10 @@ const ProductServiceAgreement = forwardRef<
                     handleCustomerSelect(value, option)
                   }}
                   onChange={(value) => {
-                    setCustomerSearchValue(value)
-                    handleFormChange('partyACompany', value)
+                    batchUpdateFormData({
+                      customerSearchValue: value,
+                      partyACompany: value,
+                    })
                     // 如果输入值为空，重置搜索状态
                     if (!value || !value.trim()) {
                       resetCustomerSearch()
@@ -955,7 +998,7 @@ const ProductServiceAgreement = forwardRef<
                   onFocus={() => {
                     // 如果有公司名称但没有搜索值，同步它们
                     if (formData.partyACompany && !customerSearchValue) {
-                      setCustomerSearchValue(formData.partyACompany)
+                      updateFormField('customerSearchValue', formData.partyACompany)
                     }
                   }}
                 notFoundContent={

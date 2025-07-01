@@ -101,8 +101,11 @@ const AgencyAccountingAgreement = forwardRef<
     // 获取当前签约方配置
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
     
-    // 状态管理（初始化时包含乙方默认值）
-    const [formData, setFormData] = useState<Record<string, any>>({
+    // 编辑模式下的本地状态（不使用缓存，完全基于API数据）
+    const [editModeFormData, setEditModeFormData] = useState<Record<string, any>>({})
+    
+    // 创建模式的状态管理（包含乙方默认值）
+    const [createModeFormData, setCreateModeFormData] = useState<Record<string, any>>({
       signatory,
       contractType: '代理记账合同',
       // 设置乙方默认值
@@ -111,6 +114,21 @@ const AgencyAccountingAgreement = forwardRef<
       partyBLegalPerson: '刘菲',
       ...contractData,
     })
+    
+    // 根据模式选择使用的表单数据
+    const formData = mode === 'edit' 
+      ? {
+          // 编辑模式：完全使用API数据和本地修改
+          signatory,
+          contractType: '代理记账合同',
+          partyBAddress: config?.address || '',
+          partyBPhone: config?.phone || '',
+          partyBLegalPerson: '刘菲',
+          ...contractData,
+          ...editModeFormData,
+        }
+      : createModeFormData
+
 
     // 申报服务选择状态
     const [selectedServices, setSelectedServices] = useState<string[]>([])
@@ -148,62 +166,34 @@ const AgencyAccountingAgreement = forwardRef<
     const [codeTotal, setCodeTotal] = useState<number>(0)
     const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
 
-    // 当contractData变化时，更新表单数据（只在初始化或明确需要重置时）
+    // 初始化表单数据
     useEffect(() => {
-      if (contractData && Object.keys(contractData).length > 0) {
-        console.log('🔄 [代理记账合同] contractData 变化，当前 formData 状态:', {
-          currentPartyAAddress: formData.partyAAddress,
-          newPartyAAddress: contractData.partyAAddress,
-          isFormEmpty: Object.keys(formData).length === 0 || (!formData.partyACompany && !formData.partyAAddress)
-        })
-        
-        // 只有在表单为空或者是初始状态时才完全覆盖数据
-        // 这样可以避免在验证失败时清空用户输入的数据
-        const isInitialLoad = Object.keys(formData).length === 0 || 
-                             (!formData.partyACompany && !formData.partyAAddress && !formData.partyAPhone)
-        
-        if (isInitialLoad) {
-          console.log('📝 [代理记账合同] 初始化或重置表单数据')
-          setFormData(prev => ({
-            ...prev,
-            signatory,
-            contractType: '代理记账合同',
-            ...contractData,
-          }))
-        } else {
-          console.log('⚠️ [代理记账合同] 表单已有数据，跳过覆盖以保护用户输入')
-          // 只更新一些安全的非用户输入字段
-          setFormData(prev => ({
-            ...prev,
-            signatory,
-            contractType: '代理记账合同',
-            // 只更新一些系统级别的字段，不覆盖用户输入
-            ...(contractData.id && { id: contractData.id }),
-            ...(contractData.contractNumber && { contractNumber: contractData.contractNumber }),
-            ...(contractData.createTime && { createTime: contractData.createTime }),
-            ...(contractData.updateTime && { updateTime: contractData.updateTime }),
-          }))
-        }
-
-        // 初始化金额显示值和其他状态（只在初始化时全量更新）
-        if (isInitialLoad) {
+      if (mode === 'edit') {
+        // 编辑模式：直接使用API数据初始化
+        if (contractData && Object.keys(contractData).length > 0) {
+          console.log('🔄 [代理记账合同] 编辑模式：初始化表单数据（完全使用API数据）')
+          
+          console.log('🔍 API数据详情:', {
+            partyACompany: contractData.partyACompany,
+            partyAAddress: contractData.partyAAddress,
+            partyACreditCode: contractData.partyACreditCode,
+            totalAgencyAccountingFee: contractData.totalAgencyAccountingFee,
+            declarationService: contractData.declarationService,
+            mode: mode,
+            dataSource: 'API'
+          })
+          
+          // 设置编辑模式的表单数据
+          setEditModeFormData(contractData)
+          
+          // 初始化金额显示值
           const newAmountDisplayValues: Record<string, string> = {
-            totalAgencyAccountingFee: contractData.totalAgencyAccountingFee
-              ? String(contractData.totalAgencyAccountingFee)
-              : '',
-            agencyAccountingFee: contractData.agencyAccountingFee
-              ? String(contractData.agencyAccountingFee)
-              : '',
-            accountingSoftwareFee: contractData.accountingSoftwareFee
-              ? String(contractData.accountingSoftwareFee)
-              : '',
-            invoicingSoftwareFee: contractData.invoicingSoftwareFee
-              ? String(contractData.invoicingSoftwareFee)
-              : '',
+            totalAgencyAccountingFee: contractData.totalAgencyAccountingFee ? String(contractData.totalAgencyAccountingFee) : '',
+            agencyAccountingFee: contractData.agencyAccountingFee ? String(contractData.agencyAccountingFee) : '',
+            accountingSoftwareFee: contractData.accountingSoftwareFee ? String(contractData.accountingSoftwareFee) : '',
+            invoicingSoftwareFee: contractData.invoicingSoftwareFee ? String(contractData.invoicingSoftwareFee) : '',
             accountBookFee: contractData.accountBookFee ? String(contractData.accountBookFee) : '',
-            currentChargeFee: contractData.currentChargeFee
-              ? String(contractData.currentChargeFee)
-              : '',
+            currentChargeFee: contractData.currentChargeFee ? String(contractData.currentChargeFee) : '',
           }
           setAmountDisplayValues(newAmountDisplayValues)
 
@@ -225,35 +215,21 @@ const AgencyAccountingAgreement = forwardRef<
             setCodeSearchValue(contractData.partyACreditCode)
           }
           
-          // 特别处理日期字段，确保它们能正确恢复
-          if (contractData.partyASignDate || contractData.partyBSignDate) {
-            console.log('📅 AgencyAccountingAgreement: 恢复日期字段:')
-            if (contractData.partyASignDate) {
-              console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
-            }
-            if (contractData.partyBSignDate) {
-              console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
-            }
-            
-            // 立即设置日期字段，不使用延迟
-            setFormData(prev => {
-              const newData = {
-                ...prev,
-                partyASignDate: contractData.partyASignDate || prev.partyASignDate,
-                partyBSignDate: contractData.partyBSignDate || prev.partyBSignDate,
-              }
-              console.log('📅 立即更新 formData 日期字段:', {
-                partyASignDate: newData.partyASignDate,
-                partyBSignDate: newData.partyBSignDate
-              })
-              return newData
-            })
-          }
-        } else {
-          console.log('⚠️ [代理记账合同] 跳过状态重置，保护用户当前输入')
+          console.log('✅ [代理记账合同] 编辑模式：API数据初始化完成')
+        }
+      } else {
+        // 创建模式：使用传入的数据初始化创建模式状态
+        if (contractData && Object.keys(contractData).length > 0) {
+          console.log('🔄 [代理记账合同] 创建模式：初始化表单数据')
+          setCreateModeFormData(prev => ({
+            ...prev,
+            signatory,
+            contractType: '代理记账合同',
+            ...contractData,
+          }))
         }
       }
-    }, [contractData, signatory])
+    }, [contractData, signatory, mode])
 
     // 自动获取委托日期
     useEffect(() => {
@@ -380,10 +356,20 @@ const AgencyAccountingAgreement = forwardRef<
     const handleCustomerSelect = (value: string, option: any) => {
       const enterprise = option.enterprise
       if (enterprise) {
-        handleFormChange('partyACompany', enterprise.companyName)
-        handleFormChange('partyACreditCode', enterprise.unifiedSocialCreditCode)
-        if ((enterprise as any).registeredAddress) {
-          handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
+        const updateData = {
+          partyACompany: enterprise.companyName,
+          partyACreditCode: enterprise.unifiedSocialCreditCode,
+          ...(((enterprise as any).registeredAddress) && { partyAAddress: (enterprise as any).registeredAddress })
+        }
+        
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({ ...prev, ...updateData }))
+        } else {
+          // 创建模式：逐个调用handleFormChange以触发自动保存
+          Object.entries(updateData).forEach(([key, val]) => {
+            handleFormChange(key, val)
+          })
         }
         message.success('企业信息已自动填入')
       }
@@ -489,10 +475,20 @@ const AgencyAccountingAgreement = forwardRef<
     const handleCodeSelect = (value: string, option: any) => {
       const enterprise = option.enterprise
       if (enterprise) {
-        handleFormChange('partyACompany', enterprise.companyName)
-        handleFormChange('partyACreditCode', enterprise.unifiedSocialCreditCode)
-        if ((enterprise as any).registeredAddress) {
-          handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
+        const updateData = {
+          partyACompany: enterprise.companyName,
+          partyACreditCode: enterprise.unifiedSocialCreditCode,
+          ...(((enterprise as any).registeredAddress) && { partyAAddress: (enterprise as any).registeredAddress })
+        }
+        
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({ ...prev, ...updateData }))
+        } else {
+          // 创建模式：逐个调用handleFormChange以触发自动保存
+          Object.entries(updateData).forEach(([key, val]) => {
+            handleFormChange(key, val)
+          })
         }
         message.success('企业信息已自动填入')
       }
@@ -521,21 +517,26 @@ const AgencyAccountingAgreement = forwardRef<
 
     // 处理表单数据变化
     const handleFormChange = (field: string, value: any) => {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value,
-      }))
-      
-      // 触发自定义事件通知CreateContract.tsx进行自动保存
-      // 所有字段变化都触发自动保存
-      console.log(`💾 [代理记账合同] ${field} 字段变化，触发自动保存:`, value)
-      // 延迟触发，确保状态已更新
-      setTimeout(() => {
-        const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field, value, contractType: '代理记账合同' }
-        })
-        document.dispatchEvent(event)
-      }, 50)
+      if (mode === 'edit') {
+        // 编辑模式：使用本地状态
+        setEditModeFormData(prev => ({ ...prev, [field]: value }))
+        console.log(`💾 [编辑模式] ${field} 字段变化:`, value)
+      } else {
+        // 创建模式：使用创建模式状态
+        setCreateModeFormData(prev => ({
+          ...prev,
+          [field]: value,
+        }))
+        console.log(`💾 [创建模式] ${field} 字段变化，触发自动保存:`, value)
+        
+        // 只在创建模式下触发自动保存事件
+        setTimeout(() => {
+          const event = new CustomEvent('contractFormFieldChange', {
+            detail: { field, value, contractType: '代理记账合同' }
+          })
+          document.dispatchEvent(event)
+        }, 50)
+      }
     }
 
     // 处理金额输入变化
@@ -719,17 +720,17 @@ const AgencyAccountingAgreement = forwardRef<
       // 同步乙方默认值到表单数据
       if (!formData.partyBAddress && config.address) {
         console.log('🔄 [代理记账合同] 同步乙方地址默认值:', config.address)
-        setFormData(prev => ({...prev, partyBAddress: config.address}))
+        handleFormChange('partyBAddress', config.address)
       }
       
       if (!formData.partyBPhone && config.phone) {
         console.log('🔄 [代理记账合同] 同步乙方电话默认值:', config.phone)
-        setFormData(prev => ({...prev, partyBPhone: config.phone}))
+        handleFormChange('partyBPhone', config.phone)
       }
       
       if (!formData.partyBLegalPerson) {
         console.log('🔄 [代理记账合同] 同步乙方法定代表人默认值: 刘菲')
-        setFormData(prev => ({...prev, partyBLegalPerson: '刘菲'}))
+        handleFormChange('partyBLegalPerson', '刘菲')
       }
 
       console.log('✅ [代理记账合同] 表单验证通过，数据同步完成')

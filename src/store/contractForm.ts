@@ -2,108 +2,251 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 
+// 合同表单完整数据结构接口
+interface ContractFormData {
+  // 基础合同信息
+  signatory?: string | null
+  contractType?: string | null
+  
+  // 甲方信息
+  partyACompany?: string
+  partyAAddress?: string
+  partyAContact?: string
+  partyAPhone?: string
+  partyACreditCode?: string
+  partyALegalPerson?: string
+  partyAPostalCode?: string
+  
+  // 乙方信息
+  partyBCompany?: string
+  partyBContact?: string
+  partyBPhone?: string
+  partyBAddress?: string
+  partyBCreditCode?: string
+  partyBLegalPerson?: string
+  partyBPostalCode?: string
+  
+  // 签署日期
+  partyASignDate?: string
+  partyBSignDate?: string
+  
+  // 委托期间（代理记账合同）
+  entrustmentStartDate?: string
+  entrustmentEndDate?: string
+  
+  // 业务地址
+  businessEstablishmentAddress?: string
+  
+  // 服务项目勾选状态
+  checkedItems?: Record<string, boolean>
+  itemAmounts?: Record<string, string>
+  
+  // 金额显示值（用于输入框显示）
+  amountDisplayValues?: Record<string, string>
+  
+  // 各项服务备注
+  businessRemark?: string
+  taxRemark?: string
+  bankRemark?: string
+  socialSecurityRemark?: string
+  socialRemark?: string
+  licenseRemark?: string
+  otherRemark?: string
+  
+  // 各项服务费用
+  businessServiceFee?: number
+  taxServiceFee?: number
+  bankServiceFee?: number
+  socialSecurityServiceFee?: number
+  socialServiceFee?: number
+  licenseServiceFee?: number
+  otherServiceFee?: number
+  totalCost?: number
+  
+  // 代理记账相关费用
+  totalAgencyAccountingFee?: number
+  agencyAccountingFee?: number
+  accountingSoftwareFee?: number
+  invoicingSoftwareFee?: number
+  accountBookFee?: number
+  currentChargeFee?: number
+  
+  // 服务项目数据
+  businessEstablishment?: Array<Record<string, any>>
+  businessChange?: Array<Record<string, any>>
+  businessCancellation?: Array<Record<string, any>>
+  businessOther?: Array<Record<string, any>>
+  businessMaterials?: Array<Record<string, any>>
+  taxMatters?: Array<Record<string, any>>
+  bankMatters?: Array<Record<string, any>>
+  socialSecurity?: Array<Record<string, any>>
+  licenseBusiness?: Array<Record<string, any>>
+  declarationService?: Array<Record<string, any>>
+  
+  // 其他业务
+  otherBusiness?: string
+  paymentMethod?: string
+  
+  // 客户搜索相关
+  customerSearchValue?: string
+  
+  // 咨询电话
+  consultPhone?: string
+  
+  // 备注
+  remarks?: string
+  
+  // 印章图片
+  partyAStampImage?: string
+  
+  // 支持其他动态字段
+  [key: string]: any
+}
+
 interface ContractFormState {
   // 合同类型
   contractType: string | null
   // 签署方
   signatory: string | null
-  // 表单数据（不限制字段）
-  formData: Record<string, any>
+  // 完整的表单数据
+  formData: ContractFormData
   // 最后更新时间
   lastUpdated: number | null
-  // 当前表单路径
-  currentPath: string | null
+  // 是否正在恢复数据
+  isRestoring: boolean
 
   // Actions
   setContractType: (contractType: string | null) => void
   setSignatory: (signatory: string | null) => void
   updateFormField: (key: string, value: any) => void
-  updateFormData: (data: Record<string, any>) => void
-  clearForm: () => void
+  batchUpdateFormData: (data: Partial<ContractFormData>) => void
   clearFormData: () => void
-  clearAllFormCache: () => void
+  clearAllCache: () => void
+  setRestoring: (restoring: boolean) => void
+  
+  // 获取完整表单数据（包含签署方和合同类型）
+  getCompleteFormData: () => ContractFormData
 }
 
 export const useContractFormStore = create<ContractFormState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       contractType: null,
       signatory: null,
       formData: {},
       lastUpdated: null,
-      currentPath: null,
+      isRestoring: false,
 
       setContractType: (contractType) =>
         set((state) => {
           state.contractType = contractType
+          state.formData.contractType = contractType
           state.lastUpdated = Date.now()
+          console.log('💾 [Store] 设置合同类型:', contractType)
         }),
 
       setSignatory: (signatory) =>
         set((state) => {
           state.signatory = signatory
+          state.formData.signatory = signatory
           state.lastUpdated = Date.now()
+          console.log('💾 [Store] 设置签署方:', signatory)
         }),
 
       updateFormField: (key, value) =>
         set((state) => {
+          // 如果正在恢复数据，跳过更新
+          if (state.isRestoring) {
+            return
+          }
+          
           state.formData[key] = value
           state.lastUpdated = Date.now()
+          
+          // 特别记录重要字段的更新
+          if (['partyACompany', 'partyASignDate', 'partyBSignDate', 'totalCost'].includes(key)) {
+            console.log(`💾 [Store] 更新重要字段 ${key}:`, value)
+          }
         }),
 
-      updateFormData: (data) =>
+      batchUpdateFormData: (data) =>
         set((state) => {
-          // 合并数据而不是替换，保留用户可能清空的字段
-          state.formData = { ...state.formData, ...data }
+          // 如果正在恢复数据，跳过更新
+          if (state.isRestoring) {
+            console.log('⏸️ [Store] 正在恢复数据，跳过批量更新')
+            return
+          }
+          
+          // 深度合并数据，确保不覆盖用户输入
+          Object.keys(data).forEach(key => {
+            if (data[key] !== undefined) {
+              state.formData[key] = data[key]
+            }
+          })
+          
           state.lastUpdated = Date.now()
-        }),
-
-      clearForm: () =>
-        set((state) => {
-          state.contractType = null
-          state.signatory = null
-          state.formData = {}
-          state.lastUpdated = Date.now()
+          console.log('💾 [Store] 批量更新表单数据:', Object.keys(data))
         }),
 
       clearFormData: () =>
         set((state) => {
-          state.formData = {}
+          state.formData = {
+            signatory: state.signatory,
+            contractType: state.contractType,
+          } as ContractFormData
           state.lastUpdated = Date.now()
+          console.log('🧹 [Store] 清除表单数据，保留签署方和合同类型')
         }),
 
-      clearAllFormCache: () => {
-        // 清理内存状态
+      clearAllCache: () =>
         set((state) => {
           state.contractType = null
           state.signatory = null
           state.formData = {}
-          state.lastUpdated = Date.now()
-          state.currentPath = null
-        })
+          state.lastUpdated = null
+          state.isRestoring = false
+          console.log('🧹 [Store] 清除所有缓存数据')
+        }),
         
-        // 延迟清理 sessionStorage，确保状态更新完成
-        setTimeout(() => {
-          try {
-            sessionStorage.removeItem('contract-form-storage')
-            console.log('🧹 已彻底清理合同表单缓存（内存 + sessionStorage）')
-          } catch (error) {
-            console.error('清理 sessionStorage 失败:', error)
+      setRestoring: (restoring) =>
+        set((state) => {
+          state.isRestoring = restoring
+          if (restoring) {
+            console.log('🔄 [Store] 开始恢复数据模式')
+          } else {
+            console.log('✅ [Store] 结束恢复数据模式')
           }
-        }, 0)
+        }),
+        
+      getCompleteFormData: () => {
+        const state = get()
+        return {
+          ...state.formData,
+          signatory: state.signatory,
+          contractType: state.contractType,
+        } as ContractFormData
       },
     })),
     {
-      name: 'contract-form-storage', // localStorage的key名称
-      storage: createJSONStorage(() => sessionStorage), // 使用sessionStorage而不是localStorage
+      name: 'contract-form-storage',
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
-        // 只持久化这些字段
         contractType: state.contractType,
         signatory: state.signatory,
         formData: state.formData,
         lastUpdated: state.lastUpdated,
-        currentPath: state.currentPath,
       }),
+      // 数据恢复时的处理
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log('🔄 [Store] 从sessionStorage恢复缓存数据:', {
+            contractType: state.contractType,
+            signatory: state.signatory,
+            formDataKeys: Object.keys(state.formData || {}),
+            lastUpdated: state.lastUpdated ? new Date(state.lastUpdated).toLocaleString() : null
+          })
+        }
+      },
     }
   )
 ) 

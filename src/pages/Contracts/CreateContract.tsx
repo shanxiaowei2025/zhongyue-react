@@ -35,16 +35,15 @@ const CreateContract: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmittingInProgress, setIsSubmittingInProgress] = useState(false)
   
-  // 使用zustand持久化存储
+  // 使用重构后的store
   const {
     contractType,
     signatory,
     formData,
     setContractType,
     setSignatory,
-    updateFormData,
-    clearForm,
-    clearAllFormCache,
+    batchUpdateFormData,
+    clearAllCache,
     lastUpdated
   } = useContractFormStore()
   
@@ -82,8 +81,8 @@ const CreateContract: React.FC = () => {
           partyBPhone: currentData.partyBPhone || '',
         }
 
-        updateFormData(currentData)
-        console.log('💾 自动保存表单数据:', currentData)
+              batchUpdateFormData(currentData)
+      console.log('💾 自动保存表单数据:', currentData)
         
         // 特别监控日期字段的保存
         if (currentData.partyASignDate) {
@@ -121,7 +120,7 @@ const CreateContract: React.FC = () => {
     const handleBeforeUnload = () => {
       saveCurrentFormData()
       // 浏览器关闭/刷新时清理数据
-      clearAllFormCache()
+      clearAllCache()
       console.log('🧹 页面关闭：清理所有表单数据')
     }
 
@@ -131,7 +130,7 @@ const CreateContract: React.FC = () => {
       // 如果关闭的是创建合同标签页，清理表单缓存
       if (tabKey === '/contracts/create') {
         console.log('🗂️ 创建合同标签页关闭，清理表单缓存')
-        clearAllFormCache()
+        clearAllCache()
       }
     }
 
@@ -146,7 +145,7 @@ const CreateContract: React.FC = () => {
       saveCurrentFormData()
       console.log('💾 组件卸载：已保存表单数据，保留参数')
     }
-  }, [clearForm, clearAllFormCache])
+  }, [clearAllCache])
 
   // 返回合同列表 - 保留数据，下次可以继续编辑
   const handleBack = () => {
@@ -159,7 +158,7 @@ const CreateContract: React.FC = () => {
   // 清除表单数据
   const clearStorageData = () => {
     try {
-      clearAllFormCache()
+      clearAllCache()
       console.log('🧹 手动清理：已清除所有表单数据')
       message.success('已清除保存的合同数据')
     } catch (error) {
@@ -199,7 +198,7 @@ const CreateContract: React.FC = () => {
       }
 
       // 提交成功后清理数据，关闭标签页并返回合同列表
-      clearAllFormCache()
+      clearAllCache()
       message.success('合同创建成功！', 2)
       
       setTimeout(() => {
@@ -354,12 +353,12 @@ const CreateContract: React.FC = () => {
       case '产品服务协议':
         return (
           <ProductServiceAgreement
-            signatory={signatory}
+            signatory={signatory || ''}
             contractData={{
-              signatory: signatory,
-              contractType: contractType,
+              signatory: signatory as string,
+              contractType: contractType as string,
               ...formData
-            }}
+            } as any}
             onSubmit={async contractData => {
               await createContractData(contractData)
             }}
@@ -370,12 +369,12 @@ const CreateContract: React.FC = () => {
       case '代理记账合同':
         return (
           <AgencyAccountingAgreement
-            signatory={signatory}
+            signatory={signatory || ''}
             contractData={{
-              signatory: signatory,
-              contractType: contractType,
+              signatory: signatory as string,
+              contractType: contractType as string,
               ...formData
-            }}
+            } as any}
             onSubmit={async contractData => {
               await createContractData(contractData)
             }}
@@ -386,12 +385,12 @@ const CreateContract: React.FC = () => {
       case '单项服务合同':
         return (
           <SingleServiceAgreement
-            signatory={signatory}
+            signatory={signatory || ''}
             contractData={{
-              signatory: signatory,
-              contractType: contractType,
+              signatory: signatory as string,
+              contractType: contractType as string,
               ...formData
-            }}
+            } as any}
             onSubmit={async contractData => {
               await createContractData(contractData)
             }}
