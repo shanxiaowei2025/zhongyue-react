@@ -214,18 +214,18 @@ const ProductServiceAgreement = forwardRef<
           ...contractData,
         }
         
-              // 特别记录重要字段
-      console.log('🔍 初始化数据详情:', {
-        partyACompany: initData.partyACompany,
-        businessEstablishmentAddress: initData.businessEstablishmentAddress,
-        businessOther: initData.businessOther,
-        businessEstablishment: initData.businessEstablishment,
-        businessChange: initData.businessChange,
-        businessCancellation: initData.businessCancellation,
-        businessMaterials: initData.businessMaterials,
-        mode: mode,
-        dataSource: mode === 'edit' ? 'API' : 'Props'
-      })
+                      // 特别记录重要字段
+        console.log('🔍 初始化数据详情:', {
+          partyACompany: initData.partyACompany,
+          businessEstablishmentAddress: initData.businessEstablishmentAddress,
+          businessOther: initData.businessOther,
+          businessEstablishment: initData.businessEstablishment,
+          businessChange: initData.businessChange,
+          businessCancellation: initData.businessCancellation,
+          businessMaterials: initData.businessMaterials,
+          mode: mode,
+          dataSource: 'Props' // 创建模式下固定为 Props
+        })
 
         // 初始化金额显示值
         const newAmountDisplayValues: Record<string, string> = {
