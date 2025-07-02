@@ -22,12 +22,14 @@ import {
 } from '@ant-design/icons'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import html2canvas from 'html2canvas'
+import { pdf } from '@react-pdf/renderer'
 import { useContractDetail } from '../../hooks/useContract'
 import { generateContractToken, updateContract } from '../../api/contract'
 import { uploadFile } from '../../api/upload'
 import ProductServiceAgreementView from '../../components/contracts/ProductServiceAgreementView'
 import AgencyAccountingAgreementView from '../../components/contracts/AgencyAccountingAgreementView'
 import SingleServiceAgreementView from '../../components/contracts/SingleServiceAgreementView'
+import ContractPDFDocument from '../../components/contracts/ContractPDFDocument'
 import styles from './ContractDetail.module.css'
 
 const { Title, Text } = Typography
@@ -78,6 +80,7 @@ const ContractDetail: React.FC = () => {
   const contractId = parseInt(id || '0', 10)
   const contractContentRef = useRef<HTMLDivElement>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [isExportingPDF, setIsExportingPDF] = useState(false)
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [signLinkModalVisible, setSignLinkModalVisible] = useState(false)
   const [signUrl, setSignUrl] = useState<string>('')
@@ -354,6 +357,52 @@ const ContractDetail: React.FC = () => {
       console.log('所有图片和元素处理完成')
     } catch (error) {
       console.error('预处理图片失败:', error)
+    }
+  }
+
+  // 下载合同PDF
+  const handleDownloadPDF = async () => {
+    if (!contractData) {
+      message.error('无法获取合同内容，请稍后重试')
+      return
+    }
+
+    setIsExportingPDF(true)
+
+    try {
+      // 显示生成进度提示
+      message.loading({
+        content: '正在生成PDF文档，请稍候...',
+        key: 'contractPDFGen',
+        duration: 0,
+      })
+
+      // 创建PDF文档实例
+      const pdfDocument = <ContractPDFDocument contractData={contractData} />
+
+      // 生成PDF blob
+      const blob = await pdf(pdfDocument).toBlob()
+
+      // 创建下载链接
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `合同_${contractData.contractNumber || contractData.id}_${new Date().toLocaleDateString()}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      // 关闭loading提示并显示成功消息
+      message.destroy('contractPDFGen')
+      message.success('PDF下载成功')
+    } catch (error) {
+      console.error('导出PDF失败:', error)
+      // 关闭loading提示
+      message.destroy('contractPDFGen')
+      message.error('导出PDF失败，请重试')
+    } finally {
+      setIsExportingPDF(false)
     }
   }
 
@@ -1725,13 +1774,22 @@ const ContractDetail: React.FC = () => {
                 </Button>
               )}
               {contractData && (
-                <Button
-                  icon={<DownloadOutlined />}
-                  loading={isExporting}
-                  onClick={handleDownloadContract}
-                >
-                  {isExporting ? '导出中...' : '下载合同'}
-                </Button>
+                <>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    loading={isExportingPDF}
+                    onClick={handleDownloadPDF}
+                  >
+                    {isExportingPDF ? '生成中...' : '下载PDF'}
+                  </Button>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    loading={isExporting}
+                    onClick={handleDownloadContract}
+                  >
+                    {isExporting ? '导出中...' : '下载合同'}
+                  </Button>
+                </>
               )}
             </Space>
           </div>
