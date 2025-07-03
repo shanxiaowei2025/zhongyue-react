@@ -90,8 +90,11 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     }
   }, [value])
 
+  // 确保 value 始终是一个对象，防止空值引用错误
+  const safeValue = value || {}
+
   // 将值对象转换为图片项数组
-  const imageList: ImageItem[] = Object.entries(value || {}).map(([key, imageData]) => ({
+  const imageList: ImageItem[] = Object.entries(safeValue).map(([key, imageData]) => ({
     key,
     fileName: imageData.fileName || key,
     url: imageData.fileName ? buildImageUrl(imageData.fileName) : imageData.url || '',
@@ -175,7 +178,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       return
     }
 
-    if (value && Object.keys(value).some(key => key === newImageLabel)) {
+    if (safeValue && Object.keys(safeValue).some(key => key === newImageLabel)) {
       message.error('标签已存在，请更换标签名')
       return
     }
@@ -185,7 +188,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       const result = await uploadFile(selectedFile)
       if (result) {
         const newValue = {
-          ...value,
+          ...safeValue,
           [newImageLabel]: {
             fileName: result.fileName,
             url: result.url,
@@ -239,7 +242,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
       }
 
       // 无论删除API是否成功，从表单中移除该图片
-      const newValue = { ...value }
+      const newValue = { ...safeValue }
       delete newValue[item.key]
       onChange?.(newValue)
 
@@ -287,7 +290,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
   const handleImageError = (key: string) => {
     const currentRetryCount = retryCount[key] || 0
 
-    if (currentRetryCount < maxRetries && value[key]) {
+    if (currentRetryCount < maxRetries && safeValue[key]) {
       // 设置递增的重试延迟: 2秒, 4秒, 8秒
       const retryDelay = Math.pow(2, currentRetryCount + 1) * 1000
 
@@ -312,9 +315,9 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         const imageIndex = updatedImageList.findIndex(item => item.key === key)
         if (imageIndex !== -1) {
           const timestamp = new Date().getTime()
-          const imageItem = value[key]
-          const fileName = imageItem.fileName || ''
-          const originalUrl = fileName ? buildImageUrl(fileName) : imageItem.url || ''
+          const imageItem = safeValue[key]
+          const fileName = imageItem?.fileName || ''
+          const originalUrl = fileName ? buildImageUrl(fileName) : imageItem?.url || ''
           const updatedUrl = originalUrl.includes('?')
             ? originalUrl.split('?')[0] + `?t=${timestamp}`
             : originalUrl + `?t=${timestamp}`
@@ -434,7 +437,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
         width={800}
       >
         <div className="flex justify-center">
-          {value[previewTitle] && checkIsImage(value[previewTitle].fileName || '') ? (
+          {safeValue[previewTitle] && checkIsImage(safeValue[previewTitle]?.fileName || '') ? (
             // 图片预览
             <Image
               alt={previewTitle}
@@ -452,17 +455,17 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             // 非图片文件预览
             <div className="flex flex-col items-center justify-center p-8">
               <div className="text-6xl mb-4">
-                {value[previewTitle]?.fileName ? getFileIcon(value[previewTitle].fileName) : <FileOutlined />}
+                {safeValue[previewTitle]?.fileName ? getFileIcon(safeValue[previewTitle].fileName) : <FileOutlined />}
               </div>
-              <div className="text-xl font-bold">{value[previewTitle]?.fileName || '未知文件'}</div>
+              <div className="text-xl font-bold">{safeValue[previewTitle]?.fileName || '未知文件'}</div>
               <div className="text-gray-500 mb-4">
-                {value[previewTitle]?.fileName ? getFileExtension(value[previewTitle].fileName) : ''}
+                {safeValue[previewTitle]?.fileName ? getFileExtension(safeValue[previewTitle].fileName) : ''}
               </div>
               <Space>
                 <Button 
                   type="primary" 
                   onClick={() => {
-                    const fileData = value[previewTitle]
+                    const fileData = safeValue[previewTitle]
                     if (fileData) {
                       const url = fileData.fileName ? buildImageUrl(fileData.fileName) : fileData.url
                       if (url) window.open(url, '_blank')

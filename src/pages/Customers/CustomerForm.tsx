@@ -2023,7 +2023,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               <MultiImageUpload
                 title="其他人员身份证照片"
                 disabled={mode === 'view'}
-                value={form.getFieldValue('otherIdImages')}
+                value={form.getFieldValue('otherIdImages') || {}}
                 onChange={value => form.setFieldValue('otherIdImages', value)}
                 onSuccess={handleImageUploadSuccess}
               />
@@ -2035,7 +2035,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               <MultiImageUpload
                 title="补充资料照片"
                 disabled={mode === 'view'}
-                value={form.getFieldValue('supplementaryImages')}
+                value={form.getFieldValue('supplementaryImages') || {}}
                 onChange={value => form.setFieldValue('supplementaryImages', value)}
                 onSuccess={handleImageUploadSuccess}
               />
