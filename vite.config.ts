@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    define: {
+      global: 'globalThis',
+    },
     server: {
       port: 5173,
       proxy: {
@@ -37,11 +40,12 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': '/src',
+        buffer: 'buffer',
       },
     },
     optimizeDeps: {
       // 预构建 dayjs 及其 locale 模块
-      include: ['dayjs', 'dayjs/locale/zh-cn'],
+      include: ['dayjs', 'dayjs/locale/zh-cn', 'buffer'],
     },
     build: {
       // 启用source map，方便调试

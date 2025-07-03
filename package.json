@@ -20,6 +20,7 @@
     "@types/styled-components": "^5.1.34",
     "antd": "^5.24.6",
     "axios": "^1.8.4",
+    "buffer": "^6.0.3",
     "dayjs": "^1.11.13",
     "formik": "^2.4.6",
     "html2canvas": "^1.4.1",

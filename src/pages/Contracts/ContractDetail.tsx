@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { Buffer } from 'buffer'
 import {
   Card,
   Button,
@@ -12,6 +13,9 @@ import {
   Modal,
   Input,
 } from 'antd'
+
+// 将Buffer添加到全局变量中
+window.Buffer = Buffer
 import {
   ArrowLeftOutlined,
   HomeOutlined,
