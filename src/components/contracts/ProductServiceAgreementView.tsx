@@ -669,7 +669,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         </div>
 
         <div className="obligation-item">
-          <p>6、协议中涉及政府费或第三方服务费，由第三方为甲方开具有效发票。</p>
+                      <p>6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。</p>
         </div>
       </div>
 

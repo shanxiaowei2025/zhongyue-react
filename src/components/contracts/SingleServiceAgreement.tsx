@@ -11,13 +11,14 @@ import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberTo
 import styles from './SingleServiceAgreement.module.css'
 
 // 签署方配置
-const SIGNATORY_CONFIG = {
+export const SIGNATORY_CONFIG = {
   保定如你心意企业管理咨询有限公司: {
     title: '保定如你心意企业管理咨询有限公司',
     englishTitle: 'Baoding Ru Ni Xin Yi Enterprise Management Consulting Co., Ltd.',
     address: '河北省保定市定兴县东落堡镇东落堡村264号',
     phone: '13831247565',
     footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
+    creditCode: '',
   },
   定兴县金盾企业管理咨询有限公司: {
     title: '定兴县金盾企业管理咨询有限公司',
@@ -25,6 +26,7 @@ const SIGNATORY_CONFIG = {
     address: '河北省保定市定兴县定兴镇北肖庄村',
     phone: '13582229111',
     footer: '定兴县金盾企业管理咨询有限公司Tel: 13582229111',
+    creditCode: '',
   },
 }
 
@@ -76,9 +78,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
     // 金额字段的字符串状态（用于输入显示）
     const [amountDisplayValues, setAmountDisplayValues] = useState<Record<string, string>>({
       businessServiceFee: '',
-      taxServiceFee: '',
       bankServiceFee: '',
-      socialSecurityServiceFee: '',
       licenseServiceFee: '',
       otherServiceFee: '',
       totalCost: '',
@@ -150,11 +150,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           businessServiceFee: contractData.businessServiceFee
             ? String(contractData.businessServiceFee)
             : '',
-          taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
           bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
-          socialSecurityServiceFee: contractData.socialSecurityServiceFee
-            ? String(contractData.socialSecurityServiceFee)
-            : '',
           licenseServiceFee: contractData.licenseServiceFee
             ? String(contractData.licenseServiceFee)
             : '',
@@ -174,9 +170,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           contractData.businessCancellation,
           contractData.businessOther,
           contractData.businessMaterials,
-          contractData.taxMatters,
           contractData.bankMatters,
-          contractData.socialSecurity,
           contractData.licenseBusiness,
         ]
 
@@ -422,9 +416,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       const businessCancellation: Array<Record<string, any>> = []
       const businessOther: Array<Record<string, any>> = []
       const businessMaterials: Array<Record<string, any>> = []
-      const taxMatters: Array<Record<string, any>> = []
       const bankMatters: Array<Record<string, any>> = []
-      const socialSecurity: Array<Record<string, any>> = []
       const licenseBusiness: Array<Record<string, any>> = []
 
       // 遍历勾选项目并归类
@@ -445,12 +437,8 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           businessOther.push({ itemKey, itemName, amount })
         } else if (itemKey.startsWith('business_material_')) {
           businessMaterials.push({ itemKey, itemName, amount })
-        } else if (itemKey.startsWith('tax_')) {
-          taxMatters.push({ itemKey, itemName, amount })
         } else if (itemKey.startsWith('bank_')) {
           bankMatters.push({ itemKey, itemName, amount })
-        } else if (itemKey.startsWith('social_security_') || itemKey.startsWith('fund_')) {
-          socialSecurity.push({ itemKey, itemName, amount })
         } else if (itemKey.startsWith('license_')) {
           licenseBusiness.push({ itemKey, itemName, amount })
         }
@@ -462,9 +450,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         businessCancellation,
         businessOther,
         businessMaterials,
-        taxMatters,
         bankMatters,
-        socialSecurity,
         licenseBusiness,
       }
     }
@@ -505,17 +491,6 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         business_material_crystal: '水晶章',
         business_material_kt_board: 'KT板牌子',
         business_material_copper: '铜牌',
-        // 税务项目
-        tax_assessment: '核定税种',
-        tax_filing: '报税',
-        tax_cancellation: '注销',
-        tax_invoice_apply: '申请发票',
-        tax_invoice_issue: '代开发票',
-        tax_change: '税务变更',
-        tax_remove_exception: '解除异常',
-        tax_supplement: '补充申报',
-        tax_software: '记账软件',
-        tax_invoice_software: '开票软件',
         // 银行项目
         bank_general_account: '一般账户设立',
         bank_basic_account: '基本账户设立',
@@ -524,13 +499,6 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         bank_cancel: '银行账户注销',
         bank_financing: '融资业务（开通平台手续）',
         bank_loan: '贷款服务',
-        // 社保项目
-        social_security_open: '社保开户',
-        social_security_hosting: '社保托管',
-        social_security_cancel: '社保账户注销',
-        fund_open: '公积金开户',
-        fund_hosting: '公积金托管',
-        fund_change: '公积金变更',
         // 许可业务项目
         license_food: '食品经营许可证',
         license_health: '卫生许可证',
@@ -656,12 +624,8 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           businessEstablishmentAddress: formData.businessEstablishmentAddress,
           businessRemark: formData.businessRemark,
           businessServiceFee: formData.businessServiceFee,
-          taxRemark: formData.taxRemark,
-          taxServiceFee: formData.taxServiceFee,
           bankRemark: formData.bankRemark,
           bankServiceFee: formData.bankServiceFee,
-          socialSecurityRemark: formData.socialSecurityRemark,
-          socialSecurityServiceFee: formData.socialSecurityServiceFee,
           licenseRemark: formData.licenseRemark,
           licenseServiceFee: formData.licenseServiceFee,
           otherRemark: formData.otherRemark,
@@ -824,14 +788,8 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           if (categoryKey === 'business_materials') {
             return key.startsWith('business_material_')
           }
-          if (categoryKey === 'tax') {
-            return key.startsWith('tax_')
-          }
           if (categoryKey === 'bank') {
             return key.startsWith('bank_')
-          }
-          if (categoryKey === 'social') {
-            return key.startsWith('social_')
           }
           if (categoryKey === 'license') {
             return key.startsWith('license_')
@@ -1366,7 +1324,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 5、乙方对甲方提供的证件和资料负有妥善保管和保密责任，乙方不得将证件和资料提供给与新企业开业登记无关的其他第三者。
               </p>
               <p className={styles.termItem}>
-                6、 协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
+                6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
               </p>
             </div>
           </div>
@@ -1459,7 +1417,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
               </p>
               <p className={styles.termItem}>
                 2、
-                本协议签订的前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
+                本协议签订前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
               </p>
               <p className={styles.termItem}>
                 3、

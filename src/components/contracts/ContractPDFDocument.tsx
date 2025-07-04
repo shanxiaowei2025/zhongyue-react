@@ -2,6 +2,9 @@ import React from 'react'
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
+import { SIGNATORY_CONFIG as AGENCY_SIGNATORY_CONFIG } from './AgencyAccountingAgreement'
+import { SIGNATORY_CONFIG as PRODUCT_SIGNATORY_CONFIG } from './ProductServiceAgreement'
+import { SIGNATORY_CONFIG as SINGLE_SIGNATORY_CONFIG } from './SingleServiceAgreement'
 
 // 注册中文字体
 Font.register({
@@ -48,57 +51,17 @@ Font.registerHyphenationCallback((word: string) => {
   return syllables.length > 0 ? syllables : [word]
 })
 
-// 签署方配置
-const SIGNATORY_CONFIG = {
-  定兴县中岳会计服务有限公司: {
-    title: '定兴县中岳会计服务有限公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省保定市定兴县繁兴街佶地国际D-1-120',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司Tel: 15030201110',
-    creditCode: '91130629MA07XG2A1Q',
-  },
-  定兴县中岳会计服务有限公司河北雄安分公司: {
-    title: '定兴县中岳会计服务有限公司河北雄安分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省雄安新区容城县容善路39号',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司河北雄安分公司Tel: 15030201110',
-    creditCode: '91130600MA0G259B3H',
-  },
-  定兴县中岳会计服务有限公司高碑店分公司: {
-    title: '定兴县中岳会计服务有限公司高碑店分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '高碑店市北城街道京广北大街188号A07',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司高碑店分公司Tel: 15030201110',
-    creditCode: '91130684MA0G3CQJ32',
-  },
-  保定脉信会计服务有限公司: {
-    title: '保定脉信会计服务有限公司',
-    englishTitle: '',
-    address: '河北省保定市容城县容城镇容美路',
-    phone: '15030201110',
-    footer: '保定脉信会计服务有限公司Tel: 15030201110',
-    creditCode: '91130629MA07XG2A1Q',
-  },
-  保定如你心意企业管理咨询有限公司: {
-    title: '保定如你心意企业管理咨询有限公司',
-    englishTitle: 'Baoding Ru Ni Xin Yi Enterprise Management Consulting Co., Ltd.',
-    address: '河北省保定市定兴县东落堡镇东落堡村264号',
-    phone: '13831247565',
-    footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
-    creditCode: '',
-  },
-  定兴县金盾企业管理咨询有限公司: {
-    title: '定兴县金盾企业管理咨询有限公司',
-    englishTitle: 'Dingxing County Golden Shield Enterprise Management Consulting Co., Ltd.',
-    address: '河北省保定市定兴县定兴镇北肖庄村',
-    phone: '13582229111',
-    footer: '定兴县金盾企业管理咨询有限公司Tel: 13582229111',
-    creditCode: '',
-  },
-} as const
+// 根据合同类型获取对应的签署方配置
+const getSignatoryConfig = (contractType: string, signatory: string) => {
+  if (contractType === '代理记账合同') {
+    return AGENCY_SIGNATORY_CONFIG[signatory as keyof typeof AGENCY_SIGNATORY_CONFIG]
+  } else if (contractType === '产品服务协议') {
+    return PRODUCT_SIGNATORY_CONFIG[signatory as keyof typeof PRODUCT_SIGNATORY_CONFIG]
+  } else if (contractType === '单项服务合同') {
+    return SINGLE_SIGNATORY_CONFIG[signatory as keyof typeof SINGLE_SIGNATORY_CONFIG]
+  }
+  return null
+}
 
 // 章图片映射配置
 const STAMP_IMAGE_MAP = {
@@ -461,9 +424,6 @@ const styles = StyleSheet.create({
   // 签署区域
   agreementSignatures: {
     marginTop: 30,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    paddingTop: 20,
   },
   signatureContainer: {
     marginTop: 10,
@@ -498,13 +458,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stampImage: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     objectFit: 'contain',
   },
   partyBSign: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     objectFit: 'contain',
   },
   signatureInfoRow: {
@@ -540,15 +500,16 @@ const styles = StyleSheet.create({
   // 页脚
   footer: {
     position: 'absolute',
-    bottom: '20mm',
+    bottom: 0,
     left: '20mm',
     right: '20mm',
     textAlign: 'center',
     fontSize: 8,
-    color: '#000',
+    color: '#b2b2b2',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#ddd',
     paddingTop: 8,
+    paddingBottom: 4,
   },
 })
 
@@ -557,7 +518,7 @@ interface ContractPDFDocumentProps {
 }
 
 const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData }) => {
-  const config = SIGNATORY_CONFIG[contractData.signatory as keyof typeof SIGNATORY_CONFIG]
+  const config = getSignatoryConfig(contractData.contractType || '', contractData.signatory || '')
 
   if (!config) {
     return (
@@ -596,98 +557,122 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
 
   // 渲染PDF服务项目（用于产品服务协议和单项服务合同）
   const renderPDFServiceItems = (items: Array<Record<string, any>> = [], category: string) => {
-    // 定义所有可能的选项映射
-    const allCategoryOptions: Record<string, Array<{ key: string; label: string }>> = {
-      business_establish: [
-        { key: 'business_establish_limited', label: '有限责任公司' },
-        { key: 'business_establish_branch', label: '有限责任公司分支机构' },
-        { key: 'business_establish_individual', label: '个人独资企业' },
-        { key: 'business_establish_partnership', label: '合伙企业' },
-        { key: 'business_establish_nonprofit', label: '民办非企业' },
-        { key: 'business_establish_joint_stock', label: '股份有限公司' },
-        { key: 'business_establish_self_employed', label: '个体工商户' },
-      ],
-      business_change: [
-        { key: 'business_change_legal_person', label: '法定代表人' },
-        { key: 'business_change_shareholder', label: '股东股权' },
-        { key: 'business_change_capital', label: '注册资金' },
-        { key: 'business_change_name', label: '公司名称' },
-        { key: 'business_change_scope', label: '经营范围' },
-        { key: 'business_change_address', label: '注册地址' },
-        { key: 'business_change_manager', label: '分公司负责人' },
-        { key: 'business_change_directors', label: '董事/监事人员' },
-      ],
-      business_cancel: [
-        { key: 'business_cancel_limited', label: '有限责任公司' },
-        { key: 'business_cancel_branch', label: '有限责任公司分支机构' },
-        { key: 'business_cancel_individual', label: '个人独资企业' },
-        { key: 'business_cancel_partnership', label: '合伙企业' },
-        { key: 'business_cancel_foreign', label: '外商投资企业' },
-        { key: 'business_cancel_joint_stock', label: '股份有限公司' },
-        { key: 'business_cancel_self_employed', label: '个体工商户' },
-      ],
-      business_other: [
-        { key: 'business_other_annual_report', label: '年报公示' },
-        { key: 'business_other_remove_exception', label: '解除异常' },
-        { key: 'business_other_info_repair', label: '信息修复' },
-        { key: 'business_other_file_retrieval', label: '档案调取' },
-        { key: 'business_other_license_annual', label: '许可证年检' },
-        { key: 'business_address_small_scale', label: '地址托管-小规模' },
-        { key: 'business_address_general', label: '地址托管-一般纳税人' },
-      ],
-      business_material: [
-        { key: 'business_material_seal', label: '备案章' },
-        { key: 'business_material_rubber', label: '胶皮章' },
-        { key: 'business_material_crystal', label: '水晶章' },
-        { key: 'business_material_kt_board', label: 'KT板牌子' },
-        { key: 'business_material_copper', label: '铜牌' },
-      ],
-      tax: [
-        { key: 'tax_assessment', label: '核定税种' },
-        { key: 'tax_filing', label: '报税' },
-        { key: 'tax_cancellation', label: '注销' },
-        { key: 'tax_invoice_apply', label: '申请发票' },
-        { key: 'tax_invoice_issue', label: '代开发票' },
-        { key: 'tax_change', label: '税务变更' },
-        { key: 'tax_remove_exception', label: '解除异常' },
-        { key: 'tax_supplement', label: '补充申报' },
-        { key: 'tax_software', label: '记账软件' },
-        { key: 'tax_invoice_software', label: '开票软件' },
-      ],
-      bank: [
-        { key: 'bank_general_account', label: '一般账户设立' },
-        { key: 'bank_basic_account', label: '基本账户设立' },
-        { key: 'bank_foreign_account', label: '外币账户设立' },
-        { key: 'bank_info_change', label: '信息变更' },
-        { key: 'bank_cancel', label: '银行账户注销' },
-        { key: 'bank_financing', label: '融资业务（开通平台手续）' },
-        { key: 'bank_loan', label: '贷款服务' },
-      ],
-      social: [
-        { key: 'social_security_open', label: '社保开户' },
-        { key: 'social_security_hosting', label: '社保托管' },
-        { key: 'social_security_cancel', label: '社保账户注销' },
-        { key: 'fund_open', label: '公积金开户' },
-        { key: 'fund_hosting', label: '公积金托管' },
-        { key: 'fund_change', label: '公积金变更' },
-      ],
-      license: [
-        { key: 'license_food', label: '食品经营许可证' },
-        { key: 'license_health', label: '卫生许可证' },
-        { key: 'license_catering', label: '餐饮许可证' },
-        { key: 'license_transport', label: '道路运输许可证' },
-        { key: 'license_medical', label: '二类医疗器械备案' },
-        { key: 'license_other', label: '其他许可证' },
-        { key: 'license_prepackaged', label: '预包装食品备案' },
-      ],
+    // 根据合同类型定义不同的选项映射
+    const getContractSpecificOptions = (contractType: string, category: string) => {
+      // 产品服务协议的选项映射（包含地址托管）
+      const productServiceOptions: Record<string, Array<{ key: string; label: string }>> = {
+        business_establish: [
+          { key: 'business_establish_limited', label: '有限责任公司' },
+          { key: 'business_establish_branch', label: '有限责任公司分支机构' },
+          { key: 'business_establish_individual', label: '个人独资企业' },
+          { key: 'business_establish_partnership', label: '合伙企业' },
+          { key: 'business_establish_nonprofit', label: '民办非企业' },
+          { key: 'business_establish_joint_stock', label: '股份有限公司' },
+          { key: 'business_establish_self_employed', label: '个体工商户' },
+        ],
+        business_change: [
+          { key: 'business_change_legal_person', label: '法定代表人' },
+          { key: 'business_change_shareholder', label: '股东股权' },
+          { key: 'business_change_capital', label: '注册资金' },
+          { key: 'business_change_name', label: '公司名称' },
+          { key: 'business_change_scope', label: '经营范围' },
+          { key: 'business_change_address', label: '注册地址' },
+          { key: 'business_change_manager', label: '分公司负责人' },
+          { key: 'business_change_directors', label: '董事/监事人员' },
+        ],
+        business_cancel: [
+          { key: 'business_cancel_limited', label: '有限责任公司' },
+          { key: 'business_cancel_branch', label: '有限责任公司分支机构' },
+          { key: 'business_cancel_individual', label: '个人独资企业' },
+          { key: 'business_cancel_partnership', label: '合伙企业' },
+          { key: 'business_cancel_foreign', label: '外商投资企业' },
+          { key: 'business_cancel_joint_stock', label: '股份有限公司' },
+          { key: 'business_cancel_self_employed', label: '个体工商户' },
+        ],
+        business_other: [
+          { key: 'business_other_annual_report', label: '年报公示' },
+          { key: 'business_other_remove_exception', label: '解除异常' },
+          { key: 'business_other_info_repair', label: '信息修复' },
+          { key: 'business_other_file_retrieval', label: '档案调取' },
+          { key: 'business_other_license_annual', label: '许可证年检' },
+          { key: 'business_address_small_scale', label: '地址托管-小规模' },
+          { key: 'business_address_general', label: '地址托管-一般纳税人' },
+        ],
+        business_material: [
+          { key: 'business_material_seal', label: '备案章' },
+          { key: 'business_material_rubber', label: '胶皮章' },
+          { key: 'business_material_crystal', label: '水晶章' },
+          { key: 'business_material_kt_board', label: 'KT板牌子' },
+          { key: 'business_material_copper', label: '铜牌' },
+        ],
+        tax: [
+          { key: 'tax_assessment', label: '核定税种' },
+          { key: 'tax_filing', label: '报税' },
+          { key: 'tax_cancellation', label: '注销' },
+          { key: 'tax_invoice_apply', label: '申请发票' },
+          { key: 'tax_invoice_issue', label: '代开发票' },
+          { key: 'tax_change', label: '税务变更' },
+          { key: 'tax_remove_exception', label: '解除异常' },
+          { key: 'tax_supplement', label: '补充申报' },
+          { key: 'tax_software', label: '记账软件' },
+          { key: 'tax_invoice_software', label: '开票软件' },
+        ],
+        bank: [
+          { key: 'bank_general_account', label: '一般账户设立' },
+          { key: 'bank_basic_account', label: '基本账户设立' },
+          { key: 'bank_foreign_account', label: '外币账户设立' },
+          { key: 'bank_info_change', label: '信息变更' },
+          { key: 'bank_cancel', label: '银行账户注销' },
+          { key: 'bank_financing', label: '融资业务（开通平台手续）' },
+          { key: 'bank_loan', label: '贷款服务' },
+        ],
+        social: [
+          { key: 'social_security_open', label: '社保开户' },
+          { key: 'social_security_hosting', label: '社保托管' },
+          { key: 'social_security_cancel', label: '社保账户注销' },
+          { key: 'fund_open', label: '公积金开户' },
+          { key: 'fund_hosting', label: '公积金托管' },
+          { key: 'fund_change', label: '公积金变更' },
+        ],
+        license: [
+          { key: 'license_food', label: '食品经营许可证' },
+          { key: 'license_health', label: '卫生许可证' },
+          { key: 'license_catering', label: '餐饮许可证' },
+          { key: 'license_transport', label: '道路运输许可证' },
+          { key: 'license_medical', label: '二类医疗器械备案' },
+          { key: 'license_other', label: '其他许可证' },
+          { key: 'license_prepackaged', label: '预包装食品备案' },
+        ],
+      }
+
+      // 单项服务合同的选项映射（不包含地址托管和税务、社保）
+      const singleServiceOptions: Record<string, Array<{ key: string; label: string }>> = {
+        business_establish: productServiceOptions.business_establish,
+        business_change: productServiceOptions.business_change,
+        business_cancel: productServiceOptions.business_cancel,
+        business_other: [
+          { key: 'business_other_annual_report', label: '年报公示' },
+          { key: 'business_other_remove_exception', label: '解除异常' },
+          { key: 'business_other_info_repair', label: '信息修复' },
+          { key: 'business_other_file_retrieval', label: '档案调取' },
+          { key: 'business_other_license_annual', label: '许可证年检' },
+          // 注意：单项服务合同不包含地址托管、税务、社保选项
+        ],
+        business_material: productServiceOptions.business_material,
+        bank: productServiceOptions.bank,
+        license: productServiceOptions.license,
+      }
+
+      // 根据合同类型返回对应的选项映射
+      if (contractType === '单项服务合同') {
+        return singleServiceOptions[category] || []
+      } else {
+        return productServiceOptions[category] || []
+      }
     }
 
-    // 获取当前类别的所有可能选项
-    const categoryOptions = allCategoryOptions[category] || []
-    
-    if (categoryOptions.length === 0) {
-      return <Text style={{ fontSize: 9, color: '#666' }}>未选择</Text>
-    }
+    // 获取当前合同类型和类别的选项
+    const categoryOptions = getContractSpecificOptions(contractData.contractType || '', category)
 
     // 将现有项目转换为Map以便快速查找
     const selectedItemsMap = items.reduce(
@@ -698,65 +683,133 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       {} as Record<string, any>
     )
 
-    return (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 }}>
-        {categoryOptions.map((option, index) => {
-          const isSelected = selectedItemsMap.hasOwnProperty(option.key)
-          const item = selectedItemsMap[option.key]
+    // 将选项分成多行，每行最多3个项目，确保不被分页分割且避免重叠
+    const itemsPerRow = 3
+    const rows: Array<Array<{ key: string; label: string }>> = []
+    for (let i = 0; i < categoryOptions.length; i += itemsPerRow) {
+      rows.push(categoryOptions.slice(i, i + itemsPerRow))
+    }
 
-          return (
-            <View key={option.key} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8, marginBottom: 2 }}>
-              <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
-                {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
-              </View>
-              <Text style={{ fontSize: 8, marginLeft: 3 }}>
-                {option.label}
-                {isSelected && item.amount ? `（${item.amount}元）` : ''}
-              </Text>
-            </View>
-          )
-        })}
+    return (
+      <View style={{ marginBottom: 6 }}>
+        {rows.map((row, rowIndex) => (
+          <View 
+            key={rowIndex} 
+            style={{ 
+              flexDirection: 'row', 
+              marginBottom: 1, 
+              width: '100%',
+              minHeight: 16, // 增加最小高度确保足够空间
+              paddingVertical: 1, // 添加垂直内边距
+            }} 
+          >
+            {row.map((option) => {
+              const isSelected = selectedItemsMap.hasOwnProperty(option.key)
+              const item = selectedItemsMap[option.key]
+
+              return (
+                <View 
+                  key={option.key} 
+                  style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    marginRight: 8, 
+                    width: '30%',
+                    minHeight: 16, // 增加选项的最小高度
+                    paddingVertical: 1, // 添加垂直内边距
+                  }}
+                  wrap={false} // 每个选项作为不可分割的整体
+                >
+                  <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
+                    {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
+                  </View>
+                  <Text style={{ fontSize: 8, marginLeft: 3, flex: 1, lineHeight: 1.3 }}>
+                    {option.label}
+                    {isSelected && item && item.amount ? `（${item.amount}元）` : ''}
+                  </Text>
+                </View>
+              )
+            })}
+          </View>
+        ))}
       </View>
     )
   }
 
-  // 渲染申报服务选项
+  // 渲染申报服务选项（两列显示）
   const renderDeclarationServices = () => {
-    if (!contractData.declarationService || !Array.isArray(contractData.declarationService)) {
-      return (
-        <View style={styles.serviceCheckboxes}>
-          <Text style={styles.serviceItemEmpty}>未选择</Text>
-        </View>
-      )
-    }
-
     // 构建选中服务的映射，支持多种数据结构
-    const selectedServiceMap = contractData.declarationService.reduce(
-      (acc, service) => {
-        // 处理不同的数据结构
-        if (typeof service === 'string') {
-          acc[service] = true
-        } else if (service && typeof service === 'object' && service.value) {
-          acc[service.value] = true
-        }
-        return acc
-      },
-      {} as Record<string, boolean>
-    )
+    const selectedServiceMap = (contractData.declarationService && Array.isArray(contractData.declarationService))
+      ? contractData.declarationService.reduce(
+          (acc, service) => {
+            // 处理不同的数据结构
+            if (typeof service === 'string') {
+              acc[service] = true
+            } else if (service && typeof service === 'object' && service.value) {
+              acc[service.value] = true
+            }
+            return acc
+          },
+          {} as Record<string, boolean>
+        )
+      : {} as Record<string, boolean>
+
+    // 计算每列的项目数量（向上取整，确保第一列不会比第二列少太多）
+    const itemsPerColumn = Math.ceil(DECLARATION_SERVICE_OPTIONS.length / 2)
+    const leftColumnItems = DECLARATION_SERVICE_OPTIONS.slice(0, itemsPerColumn)
+    const rightColumnItems = DECLARATION_SERVICE_OPTIONS.slice(itemsPerColumn)
 
     return (
-      <View style={styles.serviceCheckboxes}>
-        {DECLARATION_SERVICE_OPTIONS.map((option, index) => {
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+        {/* 左列 */}
+        <View style={{ width: '48%' }}>
+          {leftColumnItems.map((option, index) => {
           const isSelected = selectedServiceMap.hasOwnProperty(option.value)
           return (
-            <View key={index} style={styles.serviceItem}>
+              <View 
+                key={index} 
+                style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  marginBottom: 1,
+                  minHeight: 16, // 增加最小高度确保足够空间
+                  paddingVertical: 1, // 添加垂直内边距
+                }}
+                wrap={false} // 每个选项作为不可分割的整体
+              >
               <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
                 {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
               </View>
-              <Text style={styles.serviceLabel}>{option.label}</Text>
+                <Text style={{ fontSize: 8, marginLeft: 3, flex: 1, lineHeight: 1.3 }}>{option.label}</Text>
             </View>
           )
         })}
+        </View>
+        
+        {/* 右列 */}
+        <View style={{ width: '48%' }}>
+          {rightColumnItems.map((option, index) => {
+            const isSelected = selectedServiceMap.hasOwnProperty(option.value)
+            return (
+              <View 
+                key={index} 
+                style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  marginBottom: 1,
+                  minHeight: 16, // 增加最小高度确保足够空间
+                  paddingVertical: 1, // 添加垂直内边距
+                }}
+                wrap={false} // 每个选项作为不可分割的整体
+              >
+                <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
+                  {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
+                </View>
+                <Text style={{ fontSize: 8, marginLeft: 3, flex: 1, lineHeight: 1.3 }}>{option.label}</Text>
+              </View>
+            )
+          })}
+        </View>
       </View>
     )
   }
@@ -776,21 +829,6 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
   // 渲染代理记账合同
   const renderAgencyAccountingContract = () => (
     <Page size="A4" style={styles.page} wrap>
-      {/* 合同头部 */}
-      <View style={styles.header}>
-        <View style={styles.logoSection}>
-          <Image src="/images/contract-logo.png" style={styles.companyLogo} />
-          <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>{config.title}</Text>
-            {config.englishTitle && <Text style={styles.companyNameEn}>{config.englishTitle}</Text>}
-            <Text style={styles.contactInfo}>咨询电话：{config.phone}</Text>
-            {config.englishTitle && (
-              <Text style={styles.companyRegistration}>Company Registration</Text>
-            )}
-          </View>
-        </View>
-      </View>
-
       {/* 合同标题 */}
       <View style={styles.agreementHeader}>
         <Text style={styles.agreementTitle}>代理记账业务委托合同</Text>
@@ -843,7 +881,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>统一社会信用代码：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyBCreditCode}>{config.creditCode}</Text>
+            <Text style={styles.partyBCreditCode}>{'creditCode' in config ? (config as any).creditCode || '' : ''}</Text>
           </View>
         </View>
 
@@ -871,7 +909,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
 
       {/* 合同前言 */}
       <Text style={styles.agreementPreamble}>
-        甲方因经营管理需要委托乙方代理发票开具、记账纳税申报。为了维护双方合法权益根据《中华人民共和国民法典》及《代理记账管理办法》等法律、法规的规定经双方代表友好协商，达成以下协议：
+        甲方因经营管理需要委托乙方代理发票开据、记账纳税申报。为了维护双方合法权益根据《中华人民共和国民法典》及《代理记账管理办法》等法律、法规的规定经双方代表友好协商，达成以下协议：
       </Text>
 
       {/* 一、委托业务范围 */}
@@ -949,7 +987,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             (十二)甲方应按本协议书规定及时足额支付代理记账服务费。
           </Text>
           <Text style={styles.paragraph}>
-            (十三)甲方应保证在规定的纳税期，银行账户有足额的存款缴纳税款。
+            (十三)甲方应保证在规定的纳税期，银行账户有足额的存款缴纳税费款。
           </Text>
         </View>
       </View>
@@ -959,7 +997,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <Text style={styles.sectionTitle}>三、乙方的责任和义务</Text>
         <View style={[styles.sectionContent, styles.partyBObligations]}>
           <Text style={styles.paragraph}>
-            (一)乙方根据甲方所提供的原始凭证和其他资料，按照国家统一会计制度的规定进行会计核算，包括审核原始凭证、填制记账凭证、登记会计账簿、设计编制和提供财务会计报告。
+            (一)乙方根据甲方所提供的原始凭证和其他资料，按照国家统一会计制度的规定进行会计核算，包括审核原始凭证、填制记账凭证、登记会计账簿、按时编制和提供财务会计报告。
           </Text>
           <Text style={styles.paragraph}>
             (二)乙方应严格按照税收相关法律法规，在规定的申报期内为甲方及时、准确地办理纳税申报业务。
@@ -974,7 +1012,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             (五)乙方应协助甲方制定合理的会计资料传递程序，积极配合甲方做好会计资料的签收手续。在代理记账过程中，应妥善保管会计资料。
           </Text>
           <Text style={styles.paragraph}>
-            (六)乙方应按时将当年应归档的会计资料整理、装订后形成会计档案，于会计年度终了后交甲方保管。本办理交接手续前，由乙方负责保管。
+            (六)乙方应按时将当年应归档的会计资料整理、装订后形成会计档案，于会计年度终了后交甲方保管。未办理交接手续前，由乙方负责保管。
           </Text>
           <Text style={styles.paragraph}>
             (七)委托协议终止时，乙方应与甲方办理会计业务交接事宜。
@@ -1009,7 +1047,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <Text style={styles.sectionTitle}>五、协议的终止</Text>
         <View style={[styles.sectionContent, styles.agreementTermination]}>
           <Text style={styles.paragraph}>
-            (一)协议期满，本协议自然终止，双方如需续约，须另定协议。
+            (一)协议期满，本协议自然终止，双方如欲续约，须另定协议。
           </Text>
           <Text style={styles.paragraph}>(二)经双方协商一致后，可提前终止协议。</Text>
         </View>
@@ -1068,7 +1106,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             (四)关于会计账务出现的问题，办理交接手续以前的由甲方负责，办理交接手续以后的由乙方负责；
           </Text>
           <Text style={styles.paragraph}>
-            (五)如甲方中途终止合同（转走或注销），未到期服务费用乙方不予退还，并且代理期间遗留业务按照正常收费标准收费。
+            (五)如甲方中途终止合同（转走或注销），未到期服务费用乙方不予退还，并且代理期间赠送业务按照正常收费标准收费。
           </Text>
         </View>
       </View>
@@ -1081,7 +1119,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             (一)本协议的补充条款、附件及补充协议均为本协议不可分割的部分。本协议补充条款、补充协议与本协议不一致的，以补充条款、补充协议为准。
           </Text>
           <Text style={styles.paragraph}>
-            (二)本协议的未尽事宜及本协议在履行过程中需要变更的事宜，双方应通过订立变更协议进行约定。
+            (二)本协议的未尽事宜及本协议在履行过程中需变更的事宜，双方应通过订立变更协议进行约定。
           </Text>
           <Text style={styles.paragraph}>
             (三)甲乙双方在履行本协议过程中发生争议，应协商解决。协商不能解决的，向仲裁委员会申请仲裁/依法向人民法院起诉。
@@ -1228,7 +1266,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 页脚 */}
-      <Text style={styles.footer}>{config.footer}</Text>
+      <Text style={styles.footer} fixed>{config.footer}</Text>
     </Page>
   )
 
@@ -1394,7 +1432,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         {/* 费用总计 */}
         <View style={{ marginTop: 15, marginBottom: 15 }}>
           <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
-            费用总计（人民币）：{formatCurrency(contractData.totalCost)}元
+            费用总计（人民币）：{formatCurrency(contractData.totalCost)}元&nbsp;&nbsp;
             大写金额（人民币）：{numberToChinese(contractData.totalCost || 0)}。
           </Text>
           <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
@@ -1453,7 +1491,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             5、乙方对甲方提供的证件和资料负有妥善保管和保密责任，乙方不得将证件和资料提供给与新企业开业登记（包括工商、质监、税务等部门）无关的其他第三者。
           </Text>
           <Text style={styles.paragraph}>
-            6、协议中涉及政府费或第三方服务费，由第三方为甲方开具有效发票。
+            6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
           </Text>
         </View>
       </View>
@@ -1601,8 +1639,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 页脚 */}
-      <Text style={styles.footer}>{config.footer}</Text>
-      <Text style={styles.footer}>
+      <Text style={styles.footer} fixed>
+        {config.footer}
+        {'\n'}
         中岳服务平台专注于中小微企业服务，主要业务：企业注册、财务代理、人事代理、商标注册、办公租赁、税收筹划、法律服务等。
       </Text>
     </Page>
@@ -1733,7 +1772,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         </View>
 
         {/* 许可业务 */}
-        <View style={styles.sectionContent}>
+        <View style={styles.sectionContent} break={false}>
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>3、许可业务：</Text>
           {renderPDFServiceItems(contractData.licenseBusiness || [], 'license')}
           <Text style={styles.paragraph}>
@@ -1752,7 +1791,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         {/* 费用总计 */}
         <View style={{ marginTop: 15, marginBottom: 15 }}>
           <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
-            费用总计（人民币）：{contractData.totalCost ? `${contractData.totalCost}元` : '-'}
+            费用总计（人民币）：{contractData.totalCost ? `${contractData.totalCost}元` : '-'}&nbsp;&nbsp;
             大写金额（人民币）：{contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
           </Text>
           <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
@@ -1810,6 +1849,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <Text style={styles.paragraph}>
             5、乙方对甲方提供的证件和资料负有妥善保管和保密责任，乙方不得将证件和资料提供给与新企业开业登记无关的其他第三者。
           </Text>
+        </View>
+      </View>
+
+      {/* 强制换行分隔，确保第6点正确显示 */}
+      <View style={styles.agreementSection}>
+        <View style={styles.sectionContent}>
           <Text style={styles.paragraph}>
             6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
           </Text>
@@ -1886,7 +1931,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             1、协议生效后各方应认真自觉遵守，在协议履行过程中发生的争议，各方应协商解决，若协商不成，任何一方应向乙方所在地人民法院提起诉讼。
           </Text>
           <Text style={styles.paragraph}>
-            2、本协议签订的前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
+            2、本协议签订前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
           </Text>
           <Text style={styles.paragraph}>
             3、本合同为中文版本，并适用中国大陆地区法律，本合同自双方盖章且甲方按约定完成付款之日起生效。
@@ -1959,7 +2004,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 页脚 */}
-      <Text style={styles.footer}>{config.footer}</Text>
+      <Text style={styles.footer} fixed>{config.footer}</Text>
     </Page>
   )
 

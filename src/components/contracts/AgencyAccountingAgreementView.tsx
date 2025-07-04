@@ -4,44 +4,7 @@ import dayjs from 'dayjs'
 import { numberToChinese } from '../../utils/numberToChinese'
 import type { Contract, ContractStatus } from '../../types/contract'
 import styles from './AgencyAccountingAgreementView.module.css'
-
-const { Title, Text } = Typography
-
-// 签署方配置
-const SIGNATORY_CONFIG = {
-  定兴县中岳会计服务有限公司: {
-    title: '定兴县中岳会计服务有限公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省保定市定兴县繁兴街佶地国际D-1-120',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司Tel: 15030201110',
-    creditCode: '91130629MA07XG2A1Q',
-  },
-  定兴县中岳会计服务有限公司河北雄安分公司: {
-    title: '定兴县中岳会计服务有限公司河北雄安分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省雄安新区容城县容城镇容善路39号',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司河北雄安分公司Tel: 15030201110',
-    creditCode: '91130600MA0G259B3H',
-  },
-  定兴县中岳会计服务有限公司高碑店分公司: {
-    title: '定兴县中岳会计服务有限公司高碑店分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '高碑店市北城街道京广北大街188号A07',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司高碑店分公司Tel: 15030201110',
-    creditCode: '91130684MA0G3CQJ32',
-  },
-  保定脉信会计服务有限公司: {
-    title: '保定脉信会计服务有限公司',
-    englishTitle: '',
-    address: '河北省保定市容城县容城镇容美路',
-    phone: '15030201110',
-    footer: '保定脉信会计服务有限公司Tel: 15030201110',
-    creditCode: '91130629MA07XG2A1Q',
-  },
-}
+import { SIGNATORY_CONFIG } from './AgencyAccountingAgreement'
 
 // 章图片映射配置
 const STAMP_IMAGE_MAP = {
@@ -267,7 +230,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       </div>
 
       <div className={styles.agreementPreamble}>
-        甲方因经营管理需要委托乙方代理发票开具、记账纳税申报。为了维护双方
+        甲方因经营管理需要委托乙方代理发票开据、记账纳税申报。为了维护双方
         合法权益根据《中华人民共和国民法典》及《代理记账管理办法》等法律、法规
         的规定经双方代表友好协商，达成以下协议：
       </div>
@@ -331,7 +294,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
           </p>
           <p>(十一)甲方委托乙方开具销售发票的，应符合税收相关法律法规，不得要求乙方虚开发票。</p>
           <p>(十二)甲方应按本协议书规定及时足额支付代理记账服务费。</p>
-          <p>(十三)甲方应保证在规定的纳税期，银行账户有足额的存款缴纳税款。</p>
+          <p>(十三)甲方应保证在规定的纳税期，银行账户有足额的存款缴纳税费款。</p>
         </div>
       </div>
 
@@ -339,7 +302,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         <div className={styles.sectionTitle}>三、乙方的责任和义务</div>
         <div className={styles.sectionContent + ' ' + styles.partyBObligations}>
           <p>
-            (一)乙方根据甲方所提供的原始凭证和其他资料，按照国家统一会计制度的规定进行会计核算，包括审核原始凭证、填制记账凭证、登记会计账簿、设计编制和提供财务会计报告。
+            (一)乙方根据甲方所提供的原始凭证和其他资料，按照国家统一会计制度的规定进行会计核算，包括审核原始凭证、填制记账凭证、登记会计账簿、按时编制和提供财务会计报告。
           </p>
           <p>
             (二)乙方应严格按照税收相关法律法规，在规定的申报期内为甲方及时、准确地办理纳税申报业务。
@@ -353,7 +316,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             保管会计资料。
           </p>
           <p>
-            (六)乙方应按时将当年应归档的会计资料整理、装订后形成会计档案，于会计年度终了后交甲方保管。本办理交接手续前，由乙方负责保管。
+            (六)乙方应按时将当年应归档的会计资料整理、装订后形成会计档案，于会计年度终了后交甲方保管。未办理交接手续前，由乙方负责保管。
           </p>
           <p>(七)委托协议终止时，乙方应与甲方办理会计业务交接事宜。</p>
           <p>
@@ -379,7 +342,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       <div className={styles.agreementSection}>
         <div className={styles.sectionTitle}>五、协议的终止</div>
         <div className={styles.sectionContent + ' ' + styles.agreementTermination}>
-          <p>(一)协议期满，本协议自然终止，双方如需续约，须另定协议。</p>
+          <p>(一)协议期满，本协议自然终止，双方如欲续约，须另定协议。</p>
           <p>(二)经双方协商一致后，可提前终止协议。</p>
         </div>
       </div>
@@ -431,7 +394,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             (四)关于会计账务出现的问题，办理交接手续以前的由甲方负责，办理交接手续以后的由乙方负责；
           </p>
           <p>
-            (五)如甲方中途终止合同（转走或注销），未到期服务费用乙方不予退还，并且代理期间遗留业务按照正常收费标准收费。
+            (五)如甲方中途终止合同（转走或注销），未到期服务费用乙方不予退还，并且代理期间赠送业务按照正常收费标准收费。
           </p>
         </div>
       </div>
@@ -443,7 +406,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             (一)本协议的补充条款、附件及补充协议均为本协议不可分割的部分。本协议补充条款、补充协议与本协议不一致的，以补充条款、补充协议为准。
           </p>
           <p>
-            (二)本协议的未尽事宜及本协议在履行过程中需要变更的事宜，双方应通过订立变更协议进行约定。
+            (二)本协议的未尽事宜及本协议在履行过程中需变更的事宜，双方应通过订立变更协议进行约定。
           </p>
           <p>
             (三)甲乙双方在履行本协议过程中发生争议，应协商解决。协商不能解决的，向仲裁委员会申请仲裁/依法向人民法院起诉。

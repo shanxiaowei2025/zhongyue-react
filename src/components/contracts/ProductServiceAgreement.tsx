@@ -12,7 +12,7 @@ import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberTo
 import './ProductServiceAgreement.css'
 
 // 签署方配置
-const SIGNATORY_CONFIG = {
+export const SIGNATORY_CONFIG = {
   定兴县中岳会计服务有限公司: {
     title: '定兴县中岳会计服务有限公司',
     englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
@@ -1660,7 +1660,7 @@ const ProductServiceAgreement = forwardRef<
           </div>
 
           <div className="obligation-item">
-            <p>6、协议中涉及政府费或第三方服务费，由第三方为甲方开具有效发票。</p>
+            <p>6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。</p>
           </div>
         </div>
 

@@ -4,24 +4,7 @@ import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
 import styles from './SingleServiceAgreementView.module.css'
-
-// 签署方配置
-const SIGNATORY_CONFIG = {
-  保定如你心意企业管理咨询有限公司: {
-    title: '保定如你心意企业管理咨询有限公司',
-    englishTitle: 'Baoding Ru Ni Xin Yi Enterprise Management Consulting Co., Ltd.',
-    address: '河北省保定市定兴县东落堡镇东落堡村264号',
-    phone: '13831247565',
-    footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
-  },
-  定兴县金盾企业管理咨询有限公司: {
-    title: '定兴县金盾企业管理咨询有限公司',
-    englishTitle: 'Dingxing County Golden Shield Enterprise Management Consulting Co., Ltd.',
-    address: '河北省保定市定兴县定兴镇北肖庄村',
-    phone: '13582229111',
-    footer: '定兴县金盾企业管理咨询有限公司Tel: 13582229111',
-  },
-}
+import { SIGNATORY_CONFIG } from './SingleServiceAgreement'
 
 // 章图片映射配置
 const STAMP_IMAGE_MAP = {
@@ -83,17 +66,6 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
       business_material_crystal: '水晶章',
       business_material_kt_board: 'KT板牌子',
       business_material_copper: '铜牌',
-      // 税务项目
-      tax_assessment: '核定税种',
-      tax_filing: '报税',
-      tax_cancellation: '注销',
-      tax_invoice_apply: '申请发票',
-      tax_invoice_issue: '代开发票',
-      tax_change: '税务变更',
-      tax_remove_exception: '解除异常',
-      tax_supplement: '补充申报',
-      tax_software: '记账软件',
-      tax_invoice_software: '开票软件',
       // 银行项目
       bank_general_account: '一般账户设立',
       bank_basic_account: '基本账户设立',
@@ -102,13 +74,6 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
       bank_cancel: '银行账户注销',
       bank_financing: '融资业务（开通平台手续）',
       bank_loan: '贷款服务',
-      // 社保项目
-      social_security_open: '社保开户',
-      social_security_hosting: '社保托管',
-      social_security_cancel: '社保账户注销',
-      fund_open: '公积金开户',
-      fund_hosting: '公积金托管',
-      fund_change: '公积金变更',
       // 许可业务项目
       license_food: '食品经营许可证',
       license_health: '卫生许可证',
@@ -181,18 +146,6 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
         { key: 'business_material_kt_board', label: 'KT板牌子' },
         { key: 'business_material_copper', label: '铜牌' },
       ],
-      taxMatters: [
-        { key: 'tax_assessment', label: '核定税种' },
-        { key: 'tax_filing', label: '报税' },
-        { key: 'tax_cancellation', label: '注销' },
-        { key: 'tax_invoice_apply', label: '申请发票' },
-        { key: 'tax_invoice_issue', label: '代开发票' },
-        { key: 'tax_change', label: '税务变更' },
-        { key: 'tax_remove_exception', label: '解除异常' },
-        { key: 'tax_supplement', label: '补充申报' },
-        { key: 'tax_software', label: '记账软件' },
-        { key: 'tax_invoice_software', label: '开票软件' },
-      ],
       bankMatters: [
         { key: 'bank_general_account', label: '一般账户设立' },
         { key: 'bank_basic_account', label: '基本账户设立' },
@@ -201,14 +154,6 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
         { key: 'bank_cancel', label: '银行账户注销' },
         { key: 'bank_financing', label: '融资业务（开通平台手续）' },
         { key: 'bank_loan', label: '贷款服务' },
-      ],
-      socialSecurity: [
-        { key: 'social_security_open', label: '社保开户' },
-        { key: 'social_security_hosting', label: '社保托管' },
-        { key: 'social_security_cancel', label: '社保账户注销' },
-        { key: 'fund_open', label: '公积金开户' },
-        { key: 'fund_hosting', label: '公积金托管' },
-        { key: 'fund_change', label: '公积金变更' },
       ],
       licenseBusiness: [
         { key: 'license_food', label: '食品经营许可证' },
@@ -534,7 +479,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
               5、乙方对甲方提供的证件和资料负有妥善保管和保密责任，乙方不得将证件和资料提供给与新企业开业登记无关的其他第三者。
             </p>
             <p className={styles.termItem}>
-              6、 协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
+              6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。
             </p>
           </div>
         </div>
@@ -627,7 +572,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             </p>
             <p className={styles.termItem}>
               2、
-              本协议签订的前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
+              本协议签订前各方所发生的委托事宜，甲乙双方在本协议商事服务与法律咨询范围内予以追认。
             </p>
             <p className={styles.termItem}>
               3、
