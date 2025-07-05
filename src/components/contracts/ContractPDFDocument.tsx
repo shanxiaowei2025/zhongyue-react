@@ -28,12 +28,12 @@ Font.registerHyphenationCallback((word: string) => {
   if (/[\u4e00-\u9fff]/.test(word)) {
     return word.split('')
   }
-  
+
   // 对于英文和数字，保持原有的断字逻辑
   if (word.length <= 3) {
     return [word]
   }
-  
+
   // 简单的英文断字处理
   const syllables = []
   let current = ''
@@ -47,7 +47,7 @@ Font.registerHyphenationCallback((word: string) => {
   if (current) {
     syllables.push(current)
   }
-  
+
   return syllables.length > 0 ? syllables : [word]
 })
 
@@ -297,13 +297,41 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 8,
     flexDirection: 'column',
+    width: '100%',
   },
   serviceItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
+    alignItems: 'flex-start',
+    marginBottom: 4,
     marginRight: 10,
-    flexWrap: 'wrap',
+    width: '100%',
+    minHeight: 18,
+    orphans: 2,
+    widows: 2,
+  },
+  serviceItemGroup: {
+    flexDirection: 'column',
+    width: '100%',
+    marginBottom: 6,
+    orphans: 2,
+    widows: 2,
+  },
+  serviceItemRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    minHeight: 18,
+    marginBottom: 2,
+    orphans: 2,
+    widows: 2,
+  },
+  serviceItemColumn: {
+    width: '33.33%',
+    paddingRight: 8,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    minHeight: 18,
   },
   checkboxChecked: {
     width: 10,
@@ -315,6 +343,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     display: 'flex',
+    flexShrink: 0,
   },
   checkboxUnchecked: {
     width: 10,
@@ -323,6 +352,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
     borderWidth: 1,
     borderColor: '#000',
+    flexShrink: 0,
   },
   checkboxCheckmark: {
     fontSize: 8,
@@ -332,8 +362,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   serviceLabel: {
-    fontSize: 9,
+    fontSize: 8,
     flex: 1,
+    lineHeight: 1.2,
+    marginLeft: 4,
   },
   serviceItemEmpty: {
     fontSize: 9,
@@ -494,6 +526,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: '100%',
     flexShrink: 1,
+    orphans: 2,
+    widows: 2,
+  },
+  // 服务项目容器样式
+  serviceContainer: {
+    flexDirection: 'column',
+    width: '100%',
+    marginBottom: 10,
     orphans: 2,
     widows: 2,
   },
@@ -683,7 +723,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       {} as Record<string, any>
     )
 
-    // 将选项分成多行，每行最多3个项目，确保不被分页分割且避免重叠
+    // 将选项分成多行，每行最多3个项目
     const itemsPerRow = 3
     const rows: Array<Array<{ key: string; label: string }>> = []
     for (let i = 0; i < categoryOptions.length; i += itemsPerRow) {
@@ -691,45 +731,70 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     }
 
     return (
-      <View style={{ marginBottom: 6 }}>
+      <View
+        style={{
+          marginBottom: 6,
+          width: '100%',
+          flexDirection: 'column',
+        }}
+      >
         {rows.map((row, rowIndex) => (
-          <View 
-            key={rowIndex} 
-            style={{ 
-              flexDirection: 'row', 
-              marginBottom: 1, 
+          <View
+            key={rowIndex}
+            style={{
               width: '100%',
-              minHeight: 16, // 增加最小高度确保足够空间
-              paddingVertical: 1, // 添加垂直内边距
-            }} 
+              marginBottom: 2,
+              flexDirection: 'row',
+              justifyContent: 'flex-start',
+              alignItems: 'flex-start',
+              minHeight: 18,
+            }}
+            wrap={false}
           >
-            {row.map((option) => {
+            {row.map((option, colIndex) => {
               const isSelected = selectedItemsMap.hasOwnProperty(option.key)
               const item = selectedItemsMap[option.key]
 
               return (
-                <View 
-                  key={option.key} 
-                  style={{ 
-                    flexDirection: 'row', 
-                    alignItems: 'center', 
-                    marginRight: 8, 
-                    width: '30%',
-                    minHeight: 16, // 增加选项的最小高度
-                    paddingVertical: 1, // 添加垂直内边距
+                <View
+                  key={option.key}
+                  style={{
+                    width: '33.33%',
+                    paddingRight: 8,
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    minHeight: 18,
                   }}
-                  wrap={false} // 每个选项作为不可分割的整体
                 >
-                  <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
+                  <View
+                    style={{
+                      ...styles.checkboxChecked,
+                      ...(isSelected ? {} : styles.checkboxUnchecked),
+                      marginTop: 1,
+                      flexShrink: 0,
+                    }}
+                  >
                     {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
                   </View>
-                  <Text style={{ fontSize: 8, marginLeft: 3, flex: 1, lineHeight: 1.3 }}>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      marginLeft: 4,
+                      lineHeight: 1.2,
+                      flex: 1,
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     {option.label}
                     {isSelected && item && item.amount ? `（${item.amount}元）` : ''}
                   </Text>
                 </View>
               )
             })}
+            {/* 填充空白列，确保对齐 */}
+            {Array.from({ length: itemsPerRow - row.length }, (_, i) => (
+              <View key={`empty-${i}`} style={{ width: '33.33%' }} />
+            ))}
           </View>
         ))}
       </View>
@@ -739,20 +804,21 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
   // 渲染申报服务选项（两列显示）
   const renderDeclarationServices = () => {
     // 构建选中服务的映射，支持多种数据结构
-    const selectedServiceMap = (contractData.declarationService && Array.isArray(contractData.declarationService))
-      ? contractData.declarationService.reduce(
-          (acc, service) => {
-            // 处理不同的数据结构
-            if (typeof service === 'string') {
-              acc[service] = true
-            } else if (service && typeof service === 'object' && service.value) {
-              acc[service.value] = true
-            }
-            return acc
-          },
-          {} as Record<string, boolean>
-        )
-      : {} as Record<string, boolean>
+    const selectedServiceMap =
+      contractData.declarationService && Array.isArray(contractData.declarationService)
+        ? contractData.declarationService.reduce(
+            (acc, service) => {
+              // 处理不同的数据结构
+              if (typeof service === 'string') {
+                acc[service] = true
+              } else if (service && typeof service === 'object' && service.value) {
+                acc[service.value] = true
+              }
+              return acc
+            },
+            {} as Record<string, boolean>
+          )
+        : ({} as Record<string, boolean>)
 
     // 计算每列的项目数量（向上取整，确保第一列不会比第二列少太多）
     const itemsPerColumn = Math.ceil(DECLARATION_SERVICE_OPTIONS.length / 2)
@@ -760,55 +826,115 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     const rightColumnItems = DECLARATION_SERVICE_OPTIONS.slice(itemsPerColumn)
 
     return (
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
-        {/* 左列 */}
-        <View style={{ width: '48%' }}>
-          {leftColumnItems.map((option, index) => {
-          const isSelected = selectedServiceMap.hasOwnProperty(option.value)
-          return (
-              <View 
-                key={index} 
-                style={{ 
-                  flexDirection: 'row', 
-                  alignItems: 'center', 
-                  marginBottom: 1,
-                  minHeight: 16, // 增加最小高度确保足够空间
-                  paddingVertical: 1, // 添加垂直内边距
-                }}
-                wrap={false} // 每个选项作为不可分割的整体
-              >
-              <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
-                {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
-              </View>
-                <Text style={{ fontSize: 8, marginLeft: 3, flex: 1, lineHeight: 1.3 }}>{option.label}</Text>
-            </View>
-          )
-        })}
-        </View>
-        
-        {/* 右列 */}
-        <View style={{ width: '48%' }}>
-          {rightColumnItems.map((option, index) => {
-            const isSelected = selectedServiceMap.hasOwnProperty(option.value)
-            return (
-              <View 
-                key={index} 
-                style={{ 
-                  flexDirection: 'row', 
-                  alignItems: 'center', 
-                  marginBottom: 1,
-                  minHeight: 16, // 增加最小高度确保足够空间
-                  paddingVertical: 1, // 添加垂直内边距
-                }}
-                wrap={false} // 每个选项作为不可分割的整体
-              >
-                <View style={isSelected ? styles.checkboxChecked : styles.checkboxUnchecked}>
-                  {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
+      <View
+        style={{
+          marginBottom: 10,
+          width: '100%',
+          flexDirection: 'column',
+        }}
+      >
+        {/* 使用表格化布局替代两列flex布局 */}
+        <View
+          style={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
+          {/* 左列 */}
+          <View
+            style={{
+              width: '48%',
+              flexDirection: 'column',
+            }}
+          >
+            {leftColumnItems.map((option, index) => {
+              const isSelected = selectedServiceMap.hasOwnProperty(option.value)
+              return (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    marginBottom: 2,
+                    minHeight: 18,
+                    width: '100%',
+                  }}
+                  wrap={false}
+                >
+                  <View
+                    style={{
+                      ...styles.checkboxChecked,
+                      ...(isSelected ? {} : styles.checkboxUnchecked),
+                      marginTop: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      marginLeft: 4,
+                      flex: 1,
+                      lineHeight: 1.2,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    {option.label}
+                  </Text>
                 </View>
-                <Text style={{ fontSize: 8, marginLeft: 3, flex: 1, lineHeight: 1.3 }}>{option.label}</Text>
-              </View>
-            )
-          })}
+              )
+            })}
+          </View>
+
+          {/* 右列 */}
+          <View
+            style={{
+              width: '48%',
+              flexDirection: 'column',
+            }}
+          >
+            {rightColumnItems.map((option, index) => {
+              const isSelected = selectedServiceMap.hasOwnProperty(option.value)
+              return (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    marginBottom: 2,
+                    minHeight: 18,
+                    width: '100%',
+                  }}
+                  wrap={false}
+                >
+                  <View
+                    style={{
+                      ...styles.checkboxChecked,
+                      ...(isSelected ? {} : styles.checkboxUnchecked),
+                      marginTop: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      marginLeft: 4,
+                      flex: 1,
+                      lineHeight: 1.2,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    {option.label}
+                  </Text>
+                </View>
+              )
+            })}
+          </View>
         </View>
       </View>
     )
@@ -835,7 +961,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 合同双方信息 */}
-              <View style={styles.agreementParties}>
+      <View style={styles.agreementParties}>
         <View style={styles.partySection}>
           <Text style={styles.partyLabel}>甲方：</Text>
           <View style={styles.partyContent}>
@@ -881,7 +1007,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>统一社会信用代码：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyBCreditCode}>{'creditCode' in config ? (config as any).creditCode || '' : ''}</Text>
+            <Text style={styles.partyBCreditCode}>
+              {'creditCode' in config ? (config as any).creditCode || '' : ''}
+            </Text>
           </View>
         </View>
 
@@ -913,7 +1041,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </Text>
 
       {/* 一、委托业务范围 */}
-      <View style={styles.agreementSection} break={false}>
+      <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>一、委托业务范围</Text>
         <View style={styles.sectionContent}>
           <View style={styles.entrustmentPeriod}>
@@ -946,7 +1074,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 二、甲方的责任和义务 */}
-      <View style={styles.agreementSection} break={false}>
+      <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>二、甲方的责任和义务</Text>
         <View style={[styles.sectionContent, styles.partyAObligations]}>
           <Text style={styles.paragraph}>
@@ -993,7 +1121,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 三、乙方的责任和义务 */}
-      <View style={styles.agreementSection} break={false}>
+      <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>三、乙方的责任和义务</Text>
         <View style={[styles.sectionContent, styles.partyBObligations]}>
           <Text style={styles.paragraph}>
@@ -1030,7 +1158,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 四、责任划分 */}
-      <View style={styles.agreementSection} break={false}>
+      <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>四、责任划分</Text>
         <View style={[styles.sectionContent, styles.responsibilityDivision]}>
           <Text style={styles.paragraph}>
@@ -1043,7 +1171,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 五、协议的终止 */}
-      <View style={styles.agreementSection} break={false}>
+      <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>五、协议的终止</Text>
         <View style={[styles.sectionContent, styles.agreementTermination]}>
           <Text style={styles.paragraph}>
@@ -1266,7 +1394,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 页脚 */}
-      <Text style={styles.footer} fixed>{config.footer}</Text>
+      <Text style={styles.footer} fixed>
+        {config.footer}
+      </Text>
     </Page>
   )
 
@@ -1282,15 +1412,15 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <View style={isMaixinProductService ? styles.companyInfoNoLogo : styles.companyInfo}>
             <Text style={styles.companyName}>
               {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ||
-              contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司' ? (
-                `定兴县中岳会计服务有限公司\n${contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? '河北雄安分公司' : '高碑店分公司'}`
-              ) : (
-                config.title
-              )}
+              contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司'
+                ? `定兴县中岳会计服务有限公司\n${contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? '河北雄安分公司' : '高碑店分公司'}`
+                : config.title}
             </Text>
             {config.englishTitle && <Text style={styles.companyNameEn}>{config.englishTitle}</Text>}
             <Text style={styles.contactInfo}>咨询电话：{config.phone}</Text>
-            {config.englishTitle && <Text style={styles.companyRegistration}>Company Registration</Text>}
+            {config.englishTitle && (
+              <Text style={styles.companyRegistration}>Company Registration</Text>
+            )}
           </View>
         </View>
       </View>
@@ -1348,14 +1478,14 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       {/* 委托服务项目及费用 */}
       <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>（一）委托服务项目及费用：</Text>
-        
+
         {/* 工商服务 */}
         <View style={styles.sectionContent}>
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>1、工商：</Text>
-          
+
           {/* 设立 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>①设立：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>①设立：</Text>
             {renderPDFServiceItems(contractData.businessEstablishment || [], 'business_establish')}
             {contractData.businessEstablishmentAddress && (
               <Text style={[styles.paragraph, { marginTop: 4 }]}>
@@ -1365,77 +1495,96 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           </View>
 
           {/* 变更 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>②变更：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>②变更：</Text>
             {renderPDFServiceItems(contractData.businessChange || [], 'business_change')}
           </View>
 
           {/* 注销 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>③注销：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>③注销：</Text>
             {renderPDFServiceItems(contractData.businessCancellation || [], 'business_cancel')}
           </View>
 
           {/* 其他 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>④其他：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>④其他：</Text>
             {renderPDFServiceItems(contractData.businessOther || [], 'business_other')}
           </View>
 
           {/* 物料 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>⑤物料：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>⑤物料：</Text>
             {renderPDFServiceItems(contractData.businessMaterials || [], 'business_material')}
           </View>
 
           <Text style={styles.paragraph}>
-            备注：{contractData.businessRemark || '-'}，服务费用：{formatCurrency(contractData.businessServiceFee)}元。
+            备注：{contractData.businessRemark || '-'}，服务费用：
+            {formatCurrency(contractData.businessServiceFee)}元。
           </Text>
         </View>
 
         {/* 税务服务 */}
         <View style={styles.sectionContent}>
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>2、税务：</Text>
-          {renderPDFServiceItems(contractData.taxMatters || [], 'tax')}
+          <View style={styles.serviceItemGroup}>
+            {renderPDFServiceItems(contractData.taxMatters || [], 'tax')}
+          </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.taxRemark || '-'}，服务费用：{formatCurrency(contractData.taxServiceFee)}元。
+            备注：{contractData.taxRemark || '-'}，服务费用：
+            {formatCurrency(contractData.taxServiceFee)}元。
           </Text>
         </View>
 
         {/* 银行服务 */}
         <View style={styles.sectionContent}>
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>3、银行：</Text>
-          {renderPDFServiceItems(contractData.bankMatters || [], 'bank')}
+          <View style={styles.serviceItemGroup}>
+            {renderPDFServiceItems(contractData.bankMatters || [], 'bank')}
+          </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.bankRemark || '-'}，服务费用：{formatCurrency(contractData.bankServiceFee)}元。
+            备注：{contractData.bankRemark || '-'}，服务费用：
+            {formatCurrency(contractData.bankServiceFee)}元。
           </Text>
         </View>
 
         {/* 社保服务 */}
         <View style={styles.sectionContent}>
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>4、社保：</Text>
-          {renderPDFServiceItems(contractData.socialSecurity || [], 'social')}
+          <View style={styles.serviceItemGroup}>
+            {renderPDFServiceItems(contractData.socialSecurity || [], 'social')}
+          </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.socialSecurityRemark || '-'}，服务费用：{formatCurrency(contractData.socialSecurityServiceFee)}元。
+            备注：{contractData.socialSecurityRemark || '-'}，服务费用：
+            {formatCurrency(contractData.socialSecurityServiceFee)}元。
           </Text>
         </View>
 
         {/* 许可业务 */}
         <View style={styles.sectionContent}>
-          <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>5、许可业务：</Text>
-          {renderPDFServiceItems(contractData.licenseBusiness || [], 'license')}
+          <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>
+            5、许可业务：
+          </Text>
+          <View style={styles.serviceItemGroup}>
+            {renderPDFServiceItems(contractData.licenseBusiness || [], 'license')}
+          </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.licenseRemark || '-'}，服务费用：{formatCurrency(contractData.licenseServiceFee)}元。
+            备注：{contractData.licenseRemark || '-'}，服务费用：
+            {formatCurrency(contractData.licenseServiceFee)}元。
           </Text>
         </View>
 
         {/* 费用总计 */}
         <View style={{ marginTop: 15, marginBottom: 15 }}>
-          <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
+          <Text
+            style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
+          >
             费用总计（人民币）：{formatCurrency(contractData.totalCost)}元&nbsp;&nbsp;
             大写金额（人民币）：{numberToChinese(contractData.totalCost || 0)}。
           </Text>
-          <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
+          <Text
+            style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
+          >
             备注：{contractData.otherRemark || '-'}
           </Text>
         </View>
@@ -1716,14 +1865,14 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       {/* 委托服务项目及费用 */}
       <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>（一）委托服务项目及费用：</Text>
-        
+
         {/* 工商服务 */}
         <View style={styles.sectionContent}>
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>1、工商：</Text>
-          
+
           {/* 设立 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>①设立：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>①设立：</Text>
             {renderPDFServiceItems(contractData.businessEstablishment || [], 'business_establish')}
           </View>
 
@@ -1734,31 +1883,32 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           )}
 
           {/* 变更 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>②变更：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>②变更：</Text>
             {renderPDFServiceItems(contractData.businessChange || [], 'business_change')}
           </View>
 
           {/* 注销 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>③注销：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>③注销：</Text>
             {renderPDFServiceItems(contractData.businessCancellation || [], 'business_cancel')}
           </View>
 
           {/* 其他 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>④其他：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>④其他：</Text>
             {renderPDFServiceItems(contractData.businessOther || [], 'business_other')}
           </View>
 
           {/* 物料 */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontSize: 9, marginBottom: 4 }}>⑤物料：</Text>
+          <View style={styles.serviceItemGroup}>
+            <Text style={{ fontSize: 9, marginBottom: 4, fontWeight: 'bold' }}>⑤物料：</Text>
             {renderPDFServiceItems(contractData.businessMaterials || [], 'business_material')}
           </View>
 
           <Text style={styles.paragraph}>
-            备注：{contractData.businessRemark || '-'}，服务费用：{contractData.businessServiceFee ? `${contractData.businessServiceFee}元` : '-'}
+            备注：{contractData.businessRemark || '-'}，服务费用：
+            {contractData.businessServiceFee ? `${contractData.businessServiceFee}元` : '-'}
           </Text>
         </View>
 
@@ -1767,34 +1917,46 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>2、银行：</Text>
           {renderPDFServiceItems(contractData.bankMatters || [], 'bank')}
           <Text style={styles.paragraph}>
-            备注：{contractData.bankRemark || '-'}，服务费用：{contractData.bankServiceFee ? `${contractData.bankServiceFee}元` : '-'}
+            备注：{contractData.bankRemark || '-'}，服务费用：
+            {contractData.bankServiceFee ? `${contractData.bankServiceFee}元` : '-'}
           </Text>
         </View>
 
         {/* 许可业务 */}
         <View style={styles.sectionContent} break={false}>
-          <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>3、许可业务：</Text>
+          <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>
+            3、许可业务：
+          </Text>
           {renderPDFServiceItems(contractData.licenseBusiness || [], 'license')}
           <Text style={styles.paragraph}>
-            备注：{contractData.licenseRemark || '-'}，服务费用：{contractData.licenseServiceFee ? `${contractData.licenseServiceFee}元` : '-'}
+            备注：{contractData.licenseRemark || '-'}，服务费用：
+            {contractData.licenseServiceFee ? `${contractData.licenseServiceFee}元` : '-'}
           </Text>
         </View>
 
         {/* 其他服务事项 */}
         <View style={styles.sectionContent}>
-          <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>4、其他服务事项：</Text>
+          <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>
+            4、其他服务事项：
+          </Text>
           <Text style={styles.paragraph}>
-            备注：{contractData.otherRemark || '-'}，服务费用：{contractData.otherServiceFee ? `${contractData.otherServiceFee}元` : '-'}
+            备注：{contractData.otherRemark || '-'}，服务费用：
+            {contractData.otherServiceFee ? `${contractData.otherServiceFee}元` : '-'}
           </Text>
         </View>
 
         {/* 费用总计 */}
         <View style={{ marginTop: 15, marginBottom: 15 }}>
-          <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
-            费用总计（人民币）：{contractData.totalCost ? `${contractData.totalCost}元` : '-'}&nbsp;&nbsp;
-            大写金额（人民币）：{contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
+          <Text
+            style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
+          >
+            费用总计（人民币）：{contractData.totalCost ? `${contractData.totalCost}元` : '-'}
+            &nbsp;&nbsp; 大写金额（人民币）：
+            {contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
           </Text>
-          <Text style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
+          <Text
+            style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
+          >
             备注：{contractData.remarks || '-'}
           </Text>
         </View>
@@ -1804,7 +1966,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       <View style={styles.agreementSection}>
         <Text style={styles.sectionTitle}>（二）付款方式</Text>
         <Text style={styles.paragraph}>
-          请务必及时将详细的付款信息及公司名称、服务协议编号提供于我司，以便我司及时查收款项。本合同签订后，超过 3 个工作日未支付本合同自动失效。
+          请务必及时将详细的付款信息及公司名称、服务协议编号提供于我司，以便我司及时查收款项。本合同签订后，超过
+          3 个工作日未支付本合同自动失效。
         </Text>
       </View>
 
@@ -2004,7 +2167,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
       </View>
 
       {/* 页脚 */}
-      <Text style={styles.footer} fixed>{config.footer}</Text>
+      <Text style={styles.footer} fixed>
+        {config.footer}
+      </Text>
     </Page>
   )
 
@@ -2012,4 +2177,3 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
 }
 
 export default ContractPDFDocument
- 
