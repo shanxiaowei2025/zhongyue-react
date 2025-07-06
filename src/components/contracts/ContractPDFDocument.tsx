@@ -2,6 +2,7 @@ import React from 'react'
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
+import { formatFeeAmount as formatFeeAmountUtil } from '../../utils/formatUtils'
 import { SIGNATORY_CONFIG as AGENCY_SIGNATORY_CONFIG } from './AgencyAccountingAgreement'
 import { SIGNATORY_CONFIG as PRODUCT_SIGNATORY_CONFIG } from './ProductServiceAgreement'
 import { SIGNATORY_CONFIG as SINGLE_SIGNATORY_CONFIG } from './SingleServiceAgreement'
@@ -570,19 +571,38 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     )
   }
 
+  // 通用空值处理函数
+  const formatEmptyValue = (value?: any) => {
+    if (value === undefined || value === null || value === '' || value === 0) {
+      return '/'
+    }
+    return value
+  }
+
   // 格式化日期
   const formatDate = (dateString?: string | Date) => {
-    if (!dateString) return '-'
+    if (!dateString) return '/'
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString
     return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`
   }
 
   // 金额格式化
   const formatCurrency = (amount?: number | string | null) => {
-    if (amount === undefined || amount === null || amount === '') return '0.00'
+    if (amount === undefined || amount === null || amount === '' || amount === 0) return '/'
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
-    if (isNaN(numAmount) || !isFinite(numAmount)) return '0.00'
+    if (isNaN(numAmount) || !isFinite(numAmount)) return '/'
     return numAmount.toFixed(2)
+  }
+
+  // PDF专用的费用格式化函数
+  const formatFeeAmount = (amount?: number | string | null) => {
+    return formatFeeAmountUtil(amount)
+  }
+
+  // 文本字段格式化
+  const formatText = (text?: string | null) => {
+    if (!text || text.trim() === '') return '/'
+    return text.trim()
   }
 
   // 获取乙方盖章图片
@@ -965,35 +985,35 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <View style={styles.partySection}>
           <Text style={styles.partyLabel}>甲方：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyACompany || '-'}</Text>
+            <Text style={styles.partyValue}>{formatText(contractData.partyACompany)}</Text>
           </View>
         </View>
 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>统一社会信用代码：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyACreditCode || '-'}</Text>
+            <Text style={styles.partyValue}>{formatText(contractData.partyACreditCode)}</Text>
           </View>
         </View>
 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>地址：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyAAddress || '-'}</Text>
+            <Text style={styles.partyValue}>{formatText(contractData.partyAAddress)}</Text>
           </View>
         </View>
 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>电话：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyAPhone || '-'}</Text>
+            <Text style={styles.partyValue}>{formatText(contractData.partyAPhone)}</Text>
           </View>
         </View>
 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>联系人：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyAContact || '-'}</Text>
+            <Text style={styles.partyValue}>{formatText(contractData.partyAContact)}</Text>
           </View>
         </View>
 
@@ -1016,21 +1036,25 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>地址：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyBAddress || config.address}</Text>
+            <Text style={styles.partyValue}>
+              {contractData.partyBAddress ? formatText(contractData.partyBAddress) : config.address}
+            </Text>
           </View>
         </View>
 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>电话：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyBPhone || config.phone}</Text>
+            <Text style={styles.partyValue}>
+              {contractData.partyBPhone ? formatText(contractData.partyBPhone) : config.phone}
+            </Text>
           </View>
         </View>
 
         <View style={styles.partyField}>
           <Text style={styles.partyLabel}>业务人：</Text>
           <View style={styles.partyContent}>
-            <Text style={styles.partyValue}>{contractData.partyBContact || '-'}</Text>
+            <Text style={styles.partyValue}>{formatText(contractData.partyBContact)}</Text>
           </View>
         </View>
       </View>
@@ -1067,7 +1091,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             {renderDeclarationServices()}
             <View style={styles.otherBusiness}>
               <Text style={styles.otherBusinessLabel}>其他业务：</Text>
-              <Text style={styles.otherBusinessValue}>{contractData.otherBusiness || '-'}</Text>
+              <Text style={styles.otherBusinessValue}>
+                {formatText(contractData.otherBusiness)}
+              </Text>
             </View>
           </View>
         </View>
@@ -1188,28 +1214,30 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <Text style={styles.paragraph}>
             经协商，乙方代理记账收费标准为：人民币每年
             <Text style={styles.feeValue}>
-              {formatCurrency(contractData.totalAgencyAccountingFee)}
+              {formatFeeAmount(contractData.totalAgencyAccountingFee)}
             </Text>
             元（代理记账费
-            <Text style={styles.feeValue}>{formatCurrency(contractData.agencyAccountingFee)}</Text>
+            <Text style={styles.feeValue}>{formatFeeAmount(contractData.agencyAccountingFee)}</Text>
             /年，记账软件服务费
             <Text style={styles.feeValue}>
-              {formatCurrency(contractData.accountingSoftwareFee)}
+              {formatFeeAmount(contractData.accountingSoftwareFee)}
             </Text>
             /年，开票软件服务费
-            <Text style={styles.feeValue}>{formatCurrency(contractData.invoicingSoftwareFee)}</Text>
+            <Text style={styles.feeValue}>
+              {formatFeeAmount(contractData.invoicingSoftwareFee)}
+            </Text>
             /年），甲方按年度提前30日支付，不足一个月的按一个月计算。如甲方业务量增加，乙方根据甲方业务增量调整增加代理费用。
           </Text>
 
           <Text style={styles.paragraph}>
             全年凭证、账簿费用为
-            <Text style={styles.feeValue}>{formatCurrency(contractData.accountBookFee)}</Text>
+            <Text style={styles.feeValue}>{formatFeeAmount(contractData.accountBookFee)}</Text>
             元。其中包括凭证、账簿、差旅费报销单、费用粘贴单、工资表、财务报表、纳税申报表等。（以上费用以实际到账执行）
           </Text>
 
           <Text style={styles.paragraph}>
             人民币本次收费总金额
-            <Text style={styles.feeValue}>{formatCurrency(contractData.currentChargeFee)}</Text>
+            <Text style={styles.feeValue}>{formatFeeAmount(contractData.currentChargeFee)}</Text>
             元。
           </Text>
 
@@ -1300,7 +1328,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>法定代表人：</Text>
-                <Text>{contractData.partyALegalPerson || '-'}</Text>
+                <Text>{formatText(contractData.partyALegalPerson)}</Text>
               </View>
             </View>
             <View style={styles.signatureInfoColumn}>
@@ -1316,13 +1344,13 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>联系人：</Text>
-                <Text>{contractData.partyAContact || '-'}</Text>
+                <Text>{formatText(contractData.partyAContact)}</Text>
               </View>
             </View>
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>联系人：</Text>
-                <Text>{contractData.partyBContact || '-'}</Text>
+                <Text>{formatText(contractData.partyBContact)}</Text>
               </View>
             </View>
           </View>
@@ -1332,13 +1360,17 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>地址：</Text>
-                <Text>{contractData.partyAAddress || '-'}</Text>
+                <Text>{formatText(contractData.partyAAddress)}</Text>
               </View>
             </View>
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>地址：</Text>
-                <Text>{contractData.partyBAddress || config.address}</Text>
+                <Text>
+                  {contractData.partyBAddress
+                    ? formatText(contractData.partyBAddress)
+                    : config.address}
+                </Text>
               </View>
             </View>
           </View>
@@ -1348,13 +1380,13 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>邮编：</Text>
-                <Text>{contractData.partyAPostalCode || '-'}</Text>
+                <Text>{formatText(contractData.partyAPostalCode)}</Text>
               </View>
             </View>
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>邮编：</Text>
-                <Text>{contractData.partyBPostalCode || '-'}</Text>
+                <Text>{formatText(contractData.partyBPostalCode)}</Text>
               </View>
             </View>
           </View>
@@ -1364,13 +1396,15 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>电话：</Text>
-                <Text>{contractData.partyAPhone || '-'}</Text>
+                <Text>{formatText(contractData.partyAPhone)}</Text>
               </View>
             </View>
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>电话：</Text>
-                <Text>{contractData.partyBPhone || config.phone}</Text>
+                <Text>
+                  {contractData.partyBPhone ? formatText(contractData.partyBPhone) : config.phone}
+                </Text>
               </View>
             </View>
           </View>
@@ -1436,19 +1470,19 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <View style={styles.partyBlock}>
           <View style={styles.partyHeader}>
             <Text style={styles.partyLabel}>【委托方】（甲方）：</Text>
-            <Text style={styles.partyCompanyName}>{contractData.partyACompany || '-'}</Text>
+            <Text style={styles.partyCompanyName}>{formatText(contractData.partyACompany)}</Text>
           </View>
 
           <View style={styles.partyDetails}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>通讯地址：</Text>
-              <Text style={styles.detailValue}>{contractData.partyAAddress || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyAAddress)}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>联系人：</Text>
-              <Text style={styles.detailValue}>{contractData.partyAContact || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyAContact)}</Text>
               <Text style={styles.detailLabel}>联系电话：</Text>
-              <Text style={styles.detailValue}>{contractData.partyAPhone || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyAPhone)}</Text>
             </View>
           </View>
         </View>
@@ -1467,9 +1501,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>联系人：</Text>
-              <Text style={styles.detailValue}>{contractData.partyBContact || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyBContact)}</Text>
               <Text style={styles.detailLabel}>联系电话：</Text>
-              <Text style={styles.detailValue}>{contractData.partyBPhone || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyBPhone)}</Text>
             </View>
           </View>
         </View>
@@ -1519,8 +1553,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           </View>
 
           <Text style={styles.paragraph}>
-            备注：{contractData.businessRemark || '-'}，服务费用：
-            {formatCurrency(contractData.businessServiceFee)}元。
+            备注：{formatText(contractData.businessRemark)}，服务费用：
+            {formatFeeAmount(contractData.businessServiceFee)}元。
           </Text>
         </View>
 
@@ -1531,8 +1565,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             {renderPDFServiceItems(contractData.taxMatters || [], 'tax')}
           </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.taxRemark || '-'}，服务费用：
-            {formatCurrency(contractData.taxServiceFee)}元。
+            备注：{formatText(contractData.taxRemark)}，服务费用：
+            {formatFeeAmount(contractData.taxServiceFee)}元。
           </Text>
         </View>
 
@@ -1543,8 +1577,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             {renderPDFServiceItems(contractData.bankMatters || [], 'bank')}
           </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.bankRemark || '-'}，服务费用：
-            {formatCurrency(contractData.bankServiceFee)}元。
+            备注：{formatText(contractData.bankRemark)}，服务费用：
+            {formatFeeAmount(contractData.bankServiceFee)}元。
           </Text>
         </View>
 
@@ -1555,8 +1589,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             {renderPDFServiceItems(contractData.socialSecurity || [], 'social')}
           </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.socialSecurityRemark || '-'}，服务费用：
-            {formatCurrency(contractData.socialSecurityServiceFee)}元。
+            备注：{formatText(contractData.socialSecurityRemark)}，服务费用：
+            {formatFeeAmount(contractData.socialSecurityServiceFee)}元。
           </Text>
         </View>
 
@@ -1569,8 +1603,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             {renderPDFServiceItems(contractData.licenseBusiness || [], 'license')}
           </View>
           <Text style={styles.paragraph}>
-            备注：{contractData.licenseRemark || '-'}，服务费用：
-            {formatCurrency(contractData.licenseServiceFee)}元。
+            备注：{formatText(contractData.licenseRemark)}，服务费用：
+            {formatFeeAmount(contractData.licenseServiceFee)}元。
           </Text>
         </View>
 
@@ -1579,13 +1613,14 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <Text
             style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
           >
-            费用总计（人民币）：{formatCurrency(contractData.totalCost)}元&nbsp;&nbsp;
-            大写金额（人民币）：{numberToChinese(contractData.totalCost || 0)}。
+            费用总计（人民币）：{formatFeeAmount(contractData.totalCost)}元&nbsp;&nbsp;
+            大写金额（人民币）：
+            {numberToChinese(parseFloat(formatFeeAmount(contractData.totalCost)))}。
           </Text>
           <Text
             style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
           >
-            备注：{contractData.otherRemark || '-'}
+            备注：{formatText(contractData.otherRemark)}
           </Text>
         </View>
       </View>
@@ -1823,19 +1858,19 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
         <View style={styles.partyBlock}>
           <View style={styles.partyHeader}>
             <Text style={styles.partyLabel}>【委托方】（甲方）：</Text>
-            <Text style={styles.partyCompanyName}>{contractData.partyACompany || '-'}</Text>
+            <Text style={styles.partyCompanyName}>{formatText(contractData.partyACompany)}</Text>
           </View>
 
           <View style={styles.partyDetails}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>通讯地址：</Text>
-              <Text style={styles.detailValue}>{contractData.partyAAddress || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyAAddress)}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>联系人：</Text>
-              <Text style={styles.detailValue}>{contractData.partyAContact || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyAContact)}</Text>
               <Text style={[styles.detailLabel, { marginLeft: 20 }]}>联系电话：</Text>
-              <Text style={styles.detailValue}>{contractData.partyAPhone || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyAPhone)}</Text>
             </View>
           </View>
         </View>
@@ -1854,9 +1889,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>联系人：</Text>
-              <Text style={styles.detailValue}>{contractData.partyBContact || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyBContact)}</Text>
               <Text style={[styles.detailLabel, { marginLeft: 20 }]}>联系电话：</Text>
-              <Text style={styles.detailValue}>{contractData.partyBPhone || '-'}</Text>
+              <Text style={styles.detailValue}>{formatText(contractData.partyBPhone)}</Text>
             </View>
           </View>
         </View>
@@ -1907,8 +1942,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           </View>
 
           <Text style={styles.paragraph}>
-            备注：{contractData.businessRemark || '-'}，服务费用：
-            {contractData.businessServiceFee ? `${contractData.businessServiceFee}元` : '-'}
+            备注：{formatText(contractData.businessRemark)}，服务费用：
+            {formatFeeAmount(contractData.businessServiceFee)}元
           </Text>
         </View>
 
@@ -1917,8 +1952,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <Text style={[styles.sectionTitle, { fontSize: 10, marginBottom: 5 }]}>2、银行：</Text>
           {renderPDFServiceItems(contractData.bankMatters || [], 'bank')}
           <Text style={styles.paragraph}>
-            备注：{contractData.bankRemark || '-'}，服务费用：
-            {contractData.bankServiceFee ? `${contractData.bankServiceFee}元` : '-'}
+            备注：{formatText(contractData.bankRemark)}，服务费用：
+            {formatFeeAmount(contractData.bankServiceFee)}元
           </Text>
         </View>
 
@@ -1929,8 +1964,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           </Text>
           {renderPDFServiceItems(contractData.licenseBusiness || [], 'license')}
           <Text style={styles.paragraph}>
-            备注：{contractData.licenseRemark || '-'}，服务费用：
-            {contractData.licenseServiceFee ? `${contractData.licenseServiceFee}元` : '-'}
+            备注：{formatText(contractData.licenseRemark)}，服务费用：
+            {formatFeeAmount(contractData.licenseServiceFee)}元
           </Text>
         </View>
 
@@ -1940,8 +1975,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             4、其他服务事项：
           </Text>
           <Text style={styles.paragraph}>
-            备注：{contractData.otherRemark || '-'}，服务费用：
-            {contractData.otherServiceFee ? `${contractData.otherServiceFee}元` : '-'}
+            备注：{formatText(contractData.otherRemark)}，服务费用：
+            {formatFeeAmount(contractData.otherServiceFee)}元
           </Text>
         </View>
 
@@ -1950,14 +1985,14 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <Text
             style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
           >
-            费用总计（人民币）：{contractData.totalCost ? `${contractData.totalCost}元` : '-'}
-            &nbsp;&nbsp; 大写金额（人民币）：
-            {contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
+            费用总计（人民币）：{formatFeeAmount(contractData.totalCost)}元&nbsp;&nbsp;
+            大写金额（人民币）：
+            {numberToChinese(parseFloat(formatFeeAmount(contractData.totalCost)))}。
           </Text>
           <Text
             style={[styles.paragraph, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}
           >
-            备注：{contractData.remarks || '-'}
+            备注：{formatText(contractData.remarks)}
           </Text>
         </View>
       </View>

@@ -2,6 +2,7 @@ import React from 'react'
 import { Tag, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { numberToChinese } from '../../utils/numberToChinese'
+import { formatText, formatAgencyFee, formatDate } from '../../utils/formatUtils'
 import type { Contract, ContractStatus } from '../../types/contract'
 import styles from './AgencyAccountingAgreementView.module.css'
 import { SIGNATORY_CONFIG } from './AgencyAccountingAgreement'
@@ -81,20 +82,6 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
     }
   }
 
-  // 金额格式化 - 保留两位小数
-  const formatCurrency = (amount?: number | string | null) => {
-    // 处理空值情况
-    if (amount === undefined || amount === null || amount === '') return '0.00'
-
-    // 转换为数字类型
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
-
-    // 检查是否为有效数字
-    if (isNaN(numAmount) || !isFinite(numAmount)) return '0.00'
-
-    return numAmount.toFixed(2)
-  }
-
   // 计算大写金额
   const totalFeeInWords = React.useMemo(() => {
     if (!totalAgencyAccountingFee) return ''
@@ -161,35 +148,35 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         <div className={styles.partySection}>
           <div className={styles.partyLabel}>甲方：</div>
           <div className={styles.partyContent}>
-            <div className={styles.partyValue}>{partyACompany || '-'}</div>
+            <div className={styles.partyValue}>{formatText(partyACompany)}</div>
           </div>
         </div>
 
         <div className={styles.partyField}>
           <div className={styles.partyLabel}>统一社会信用代码：</div>
           <div className={styles.partyContent}>
-            <div className={styles.partyValue}>{partyACreditCode || '-'}</div>
+            <div className={styles.partyValue}>{formatText(partyACreditCode)}</div>
           </div>
         </div>
 
         <div className={styles.partyField}>
           <div className={styles.partyLabel}>地址：</div>
           <div className={styles.partyContent}>
-            <div className={styles.partyValue}>{partyAAddress || '-'}</div>
+            <div className={styles.partyValue}>{formatText(partyAAddress)}</div>
           </div>
         </div>
 
         <div className={styles.partyField}>
           <div className={styles.partyLabel}>电话：</div>
           <div className={styles.partyContent}>
-            <div className={styles.partyValue}>{partyAPhone || '-'}</div>
+            <div className={styles.partyValue}>{formatText(partyAPhone)}</div>
           </div>
         </div>
 
         <div className={styles.partyField}>
           <div className={styles.partyLabel}>联系人：</div>
           <div className={styles.partyContent}>
-            <div className={styles.partyValue}>{partyAContact || '-'}</div>
+            <div className={styles.partyValue}>{formatText(partyAContact)}</div>
           </div>
         </div>
 
@@ -224,7 +211,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         <div className={styles.partyField}>
           <div className={styles.partyLabel}>业务人：</div>
           <div className={styles.partyContent}>
-            <div className={styles.partyValue}>{partyBContact || '-'}</div>
+            <div className={styles.partyValue}>{formatText(partyBContact)}</div>
           </div>
         </div>
       </div>
@@ -257,7 +244,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             {getSelectedServices()}
             <div className={styles.otherBusiness}>
               <div className={styles.otherBusinessLabel}>其他业务：</div>
-              <div className={styles.otherBusinessValue}>{otherBusiness || '-'}</div>
+              <div className={styles.otherBusinessValue}>{formatText(otherBusiness)}</div>
             </div>
           </div>
         </div>
@@ -352,25 +339,27 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
         <div className={styles.sectionContent + ' ' + styles.agencyFeeContent}>
           <p>
             经协商，乙方代理记账收费标准为：人民币每年
-            <span className={styles.feeValue}>{formatCurrency(totalAgencyAccountingFee)}</span>
+            <span className={styles.feeValue}>{formatAgencyFee(totalAgencyAccountingFee)}</span>
             元（代理记账费
-            <span className={styles.feeValue}>{formatCurrency(agencyAccountingFee)}</span>
+            <span className={styles.feeValue}>{formatAgencyFee(agencyAccountingFee)}</span>
             /年，记账软件服务费
-            <span className={styles.feeValue}>{formatCurrency(accountingSoftwareFee)}</span>
+            <span className={styles.feeValue}>{formatAgencyFee(accountingSoftwareFee)}</span>
             /年，开票软件服务费
-            <span className={styles.feeValue}>{formatCurrency(invoicingSoftwareFee)}</span>
+            <span className={styles.feeValue}>{formatAgencyFee(invoicingSoftwareFee)}</span>
             /年），甲方按年度提前30日支付，不足一个月的按一个月计算。如甲方业务量增加，乙方根据甲方业务增量调整增加代理费用。
           </p>
 
           <p>
             全年凭证、账簿费用为
-            <span className={styles.feeValue}>{formatCurrency(accountBookFee)}</span>
+            <span className={styles.feeValue}>{formatAgencyFee(accountBookFee)}</span>
             元。其中包括凭证、账簿、差旅费报销单、费用粘贴单、工资表、财务报表、纳税申报表等。（以上费用以实际到账执行）
           </p>
 
           <p>
             人民币本次收费总金额
-            <span className={styles.feeValue}>{formatCurrency(contractData.currentChargeFee)}</span>
+            <span className={styles.feeValue}>
+              {formatAgencyFee(contractData.currentChargeFee)}
+            </span>
             元。
           </p>
 
@@ -482,7 +471,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>法定代表人：</div>
-                <span>{partyALegalPerson || '-'}</span>
+                <span>{formatText(partyALegalPerson)}</span>
               </div>
             </div>
             <div className={styles.signatureInfoColumn}>
@@ -498,13 +487,13 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>联系人：</div>
-                <span>{partyAContact || '-'}</span>
+                <span>{formatText(partyAContact)}</span>
               </div>
             </div>
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>联系人：</div>
-                <span>{partyBContact || '-'}</span>
+                <span>{formatText(partyBContact)}</span>
               </div>
             </div>
           </div>
@@ -514,7 +503,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>地址：</div>
-                <span>{partyAAddress || '-'}</span>
+                <span>{formatText(partyAAddress)}</span>
               </div>
             </div>
             <div className={styles.signatureInfoColumn}>
@@ -530,13 +519,13 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>邮编：</div>
-                <span>{partyAPostalCode || '-'}</span>
+                <span>{formatText(partyAPostalCode)}</span>
               </div>
             </div>
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>邮编：</div>
-                <span>{partyBPostalCode || '-'}</span>
+                <span>{formatText(partyBPostalCode)}</span>
               </div>
             </div>
           </div>
@@ -546,7 +535,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>电话：</div>
-                <span>{partyAPhone || '-'}</span>
+                <span>{formatText(partyAPhone)}</span>
               </div>
             </div>
             <div className={styles.signatureInfoColumn}>
@@ -562,13 +551,13 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>签约日期：</div>
-                <span>{partyASignDate ? dayjs(partyASignDate).format('YYYY年MM月DD日') : '-'}</span>
+                <span>{formatDate(partyASignDate)}</span>
               </div>
             </div>
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>签约日期：</div>
-                <span>{partyBSignDate ? dayjs(partyBSignDate).format('YYYY年MM月DD日') : '-'}</span>
+                <span>{formatDate(partyBSignDate)}</span>
               </div>
             </div>
           </div>

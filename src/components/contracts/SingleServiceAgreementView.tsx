@@ -3,6 +3,7 @@ import { Tag } from 'antd'
 import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
+import { formatText, formatCurrency, formatAnyDate, formatFeeAmount } from '../../utils/formatUtils'
 import styles from './SingleServiceAgreementView.module.css'
 import { SIGNATORY_CONFIG } from './SingleServiceAgreement'
 
@@ -195,19 +196,6 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
     )
   }
 
-  // 格式化日期
-  const formatDate = (dateString: string) => {
-    return dayjs(dateString).format('YYYY年MM月DD日')
-  }
-
-  // 处理日期显示
-  const getFormattedDate = (date: any) => {
-    if (!date) return '-'
-    if (typeof date === 'string') return formatDate(date)
-    if (date instanceof Date) return formatDate(date.toISOString())
-    return '-'
-  }
-
   return (
     <div className={styles.singleServiceAgreement} id="single-service-agreement-view">
       {/* 合同头部 */}
@@ -234,23 +222,25 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
         <div className={styles.partyBlock}>
           <div className={styles.partyHeader}>
             <span className={styles.partyLabel}>【委托方】（甲方）：</span>
-            <span className={styles.partyCompanyName}>{contractData.partyACompany || '-'}</span>
+            <span className={styles.partyCompanyName}>
+              {formatText(contractData.partyACompany)}
+            </span>
           </div>
 
           <div className={styles.partyDetails}>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>通讯地址：</span>
-              <span className={styles.detailValue}>{contractData.partyAAddress || '-'}</span>
+              <span className={styles.detailValue}>{formatText(contractData.partyAAddress)}</span>
             </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>联系人：</span>
               <span className={styles.detailValue} style={{ width: '200px' }}>
-                {contractData.partyAContact || '-'}
+                {formatText(contractData.partyAContact)}
               </span>
               <span className={styles.detailLabel} style={{ marginLeft: '20px' }}>
                 联系电话：
               </span>
-              <span className={styles.detailValue}>{contractData.partyAPhone || '-'}</span>
+              <span className={styles.detailValue}>{formatText(contractData.partyAPhone)}</span>
             </div>
           </div>
         </div>
@@ -270,12 +260,12 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>联系人：</span>
               <span className={styles.detailValue} style={{ width: '200px' }}>
-                {contractData.partyBContact || '-'}
+                {formatText(contractData.partyBContact)}
               </span>
               <span className={styles.detailLabel} style={{ marginLeft: '20px' }}>
                 联系电话：
               </span>
-              <span className={styles.detailValue}>{contractData.partyBPhone || '-'}</span>
+              <span className={styles.detailValue}>{contractData.partyBPhone || config.phone}</span>
             </div>
           </div>
         </div>
@@ -330,10 +320,12 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.businessRemark || '-'}</span>
+              <span className={styles.remarkContent}>
+                {formatText(contractData.businessRemark)}
+              </span>
               <span className={styles.remarkLabel}>服务费用：</span>
               <span className={styles.remarkContent}>
-                {contractData.businessServiceFee ? `${contractData.businessServiceFee}元` : '-'}
+                {formatFeeAmount(contractData.businessServiceFee)}元
               </span>
             </div>
           </div>
@@ -347,10 +339,10 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.bankRemark || '-'}</span>
+              <span className={styles.remarkContent}>{formatText(contractData.bankRemark)}</span>
               <span className={styles.remarkLabel}>服务费用：</span>
               <span className={styles.remarkContent}>
-                {contractData.bankServiceFee ? `${contractData.bankServiceFee}元` : '-'}
+                {formatFeeAmount(contractData.bankServiceFee)}元
               </span>
             </div>
           </div>
@@ -364,10 +356,10 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.licenseRemark || '-'}</span>
+              <span className={styles.remarkContent}>{formatText(contractData.licenseRemark)}</span>
               <span className={styles.remarkLabel}>服务费用：</span>
               <span className={styles.remarkContent}>
-                {contractData.licenseServiceFee ? `${contractData.licenseServiceFee}元` : '-'}
+                {formatFeeAmount(contractData.licenseServiceFee)}元
               </span>
             </div>
           </div>
@@ -378,10 +370,10 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
 
             <div className={styles.remarkRow}>
               <span className={styles.remarkLabel}>备注：</span>
-              <span className={styles.remarkContent}>{contractData.otherRemark || '-'}</span>
+              <span className={styles.remarkContent}>{formatText(contractData.otherRemark)}</span>
               <span className={styles.remarkLabel}>服务费用：</span>
               <span className={styles.remarkContent}>
-                {contractData.otherServiceFee ? `${contractData.otherServiceFee}元` : '-'}
+                {formatFeeAmount(contractData.otherServiceFee)}元
               </span>
             </div>
           </div>
@@ -390,12 +382,12 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           <div className={styles.feeRow}>
             <span className={styles.feeLabel}>费用总计（人民币）：</span>
             <span className={styles.feeAmount}>
-              <strong>{contractData.totalCost ? `${contractData.totalCost}元` : '-'}</strong>
+              <strong>{formatFeeAmount(contractData.totalCost)}元</strong>
             </span>
             <span className={styles.feeLabel}>大写金额（人民币）：</span>
             <span className={styles.feeWords}>
               <strong>
-                {contractData.totalCost ? numberToChinese(contractData.totalCost) : '-'}
+                {numberToChinese(parseFloat(formatFeeAmount(contractData.totalCost)))}
               </strong>
             </span>
           </div>
@@ -406,7 +398,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
               备注：
             </span>
             <span className={styles.remarkContent} style={{ fontWeight: 'bold' }}>
-              {contractData.remarks || '-'}
+              {formatText(contractData.remarks)}
             </span>
           </div>
         </div>
@@ -633,9 +625,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
               <div className={styles.signatureDateRow}>
                 <span className={styles.dateLabel}>日期：</span>
                 <span className={styles.dateValue}>
-                  {contractData.partyASignDate
-                    ? getFormattedDate(contractData.partyASignDate)
-                    : '-'}
+                  {formatAnyDate(contractData.partyASignDate)}
                 </span>
               </div>
             </div>
@@ -661,9 +651,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
               <div className={styles.signatureDateRow}>
                 <span className={styles.dateLabel}>日期：</span>
                 <span className={styles.dateValue}>
-                  {contractData.partyBSignDate
-                    ? getFormattedDate(contractData.partyBSignDate)
-                    : '-'}
+                  {formatAnyDate(contractData.partyBSignDate)}
                 </span>
               </div>
             </div>

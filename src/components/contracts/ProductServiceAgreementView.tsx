@@ -3,6 +3,7 @@ import { Tag } from 'antd'
 import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
+import { formatText, formatCurrency, formatDate, formatFeeAmount } from '../../utils/formatUtils'
 import './ProductServiceAgreement.css'
 
 // 签署方配置
@@ -286,12 +287,6 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
     )
   }
 
-  // 格式化日期
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-'
-    return dayjs(dateString).format('YYYY年MM月DD日')
-  }
-
   return (
     <div className="product-service-agreement">
       {/* 合同头部 */}
@@ -336,23 +331,23 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         <div className="party-block">
           <div className="party-header">
             <span className="party-label">【委托方】（甲方）：</span>
-            <span className="party-company-name">{contractData.partyACompany || '-'}</span>
+            <span className="party-company-name">{formatText(contractData.partyACompany)}</span>
           </div>
 
           <div className="party-details">
             <div className="detail-row">
               <span className="detail-label">通讯地址：</span>
-              <span className="detail-value">{contractData.partyAAddress || '-'}</span>
+              <span className="detail-value">{formatText(contractData.partyAAddress)}</span>
             </div>
 
             <div className="contact-row">
               <div className="contact-item">
                 <span className="contact-label">联系人：</span>
-                <span className="contact-value">{contractData.partyAContact || '-'}</span>
+                <span className="contact-value">{formatText(contractData.partyAContact)}</span>
               </div>
               <div className="contact-item">
                 <span className="contact-label">联系电话：</span>
-                <span className="contact-value">{contractData.partyAPhone || '-'}</span>
+                <span className="contact-value">{formatText(contractData.partyAPhone)}</span>
               </div>
             </div>
           </div>
@@ -374,11 +369,11 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
             <div className="contact-row">
               <div className="contact-item">
                 <span className="contact-label">联系人：</span>
-                <span className="contact-value">{contractData.partyBContact || '-'}</span>
+                <span className="contact-value">{formatText(contractData.partyBContact)}</span>
               </div>
               <div className="contact-item">
                 <span className="contact-label">联系电话：</span>
-                <span className="contact-value">{contractData.partyBPhone || '-'}</span>
+                <span className="contact-value">{contractData.partyBPhone || config.phone}</span>
               </div>
             </div>
           </div>
@@ -437,9 +432,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
 
           <div className="service-remark">
             <span>备注：</span>
-            <span className="remark-value">{contractData.businessRemark || '-'}</span>
+            <span className="remark-value">{formatText(contractData.businessRemark)}</span>
             <span>，服务费用：</span>
-            <span className="fee-value">{contractData.businessServiceFee || '-'}</span>
+            <span className="fee-value">{formatFeeAmount(contractData.businessServiceFee)}</span>
             <span>元。</span>
           </div>
         </div>
@@ -452,9 +447,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           </div>
           <div className="service-remark">
             <span>备注：</span>
-            <span className="remark-value">{contractData.taxRemark || '-'}</span>
+            <span className="remark-value">{formatText(contractData.taxRemark)}</span>
             <span>，服务费用：</span>
-            <span className="fee-value">{contractData.taxServiceFee || '-'}</span>
+            <span className="fee-value">{formatFeeAmount(contractData.taxServiceFee)}</span>
             <span>元。</span>
           </div>
         </div>
@@ -467,9 +462,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           </div>
           <div className="service-remark">
             <span>备注：</span>
-            <span className="remark-value">{contractData.bankRemark || '-'}</span>
+            <span className="remark-value">{formatText(contractData.bankRemark)}</span>
             <span>，服务费用：</span>
-            <span className="fee-value">{contractData.bankServiceFee || '-'}</span>
+            <span className="fee-value">{formatFeeAmount(contractData.bankServiceFee)}</span>
             <span>元。</span>
           </div>
         </div>
@@ -482,9 +477,11 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           </div>
           <div className="service-remark">
             <span>备注：</span>
-            <span className="remark-value">{contractData.socialSecurityRemark || '-'}</span>
+            <span className="remark-value">{formatText(contractData.socialSecurityRemark)}</span>
             <span>，服务费用：</span>
-            <span className="fee-value">{contractData.socialSecurityServiceFee || '-'}</span>
+            <span className="fee-value">
+              {formatFeeAmount(contractData.socialSecurityServiceFee)}
+            </span>
             <span>元。</span>
           </div>
         </div>
@@ -497,9 +494,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           </div>
           <div className="service-remark">
             <span>备注：</span>
-            <span className="remark-value">{contractData.licenseRemark || '-'}</span>
+            <span className="remark-value">{formatText(contractData.licenseRemark)}</span>
             <span>，服务费用：</span>
-            <span className="fee-value">{contractData.licenseServiceFee || '-'}</span>
+            <span className="fee-value">{formatFeeAmount(contractData.licenseServiceFee)}</span>
             <span>元。</span>
           </div>
         </div>
@@ -525,7 +522,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
                   fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
                 }}
               >
-                {contractData.totalCost || '-'}
+                {formatFeeAmount(contractData.totalCost)}
               </span>
               <span
                 style={{
@@ -554,7 +551,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
                   fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
                 }}
               >
-                {numberToChinese(contractData.totalCost || 0)}
+                {numberToChinese(parseFloat(formatFeeAmount(contractData.totalCost)))}
               </span>
               <span
                 style={{
@@ -585,7 +582,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
                 fontFamily: "'SourceHanSerifCN', '思源宋体', serif",
               }}
             >
-              {contractData.otherRemark || '-'}
+              {formatText(contractData.otherRemark)}
             </span>
           </div>
         </div>
@@ -669,7 +666,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         </div>
 
         <div className="obligation-item">
-                      <p>6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。</p>
+          <p>6、协议中涉及正规费或第三方服务费，由第三方为甲方开具有效发票。</p>
         </div>
       </div>
 
