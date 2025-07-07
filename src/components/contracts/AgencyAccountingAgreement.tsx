@@ -94,6 +94,17 @@ const AgencyAccountingAgreement = forwardRef<
   // 获取当前签约方配置
   const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
+  // 调试信息：检查配置获取是否正确
+  useEffect(() => {
+    console.log('🔍 [代理记账合同] 签署方配置调试:', {
+      signatory,
+      configExists: !!config,
+      configAddress: config?.address,
+      configTitle: config?.title,
+      allConfigKeys: Object.keys(SIGNATORY_CONFIG)
+    })
+  }, [signatory, config])
+
   // 编辑模式下的本地状态（不使用缓存，完全基于API数据）
   const [editModeFormData, setEditModeFormData] = useState<Record<string, any>>({})
 
@@ -101,12 +112,26 @@ const AgencyAccountingAgreement = forwardRef<
   const [createModeFormData, setCreateModeFormData] = useState<Record<string, any>>({
     signatory,
     contractType: '代理记账合同',
-    // 设置乙方默认值
-    partyBAddress: config?.address || '',
-    partyBPhone: config?.phone || '',
     partyBLegalPerson: '刘菲',
     ...contractData,
   })
+
+  // 当签署方配置变化时，更新创建模式的默认地址和电话
+  useEffect(() => {
+    if (mode === 'create' && config) {
+      setCreateModeFormData(prev => ({
+        ...prev,
+        signatory,
+        partyBAddress: config.address,
+        partyBPhone: config.phone,
+      }))
+      console.log('🔄 [代理记账合同] 更新签署方默认信息:', {
+        signatory,
+        address: config.address,
+        phone: config.phone
+      })
+    }
+  }, [signatory, config, mode])
 
   // 根据模式选择使用的表单数据
   const formData =
@@ -115,10 +140,15 @@ const AgencyAccountingAgreement = forwardRef<
           // 编辑模式：完全使用API数据和本地修改
           signatory,
           contractType: '代理记账合同',
-          partyBAddress: config?.address || '',
-          partyBPhone: config?.phone || '',
-          partyBLegalPerson: '刘菲',
+          // 先设置默认值（只有当config存在时才设置）
+          ...(config && {
+            partyBAddress: config.address,
+            partyBPhone: config.phone,
+            partyBLegalPerson: '刘菲',
+          }),
+          // 然后用API数据覆盖默认值（确保API数据优先）
           ...contractData,
+          // 最后用本地编辑数据覆盖
           ...editModeFormData,
         }
       : createModeFormData
@@ -170,10 +200,14 @@ const AgencyAccountingAgreement = forwardRef<
           partyACompany: contractData.partyACompany,
           partyAAddress: contractData.partyAAddress,
           partyACreditCode: contractData.partyACreditCode,
+          partyBAddress: contractData.partyBAddress,
+          partyBPhone: contractData.partyBPhone,
           totalAgencyAccountingFee: contractData.totalAgencyAccountingFee,
           declarationService: contractData.declarationService,
           mode: mode,
           dataSource: 'API',
+          configAddress: config?.address,
+          configPhone: config?.phone,
         })
 
         // 设置编辑模式的表单数据
@@ -228,11 +262,16 @@ const AgencyAccountingAgreement = forwardRef<
           ...prev,
           signatory,
           contractType: '代理记账合同',
+          // 确保签署方配置正确设置
+          ...(config && {
+            partyBAddress: config.address,
+            partyBPhone: config.phone,
+          }),
           ...contractData,
         }))
       }
     }
-  }, [contractData, signatory, mode])
+  }, [contractData, signatory, mode, config])
 
   // 自动获取委托日期
   useEffect(() => {

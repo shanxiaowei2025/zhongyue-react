@@ -258,12 +258,26 @@ const useTabsStore = () => {
     try {
       // 检查是否是合同创建或编辑页面
       if (tabKey === '/contracts/create' || tabKey.startsWith('/contracts/edit/')) {
+        // 清理旧的缓存数据（向后兼容）
         sessionStorage.removeItem('contractCreateParams')
         sessionStorage.removeItem('contractCreateData')
         sessionStorage.removeItem('lastFormSaveTime')
+        
+        // 清理新的Zustand缓存数据
+        sessionStorage.removeItem('contract-form-storage')
+        
+        // 如果窗口对象存在，也触发store的清理方法
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          const clearCacheEvent = new CustomEvent('clearContractFormCache', {
+            detail: { tabKey, reason: 'tab-close' }
+          })
+          window.dispatchEvent(clearCacheEvent)
+        }
+        
         console.log('🧹 清理合同表单缓存数据:', { 
           tabKey, 
-          cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime'] 
+          cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime', 'contract-form-storage'],
+          reason: 'tab-close'
         })
       }
     } catch (error) {

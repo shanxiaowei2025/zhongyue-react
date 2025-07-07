@@ -104,6 +104,24 @@ const CreateContract: React.FC = () => {
   useEffect(() => {
     // 优先使用 location.state
     if (state?.signatory && state?.contractType) {
+      // 检查是否是不同的签署方或合同类型
+      const isSignatoryChanged = signatory && signatory !== state.signatory
+      const isContractTypeChanged = contractType && contractType !== state.contractType
+      
+      if (isSignatoryChanged || isContractTypeChanged) {
+        console.log('🔄 检测到签署方或合同类型变化，清理旧缓存:', {
+          oldSignatory: signatory,
+          newSignatory: state.signatory,
+          oldContractType: contractType,
+          newContractType: state.contractType,
+          signatory_changed: isSignatoryChanged,
+          contract_type_changed: isContractTypeChanged
+        })
+        
+        // 清理旧的表单数据
+        clearAllCache()
+      }
+      
       setSignatory(state.signatory)
       setContractType(state.contractType)
       console.log('💾 保存新的合同创建参数:', { signatory: state.signatory, contractType: state.contractType })
@@ -112,7 +130,7 @@ const CreateContract: React.FC = () => {
 
     // 否则zustand中已有存储的数据会自动加载
     console.log('🔄 使用已存储的合同参数:', { signatory, contractType })
-  }, [state?.signatory, state?.contractType, setContractType, setSignatory, signatory, contractType])
+  }, [state?.signatory, state?.contractType, setContractType, setSignatory, signatory, contractType, clearAllCache])
 
   // 组件卸载时的清理逻辑 - 只保存数据，不自动清理
   useEffect(() => {
@@ -134,13 +152,26 @@ const CreateContract: React.FC = () => {
       }
     }
 
+    // 监听来自MainLayout的缓存清理事件
+    const handleClearCacheEvent = (event: CustomEvent) => {
+      const { tabKey, reason } = event.detail || {}
+      console.log('📨 接收到清理缓存事件:', { tabKey, reason })
+      
+      // 如果是针对当前页面的清理事件，执行清理
+      if (tabKey === '/contracts/create') {
+        console.log('🧹 响应清理缓存事件，清理表单数据')
+        clearAllCache()
+      }
+    }
+
     window.addEventListener('beforeunload', handleBeforeUnload)
-    // 监听自定义的标签页关闭事件
     document.addEventListener('tabClose', handleTabClose)
+    window.addEventListener('clearContractFormCache', handleClearCacheEvent as EventListener)
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
       document.removeEventListener('tabClose', handleTabClose)
+      window.removeEventListener('clearContractFormCache', handleClearCacheEvent as EventListener)
       // 组件卸载时只保存数据，不清理
       saveCurrentFormData()
       console.log('💾 组件卸载：已保存表单数据，保留参数')

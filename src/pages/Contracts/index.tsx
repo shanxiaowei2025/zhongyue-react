@@ -394,13 +394,32 @@ const Contracts: React.FC = () => {
   // 清空合同表单缓存数据
   const clearContractFormCache = () => {
     try {
+      // 清理旧的缓存数据（向后兼容）
       sessionStorage.removeItem('contractCreateParams')
       sessionStorage.removeItem('contractCreateData')
       sessionStorage.removeItem('lastFormSaveTime')
+      
+      // 清理新的Zustand缓存数据
+      sessionStorage.removeItem('contract-form-storage')
+      
+      // 触发清理事件，通知已打开的合同创建页面
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        const clearCacheEvent = new CustomEvent('clearContractFormCache', {
+          detail: { 
+            tabKey: '/contracts/create', 
+            reason: 'new-contract-creation',
+            newSignatory: selectedSignatory,
+            newContractType: selectedContractType
+          }
+        })
+        window.dispatchEvent(clearCacheEvent)
+      }
+      
       console.log('🧹 创建新合同：清空表单缓存数据', {
         signatory: selectedSignatory,
         contractType: selectedContractType,
-        cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime']
+        cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime', 'contract-form-storage'],
+        reason: 'new-contract-creation'
       })
     } catch (error) {
       console.error('清空合同表单缓存失败:', error)
