@@ -17,6 +17,11 @@ export interface Enterprise {
   customerLevel?: string
   createTime?: string
   updateTime?: string
+  registeredAddress?: string
+  actualResponsibles?: Array<{
+    name: string
+    phone: string
+  }>
 }
 
 export interface EnterpriseQueryParams {

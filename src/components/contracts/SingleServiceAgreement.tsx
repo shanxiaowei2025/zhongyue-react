@@ -323,6 +323,18 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         if ((enterprise as any).registeredAddress) {
           handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
         }
+        
+        // 自动填写联系人和联系电话（从实际负责人的第一条记录）
+        if (enterprise.actualResponsibles && Array.isArray(enterprise.actualResponsibles) && enterprise.actualResponsibles.length > 0) {
+          const firstResponsible = enterprise.actualResponsibles[0]
+          if (firstResponsible.name) {
+            handleFormChange('partyAContact', firstResponsible.name)
+          }
+          if (firstResponsible.phone) {
+            handleFormChange('partyAPhone', firstResponsible.phone)
+          }
+        }
+        
         message.success('企业信息已自动填入')
       }
     }

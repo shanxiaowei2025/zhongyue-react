@@ -2194,7 +2194,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     },
     {
       key: 'images',
-      label: '文件资料',
+      label: '档案资料',
       children: (
         <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
           <div>

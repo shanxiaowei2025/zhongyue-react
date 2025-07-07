@@ -383,10 +383,21 @@ const ProductServiceAgreement = forwardRef<
     const handleCustomerSelect = useCallback((value: string, option: any) => {
       const enterprise = option.enterprise
       if (enterprise) {
-        const updateData = {
+        const updateData: Record<string, any> = {
           partyACompany: enterprise.companyName,
           customerSearchValue: enterprise.companyName,
           partyAAddress: (enterprise as any).registeredAddress || formData.partyAAddress,
+        }
+        
+        // 自动填写联系人和联系电话（从实际负责人的第一条记录）
+        if (enterprise.actualResponsibles && Array.isArray(enterprise.actualResponsibles) && enterprise.actualResponsibles.length > 0) {
+          const firstResponsible = enterprise.actualResponsibles[0]
+          if (firstResponsible.name) {
+            updateData.partyAContact = firstResponsible.name
+          }
+          if (firstResponsible.phone) {
+            updateData.partyAPhone = firstResponsible.phone
+          }
         }
         
         if (mode === 'edit') {

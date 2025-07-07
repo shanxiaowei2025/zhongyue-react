@@ -116,7 +116,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   onlineBankingStorageNumber: 'archive',
   archiveStorageRemarks: 'archive',
 
-  // 图片资料标签页字段
+  // 档案资料标签页字段
   legalPersonIdImages: 'images',
   businessLicenseImages: 'images',
   bankAccountLicenseImages: 'images',
@@ -1931,7 +1931,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     },
     {
       key: 'images',
-      label: '图片资料',
+      label: '档案资料',
       children: (
         <div className="space-y-6">
           <div>
