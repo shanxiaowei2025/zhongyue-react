@@ -597,11 +597,11 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
                   // 处理日期显示
                   let dateRangeText = '—'
                   if (item.startDate && item.endDate) {
-                    dateRangeText = `${dayjs(item.startDate).format('YYYY-MM-DD')} 至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`
+                    dateRangeText = `${dayjs(item.startDate).format('YYYY-MM')} 至 ${dayjs(item.endDate).format('YYYY-MM')}`
                   } else if (item.startDate) {
-                    dateRangeText = `从 ${dayjs(item.startDate).format('YYYY-MM-DD')} 起`
+                    dateRangeText = `从 ${dayjs(item.startDate).format('YYYY-MM')} 起`
                   } else if (item.endDate) {
-                    dateRangeText = `至 ${dayjs(item.endDate).format('YYYY-MM-DD')}`
+                    dateRangeText = `至 ${dayjs(item.endDate).format('YYYY-MM')}`
                   }
 
                   return (
@@ -654,7 +654,8 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       addFeeItem('统计报表费', receipt?.statisticalReportFee)
       addFeeItem('变更费', receipt?.changeFee)
       addFeeItem('行政许可费', receipt?.administrativeLicenseFee)
-      addFeeItem('其他业务费', receipt?.otherBusinessFee)
+      addFeeItem('其他业务费（自有）', receipt?.otherBusinessFee)
+      addFeeItem('其他业务费（外包）', receipt?.otherBusinessOutsourcingFee)
 
       if (details.length === 0) return '费用明细'
 
@@ -730,7 +731,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
               >
                 <h1 className="receipt-title">电子收款收据</h1>
                 <p className="receipt-date">
-                  日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}
+                  日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM') : '-'}
                 </p>
               </div>
               <div
@@ -766,7 +767,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
               >
                 <h1 className="receipt-title">电子收款收据</h1>
                 <p className="receipt-date">
-                  日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM-DD') : '-'}
+                  日期: {receipt?.chargeDate ? dayjs(receipt.chargeDate).format('YYYY-MM') : '-'}
                 </p>
               </div>
               <div

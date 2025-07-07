@@ -292,10 +292,10 @@ const AgencyAccountingAgreement = forwardRef<
 
           // 自动填充委托开始和结束日期
           if (agencyStartDate) {
-            handleFormChange('entrustmentStartDate', dayjs(agencyStartDate).format('YYYY-MM-DD'))
+            handleFormChange('entrustmentStartDate', dayjs(agencyStartDate).format('YYYY-MM'))
           }
           if (agencyEndDate) {
-            handleFormChange('entrustmentEndDate', dayjs(agencyEndDate).format('YYYY-MM-DD'))
+            handleFormChange('entrustmentEndDate', dayjs(agencyEndDate).format('YYYY-MM'))
           }
         }
       } catch (error) {
@@ -803,9 +803,20 @@ const AgencyAccountingAgreement = forwardRef<
         {} as Record<string, any>
       )
 
+      // 处理委托日期格式：将年月格式转换为年月日格式（日期默认为1号）
+      const processedFormData = { ...filteredFormData }
+      if (processedFormData.entrustmentStartDate && processedFormData.entrustmentStartDate.length === 7) {
+        // 如果是年月格式 (YYYY-MM)，转换为年月日格式 (YYYY-MM-01)
+        processedFormData.entrustmentStartDate = `${processedFormData.entrustmentStartDate}-01`
+      }
+      if (processedFormData.entrustmentEndDate && processedFormData.entrustmentEndDate.length === 7) {
+        // 如果是年月格式 (YYYY-MM)，转换为年月日格式 (YYYY-MM-01)
+        processedFormData.entrustmentEndDate = `${processedFormData.entrustmentEndDate}-01`
+      }
+
       // 构建最终提交的合同数据
       const contractSubmitData: CreateContractDto = {
-        ...filteredFormData,
+        ...processedFormData,
         contractType: '代理记账合同',
         signatory,
         remarks: formData.remarks,
@@ -1198,18 +1209,22 @@ const AgencyAccountingAgreement = forwardRef<
                 placeholder="开始日期"
                 value={formData.entrustmentStartDate ? dayjs(formData.entrustmentStartDate) : null}
                 onChange={date =>
-                  handleFormChange('entrustmentStartDate', date ? date.format('YYYY-MM-DD') : null)
+                  handleFormChange('entrustmentStartDate', date ? date.format('YYYY-MM') : null)
                 }
                 className={styles.datePicker}
+                picker="month"
+                format="YYYY-MM"
               />
               日至
               <DatePicker
                 placeholder="结束日期"
                 value={formData.entrustmentEndDate ? dayjs(formData.entrustmentEndDate) : null}
                 onChange={date =>
-                  handleFormChange('entrustmentEndDate', date ? date.format('YYYY-MM-DD') : null)
+                  handleFormChange('entrustmentEndDate', date ? date.format('YYYY-MM') : null)
                 }
                 className={styles.datePicker}
+                picker="month"
+                format="YYYY-MM"
               />
               日期间内的经济业务进行代理记账。
             </div>
