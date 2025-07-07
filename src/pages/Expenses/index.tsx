@@ -906,11 +906,12 @@ const Expenses: React.FC = () => {
       )}
 
       {/* 审核弹窗 */}
-      <AuditModal
-        visible={auditModalVisible}
-        onClose={() => setAuditModalVisible(false)}
-        onConfirm={handleAuditSubmit}
-      />
+              <AuditModal
+          visible={auditModalVisible}
+          expense={expenseToAudit}
+          onClose={() => setAuditModalVisible(false)}
+          onConfirm={handleAuditSubmit}
+        />
     </div>
   )
 }

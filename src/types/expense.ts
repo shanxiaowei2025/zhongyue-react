@@ -221,6 +221,7 @@ export interface ReceiptViewDto {
   changeFee?: number | string
   administrativeLicenseFee?: number | string
   otherBusinessFee?: number | string
+  otherBusinessOutsourcing?: string | string[]
   otherBusinessOutsourcingFee?: number | string
   receiptRemarks?: string
   contractImage?: string | string[] // 电子合同
