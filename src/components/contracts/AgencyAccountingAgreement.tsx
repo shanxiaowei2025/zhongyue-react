@@ -1399,6 +1399,17 @@ const AgencyAccountingAgreement = forwardRef<
                 className={styles.otherBusinessInput}
               />
             </div>
+            {/* 备注行 */}
+            <div className={styles.otherBusiness}>
+              <div className={styles.otherBusinessLabel} style={{ fontWeight: 'bold' }}>备注：</div>
+              <Input
+                placeholder="请填写备注"
+                value={formData.remarks || ''}
+                onChange={e => handleFormChange('remarks', e.target.value)}
+                className={styles.otherBusinessInput}
+                style={{ fontWeight: 'bold' }}
+              />
+            </div>
           </div>
         </div>
       </div>

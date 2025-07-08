@@ -1095,6 +1095,13 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
                 {formatText(contractData.otherBusiness)}
               </Text>
             </View>
+            {/* 备注行 */}
+            <View style={styles.otherBusiness}>
+              <Text style={[styles.otherBusinessLabel, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>备注：</Text>
+              <Text style={[styles.otherBusinessValue, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
+                {formatText(contractData.remarks)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
