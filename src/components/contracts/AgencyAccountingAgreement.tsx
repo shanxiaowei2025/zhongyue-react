@@ -55,9 +55,32 @@ const STAMP_IMAGE_MAP = {
   保定脉信会计服务有限公司: '/images/contract-seals/maixin-seal.jpg',
 }
 
+// 邮政编码映射配置
+const POSTAL_CODE_MAP: Record<string, string> = {
+  '定兴县': '072650',
+  '雄安新区': '071701',
+  '高碑店市': '074000',
+  '容城县': '071700',
+}
+
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
   return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
+}
+
+// 根据地址识别邮政编码
+const getPostalCodeFromAddress = (address: string): string => {
+  if (!address) return ''
+  
+  // 遍历邮政编码映射，检查地址中是否包含关键词
+  for (const [keyword, postalCode] of Object.entries(POSTAL_CODE_MAP)) {
+    if (address.includes(keyword)) {
+      console.log(`🔍 [代理记账合同] 从地址中识别到邮政编码: ${keyword} -> ${postalCode}`)
+      return postalCode
+    }
+  }
+  
+  return ''
 }
 
 // 申报服务项目
@@ -130,6 +153,17 @@ const AgencyAccountingAgreement = forwardRef<
         address: config.address,
         phone: config.phone
       })
+      
+      // 根据默认乙方地址自动填写邮政编码
+      const defaultPostalCode = getPostalCodeFromAddress(config.address)
+      if (defaultPostalCode) {
+        setCreateModeFormData(prev => ({
+          ...prev,
+          partyAPostalCode: defaultPostalCode,
+          partyBPostalCode: defaultPostalCode
+        }))
+        console.log(`🔄 [代理记账合同] 根据默认乙方地址自动填写邮政编码: ${defaultPostalCode}`)
+      }
     }
   }, [signatory, config, mode])
 
@@ -189,12 +223,65 @@ const AgencyAccountingAgreement = forwardRef<
   const [codeTotal, setCodeTotal] = useState<number>(0)
   const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
 
+  // 自动获取委托日期函数
+  const fetchAgencyDates = async () => {
+    // 只有在创建模式且已有公司名称或统一社会信用代码时才请求
+    if (mode !== 'create') return
+    if (!formData.partyACompany && !formData.partyACreditCode) return
+
+    try {
+      const params: { companyName?: string; unifiedSocialCreditCode?: string } = {}
+      if (formData.partyACompany) params.companyName = formData.partyACompany
+      if (formData.partyACreditCode) params.unifiedSocialCreditCode = formData.partyACreditCode
+
+      console.log('🔍 [代理记账合同] 获取委托日期，参数:', params)
+      const response = await getAgencyContractDates(params)
+
+      if (response.code === 0 && response.data) {
+        const { agencyStartDate, agencyEndDate } = response.data
+
+        // 自动填充委托开始和结束日期
+        if (agencyStartDate) {
+          handleFormChange('entrustmentStartDate', dayjs(agencyStartDate).format('YYYY-MM'))
+        }
+        if (agencyEndDate) {
+          handleFormChange('entrustmentEndDate', dayjs(agencyEndDate).format('YYYY-MM'))
+        }
+        console.log('✅ [代理记账合同] 成功获取并设置委托日期:', {
+          agencyStartDate,
+          agencyEndDate
+        })
+      }
+    } catch (error) {
+      // 静默处理错误，不影响用户体验
+      console.warn('❌ [代理记账合同] 获取委托日期失败:', error)
+    }
+  }
+
   // 初始化表单数据
   useEffect(() => {
     if (mode === 'edit') {
       // 编辑模式：直接使用API数据初始化
       if (contractData && Object.keys(contractData).length > 0) {
         console.log('🔄 [代理记账合同] 编辑模式：初始化表单数据（完全使用API数据）')
+
+        console.log('🔍 API数据详情:', {
+          partyACompany: contractData.partyACompany,
+        })
+
+        // 如果是编辑模式且乙方地址存在，尝试填充邮政编码
+        const partyBAddress = contractData.partyBAddress || config?.address || ''
+        if (partyBAddress && (!contractData.partyAPostalCode || !contractData.partyBPostalCode)) {
+          const postalCode = getPostalCodeFromAddress(partyBAddress)
+          if (postalCode) {
+            setEditModeFormData(prev => ({
+              ...prev,
+              partyAPostalCode: contractData.partyAPostalCode || postalCode,
+              partyBPostalCode: contractData.partyBPostalCode || postalCode
+            }))
+            console.log(`🔄 [代理记账合同] 编辑模式：根据乙方地址自动补充邮政编码: ${postalCode}`)
+          }
+        }
 
         console.log('🔍 API数据详情:', {
           partyACompany: contractData.partyACompany,
@@ -275,37 +362,12 @@ const AgencyAccountingAgreement = forwardRef<
 
   // 自动获取委托日期
   useEffect(() => {
-    const fetchAgencyDates = async () => {
-      // 只有在创建模式且已有公司名称或统一社会信用代码时才请求
-      if (mode !== 'create') return
-      if (!debouncedCompanyName && !debouncedCreditCode) return
-
-      try {
-        const params: { companyName?: string; unifiedSocialCreditCode?: string } = {}
-        if (debouncedCompanyName) params.companyName = debouncedCompanyName
-        if (debouncedCreditCode) params.unifiedSocialCreditCode = debouncedCreditCode
-
-        const response = await getAgencyContractDates(params)
-
-        if (response.code === 0 && response.data) {
-          const { agencyStartDate, agencyEndDate } = response.data
-
-          // 自动填充委托开始和结束日期
-          if (agencyStartDate) {
-            handleFormChange('entrustmentStartDate', dayjs(agencyStartDate).format('YYYY-MM'))
-          }
-          if (agencyEndDate) {
-            handleFormChange('entrustmentEndDate', dayjs(agencyEndDate).format('YYYY-MM'))
-          }
-        }
-      } catch (error) {
-        // 静默处理错误，不影响用户体验
-        console.warn('获取委托日期失败:', error)
-      }
-    }
+    // 只有在创建模式且已有公司名称或统一社会信用代码时才请求
+    if (mode !== 'create') return
+    if (!debouncedCompanyName && !debouncedCreditCode) return
 
     fetchAgencyDates()
-  }, [debouncedCompanyName, debouncedCreditCode, mode])
+  }, [debouncedCompanyName, debouncedCreditCode, mode, fetchAgencyDates])
 
   // 搜索客户信息（模糊搜索）
   const handleCustomerSearch = async (searchValue: string, resetPage: boolean = false) => {
@@ -396,38 +458,61 @@ const AgencyAccountingAgreement = forwardRef<
 
   // 选择客户时自动填入信息
   const handleCustomerSelect = (value: string, option: any) => {
-    const enterprise = option.enterprise
-    if (enterprise) {
-      const updateData: Record<string, any> = {
-        partyACompany: enterprise.companyName,
-        partyACreditCode: enterprise.unifiedSocialCreditCode,
-        ...((enterprise as any).registeredAddress && {
-          partyAAddress: (enterprise as any).registeredAddress,
-        }),
-      }
+    console.log('📋 选择客户:', option)
 
-      // 自动填写联系人和联系电话（从实际负责人的第一条记录）
-      if (enterprise.actualResponsibles && Array.isArray(enterprise.actualResponsibles) && enterprise.actualResponsibles.length > 0) {
-        const firstResponsible = enterprise.actualResponsibles[0]
-        if (firstResponsible.name) {
-          updateData.partyAContact = firstResponsible.name
-        }
-        if (firstResponsible.phone) {
-          updateData.partyAPhone = firstResponsible.phone
-        }
-      }
-
-      if (mode === 'edit') {
-        // 编辑模式：使用本地状态
-        setEditModeFormData(prev => ({ ...prev, ...updateData }))
-      } else {
-        // 创建模式：逐个调用handleFormChange以触发自动保存
-        Object.entries(updateData).forEach(([key, val]) => {
-          handleFormChange(key, val)
-        })
-      }
-      message.success('企业信息已自动填入')
+    // 重置客户搜索框
+    setCustomerSearchValue(value)
+    
+    // 更新客户基本信息
+    const customerData = {
+      partyACompany: value,
+      partyAAddress: option.address || '',
+      partyAPhone: option.phone || '',
+      partyAContact: option.contact || '',
+      partyALegalPerson: option.legalPerson || '',
+      partyACreditCode: option.unifiedSocialCreditCode || '',
     }
+    
+    // 应用到表单
+    if (mode === 'edit') {
+      setEditModeFormData(prev => ({
+        ...prev,
+        ...customerData,
+      }))
+    } else {
+      setCreateModeFormData(prev => ({
+        ...prev,
+        ...customerData,
+      }))
+    }
+    
+    // 尝试根据乙方地址自动填写邮政编码
+    const partyBAddress = mode === 'edit' 
+      ? (editModeFormData.partyBAddress || config?.address || '') 
+      : (createModeFormData.partyBAddress || config?.address || '')
+      
+    const postalCode = getPostalCodeFromAddress(partyBAddress)
+    if (postalCode) {
+      if (mode === 'edit') {
+        setEditModeFormData(prev => ({
+          ...prev,
+          partyAPostalCode: postalCode,
+          partyBPostalCode: postalCode
+        }))
+      } else {
+        setCreateModeFormData(prev => ({
+          ...prev,
+          partyAPostalCode: postalCode,
+          partyBPostalCode: postalCode
+        }))
+      }
+      console.log(`💾 选择客户后，根据现有乙方地址自动填写邮政编码: ${postalCode}`)
+    }
+    
+    console.log('💾 客户选择完成，更新表单数据:', customerData)
+    
+    // 获取委托日期
+    fetchAgencyDates()
   }
 
   // 重置客户搜索状态
@@ -577,6 +662,31 @@ const AgencyAccountingAgreement = forwardRef<
 
   // 处理表单数据变化
   const handleFormChange = (field: string, value: any) => {
+    // 如果是乙方地址字段变化，自动填写邮政编码
+    if (field === 'partyBAddress' && value) {
+      const postalCode = getPostalCodeFromAddress(value)
+      if (postalCode) {
+        // 延迟一点执行，让当前地址先更新完成
+        setTimeout(() => {
+          // 同时更新甲方和乙方的邮政编码（根据需求）
+          if (mode === 'edit') {
+            setEditModeFormData(prev => ({ 
+              ...prev, 
+              partyAPostalCode: postalCode, 
+              partyBPostalCode: postalCode 
+            }))
+          } else {
+            setCreateModeFormData(prev => ({
+              ...prev,
+              partyAPostalCode: postalCode,
+              partyBPostalCode: postalCode
+            }))
+          }
+          console.log(`💾 根据乙方地址自动填写邮政编码: ${postalCode}`)
+        }, 100)
+      }
+    }
+
     if (mode === 'edit') {
       // 编辑模式：使用本地状态
       setEditModeFormData(prev => ({ ...prev, [field]: value }))
