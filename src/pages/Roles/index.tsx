@@ -203,15 +203,13 @@ const Roles = () => {
   ]
 
   // 排序和过滤查询结果
-  const filteredRoles = roles
-    .filter(role =>
-      searchText
-        ? role.name.toLowerCase().includes(searchText.toLowerCase()) ||
-          role.code.toLowerCase().includes(searchText.toLowerCase()) ||
-          (role.remark && role.remark.toLowerCase().includes(searchText.toLowerCase()))
-        : true
-    )
-    .sort((a, b) => a.id - b.id) // 按ID升序排序
+  const filteredRoles = roles.filter(role =>
+    searchText
+      ? role.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        role.code.toLowerCase().includes(searchText.toLowerCase()) ||
+        (role.remark && role.remark.toLowerCase().includes(searchText.toLowerCase()))
+      : true
+  )
 
   return (
     <div>
