@@ -132,6 +132,40 @@
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
+/* 统一社会信用代码字段 */
+.party-credit-code {
+  display: flex;
+  margin-bottom: 12px;
+  gap: 10px;
+  margin-left: 10px;
+}
+
+.credit-code-label {
+  font-weight: normal;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.credit-code-input {
+  flex: 1;
+  max-width: 300px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.credit-code-value {
+  font-size: 12px;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
 .party-details {
   padding-left: 10px;
 }

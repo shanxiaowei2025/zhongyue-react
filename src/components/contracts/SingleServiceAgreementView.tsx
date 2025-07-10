@@ -227,6 +227,14 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
             </span>
           </div>
 
+          {/* 甲方统一社会信用代码 */}
+          <div className={styles.partyCreditCode}>
+            <span className={styles.creditCodeLabel}>统一社会信用代码：</span>
+            <span className={styles.creditCodeValue}>
+              {formatText(contractData.partyACreditCode)}
+            </span>
+          </div>
+
           <div className={styles.partyDetails}>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>通讯地址：</span>

@@ -334,6 +334,12 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
             <span className="party-company-name">{formatText(contractData.partyACompany)}</span>
           </div>
 
+          {/* 甲方统一社会信用代码 */}
+          <div className="party-credit-code">
+            <span className="credit-code-label">统一社会信用代码：</span>
+            <span className="credit-code-value">{formatText(contractData.partyACreditCode)}</span>
+          </div>
+
           <div className="party-details">
             <div className="detail-row">
               <span className="detail-label">通讯地址：</span>

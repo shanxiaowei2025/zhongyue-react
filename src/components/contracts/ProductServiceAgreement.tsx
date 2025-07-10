@@ -80,18 +80,18 @@ const ProductServiceAgreement = forwardRef<
     { signatory, contractData = {}, onSubmit, onUpdate, isSubmitting = false, mode = 'create' },
     ref
   ) => {
-      // 使用store管理表单缓存 (仅创建模式)
-  const {
-    formData: cachedFormData,
-    updateFormField,
-    batchUpdateFormData,
-    setRestoring,
-    getCompleteFormData,
-  } = useContractFormStore()
+    // 使用store管理表单缓存 (仅创建模式)
+    const {
+      formData: cachedFormData,
+      updateFormField,
+      batchUpdateFormData,
+      setRestoring,
+      getCompleteFormData,
+    } = useContractFormStore()
 
-  // 编辑模式下的本地状态（不使用缓存）
-  const [editModeFormData, setEditModeFormData] = useState<Record<string, any>>({})
-  const [isInitialized, setIsInitialized] = useState(false)
+    // 编辑模式下的本地状态（不使用缓存）
+    const [editModeFormData, setEditModeFormData] = useState<Record<string, any>>({})
+    const [isInitialized, setIsInitialized] = useState(false)
 
     const { createContractData } = useContractDetail()
 
@@ -102,22 +102,31 @@ const ProductServiceAgreement = forwardRef<
     const [customerTotal, setCustomerTotal] = useState<number>(0)
     const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
 
-      // 根据模式决定数据来源
-  const formData = mode === 'edit' 
-    ? {
-        // 编辑模式：完全使用API数据和本地状态，不使用缓存
-        signatory,
-        contractType: '产品服务协议',
-        ...contractData,
-        ...editModeFormData, // 编辑过程中的本地修改
-      }
-    : {
-        // 创建模式：使用缓存数据
-        signatory,
-        contractType: '产品服务协议',
-        ...contractData,
-        ...cachedFormData,
-      }
+    // 统一社会信用代码搜索相关状态
+    const [codeSearchLoading, setCodeSearchLoading] = useState<boolean>(false)
+    const [codeOptions, setCodeOptions] = useState<CustomerSearchOption[]>([])
+    const [codePage, setCodePage] = useState<number>(1)
+    const [codeTotal, setCodeTotal] = useState<number>(0)
+    const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
+    const [codeSearchValue, setCodeSearchValue] = useState<string>('')
+
+    // 根据模式决定数据来源
+    const formData =
+      mode === 'edit'
+        ? {
+            // 编辑模式：完全使用API数据和本地状态，不使用缓存
+            signatory,
+            contractType: '产品服务协议',
+            ...contractData,
+            ...editModeFormData, // 编辑过程中的本地修改
+          }
+        : {
+            // 创建模式：使用缓存数据
+            signatory,
+            contractType: '产品服务协议',
+            ...contractData,
+            ...cachedFormData,
+          }
 
     // 便捷的getter函数
     const checkedItems = formData.checkedItems || {}
@@ -132,157 +141,167 @@ const ProductServiceAgreement = forwardRef<
     }
     const customerSearchValue = formData.customerSearchValue || formData.partyACompany || ''
 
-      // 初始化表单数据
-  useEffect(() => {
-    if (mode === 'edit') {
-      // 编辑模式：直接使用API数据，不依赖store缓存
-      if (contractData && Object.keys(contractData).length > 0) {
-        console.log('🔄 编辑模式：初始化表单数据（完全使用API数据）')
-        
-        // 特别记录重要字段
-        console.log('🔍 API数据详情:', {
-          partyACompany: contractData.partyACompany,
-          businessEstablishmentAddress: contractData.businessEstablishmentAddress,
-          businessOther: contractData.businessOther,
-          businessEstablishment: contractData.businessEstablishment,
-          businessChange: contractData.businessChange,
-          businessCancellation: contractData.businessCancellation,
-          businessMaterials: contractData.businessMaterials,
-          mode: mode,
-          dataSource: 'API'
-        })
-        
-        // 处理服务项目数组数据，转换为勾选状态
-        const newCheckedItems: Record<string, boolean> = {}
-        const newItemAmounts: Record<string, string> = {}
-        
-        const serviceArrays = [
-          contractData.businessEstablishment,
-          contractData.businessChange,
-          contractData.businessCancellation,
-          contractData.businessOther,
-          contractData.businessMaterials,
-          contractData.taxMatters,
-          contractData.bankMatters,
-          contractData.socialSecurity,
-          contractData.licenseBusiness,
-        ]
+    // 初始化表单数据
+    useEffect(() => {
+      if (mode === 'edit') {
+        // 编辑模式：直接使用API数据，不依赖store缓存
+        if (contractData && Object.keys(contractData).length > 0) {
+          console.log('🔄 编辑模式：初始化表单数据（完全使用API数据）')
 
-        serviceArrays.forEach(serviceArray => {
-          if (Array.isArray(serviceArray)) {
-            serviceArray.forEach(item => {
-              if (item.itemKey) {
-                newCheckedItems[item.itemKey] = true
-                newItemAmounts[item.itemKey] = String(item.amount || '')
-              }
-            })
+          // 特别记录重要字段
+          console.log('🔍 API数据详情:', {
+            partyACompany: contractData.partyACompany,
+            businessEstablishmentAddress: contractData.businessEstablishmentAddress,
+            businessOther: contractData.businessOther,
+            businessEstablishment: contractData.businessEstablishment,
+            businessChange: contractData.businessChange,
+            businessCancellation: contractData.businessCancellation,
+            businessMaterials: contractData.businessMaterials,
+            mode: mode,
+            dataSource: 'API',
+          })
+
+          // 处理服务项目数组数据，转换为勾选状态
+          const newCheckedItems: Record<string, boolean> = {}
+          const newItemAmounts: Record<string, string> = {}
+
+          const serviceArrays = [
+            contractData.businessEstablishment,
+            contractData.businessChange,
+            contractData.businessCancellation,
+            contractData.businessOther,
+            contractData.businessMaterials,
+            contractData.taxMatters,
+            contractData.bankMatters,
+            contractData.socialSecurity,
+            contractData.licenseBusiness,
+          ]
+
+          serviceArrays.forEach(serviceArray => {
+            if (Array.isArray(serviceArray)) {
+              serviceArray.forEach(item => {
+                if (item.itemKey) {
+                  newCheckedItems[item.itemKey] = true
+                  newItemAmounts[item.itemKey] = String(item.amount || '')
+                }
+              })
+            }
+          })
+
+          // 初始化金额显示值
+          const newAmountDisplayValues: Record<string, string> = {
+            businessServiceFee: contractData.businessServiceFee
+              ? String(contractData.businessServiceFee)
+              : '',
+            taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
+            bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
+            socialSecurityServiceFee: contractData.socialSecurityServiceFee
+              ? String(contractData.socialSecurityServiceFee)
+              : '',
+            licenseServiceFee: contractData.licenseServiceFee
+              ? String(contractData.licenseServiceFee)
+              : '',
+            totalCost: contractData.totalCost ? String(contractData.totalCost) : '',
           }
-        })
 
-        // 初始化金额显示值
-        const newAmountDisplayValues: Record<string, string> = {
-          businessServiceFee: contractData.businessServiceFee ? String(contractData.businessServiceFee) : '',
-          taxServiceFee: contractData.taxServiceFee ? String(contractData.taxServiceFee) : '',
-          bankServiceFee: contractData.bankServiceFee ? String(contractData.bankServiceFee) : '',
-          socialSecurityServiceFee: contractData.socialSecurityServiceFee ? String(contractData.socialSecurityServiceFee) : '',
-          licenseServiceFee: contractData.licenseServiceFee ? String(contractData.licenseServiceFee) : '',
-          totalCost: contractData.totalCost ? String(contractData.totalCost) : '',
-        }
-        
-        // 设置编辑模式的本地状态
-        setEditModeFormData({
-          checkedItems: newCheckedItems,
-          itemAmounts: newItemAmounts,
-          amountDisplayValues: newAmountDisplayValues,
-          customerSearchValue: contractData.partyACompany || '',
-        })
-        
-        setIsInitialized(true)
-        console.log('✅ 编辑模式：API数据初始化完成')
-      }
-    } else {
-      // 创建模式：使用原有的store逻辑
-      if (!isInitialized) {
-        console.log('🔄 创建模式：初始化表单数据（使用缓存）')
-        
-        // 开启恢复模式，防止初始化时触发缓存更新
-        setRestoring(true)
-        
-        const initData: Record<string, any> = {
-          signatory,
-          contractType: '产品服务协议',
-          ...contractData,
-        }
-        
-                      // 特别记录重要字段
-        console.log('🔍 初始化数据详情:', {
-          partyACompany: initData.partyACompany,
-          businessEstablishmentAddress: initData.businessEstablishmentAddress,
-          businessOther: initData.businessOther,
-          businessEstablishment: initData.businessEstablishment,
-          businessChange: initData.businessChange,
-          businessCancellation: initData.businessCancellation,
-          businessMaterials: initData.businessMaterials,
-          mode: mode,
-          dataSource: 'Props' // 创建模式下固定为 Props
-        })
+          // 设置编辑模式的本地状态
+          setEditModeFormData({
+            checkedItems: newCheckedItems,
+            itemAmounts: newItemAmounts,
+            amountDisplayValues: newAmountDisplayValues,
+            customerSearchValue: contractData.partyACompany || '',
+          })
 
-        // 初始化金额显示值
-        const newAmountDisplayValues: Record<string, string> = {
-          businessServiceFee: initData.businessServiceFee ? String(initData.businessServiceFee) : '',
-          taxServiceFee: initData.taxServiceFee ? String(initData.taxServiceFee) : '',
-          bankServiceFee: initData.bankServiceFee ? String(initData.bankServiceFee) : '',
-          socialSecurityServiceFee: initData.socialSecurityServiceFee ? String(initData.socialSecurityServiceFee) : '',
-          licenseServiceFee: initData.licenseServiceFee ? String(initData.licenseServiceFee) : '',
-          totalCost: initData.totalCost ? String(initData.totalCost) : '',
-        }
-
-        // 初始化勾选状态和项目金额
-        const newCheckedItems: Record<string, boolean> = {}
-        const newItemAmounts: Record<string, string> = {}
-
-        // 处理各类服务项目数据
-        const serviceArrays = [
-          initData.businessEstablishment,
-          initData.businessChange,
-          initData.businessCancellation,
-          initData.businessOther,
-          initData.businessMaterials,
-          initData.taxMatters,
-          initData.bankMatters,
-          initData.socialSecurity,
-          initData.licenseBusiness,
-        ]
-
-        serviceArrays.forEach(serviceArray => {
-          if (Array.isArray(serviceArray)) {
-            serviceArray.forEach(item => {
-              if (item.itemKey) {
-                newCheckedItems[item.itemKey] = true
-                newItemAmounts[item.itemKey] = String(item.amount || '')
-              }
-            })
-          }
-        })
-
-        // 同步到store
-        batchUpdateFormData({
-          ...initData,
-          checkedItems: newCheckedItems,
-          itemAmounts: newItemAmounts,
-          amountDisplayValues: newAmountDisplayValues,
-          customerSearchValue: initData.partyACompany || initData.customerSearchValue || '',
-        })
-        
-        // 关闭恢复模式
-        setTimeout(() => {
-          setRestoring(false)
           setIsInitialized(true)
-          console.log(`✅ ProductServiceAgreement: 初始化完成 (${mode}模式)`)
-        }, 100)
+          console.log('✅ 编辑模式：API数据初始化完成')
+        }
+      } else {
+        // 创建模式：使用原有的store逻辑
+        if (!isInitialized) {
+          console.log('🔄 创建模式：初始化表单数据（使用缓存）')
+
+          // 开启恢复模式，防止初始化时触发缓存更新
+          setRestoring(true)
+
+          const initData: Record<string, any> = {
+            signatory,
+            contractType: '产品服务协议',
+            ...contractData,
+          }
+
+          // 特别记录重要字段
+          console.log('🔍 初始化数据详情:', {
+            partyACompany: initData.partyACompany,
+            businessEstablishmentAddress: initData.businessEstablishmentAddress,
+            businessOther: initData.businessOther,
+            businessEstablishment: initData.businessEstablishment,
+            businessChange: initData.businessChange,
+            businessCancellation: initData.businessCancellation,
+            businessMaterials: initData.businessMaterials,
+            mode: mode,
+            dataSource: 'Props', // 创建模式下固定为 Props
+          })
+
+          // 初始化金额显示值
+          const newAmountDisplayValues: Record<string, string> = {
+            businessServiceFee: initData.businessServiceFee
+              ? String(initData.businessServiceFee)
+              : '',
+            taxServiceFee: initData.taxServiceFee ? String(initData.taxServiceFee) : '',
+            bankServiceFee: initData.bankServiceFee ? String(initData.bankServiceFee) : '',
+            socialSecurityServiceFee: initData.socialSecurityServiceFee
+              ? String(initData.socialSecurityServiceFee)
+              : '',
+            licenseServiceFee: initData.licenseServiceFee ? String(initData.licenseServiceFee) : '',
+            totalCost: initData.totalCost ? String(initData.totalCost) : '',
+          }
+
+          // 初始化勾选状态和项目金额
+          const newCheckedItems: Record<string, boolean> = {}
+          const newItemAmounts: Record<string, string> = {}
+
+          // 处理各类服务项目数据
+          const serviceArrays = [
+            initData.businessEstablishment,
+            initData.businessChange,
+            initData.businessCancellation,
+            initData.businessOther,
+            initData.businessMaterials,
+            initData.taxMatters,
+            initData.bankMatters,
+            initData.socialSecurity,
+            initData.licenseBusiness,
+          ]
+
+          serviceArrays.forEach(serviceArray => {
+            if (Array.isArray(serviceArray)) {
+              serviceArray.forEach(item => {
+                if (item.itemKey) {
+                  newCheckedItems[item.itemKey] = true
+                  newItemAmounts[item.itemKey] = String(item.amount || '')
+                }
+              })
+            }
+          })
+
+          // 同步到store
+          batchUpdateFormData({
+            ...initData,
+            checkedItems: newCheckedItems,
+            itemAmounts: newItemAmounts,
+            amountDisplayValues: newAmountDisplayValues,
+            customerSearchValue: initData.partyACompany || initData.customerSearchValue || '',
+          })
+
+          // 关闭恢复模式
+          setTimeout(() => {
+            setRestoring(false)
+            setIsInitialized(true)
+            console.log(`✅ ProductServiceAgreement: 初始化完成 (${mode}模式)`)
+          }, 100)
+        }
       }
-    }
-  }, [contractData, signatory, isInitialized, setRestoring, batchUpdateFormData, mode])
+    }, [contractData, signatory, isInitialized, setRestoring, batchUpdateFormData, mode])
 
     // 计算大写金额（避免useEffect无限循环）
     const totalCostInWords = React.useMemo(() => {
@@ -303,22 +322,22 @@ const ProductServiceAgreement = forwardRef<
 
       try {
         setCustomerSearchLoading(true)
-        
+
         const currentPage = resetPage ? 1 : customerPage
-        
+
         const params: CustomerQueryParams = {
           page: currentPage,
           pageSize: 20, // 每次加载20条数据
-          companyName: searchValue.trim()
+          companyName: searchValue.trim(),
         }
-        
+
         const response = await searchCustomers(params)
-        
+
         if (response.code === 0 && response.data) {
           const { data: enterprises, total } = response.data
-          
+
           // 转换为选项格式
-          const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+          const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
             value: enterprise.companyName,
             label: (
               <div style={{ padding: '4px 0' }}>
@@ -335,19 +354,19 @@ const ProductServiceAgreement = forwardRef<
                 )}
               </div>
             ),
-            enterprise
+            enterprise,
           }))
-          
+
           if (resetPage) {
             setCustomerOptions(newOptions)
             setCustomerPage(1)
           } else {
             setCustomerOptions(prev => [...prev, ...newOptions])
           }
-          
+
           setCustomerTotal(total)
           setHasMoreCustomers(currentPage * 20 < total)
-          
+
           if (resetPage) {
             setCustomerPage(2) // 下次请求第二页
           } else {
@@ -380,36 +399,44 @@ const ProductServiceAgreement = forwardRef<
     }
 
     // 选择客户时自动填入信息
-    const handleCustomerSelect = useCallback((value: string, option: any) => {
-      const enterprise = option.enterprise
-      if (enterprise) {
-        const updateData: Record<string, any> = {
-          partyACompany: enterprise.companyName,
-          customerSearchValue: enterprise.companyName,
-          partyAAddress: (enterprise as any).registeredAddress || formData.partyAAddress,
-        }
-        
-        // 自动填写联系人和联系电话（从实际负责人的第一条记录）
-        if (enterprise.actualResponsibles && Array.isArray(enterprise.actualResponsibles) && enterprise.actualResponsibles.length > 0) {
-          const firstResponsible = enterprise.actualResponsibles[0]
-          if (firstResponsible.name) {
-            updateData.partyAContact = firstResponsible.name
+    const handleCustomerSelect = useCallback(
+      (value: string, option: any) => {
+        const enterprise = option.enterprise
+        if (enterprise) {
+          const updateData: Record<string, any> = {
+            partyACompany: enterprise.companyName,
+            customerSearchValue: enterprise.companyName,
+            partyACreditCode: enterprise.unifiedSocialCreditCode,
+            partyAAddress: (enterprise as any).registeredAddress || formData.partyAAddress,
           }
-          if (firstResponsible.phone) {
-            updateData.partyAPhone = firstResponsible.phone
+
+          // 自动填写联系人和联系电话（从实际负责人的第一条记录）
+          if (
+            enterprise.actualResponsibles &&
+            Array.isArray(enterprise.actualResponsibles) &&
+            enterprise.actualResponsibles.length > 0
+          ) {
+            const firstResponsible = enterprise.actualResponsibles[0]
+            if (firstResponsible.name) {
+              updateData.partyAContact = firstResponsible.name
+            }
+            if (firstResponsible.phone) {
+              updateData.partyAPhone = firstResponsible.phone
+            }
           }
+
+          if (mode === 'edit') {
+            // 编辑模式：使用本地状态
+            setEditModeFormData(prev => ({ ...prev, ...updateData }))
+          } else {
+            // 创建模式：使用store缓存
+            batchUpdateFormData(updateData)
+          }
+          message.success('企业信息已自动填入')
         }
-        
-        if (mode === 'edit') {
-          // 编辑模式：使用本地状态
-          setEditModeFormData(prev => ({ ...prev, ...updateData }))
-        } else {
-          // 创建模式：使用store缓存
-          batchUpdateFormData(updateData)
-        }
-        message.success('企业信息已自动填入')
-      }
-    }, [mode, batchUpdateFormData, formData.partyAAddress])
+      },
+      [mode, batchUpdateFormData, formData.partyAAddress]
+    )
 
     // 重置客户搜索状态
     const resetCustomerSearch = useCallback(() => {
@@ -417,6 +444,139 @@ const ProductServiceAgreement = forwardRef<
       setCustomerPage(1)
       setCustomerTotal(0)
       setHasMoreCustomers(false)
+    }, [])
+
+    // 搜索统一社会信用代码（精确搜索）
+    const handleCodeSearch = async (searchValue: string, resetPage: boolean = false) => {
+      if (!searchValue || !searchValue.trim()) {
+        setCodeOptions([])
+        setCodeTotal(0)
+        setHasMoreCodes(false)
+        return
+      }
+
+      try {
+        setCodeSearchLoading(true)
+        const currentPage = resetPage ? 1 : codePage
+
+        const params: CustomerQueryParams = {
+          page: currentPage,
+          pageSize: 20,
+          unifiedSocialCreditCode: searchValue.trim(),
+        }
+
+        const response = await searchCustomers(params)
+
+        if (response.code === 0 && response.data) {
+          const { data: enterprises, total } = response.data
+
+          // 转换为选项格式并显示企业信息
+          const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
+            value: enterprise.unifiedSocialCreditCode,
+            label: (
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                  {enterprise.unifiedSocialCreditCode}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>{enterprise.companyName}</div>
+                {(enterprise as any).registeredAddress && (
+                  <div style={{ fontSize: '12px', color: '#999' }}>
+                    地址: {(enterprise as any).registeredAddress}
+                  </div>
+                )}
+              </div>
+            ),
+            enterprise,
+          }))
+
+          if (resetPage) {
+            setCodeOptions(newOptions)
+            setCodePage(1)
+          } else {
+            setCodeOptions(prev => [...prev, ...newOptions])
+          }
+
+          setCodeTotal(total)
+          setHasMoreCodes(currentPage * 20 < total)
+
+          if (resetPage) {
+            setCodePage(2)
+          } else {
+            setCodePage(currentPage + 1)
+          }
+        } else {
+          if (resetPage) {
+            setCodeOptions([])
+            setCodeTotal(0)
+            setHasMoreCodes(false)
+          }
+        }
+      } catch (error) {
+        console.error('搜索统一社会信用代码失败:', error)
+        if (resetPage) {
+          setCodeOptions([])
+          setCodeTotal(0)
+          setHasMoreCodes(false)
+        }
+      } finally {
+        setCodeSearchLoading(false)
+      }
+    }
+
+    // 加载更多统一社会信用代码数据
+    const handleLoadMoreCodes = () => {
+      if (!codeSearchLoading && hasMoreCodes && codeSearchValue) {
+        handleCodeSearch(codeSearchValue, false)
+      }
+    }
+
+    // 选择统一社会信用代码时自动填入信息
+    const handleCodeSelect = useCallback(
+      (value: string, option: any) => {
+        const enterprise = option.enterprise
+        if (enterprise) {
+          const updateData: Record<string, any> = {
+            partyACompany: enterprise.companyName,
+            partyACreditCode: enterprise.unifiedSocialCreditCode,
+            customerSearchValue: enterprise.companyName,
+            ...((enterprise as any).registeredAddress && {
+              partyAAddress: (enterprise as any).registeredAddress,
+            }),
+          }
+
+          // 自动填写联系人和联系电话（从实际负责人的第一条记录）
+          if (
+            enterprise.actualResponsibles &&
+            Array.isArray(enterprise.actualResponsibles) &&
+            enterprise.actualResponsibles.length > 0
+          ) {
+            const firstResponsible = enterprise.actualResponsibles[0]
+            if (firstResponsible.name) {
+              updateData.partyAContact = firstResponsible.name
+            }
+            if (firstResponsible.phone) {
+              updateData.partyAPhone = firstResponsible.phone
+            }
+          }
+
+          // 应用数据更新
+          if (mode === 'edit') {
+            setEditModeFormData(prev => ({ ...prev, ...updateData }))
+          } else {
+            batchUpdateFormData(updateData)
+          }
+          message.success('企业信息已自动填入')
+        }
+      },
+      [mode, batchUpdateFormData]
+    )
+
+    // 重置统一社会信用代码搜索状态
+    const resetCodeSearch = useCallback(() => {
+      setCodeOptions([])
+      setCodePage(1)
+      setCodeTotal(0)
+      setHasMoreCodes(false)
     }, [])
 
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
@@ -430,101 +590,116 @@ const ProductServiceAgreement = forwardRef<
     }
 
     // 处理表单数据变化
-    const handleFormChange = useCallback((field: string, value: any) => {
-      if (mode === 'edit') {
-        // 编辑模式：使用本地状态
-        setEditModeFormData(prev => ({ ...prev, [field]: value }))
-        console.log(`💾 [编辑模式] ${field} 字段变化:`, value)
-      } else {
-        // 创建模式：使用store缓存
-        updateFormField(field, value)
-        console.log(`💾 [创建模式] ${field} 字段变化:`, value)
-      }
-    }, [mode, updateFormField])
+    const handleFormChange = useCallback(
+      (field: string, value: any) => {
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({ ...prev, [field]: value }))
+          console.log(`💾 [编辑模式] ${field} 字段变化:`, value)
+        } else {
+          // 创建模式：使用store缓存
+          updateFormField(field, value)
+          console.log(`💾 [创建模式] ${field} 字段变化:`, value)
+        }
+      },
+      [mode, updateFormField]
+    )
 
     // 处理勾选框状态变化
-    const handleCheckboxChange = useCallback((itemKey: string, checked: boolean) => {
-      const newCheckedItems = { ...checkedItems, [itemKey]: checked }
-      const newItemAmounts = { ...itemAmounts }
-      
-      // 如果取消勾选，清空对应金额
-      if (!checked) {
-        newItemAmounts[itemKey] = ''
-      }
+    const handleCheckboxChange = useCallback(
+      (itemKey: string, checked: boolean) => {
+        const newCheckedItems = { ...checkedItems, [itemKey]: checked }
+        const newItemAmounts = { ...itemAmounts }
 
-      if (mode === 'edit') {
-        // 编辑模式：使用本地状态
-        setEditModeFormData(prev => ({
-          ...prev,
-          checkedItems: newCheckedItems,
-          itemAmounts: newItemAmounts,
-        }))
-        console.log(`💾 [编辑模式] 复选框变化: ${itemKey}=${checked}`)
-      } else {
-        // 创建模式：使用store缓存
-        batchUpdateFormData({
-          checkedItems: newCheckedItems,
-          itemAmounts: newItemAmounts,
-        })
-        console.log(`💾 [创建模式] 复选框变化: ${itemKey}=${checked}`)
-      }
-    }, [checkedItems, itemAmounts, mode, batchUpdateFormData])
+        // 如果取消勾选，清空对应金额
+        if (!checked) {
+          newItemAmounts[itemKey] = ''
+        }
+
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({
+            ...prev,
+            checkedItems: newCheckedItems,
+            itemAmounts: newItemAmounts,
+          }))
+          console.log(`💾 [编辑模式] 复选框变化: ${itemKey}=${checked}`)
+        } else {
+          // 创建模式：使用store缓存
+          batchUpdateFormData({
+            checkedItems: newCheckedItems,
+            itemAmounts: newItemAmounts,
+          })
+          console.log(`💾 [创建模式] 复选框变化: ${itemKey}=${checked}`)
+        }
+      },
+      [checkedItems, itemAmounts, mode, batchUpdateFormData]
+    )
 
     // 处理金额输入变化
-    const handleAmountChange = useCallback((itemKey: string, value: string) => {
-      // 格式化金额输入，确保最多两位小数
-      const formattedValue = formatAmount(value)
-      const newItemAmounts = { ...itemAmounts, [itemKey]: formattedValue }
+    const handleAmountChange = useCallback(
+      (itemKey: string, value: string) => {
+        // 格式化金额输入，确保最多两位小数
+        const formattedValue = formatAmount(value)
+        const newItemAmounts = { ...itemAmounts, [itemKey]: formattedValue }
 
-      if (mode === 'edit') {
-        // 编辑模式：使用本地状态
-        setEditModeFormData(prev => ({
-          ...prev,
-          itemAmounts: newItemAmounts,
-        }))
-        console.log(`💾 [编辑模式] 金额变化: ${itemKey}=${formattedValue}`)
-      } else {
-        // 创建模式：使用store缓存
-        batchUpdateFormData({
-          itemAmounts: newItemAmounts,
-        })
-        console.log(`💾 [创建模式] 金额变化: ${itemKey}=${formattedValue}`)
-      }
-    }, [itemAmounts, mode, batchUpdateFormData])
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({
+            ...prev,
+            itemAmounts: newItemAmounts,
+          }))
+          console.log(`💾 [编辑模式] 金额变化: ${itemKey}=${formattedValue}`)
+        } else {
+          // 创建模式：使用store缓存
+          batchUpdateFormData({
+            itemAmounts: newItemAmounts,
+          })
+          console.log(`💾 [创建模式] 金额变化: ${itemKey}=${formattedValue}`)
+        }
+      },
+      [itemAmounts, mode, batchUpdateFormData]
+    )
 
     // 处理表单金额字段变化
-    const handleFormAmountChange = useCallback((field: string, value: string) => {
-      // 格式化金额输入，确保最多两位小数
-      const formattedValue = formatAmount(value)
+    const handleFormAmountChange = useCallback(
+      (field: string, value: string) => {
+        // 格式化金额输入，确保最多两位小数
+        const formattedValue = formatAmount(value)
 
-      // 更新显示值（用户看到的）
-      const newAmountDisplayValues = { ...amountDisplayValues, [field]: formattedValue }
-      
-      if (mode === 'edit') {
-        // 编辑模式：使用本地状态
-        setEditModeFormData(prev => ({
-          ...prev,
-          amountDisplayValues: newAmountDisplayValues,
-        }))
-      } else {
-        // 创建模式：使用store缓存
-        updateFormField('amountDisplayValues', newAmountDisplayValues)
-      }
-    }, [amountDisplayValues, mode, updateFormField])
+        // 更新显示值（用户看到的）
+        const newAmountDisplayValues = { ...amountDisplayValues, [field]: formattedValue }
+
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({
+            ...prev,
+            amountDisplayValues: newAmountDisplayValues,
+          }))
+        } else {
+          // 创建模式：使用store缓存
+          updateFormField('amountDisplayValues', newAmountDisplayValues)
+        }
+      },
+      [amountDisplayValues, mode, updateFormField]
+    )
 
     // 处理表单金额字段失焦
-    const handleFormAmountBlur = useCallback((field: string, value: string) => {
-      const numericValue = parseAmount(value)
-      
-      // 更新数值（用于计算和提交）
-      if (mode === 'edit') {
-        // 编辑模式：使用本地状态
-        setEditModeFormData(prev => ({ ...prev, [field]: numericValue }))
-      } else {
-        // 创建模式：使用store缓存
-        updateFormField(field, numericValue)
-      }
-    }, [mode, updateFormField])
+    const handleFormAmountBlur = useCallback(
+      (field: string, value: string) => {
+        const numericValue = parseAmount(value)
+
+        // 更新数值（用于计算和提交）
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({ ...prev, [field]: numericValue }))
+        } else {
+          // 创建模式：使用store缓存
+          updateFormField(field, numericValue)
+        }
+      },
+      [mode, updateFormField]
+    )
 
     // 收集服务项目数据
     const collectServiceData = () => {
@@ -698,6 +873,11 @@ const ProductServiceAgreement = forwardRef<
         return false
       }
 
+      if (!formData.partyACreditCode?.trim()) {
+        message.error('请填写甲方统一社会信用代码')
+        return false
+      }
+
       if (!formData.partyAContact?.trim()) {
         message.error('请填写甲方联系人')
         return false
@@ -793,6 +973,7 @@ const ProductServiceAgreement = forwardRef<
           signatory: formData.signatory,
           contractType: formData.contractType,
           partyACompany: formData.partyACompany,
+          partyACreditCode: formData.partyACreditCode,
           partyAAddress: formData.partyAAddress,
           partyAContact: formData.partyAContact,
           partyAPhone: formData.partyAPhone,
@@ -883,51 +1064,51 @@ const ProductServiceAgreement = forwardRef<
     const getFormData = useCallback(() => {
       const serviceData = collectServiceData()
       const completeData = getCompleteFormData()
-      
+
       // 返回完整的表单数据
       const data = {
         ...completeData,
         ...serviceData,
       }
-      
+
       console.log('📋 [产品服务协议] getFormData 返回数据:', {
         partyAAddress: data.partyAAddress,
         partyAPhone: data.partyAPhone,
         partyAContact: data.partyAContact,
         partyASignDate: data.partyASignDate,
         partyBSignDate: data.partyBSignDate,
-        totalFields: Object.keys(data).length
+        totalFields: Object.keys(data).length,
       })
-      
+
       return data
     }, [getCompleteFormData])
 
-      // 监听客户数据同步事件 (仅在创建模式下)
-  useEffect(() => {
-    // 编辑模式下跳过客户数据同步，避免覆盖API数据
-    if (mode === 'edit') return
-    
-    const handleSyncCustomerData = (event: any) => {
-      try {
-        const customerName = event.detail?.customerName
-        if (customerName && customerName !== customerSearchValue) {
-          console.log('🔄 收到客户数据同步事件，强制同步客户名称:', customerName)
-          batchUpdateFormData({
-            customerSearchValue: customerName,
-            partyACompany: customerName || formData.partyACompany,
-          })
-        }
-      } catch (error) {
-        console.error('同步客户数据失败:', error)
-      }
-    }
+    // 监听客户数据同步事件 (仅在创建模式下)
+    useEffect(() => {
+      // 编辑模式下跳过客户数据同步，避免覆盖API数据
+      if (mode === 'edit') return
 
-    document.addEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
-    
-    return () => {
-      document.removeEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
-    }
-  }, [customerSearchValue, formData.partyACompany, batchUpdateFormData, mode])
+      const handleSyncCustomerData = (event: any) => {
+        try {
+          const customerName = event.detail?.customerName
+          if (customerName && customerName !== customerSearchValue) {
+            console.log('🔄 收到客户数据同步事件，强制同步客户名称:', customerName)
+            batchUpdateFormData({
+              customerSearchValue: customerName,
+              partyACompany: customerName || formData.partyACompany,
+            })
+          }
+        } catch (error) {
+          console.error('同步客户数据失败:', error)
+        }
+      }
+
+      document.addEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
+
+      return () => {
+        document.removeEventListener('syncCustomerData', handleSyncCustomerData as EventListener)
+      }
+    }, [customerSearchValue, formData.partyACompany, batchUpdateFormData, mode])
 
     useImperativeHandle(ref, () => ({
       validateForm,
@@ -979,39 +1160,39 @@ const ProductServiceAgreement = forwardRef<
           <div className="party-block">
             <div className="party-header">
               <span className="party-label">【委托方】（甲方）：</span>
-                              <AutoComplete
-                  className="party-company-input"
-                  placeholder="请输入甲方公司名称进行搜索"
-                  options={customerOptions}
-                  value={customerSearchValue || formData.partyACompany || ''}
-                  onSearch={(value) => {
-                    updateFormField('customerSearchValue', value)
-                    if (value && value.trim()) {
-                      handleCustomerSearch(value.trim(), true)
-                    } else {
-                      resetCustomerSearch()
-                    }
-                  }}
-                  onSelect={(value, option) => {
-                    handleCustomerSelect(value, option)
-                  }}
-                  onChange={(value) => {
-                    batchUpdateFormData({
-                      customerSearchValue: value,
-                      partyACompany: value,
-                    })
-                    // 如果输入值为空，重置搜索状态
-                    if (!value || !value.trim()) {
-                      resetCustomerSearch()
-                    }
-                  }}
-                  // 确保组件焦点获取时同步值
-                  onFocus={() => {
-                    // 如果有公司名称但没有搜索值，同步它们
-                    if (formData.partyACompany && !customerSearchValue) {
-                      updateFormField('customerSearchValue', formData.partyACompany)
-                    }
-                  }}
+              <AutoComplete
+                className="party-company-input"
+                placeholder="请输入甲方公司名称进行搜索"
+                options={customerOptions}
+                value={customerSearchValue || formData.partyACompany || ''}
+                onSearch={value => {
+                  updateFormField('customerSearchValue', value)
+                  if (value && value.trim()) {
+                    handleCustomerSearch(value.trim(), true)
+                  } else {
+                    resetCustomerSearch()
+                  }
+                }}
+                onSelect={(value, option) => {
+                  handleCustomerSelect(value, option)
+                }}
+                onChange={value => {
+                  batchUpdateFormData({
+                    customerSearchValue: value,
+                    partyACompany: value,
+                  })
+                  // 如果输入值为空，重置搜索状态
+                  if (!value || !value.trim()) {
+                    resetCustomerSearch()
+                  }
+                }}
+                // 确保组件焦点获取时同步值
+                onFocus={() => {
+                  // 如果有公司名称但没有搜索值，同步它们
+                  if (formData.partyACompany && !customerSearchValue) {
+                    updateFormField('customerSearchValue', formData.partyACompany)
+                  }
+                }}
                 notFoundContent={
                   customerSearchLoading ? (
                     <div style={{ textAlign: 'center', padding: '12px' }}>
@@ -1024,7 +1205,7 @@ const ProductServiceAgreement = forwardRef<
                     </div>
                   ) : null
                 }
-                dropdownRender={(menu) => (
+                dropdownRender={menu => (
                   <div>
                     {menu}
                     {hasMoreCustomers && (
@@ -1034,7 +1215,7 @@ const ProductServiceAgreement = forwardRef<
                           padding: '8px 12px',
                           borderTop: '1px solid #f0f0f0',
                           cursor: 'pointer',
-                          color: '#1890ff'
+                          color: '#1890ff',
                         }}
                         onClick={handleLoadMoreCustomers}
                       >
@@ -1049,14 +1230,109 @@ const ProductServiceAgreement = forwardRef<
                       </div>
                     )}
                     {customerTotal > 0 && (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '4px 12px',
-                        fontSize: '12px',
-                        color: '#999',
-                        borderTop: '1px solid #f0f0f0'
-                      }}>
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0',
+                        }}
+                      >
                         共找到 {customerTotal} 条结果
+                      </div>
+                    )}
+                  </div>
+                )}
+                filterOption={false} // 禁用本地过滤，使用服务器端搜索
+              />
+            </div>
+
+            {/* 甲方统一社会信用代码 */}
+            <div className="party-credit-code">
+              <span className="credit-code-label">统一社会信用代码：</span>
+              <AutoComplete
+                className="credit-code-input"
+                placeholder="*请输入甲方统一社会信用代码进行搜索"
+                options={codeOptions}
+                value={codeSearchValue || formData.partyACreditCode || ''}
+                onSearch={value => {
+                  setCodeSearchValue(value)
+                  if (value && value.trim()) {
+                    handleCodeSearch(value.trim(), true)
+                  } else {
+                    resetCodeSearch()
+                  }
+                }}
+                onSelect={(value, option) => {
+                  handleCodeSelect(value, option)
+                }}
+                onChange={value => {
+                  setCodeSearchValue(value)
+                  if (mode === 'edit') {
+                    setEditModeFormData(prev => ({ ...prev, partyACreditCode: value }))
+                  } else {
+                    updateFormField('partyACreditCode', value)
+                  }
+                  // 如果输入值为空，重置搜索状态
+                  if (!value || !value.trim()) {
+                    resetCodeSearch()
+                  }
+                }}
+                // 确保组件焦点获取时同步值
+                onFocus={() => {
+                  // 如果有统一社会信用代码但没有搜索值，同步它们
+                  if (formData.partyACreditCode && !codeSearchValue) {
+                    setCodeSearchValue(formData.partyACreditCode)
+                  }
+                }}
+                notFoundContent={
+                  codeSearchLoading ? (
+                    <div style={{ textAlign: 'center', padding: '12px' }}>
+                      <Spin size="small" />
+                      <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                    </div>
+                  ) : codeSearchValue && codeOptions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                      暂无匹配结果
+                    </div>
+                  ) : null
+                }
+                dropdownRender={menu => (
+                  <div>
+                    {menu}
+                    {hasMoreCodes && (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '8px 12px',
+                          borderTop: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          color: '#1890ff',
+                        }}
+                        onClick={handleLoadMoreCodes}
+                      >
+                        {codeSearchLoading ? (
+                          <>
+                            <LoadingOutlined style={{ marginRight: '4px' }} />
+                            加载中...
+                          </>
+                        ) : (
+                          '加载更多'
+                        )}
+                      </div>
+                    )}
+                    {codeTotal > 0 && (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0',
+                        }}
+                      >
+                        共找到 {codeTotal} 条结果
                       </div>
                     )}
                   </div>
@@ -1847,7 +2123,12 @@ const ProductServiceAgreement = forwardRef<
                       }
                       try {
                         const dayjsValue = dayjs(formData.partyASignDate)
-                        console.log('🗓️ 甲方签署日期解析:', formData.partyASignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        console.log(
+                          '🗓️ 甲方签署日期解析:',
+                          formData.partyASignDate,
+                          '->',
+                          dayjsValue.format('YYYY-MM-DD')
+                        )
                         return dayjsValue.isValid() ? dayjsValue : undefined
                       } catch (error) {
                         console.error('🗓️ 甲方签署日期解析失败:', formData.partyASignDate, error)
@@ -1897,7 +2178,12 @@ const ProductServiceAgreement = forwardRef<
                       }
                       try {
                         const dayjsValue = dayjs(formData.partyBSignDate)
-                        console.log('🗓️ 乙方签署日期解析:', formData.partyBSignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        console.log(
+                          '🗓️ 乙方签署日期解析:',
+                          formData.partyBSignDate,
+                          '->',
+                          dayjsValue.format('YYYY-MM-DD')
+                        )
                         return dayjsValue.isValid() ? dayjsValue : undefined
                       } catch (error) {
                         console.error('🗓️ 乙方签署日期解析失败:', formData.partyBSignDate, error)

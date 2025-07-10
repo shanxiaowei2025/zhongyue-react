@@ -94,6 +94,14 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
     const [customerTotal, setCustomerTotal] = useState<number>(0)
     const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
 
+    // 统一社会信用代码搜索相关状态
+    const [codeSearchLoading, setCodeSearchLoading] = useState<boolean>(false)
+    const [codeOptions, setCodeOptions] = useState<CustomerSearchOption[]>([])
+    const [codeSearchValue, setCodeSearchValue] = useState<string>('')
+    const [codePage, setCodePage] = useState<number>(1)
+    const [codeTotal, setCodeTotal] = useState<number>(0)
+    const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
+
     // 清除字段验证错误
     const clearValidationError = (fieldName: string) => {
       setValidationErrors(prev => {
@@ -328,6 +336,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       const enterprise = option.enterprise
       if (enterprise) {
         handleFormChange('partyACompany', enterprise.companyName)
+        handleFormChange('partyACreditCode', enterprise.unifiedSocialCreditCode)
         if ((enterprise as any).registeredAddress) {
           handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
         }
@@ -358,6 +367,128 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       setCustomerPage(1)
       setCustomerTotal(0)
       setHasMoreCustomers(false)
+    }
+
+    // 搜索统一社会信用代码（精确搜索）
+    const handleCodeSearch = async (searchValue: string, resetPage: boolean = false) => {
+      if (!searchValue || !searchValue.trim()) {
+        setCodeOptions([])
+        setCodeTotal(0)
+        setHasMoreCodes(false)
+        return
+      }
+
+      try {
+        setCodeSearchLoading(true)
+        const currentPage = resetPage ? 1 : codePage
+
+        const params: CustomerQueryParams = {
+          page: currentPage,
+          pageSize: 20,
+          unifiedSocialCreditCode: searchValue.trim(),
+        }
+
+        const response = await searchCustomers(params)
+
+        if (response.code === 0 && response.data) {
+          const { data: enterprises, total } = response.data
+
+          // 转换为选项格式并显示企业信息
+          const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
+            value: enterprise.unifiedSocialCreditCode,
+            label: (
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
+                  {enterprise.unifiedSocialCreditCode}
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>{enterprise.companyName}</div>
+                {(enterprise as any).registeredAddress && (
+                  <div style={{ fontSize: '12px', color: '#999' }}>
+                    地址: {(enterprise as any).registeredAddress}
+                  </div>
+                )}
+              </div>
+            ),
+            enterprise,
+          }))
+
+          if (resetPage) {
+            setCodeOptions(newOptions)
+            setCodePage(1)
+          } else {
+            setCodeOptions(prev => [...prev, ...newOptions])
+          }
+
+          setCodeTotal(total)
+          setHasMoreCodes(currentPage * 20 < total)
+
+          if (resetPage) {
+            setCodePage(2)
+          } else {
+            setCodePage(currentPage + 1)
+          }
+        } else {
+          if (resetPage) {
+            setCodeOptions([])
+            setCodeTotal(0)
+            setHasMoreCodes(false)
+          }
+        }
+      } catch (error) {
+        console.error('搜索统一社会信用代码失败:', error)
+        if (resetPage) {
+          setCodeOptions([])
+          setCodeTotal(0)
+          setHasMoreCodes(false)
+        }
+      } finally {
+        setCodeSearchLoading(false)
+      }
+    }
+
+    // 加载更多统一社会信用代码数据
+    const handleLoadMoreCodes = () => {
+      if (!codeSearchLoading && hasMoreCodes && codeSearchValue) {
+        handleCodeSearch(codeSearchValue, false)
+      }
+    }
+
+    // 选择统一社会信用代码时自动填入信息
+    const handleCodeSelect = (value: string, option: any) => {
+      const enterprise = option.enterprise
+      if (enterprise) {
+        handleFormChange('partyACompany', enterprise.companyName)
+        handleFormChange('partyACreditCode', enterprise.unifiedSocialCreditCode)
+        setCustomerSearchValue(enterprise.companyName)
+        if ((enterprise as any).registeredAddress) {
+          handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
+        }
+
+        // 自动填写联系人和联系电话（从实际负责人的第一条记录）
+        if (
+          enterprise.actualResponsibles &&
+          Array.isArray(enterprise.actualResponsibles) &&
+          enterprise.actualResponsibles.length > 0
+        ) {
+          const firstResponsible = enterprise.actualResponsibles[0]
+          if (firstResponsible.name) {
+            handleFormChange('partyAContact', firstResponsible.name)
+          }
+          if (firstResponsible.phone) {
+            handleFormChange('partyAPhone', firstResponsible.phone)
+          }
+        }
+        message.success('企业信息已自动填入')
+      }
+    }
+
+    // 重置统一社会信用代码搜索状态
+    const resetCodeSearch = () => {
+      setCodeOptions([])
+      setCodeSearchValue('')
+      setCodePage(1)
+      setCodeTotal(0)
+      setHasMoreCodes(false)
     }
 
     const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
@@ -553,6 +684,13 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         hasErrors = true
       }
 
+      // 甲方统一社会信用代码必填验证
+      if (!formData.partyACreditCode?.trim()) {
+        setValidationError('partyACreditCode')
+        message.error('请填写甲方统一社会信用代码')
+        hasErrors = true
+      }
+
       // 甲方联系人必填验证
       if (!formData.partyAContact?.trim()) {
         setValidationError('partyAContact')
@@ -705,6 +843,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
 
         // 甲方信息
         partyACompany: formData.partyACompany || '',
+        partyACreditCode: formData.partyACreditCode || '',
         partyAAddress: formData.partyAAddress || '',
         partyAPhone: formData.partyAPhone || '',
         partyAContact: formData.partyAContact || '',
@@ -932,6 +1071,92 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                         }}
                       >
                         共找到 {customerTotal} 条结果
+                      </div>
+                    )}
+                  </div>
+                )}
+                filterOption={false} // 禁用本地过滤，使用服务器端搜索
+              />
+            </div>
+
+            {/* 甲方统一社会信用代码 */}
+            <div className={styles.partyCreditCode}>
+              <span className={styles.creditCodeLabel}>统一社会信用代码：</span>
+              <AutoComplete
+                className={styles.inputField}
+                placeholder="*请输入甲方统一社会信用代码进行搜索"
+                options={codeOptions}
+                value={codeSearchValue || formData.partyACreditCode || ''}
+                onSearch={value => {
+                  setCodeSearchValue(value)
+                  if (value && value.trim()) {
+                    handleCodeSearch(value.trim(), true)
+                  } else {
+                    resetCodeSearch()
+                  }
+                }}
+                onSelect={(value, option) => {
+                  handleCodeSelect(value, option)
+                }}
+                onChange={value => {
+                  setCodeSearchValue(value)
+                  handleFormChange('partyACreditCode', value)
+                  // 如果输入值为空，重置搜索状态
+                  if (!value || !value.trim()) {
+                    resetCodeSearch()
+                  }
+                }}
+                style={{
+                  width: 'auto',
+                  minWidth: '300px',
+                }}
+                notFoundContent={
+                  codeSearchLoading ? (
+                    <div style={{ textAlign: 'center', padding: '12px' }}>
+                      <Spin size="small" />
+                      <span style={{ marginLeft: '8px' }}>搜索中...</span>
+                    </div>
+                  ) : codeSearchValue && codeOptions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                      暂无匹配结果
+                    </div>
+                  ) : null
+                }
+                dropdownRender={menu => (
+                  <div>
+                    {menu}
+                    {hasMoreCodes && (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '8px 12px',
+                          borderTop: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          color: '#1890ff',
+                        }}
+                        onClick={handleLoadMoreCodes}
+                      >
+                        {codeSearchLoading ? (
+                          <>
+                            <LoadingOutlined style={{ marginRight: '4px' }} />
+                            加载中...
+                          </>
+                        ) : (
+                          '加载更多'
+                        )}
+                      </div>
+                    )}
+                    {codeTotal > 0 && (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0',
+                        }}
+                      >
+                        共找到 {codeTotal} 条结果
                       </div>
                     )}
                   </div>
