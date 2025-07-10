@@ -913,11 +913,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         }
       })
 
-      // 处理合同图片 - 将对象数组转换为文件名数组
-      if (formattedValues.contractImage && Array.isArray(formattedValues.contractImage)) {
-        formattedValues.contractImage = formattedValues.contractImage.map(
-          (item: any) => item.fileName
-        )
+      // 处理合同图片 - 将多文件对象转换为文件名数组
+      if (formattedValues.contractImage && typeof formattedValues.contractImage === 'object') {
+        if (Array.isArray(formattedValues.contractImage)) {
+          // 兼容旧的数组格式
+          formattedValues.contractImage = formattedValues.contractImage.map(
+            (item: any) => item.fileName
+          )
+        } else {
+          // 新的对象格式: {"1752163820899_476": {"fileName": "1_1752163821041.jpg", "url": "..."}}
+          formattedValues.contractImage = Object.values(formattedValues.contractImage).map(
+            (item: any) => item.fileName
+          )
+        }
       } else if (
         formattedValues.contractImage === undefined ||
         formattedValues.contractImage === null
@@ -926,11 +934,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formattedValues.contractImage = []
       }
 
-      // 处理收据凭证 - 将对象数组转换为文件名数组
-      if (formattedValues.proofOfCharge && Array.isArray(formattedValues.proofOfCharge)) {
-        formattedValues.proofOfCharge = formattedValues.proofOfCharge.map(
-          (item: any) => item.fileName
-        )
+      // 处理收据凭证 - 将多文件对象转换为文件名数组
+      if (formattedValues.proofOfCharge && typeof formattedValues.proofOfCharge === 'object') {
+        if (Array.isArray(formattedValues.proofOfCharge)) {
+          // 兼容旧的数组格式
+          formattedValues.proofOfCharge = formattedValues.proofOfCharge.map(
+            (item: any) => item.fileName
+          )
+        } else {
+          // 新的对象格式: {"1752163820899_476": {"fileName": "1_1752163821041.jpg", "url": "..."}}
+          formattedValues.proofOfCharge = Object.values(formattedValues.proofOfCharge).map(
+            (item: any) => item.fileName
+          )
+        }
       } else if (
         formattedValues.proofOfCharge === undefined ||
         formattedValues.proofOfCharge === null
@@ -952,6 +968,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       }
 
       console.log('提交格式化后的表单数据:', formattedValues)
+      console.log('合同图片转换后:', formattedValues.contractImage)
+      console.log('收据凭证转换后:', formattedValues.proofOfCharge)
 
       if (mode === 'add') {
         await createExpense(formattedValues)
