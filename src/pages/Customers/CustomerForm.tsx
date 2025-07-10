@@ -31,7 +31,7 @@ import {
   QuestionCircleOutlined,
 } from '@ant-design/icons'
 import ImageUpload from '../../components/ImageUpload'
-import MultiImageUpload from '../../components/MultiImageUpload'
+import MultiFileUpload from '../../components/MultiFileUpload'
 import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
 import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
@@ -1384,17 +1384,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       '-'
                     )
                   ) : (
-                    <MultiImageUpload
+                    <MultiFileUpload
                       disabled={false}
                       value={images || {}}
                       onChange={value => {
-                        console.log('MultiImageUpload onChange 被调用, value:', value)
+                        console.log('MultiFileUpload onChange 被调用, value:', value)
                         // 更新实缴资本项中的图片
                         handleUpdatePaidInCapitalItem(index, 'images', value)
                       }}
                       onSuccess={() => {
                         // 调用回调但不做其他操作，避免自动保存导致图片丢失
-                        console.log('MultiImageUpload onSuccess 被调用')
+                        console.log('MultiFileUpload onSuccess 被调用')
                       }}
                     />
                   ),
@@ -1575,17 +1575,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       '-'
                     )
                   ) : (
-                    <MultiImageUpload
+                    <MultiFileUpload
                       disabled={false}
                       value={images || {}}
                       onChange={value => {
-                        console.log('行政许可 MultiImageUpload onChange 被调用, value:', value)
+                        console.log('行政许可 MultiFileUpload onChange 被调用, value:', value)
                         // 更新行政许可项中的图片
                         handleUpdateAdministrativeLicenseItem(index, 'images', value)
                       }}
                       onSuccess={() => {
                         // 调用回调但不做其他操作，避免自动保存导致图片丢失
-                        console.log('行政许可 MultiImageUpload onSuccess 被调用')
+                        console.log('行政许可 MultiFileUpload onSuccess 被调用')
                       }}
                     />
                   ),
@@ -2038,7 +2038,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <div>
             <Form.Item name="otherIdImages" label="其他人员身份证照片">
-              <MultiImageUpload
+              <MultiFileUpload
                 title="其他人员身份证照片"
                 disabled={mode === 'view'}
                 value={form.getFieldValue('otherIdImages') || {}}
@@ -2050,7 +2050,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           <div>
             <Form.Item name="supplementaryImages" label="补充资料照片">
-              <MultiImageUpload
+              <MultiFileUpload
                 title="补充资料照片"
                 disabled={mode === 'view'}
                 value={form.getFieldValue('supplementaryImages') || {}}

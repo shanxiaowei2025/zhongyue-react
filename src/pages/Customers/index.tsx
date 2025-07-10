@@ -1635,7 +1635,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {Object.entries(images).map(([key, image]) => (
           <div key={key} className="mb-2">
-            <div className="mb-1">{key}</div>
+            <div className="mb-1">{image.fileName || key}</div>
             {renderImage(image, key)}
           </div>
         ))}
@@ -1738,7 +1738,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                   rel="noopener noreferrer"
                   className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
                 >
-                  {key}
+                  {fileData.fileName || key}
                 </a>
               </div>
             )
@@ -1766,7 +1766,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                   rel="noopener noreferrer"
                   className="text-xs text-blue-500 mt-1 hover:underline truncate w-full text-center"
                 >
-                  {key}
+                  {fileData.fileName || key}
                 </a>
               </div>
             )
