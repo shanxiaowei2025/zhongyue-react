@@ -13,9 +13,12 @@ import {
   FileJpgOutlined,
   FileImageOutlined,
   FileTextOutlined,
+  InboxOutlined,
 } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
+
+const { Dragger } = Upload
 
 // 定义文件类型图标映射
 const FILE_ICONS: Record<string, React.ReactNode> = {
@@ -26,11 +29,14 @@ const FILE_ICONS: Record<string, React.ReactNode> = {
   xlsx: <FileExcelOutlined />,
   ppt: <FilePptOutlined />,
   pptx: <FilePptOutlined />,
+  csv: <FileTextOutlined />,
+  txt: <FileTextOutlined />,
   jpg: <FileJpgOutlined />,
   jpeg: <FileJpgOutlined />,
   png: <FileImageOutlined />,
   gif: <FileImageOutlined />,
-  txt: <FileTextOutlined />,
+  bmp: <FileImageOutlined />,
+  webp: <FileImageOutlined />,
   default: <FileOutlined />,
 }
 
@@ -40,11 +46,10 @@ interface FileUploadProps {
   onChange?: (value: { fileName: string; url: string } | undefined) => void
   disabled?: boolean
   onSuccess?: (isAutoSave: boolean) => void
-  accept?: string // 新增: 接受的文件类型，默认为所有文件
-  multiple?: boolean // 新增: 是否允许多文件上传
-  maxCount?: number // 新增: 最大上传数量，默认为1
-  onFileUpload?: (fileName: string) => void // 新增: 文件上传成功回调
-  onFileRemove?: () => void // 新增: 文件删除回调
+  accept?: string
+  showDragArea?: boolean // 是否显示拖拽上传区域
+  onFileUpload?: (fileName: string) => void
+  onFileRemove?: () => void
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -53,16 +58,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
   onChange,
   disabled = false,
   onSuccess,
-  accept = '*',
-  multiple = false,
-  maxCount = 1,
+  accept = '.jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv',
+  showDragArea = false,
   onFileUpload,
   onFileRemove,
 }) => {
   const [loading, setLoading] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewFile, setPreviewFile] = useState('')
-  const [isImage, setIsImage] = useState(false)
   const [fileError, setFileError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
@@ -86,78 +89,69 @@ const FileUpload: React.FC<FileUploadProps> = ({
   }, [value?.url])
 
   // 判断文件类型
-  const getFileType = (fileName: any): string => {
+  const getFileType = (fileName: string): string => {
     if (!fileName) return 'default'
-    // 确保fileName是字符串类型
-    const fileNameStr =
-      typeof fileName === 'string'
-        ? fileName
-        : fileName.fileName
-          ? fileName.fileName
-          : fileName.url
-            ? fileName.url
-            : String(fileName)
-
-    const extension = fileNameStr.split('.').pop()?.toLowerCase() || 'default'
+    const extension = fileName.split('.').pop()?.toLowerCase() || 'default'
     return FILE_ICONS[extension] ? extension : 'default'
   }
 
   // 判断是否为图片
-  const checkIsImage = (fileName: any): boolean => {
+  const checkIsImage = (fileName: string): boolean => {
     if (!fileName) return false
-    // 确保fileName是字符串类型
-    const fileNameStr =
-      typeof fileName === 'string'
-        ? fileName
-        : fileName.fileName
-          ? fileName.fileName
-          : fileName.url
-            ? fileName.url
-            : String(fileName)
-
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
-    const extension = fileNameStr.split('.').pop()?.toLowerCase() || ''
+    const extension = fileName.split('.').pop()?.toLowerCase() || ''
     return imageExtensions.includes(extension)
   }
 
-  const beforeUpload = (file: File) => {
-    // 检查文件类型是否符合accept属性
-    if (accept !== '*') {
-      const acceptTypes = accept.split(',').map(type => type.trim())
-      const fileType = file.type || `application/${file.name.split('.').pop()}`
+  // 获取文件图标
+  const getFileIcon = (fileName: string) => {
+    const fileType = getFileType(fileName)
+    return FILE_ICONS[fileType] || FILE_ICONS.default
+  }
 
+  // 获取文件扩展名
+  const getFileExtension = (fileName: string) => {
+    if (!fileName) return ''
+    return fileName.split('.').pop()?.toUpperCase() || ''
+  }
+
+  const beforeUpload = (file: File) => {
+    console.log('beforeUpload called:', file.name)
+    
+    // 检查文件类型
+    if (accept && accept !== '*') {
+      const acceptTypes = accept.split(',').map(type => type.trim())
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
+      
       const isAccepted = acceptTypes.some(type => {
         if (type.startsWith('.')) {
-          // 如果是按扩展名限制
           return file.name.toLowerCase().endsWith(type.toLowerCase())
         } else if (type.includes('*')) {
-          // 如果是按MIME类型通配符限制
           const typeParts = type.split('/')
-          const fileParts = fileType.split('/')
+          const fileParts = (file.type || `application/${fileExtension}`).split('/')
           return (
             typeParts[0] === '*' ||
             (typeParts[0] === fileParts[0] &&
               (typeParts[1] === '*' || typeParts[1] === fileParts[1]))
           )
         } else {
-          // 如果是按完整MIME类型限制
-          return fileType === type
+          return file.type === type
         }
       })
 
       if (!isAccepted) {
-        message.error(`只能上传${accept}类型的文件！`)
+        message.error('文件格式不支持！')
         return false
       }
     }
 
-    // 移除文件大小限制，允许上传任意大小的文件
-
-    return true
+    return true // 允许上传，使用自定义上传
   }
 
   const handleCustomUpload = async (options: any) => {
     const { file, onSuccess: onUploadSuccess, onError } = options
+    console.log('handleCustomUpload called:', file.name)
+    
     setLoading(true)
 
     try {
@@ -171,9 +165,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         // 记录上传的文件
         onFileUpload?.(result.fileName)
 
-        // 检查是否是图片
-        setIsImage(checkIsImage(result.fileName))
-
         // 上传成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)
       } else {
@@ -181,6 +172,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
     } catch (error) {
       console.error('上传出错:', error)
+      message.error('上传失败')
       onError('上传失败')
     } finally {
       setLoading(false)
@@ -195,11 +187,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
       // 尝试使用url中的文件名进行删除
       let fileNameToDelete = value.fileName
 
-      // 尝试从URL中提取更精确的文件名
-      if (value.url) {
+      // 如果文件名不包含连字符，尝试从URL中提取更精确的文件名
+      if (!fileNameToDelete.includes('-') && value.url) {
         const urlParts = value.url.split('/')
         const lastPart = urlParts[urlParts.length - 1]
-        if (lastPart) {
+        if (lastPart && lastPart.includes('-')) {
           fileNameToDelete = lastPart.split('?')[0] // 移除可能的查询参数
         }
       }
@@ -238,9 +230,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       setPreviewFile(urlWithTimestamp)
       setPreviewVisible(true)
 
-      // 检查是否是图片
-      setIsImage(checkIsImage(value.fileName))
-
       // 重置重试计数
       setRetryCount(0)
       setFileError(false)
@@ -267,7 +256,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   // 处理图片加载错误
   const handleImageError = () => {
-    if (retryCount < maxRetries && value?.url && isImage) {
+    if (retryCount < maxRetries && value?.url) {
       // 设置递增的重试延迟: 2秒, 4秒, 8秒
       const retryDelay = Math.pow(2, retryCount + 1) * 1000
 
@@ -285,59 +274,64 @@ const FileUpload: React.FC<FileUploadProps> = ({
           `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
         )
       }, retryDelay)
-    } else if (isImage) {
+    } else {
       // 超过最大重试次数，显示错误状态
       setFileError(true)
-      message.error(`图片加载失败，已尝试${maxRetries}次重新加载`)
+      if (retryCount >= maxRetries) {
+        message.error(`文件加载失败，已尝试${maxRetries}次重新加载`)
+      }
     }
-  }
-
-  // 获取文件图标
-  const getFileIcon = (fileName: string) => {
-    const fileType = getFileType(fileName)
-    return FILE_ICONS[fileType] || FILE_ICONS.default
-  }
-
-  const getFileExtension = (fileName: any) => {
-    if (!fileName) return ''
-    // 确保fileName是字符串类型
-    const fileNameStr =
-      typeof fileName === 'string'
-        ? fileName
-        : fileName.fileName
-          ? fileName.fileName
-          : fileName.url
-            ? fileName.url
-            : String(fileName)
-
-    return fileNameStr.split('.').pop()?.toUpperCase() || ''
   }
 
   return (
     <div className="file-upload-container">
       <Spin spinning={loading} indicator={<LoadingOutlined />}>
-        <Upload
-          listType="picture-card"
-          maxCount={maxCount}
-          fileList={fileList}
-          beforeUpload={beforeUpload}
-          customRequest={handleCustomUpload}
-          onRemove={handleRemove}
-          accept={accept}
-          disabled={disabled}
-          onPreview={() => handlePreview()}
-          multiple={multiple}
-        >
-          {(!value || multiple) && fileList.length < maxCount && (
-            <div>
-              <UploadOutlined />
-              <div style={{ marginTop: 8 }}>上传{label}</div>
-            </div>
-          )}
-        </Upload>
+        {showDragArea && !value && !disabled ? (
+          // 拖拽上传区域
+          <Dragger
+            name="file"
+            showUploadList={false}
+            beforeUpload={beforeUpload}
+            customRequest={handleCustomUpload}
+            accept={accept}
+            disabled={disabled}
+            className="min-h-32"
+          >
+            <p className="ant-upload-drag-icon">
+              <InboxOutlined />
+            </p>
+            <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
+            <p className="ant-upload-hint">
+              支持图片、PDF、Word、Excel、CSV等格式
+            </p>
+          </Dragger>
+        ) : (
+          // 标准上传组件
+          <Upload
+            listType="picture-card"
+            maxCount={1}
+            fileList={fileList}
+            beforeUpload={beforeUpload}
+            customRequest={handleCustomUpload}
+            onRemove={handleRemove}
+            accept={accept}
+            disabled={disabled}
+            onPreview={() => handlePreview()}
+          >
+            {!value && (
+              <div>
+                <UploadOutlined />
+                <div style={{ marginTop: 8 }}>上传{label}</div>
+                <div style={{ marginTop: 4, fontSize: '12px', color: '#999' }}>
+                  支持图片、PDF、Word、Excel、CSV
+                </div>
+              </div>
+            )}
+          </Upload>
+        )}
 
         {value && (
-          <div className="image-actions mt-2">
+          <div className="file-actions mt-2">
             <Button type="text" icon={<EyeOutlined />} onClick={handlePreview} size="small">
               预览
             </Button>
@@ -368,7 +362,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         width={800}
       >
         <div className="flex justify-center">
-          {isImage ? (
+          {value && checkIsImage(value.fileName) ? (
             // 图片预览
             <Image
               alt={label}
@@ -382,11 +376,21 @@ const FileUpload: React.FC<FileUploadProps> = ({
           ) : (
             // 非图片文件预览
             <div className="flex flex-col items-center justify-center p-8">
-              <div className="text-6xl mb-4">{getFileIcon(value?.fileName || '')}</div>
+              <div className="text-6xl mb-4">
+                {value?.fileName ? getFileIcon(value.fileName) : <FileOutlined />}
+              </div>
               <div className="text-xl font-bold">{value?.fileName || '未知文件'}</div>
-              <div className="text-gray-500 mb-4">{getFileExtension(value?.fileName || '')}</div>
+              <div className="text-gray-500 mb-4">
+                {value?.fileName ? getFileExtension(value.fileName) : ''}
+              </div>
               <Space>
-                <Button type="primary" onClick={() => window.open(previewFile, '_blank')}>
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    const url = value?.fileName ? buildImageUrl(value.fileName) : value?.url
+                    if (url) window.open(url, '_blank')
+                  }}
+                >
                   下载文件
                 </Button>
               </Space>

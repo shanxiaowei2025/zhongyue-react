@@ -30,7 +30,7 @@ import {
   InfoCircleOutlined,
   QuestionCircleOutlined,
 } from '@ant-design/icons'
-import ImageUpload from '../../components/ImageUpload'
+import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
 import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
@@ -803,7 +803,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   // 处理图片上传成功 - 修正类型问题
-  const handleImageUploadSuccess = (isAutoSave: boolean) => {
+  const handleFileUploadSuccess = (isAutoSave: boolean) => {
     if (mode === 'add') {
       // 获取表单中的所有图片字段，提取文件名
       const formValues = form.getFieldsValue()
@@ -1956,25 +1956,25 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <h3 className="font-medium mb-2">法人身份证照片</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item name={['legalPersonIdImages', 'front']} label="身份证正面">
-                <ImageUpload
+                <FileUpload
                   label="身份证正面"
                   disabled={mode === 'view'}
                   value={safeGetFieldValue(form, ['legalPersonIdImages', 'front'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
                   }
-                  onSuccess={handleImageUploadSuccess}
+                  onSuccess={handleFileUploadSuccess}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">
-                <ImageUpload
+                <FileUpload
                   label="身份证反面"
                   disabled={mode === 'view'}
                   value={safeGetFieldValue(form, ['legalPersonIdImages', 'back'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'back'], value)
                   }
-                  onSuccess={handleImageUploadSuccess}
+                  onSuccess={handleFileUploadSuccess}
                 />
               </Form.Item>
             </div>
@@ -1984,25 +1984,25 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <h3 className="font-medium mb-2">营业执照照片</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item name={['businessLicenseImages', 'main']} label="营业执照">
-                <ImageUpload
+                <FileUpload
                   label="营业执照"
                   disabled={mode === 'view'}
                   value={safeGetFieldValue(form, ['businessLicenseImages', 'main'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['businessLicenseImages', 'main'], value)
                   }
-                  onSuccess={handleImageUploadSuccess}
+                  onSuccess={handleFileUploadSuccess}
                 />
               </Form.Item>
               <Form.Item name={['businessLicenseImages', 'copy']} label="营业执照副本">
-                <ImageUpload
+                <FileUpload
                   label="营业执照副本"
                   disabled={mode === 'view'}
                   value={safeGetFieldValue(form, ['businessLicenseImages', 'copy'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['businessLicenseImages', 'copy'], value)
                   }
-                  onSuccess={handleImageUploadSuccess}
+                  onSuccess={handleFileUploadSuccess}
                 />
               </Form.Item>
             </div>
@@ -2012,25 +2012,25 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <h3 className="font-medium mb-2">开户许可证照片</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item name={['bankAccountLicenseImages', 'basic']} label="基本户开户许可证">
-                <ImageUpload
+                <FileUpload
                   label="基本户开户许可证"
                   disabled={mode === 'view'}
                   value={safeGetFieldValue(form, ['bankAccountLicenseImages', 'basic'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'basic'], value)
                   }
-                  onSuccess={handleImageUploadSuccess}
+                  onSuccess={handleFileUploadSuccess}
                 />
               </Form.Item>
               <Form.Item name={['bankAccountLicenseImages', 'general']} label="一般户开户许可证">
-                <ImageUpload
+                <FileUpload
                   label="一般户开户许可证"
                   disabled={mode === 'view'}
                   value={safeGetFieldValue(form, ['bankAccountLicenseImages', 'general'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'general'], value)
                   }
-                  onSuccess={handleImageUploadSuccess}
+                  onSuccess={handleFileUploadSuccess}
                 />
               </Form.Item>
             </div>
@@ -2043,7 +2043,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 disabled={mode === 'view'}
                 value={form.getFieldValue('otherIdImages') || {}}
                 onChange={value => form.setFieldValue('otherIdImages', value)}
-                onSuccess={handleImageUploadSuccess}
+                onSuccess={handleFileUploadSuccess}
               />
             </Form.Item>
           </div>
@@ -2055,7 +2055,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 disabled={mode === 'view'}
                 value={form.getFieldValue('supplementaryImages') || {}}
                 onChange={value => form.setFieldValue('supplementaryImages', value)}
-                onSuccess={handleImageUploadSuccess}
+                onSuccess={handleFileUploadSuccess}
               />
             </Form.Item>
           </div>
