@@ -40,6 +40,7 @@ import type {
   TaxVerificationAttachment,
 } from '../../types/taxVerification'
 import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
+import type { ImageType } from '../../types'
 import MultiFileUpload from '../../components/MultiFileUpload'
 
 const { Title } = Typography
@@ -113,6 +114,26 @@ const TaxReview: React.FC = () => {
   const [attachmentFiles, setAttachmentFiles] = useState<Array<{ fileName: string; url: string }>>(
     []
   )
+
+  // 将数组格式转换为对象格式
+  const arrayToObjectFormat = (files: Array<{ fileName: string; url: string }>): Record<string, ImageType> => {
+    const result: Record<string, ImageType> = {}
+    files.forEach((file, index) => {
+      result[index.toString()] = {
+        fileName: file.fileName,
+        url: file.url,
+      }
+    })
+    return result
+  }
+
+  // 将对象格式转换为数组格式
+  const objectToArrayFormat = (value: Record<string, ImageType>): Array<{ fileName: string; url: string }> => {
+    return Object.values(value).map(item => ({
+      fileName: item.fileName || '',
+      url: item.url || '',
+    }))
+  }
 
   // 企业名称搜索相关状态
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
@@ -941,8 +962,8 @@ const TaxReview: React.FC = () => {
           <Form.Item label="附件">
             <MultiFileUpload
               label="附件"
-              value={attachmentFiles}
-              onChange={files => setAttachmentFiles(files)}
+              value={arrayToObjectFormat(attachmentFiles)}
+              onChange={value => setAttachmentFiles(objectToArrayFormat(value))}
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.csv"
             />
             <div style={{ marginTop: 8, color: '#666', fontSize: 12 }}>

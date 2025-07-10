@@ -8,6 +8,7 @@ import { message } from 'antd'
 import { mutate } from 'swr'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { buildImageUrl } from '../../utils/upload'
+import type { ImageType } from '../../types'
 import { getContractList } from '../../api/contract'
 import ContractLink from '../../components/ContractLink'
 import './expenses.css'
@@ -350,8 +351,29 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
     setSelectedSeal(e.target.value)
   }
 
+  // 将数组格式转换为对象格式
+  const arrayToObjectFormat = (files: Array<{ fileName: string; url: string }>): Record<string, ImageType> => {
+    const result: Record<string, ImageType> = {}
+    files.forEach((file, index) => {
+      result[index.toString()] = {
+        fileName: file.fileName,
+        url: file.url,
+      }
+    })
+    return result
+  }
+
+  // 将对象格式转换为数组格式
+  const objectToArrayFormat = (value: Record<string, ImageType>): Array<{ fileName: string; url: string }> => {
+    return Object.values(value).map(item => ({
+      fileName: item.fileName || '',
+      url: item.url || '',
+    }))
+  }
+
   // 处理电子合同变更 - 自动保存
-  const handleContractChange = async (files: Array<{ fileName: string; url: string }>) => {
+  const handleContractChange = async (value: Record<string, ImageType>) => {
+    const files = objectToArrayFormat(value)
     setContractImage(files)
 
     // 自动保存电子合同
@@ -878,7 +900,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
               </p>
               <MultiFileUpload
                 label="电子合同"
-                value={contractImage}
+                value={arrayToObjectFormat(contractImage)}
                 onChange={handleContractChange}
                 accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                 onFileUpload={handleFileUpload}

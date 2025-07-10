@@ -52,6 +52,7 @@ const FILE_ICONS: Record<string, React.ReactNode> = {
 
 interface MultiFileUploadProps {
   title?: string
+  label?: string // 兼容ExpenseForm中的label属性
   value?: Record<string, ImageType>
   onChange?: (value: Record<string, ImageType>) => void
   maxCount?: number
@@ -59,6 +60,8 @@ interface MultiFileUploadProps {
   onSuccess?: (isAutoSave: boolean) => void
   accept?: string // 接受的文件类型
   showUploadArea?: boolean // 是否显示拖拽上传区域
+  onFileUpload?: (fileName: string) => void // 兼容属性
+  onFileRemove?: (fileName: string) => void // 兼容属性
 }
 
 interface FileItem {
@@ -69,6 +72,7 @@ interface FileItem {
 
 const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   title,
+  label,
   value = {},
   onChange,
   maxCount = 999,
@@ -76,6 +80,8 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   onSuccess,
   accept = '.jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv',
   showUploadArea = true,
+  onFileUpload,
+  onFileRemove,
 }) => {
   const [loading, setLoading] = useState(false)
   const [uploadingCount, setUploadingCount] = useState(0)
@@ -228,6 +234,9 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         onUploadSuccess('上传成功')
         message.success(`${file.name} 上传成功`)
 
+        // 调用文件上传回调
+        onFileUpload?.(result.fileName)
+
         // 上传成功后，调用外部回调进行自动保存
         setTimeout(() => onSuccess?.(true), 300)
       } else {
@@ -286,6 +295,9 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       setImageErrors(newImageErrors)
 
       message.success('删除成功')
+
+      // 调用文件删除回调
+      onFileRemove?.(item.fileName)
 
       // 删除成功后，调用外部回调进行自动保存
       setTimeout(() => onSuccess?.(true), 300)
@@ -381,7 +393,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     <div className="multi-file-upload-container">
       <Spin spinning={loading || uploadingCount > 0} indicator={<LoadingOutlined />}>
         <div className="flex justify-between items-center mb-3">
-          <h3 className="font-medium">{title}</h3>
+          <h3 className="font-medium">{label || title}</h3>
           <span className="text-sm text-gray-500">
             {uploadingCount > 0 && `正在上传 ${uploadingCount} 个文件... `}
             已上传 {fileList.length}/{maxCount} 个文件
@@ -514,7 +526,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       {/* 预览模态框 */}
       <Modal
         open={previewVisible}
-        title={previewTitle}
+        title={label || title || previewTitle}
         footer={null}
         onCancel={() => setPreviewVisible(false)}
         centered
