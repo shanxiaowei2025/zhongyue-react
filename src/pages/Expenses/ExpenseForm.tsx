@@ -1335,7 +1335,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 >
                   <MultiFileUpload
                     label="收据凭证"
-                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                     onSuccess={isAutoSave => {
                       // 在编辑模式下自动保存，新建模式不自动保存
                       if (isAutoSave && mode === 'edit') {
@@ -1350,7 +1349,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                 <Form.Item name="contractImage" label="电子合同" tooltip="上传签署的电子合同文件">
                   <MultiFileUpload
                     label="电子合同"
-                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
                     onSuccess={isAutoSave => {
                       // 在编辑模式下自动保存，新建模式不自动保存
                       if (isAutoSave && mode === 'edit') {
