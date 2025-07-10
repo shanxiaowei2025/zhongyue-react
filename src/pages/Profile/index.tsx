@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Card, Button, Form, Input, Upload, message, Tabs, Spin, Tag, Descriptions } from 'antd'
-import { UserOutlined, LockOutlined, UploadOutlined, PhoneOutlined } from '@ant-design/icons'
-import type { UploadProps } from 'antd'
+import { Card, Button, Form, Input, message, Tabs, Spin, Tag, Descriptions } from 'antd'
+import { UserOutlined, LockOutlined, PhoneOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../../store/auth'
 import { getUserProfile, updateUserProfile, changePassword } from '../../api/auth'
 import type { User } from '../../types'
 import { useRoleNames } from '../../constants/roles'
+import AvatarUpload from '../../components/AvatarUpload'
 
 const { TabPane } = Tabs
 
@@ -13,7 +13,6 @@ const Profile = () => {
   const [profileForm] = Form.useForm()
   const [passwordForm] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [userProfile, setUserProfile] = useState<any>(null)
   const { user, setUser } = useAuthStore()
   const { getRoleNameFromMap, loading: rolesLoading } = useRoleNames()
@@ -129,40 +128,42 @@ const Profile = () => {
     }
   }
 
-  const uploadProps: UploadProps = {
-    name: 'avatar',
-    action: `${import.meta.env.VITE_API_BASE_URL}/users/me/avatar`,
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-    showUploadList: false,
-    beforeUpload: file => {
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      if (!isJpgOrPng) {
-        message.error('只能上传 JPG/PNG 格式的图片')
-        return false
-      }
-      return true
-    },
-    onChange: info => {
-      if (info.file.status === 'uploading') {
-        setUploading(true)
-        return
-      }
-      if (info.file.status === 'done') {
-        // 实际项目中应该返回头像 URL
-        const avatarUrl = info.file.response?.data?.url || ''
-        setUser({
-          ...user!,
-          avatar: avatarUrl,
-        })
-        setUploading(false)
-        message.success('头像上传成功')
-      } else if (info.file.status === 'error') {
-        setUploading(false)
-        message.error('头像上传失败')
-      }
-    },
+  // 处理头像上传成功
+  const handleAvatarUploadSuccess = (avatarData: { fileName: string; url: string }) => {
+    // 更新用户状态
+    if (user) {
+      setUser({
+        ...user,
+        avatar: avatarData.url,
+      })
+    }
+    
+    // 更新本地用户资料
+    if (userProfile) {
+      setUserProfile({
+        ...userProfile,
+        avatar: avatarData.url,
+      })
+    }
+  }
+
+  // 处理头像删除
+  const handleAvatarRemove = () => {
+    // 更新用户状态
+    if (user) {
+      setUser({
+        ...user,
+        avatar: '',
+      })
+    }
+    
+    // 更新本地用户资料
+    if (userProfile) {
+      setUserProfile({
+        ...userProfile,
+        avatar: '',
+      })
+    }
   }
 
   return (
@@ -173,18 +174,31 @@ const Profile = () => {
           <Card>
             <Spin spinning={loading || rolesLoading}>
               <div className="mb-6 flex items-center">
-                <div className="mr-4">
-                  <Upload {...uploadProps}>
-                    {user?.avatar ? (
-                      <div className="w-24 h-24 rounded-full overflow-hidden">
-                        <img src={user.avatar} alt="头像" className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                        <UserOutlined style={{ fontSize: 32 }} />
-                      </div>
-                    )}
-                  </Upload>
+                <div className="mr-6">
+                  <AvatarUpload
+                    value={
+                      userProfile?.avatar || user?.avatar
+                        ? {
+                            fileName: userProfile?.avatar || user?.avatar || '',
+                            url: userProfile?.avatar || user?.avatar || '',
+                          }
+                        : undefined
+                    }
+                    onChange={(value) => {
+                      if (value) {
+                        handleAvatarUploadSuccess(value)
+                      } else {
+                        handleAvatarRemove()
+                      }
+                    }}
+                    onSuccess={() => {
+                      // 可以在这里做一些额外的处理，比如重新获取用户信息
+                      fetchUserInfo()
+                    }}
+                    size={96}
+                    showDragArea={false}
+                    disabled={loading}
+                  />
                 </div>
                 <div>
                   <h2 className="text-lg font-medium">{userProfile?.username || user?.username}</h2>
@@ -197,11 +211,9 @@ const Profile = () => {
                         </Tag>
                       ))}
                   </div>
-                  <Upload {...uploadProps}>
-                    <Button icon={<UploadOutlined />} loading={uploading} className="mt-2">
-                      上传头像
-                    </Button>
-                  </Upload>
+                  <p className="text-sm text-gray-500 mt-2">
+                    点击头像或上传按钮来更换头像，支持图片裁剪
+                  </p>
                 </div>
               </div>
 
