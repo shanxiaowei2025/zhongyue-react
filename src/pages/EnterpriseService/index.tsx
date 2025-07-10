@@ -1,22 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Input,
-  Form,
-  Row,
-  Col,
-  Tag,
-  Tooltip,
-  Typography,
-} from 'antd'
-import {
-  SearchOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-} from '@ant-design/icons'
+import { Card, Table, Button, Space, Input, Form, Row, Col, Tag, Tooltip, Typography } from 'antd'
+import { SearchOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
@@ -24,7 +8,7 @@ import { useDebouncedValue } from '../../hooks/useDebounce'
 import { getEnterpriseList } from '../../api/enterpriseService'
 import type { Enterprise, EnterpriseQueryParams } from '../../types/enterpriseService'
 
-const { Title } = Typography;
+const { Title } = Typography
 
 // 智能文本渲染组件 - 只在文本被截断时显示tooltip
 const EllipsisText: React.FC<{
@@ -66,11 +50,7 @@ const EllipsisText: React.FC<{
 
   if (isOverflowing) {
     return (
-      <Tooltip
-        title={text}
-        placement="topLeft"
-        mouseEnterDelay={0.3}
-      >
+      <Tooltip title={text} placement="topLeft" mouseEnterDelay={0.3}>
         {content}
       </Tooltip>
     )
@@ -81,7 +61,7 @@ const EllipsisText: React.FC<{
 
 const EnterpriseService: React.FC = () => {
   const navigate = useNavigate()
-  
+
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
@@ -120,7 +100,7 @@ const EnterpriseService: React.FC = () => {
       setState('enterprisePagination', { current, pageSize })
 
       const response = await getEnterpriseList(params)
-      
+
       if (response.code === 0 && response.data) {
         setEnterprises(response.data.data)
         setTotal(response.data.total)
@@ -174,7 +154,7 @@ const EnterpriseService: React.FC = () => {
     // 将字符串转换为数字
     const numAmount = parseFloat(amount)
     if (isNaN(numAmount)) return '¥0.00'
-    
+
     return new Intl.NumberFormat('zh-CN', {
       style: 'currency',
       currency: 'CNY',
@@ -190,8 +170,8 @@ const EnterpriseService: React.FC = () => {
       key: 'companyName',
       width: 280,
       render: (text: string, record: Enterprise) => (
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           onClick={() => handleView(record)}
           style={{ padding: 0, textAlign: 'left' }}
         >
@@ -250,7 +230,9 @@ const EnterpriseService: React.FC = () => {
                 <Input
                   placeholder="请输入统一社会信用代码"
                   value={searchParams.unifiedSocialCreditCode}
-                  onChange={e => setSearchParams({ ...searchParams, unifiedSocialCreditCode: e.target.value })}
+                  onChange={e =>
+                    setSearchParams({ ...searchParams, unifiedSocialCreditCode: e.target.value })
+                  }
                   allowClear
                 />
               </Form.Item>
@@ -293,4 +275,4 @@ const EnterpriseService: React.FC = () => {
   )
 }
 
-export default EnterpriseService 
+export default EnterpriseService

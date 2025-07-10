@@ -104,7 +104,10 @@ export const exportExpenseCSV = (params?: Partial<ExpenseQueryParams>) => {
 }
 
 // 获取最大日期的下一天（用于自动填写开始日期）
-export const getMaxDatesNextDay = (params: { companyName?: string; unifiedSocialCreditCode?: string }) => {
+export const getMaxDatesNextDay = (params: {
+  companyName?: string
+  unifiedSocialCreditCode?: string
+}) => {
   return request.get<{
     data: {
       companyName: string

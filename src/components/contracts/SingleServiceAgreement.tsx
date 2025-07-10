@@ -122,14 +122,14 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       if (value && value.toString().trim()) {
         clearValidationError(fieldName)
       }
-      
+
       // 触发自定义事件通知CreateContract.tsx进行自动保存
       // 所有字段变化都触发自动保存
       console.log(`💾 [单项服务合同] ${fieldName} 字段变化，触发自动保存:`, value)
       // 延迟触发，确保状态已更新
       setTimeout(() => {
         const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field: fieldName, value, contractType: '单项服务合同' }
+          detail: { field: fieldName, value, contractType: '单项服务合同' },
         })
         document.dispatchEvent(event)
       }, 50)
@@ -192,17 +192,25 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         if (contractData.partyACompany) {
           setCustomerSearchValue(contractData.partyACompany)
         }
-        
+
         // 特别处理日期字段，确保它们能正确恢复
         if (contractData.partyASignDate || contractData.partyBSignDate) {
           console.log('📅 SingleServiceAgreement: 恢复日期字段:')
           if (contractData.partyASignDate) {
-            console.log('  甲方签署日期:', contractData.partyASignDate, typeof contractData.partyASignDate)
+            console.log(
+              '  甲方签署日期:',
+              contractData.partyASignDate,
+              typeof contractData.partyASignDate
+            )
           }
           if (contractData.partyBSignDate) {
-            console.log('  乙方签署日期:', contractData.partyBSignDate, typeof contractData.partyBSignDate)
+            console.log(
+              '  乙方签署日期:',
+              contractData.partyBSignDate,
+              typeof contractData.partyBSignDate
+            )
           }
-          
+
           // 立即设置日期字段，不使用延迟
           setFormData(prev => {
             const newData = {
@@ -212,7 +220,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
             }
             console.log('📅 立即更新 formData 日期字段:', {
               partyASignDate: newData.partyASignDate,
-              partyBSignDate: newData.partyBSignDate
+              partyBSignDate: newData.partyBSignDate,
             })
             return newData
           })
@@ -239,22 +247,22 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
 
       try {
         setCustomerSearchLoading(true)
-        
+
         const currentPage = resetPage ? 1 : customerPage
-        
+
         const params: CustomerQueryParams = {
           page: currentPage,
           pageSize: 20, // 每次加载20条数据
-          companyName: searchValue.trim()
+          companyName: searchValue.trim(),
         }
-        
+
         const response = await searchCustomers(params)
-        
+
         if (response.code === 0 && response.data) {
           const { data: enterprises, total } = response.data
-          
+
           // 转换为选项格式
-          const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+          const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
             value: enterprise.companyName,
             label: (
               <div style={{ padding: '4px 0' }}>
@@ -271,19 +279,19 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 )}
               </div>
             ),
-            enterprise
+            enterprise,
           }))
-          
+
           if (resetPage) {
             setCustomerOptions(newOptions)
             setCustomerPage(1)
           } else {
             setCustomerOptions(prev => [...prev, ...newOptions])
           }
-          
+
           setCustomerTotal(total)
           setHasMoreCustomers(currentPage * 20 < total)
-          
+
           if (resetPage) {
             setCustomerPage(2) // 下次请求第二页
           } else {
@@ -323,9 +331,13 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         if ((enterprise as any).registeredAddress) {
           handleFormChange('partyAAddress', (enterprise as any).registeredAddress)
         }
-        
+
         // 自动填写联系人和联系电话（从实际负责人的第一条记录）
-        if (enterprise.actualResponsibles && Array.isArray(enterprise.actualResponsibles) && enterprise.actualResponsibles.length > 0) {
+        if (
+          enterprise.actualResponsibles &&
+          Array.isArray(enterprise.actualResponsibles) &&
+          enterprise.actualResponsibles.length > 0
+        ) {
           const firstResponsible = enterprise.actualResponsibles[0]
           if (firstResponsible.name) {
             handleFormChange('partyAContact', firstResponsible.name)
@@ -334,7 +346,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
             handleFormChange('partyAPhone', firstResponsible.phone)
           }
         }
-        
+
         message.success('企业信息已自动填入')
       }
     }
@@ -368,12 +380,12 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           [itemKey]: '',
         }))
       }
-      
+
       // 触发自动保存
       console.log(`💾 [单项服务合同] 复选框变化，触发自动保存: ${itemKey}=${checked}`)
       setTimeout(() => {
         const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field: `checkbox_${itemKey}`, value: checked, contractType: '单项服务合同' }
+          detail: { field: `checkbox_${itemKey}`, value: checked, contractType: '单项服务合同' },
         })
         document.dispatchEvent(event)
       }, 50)
@@ -387,12 +399,16 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         ...prev,
         [itemKey]: formattedValue,
       }))
-      
+
       // 触发自动保存
       console.log(`💾 [单项服务合同] 金额变化，触发自动保存: ${itemKey}=${formattedValue}`)
       setTimeout(() => {
         const event = new CustomEvent('contractFormFieldChange', {
-          detail: { field: `amount_${itemKey}`, value: formattedValue, contractType: '单项服务合同' }
+          detail: {
+            field: `amount_${itemKey}`,
+            value: formattedValue,
+            contractType: '单项服务合同',
+          },
         })
         document.dispatchEvent(event)
       }, 50)
@@ -686,59 +702,59 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         // 基础合同信息
         signatory: formData.signatory || signatory,
         contractType: formData.contractType || '单项服务合同',
-        
+
         // 甲方信息
         partyACompany: formData.partyACompany || '',
         partyAAddress: formData.partyAAddress || '',
         partyAPhone: formData.partyAPhone || '',
         partyAContact: formData.partyAContact || '',
-        
+
         // 乙方信息
         partyBContact: formData.partyBContact || '',
         partyBPhone: formData.partyBPhone || '',
-        
+
         // 签约日期
         partyASignDate: formData.partyASignDate || null,
         partyBSignDate: formData.partyBSignDate || null,
-        
+
         // 服务相关
         checkedItems,
         itemAmounts,
         validationErrors,
         amountDisplayValues,
         customerSearchValue,
-        
+
         // 业务地址
         businessEstablishmentAddress: formData.businessEstablishmentAddress || '',
-        
+
         // 备注信息
         businessRemark: formData.businessRemark || '',
         bankRemark: formData.bankRemark || '',
         licenseRemark: formData.licenseRemark || '',
         otherRemark: formData.otherRemark || '',
-        
+
         // 服务费用
         businessServiceFee: formData.businessServiceFee || 0,
         bankServiceFee: formData.bankServiceFee || 0,
         licenseServiceFee: formData.licenseServiceFee || 0,
         otherServiceFee: formData.otherServiceFee || 0,
-        
+
         // 包含其他所有formData字段（确保不遗漏）
         ...formData,
-        
+
         // 服务数据
         ...serviceData,
       }
-      
+
       console.log('📋 [单项服务合同] getFormData 返回数据:', {
         partyAAddress: data.partyAAddress,
         partyAPhone: data.partyAPhone,
         partyAContact: data.partyAContact,
         partyASignDate: data.partyASignDate,
         partyBSignDate: data.partyBSignDate,
-        totalFields: Object.keys(data).length
+        totalFields: Object.keys(data).length,
       })
-      
+
       return data
     }
 
@@ -844,7 +860,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 placeholder="请输入甲方公司名称进行搜索"
                 options={customerOptions}
                 value={customerSearchValue || formData.partyACompany || ''}
-                onSearch={(value) => {
+                onSearch={value => {
                   setCustomerSearchValue(value)
                   if (value && value.trim()) {
                     handleCustomerSearch(value.trim(), true)
@@ -855,7 +871,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 onSelect={(value, option) => {
                   handleCustomerSelect(value, option)
                 }}
-                onChange={(value) => {
+                onChange={value => {
                   setCustomerSearchValue(value)
                   handleFormChange('partyACompany', value)
                   // 如果输入值为空，重置搜索状态
@@ -881,7 +897,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                     </div>
                   ) : null
                 }
-                dropdownRender={(menu) => (
+                dropdownRender={menu => (
                   <div>
                     {menu}
                     {hasMoreCustomers && (
@@ -891,7 +907,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                           padding: '8px 12px',
                           borderTop: '1px solid #f0f0f0',
                           cursor: 'pointer',
-                          color: '#1890ff'
+                          color: '#1890ff',
                         }}
                         onClick={handleLoadMoreCustomers}
                       >
@@ -906,13 +922,15 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                       </div>
                     )}
                     {customerTotal > 0 && (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '4px 12px',
-                        fontSize: '12px',
-                        color: '#999',
-                        borderTop: '1px solid #f0f0f0'
-                      }}>
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          color: '#999',
+                          borderTop: '1px solid #f0f0f0',
+                        }}
+                      >
                         共找到 {customerTotal} 条结果
                       </div>
                     )}
@@ -937,9 +955,9 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <span className={styles.detailLabel}>联系人：</span>
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
-                  style={{ 
+                  style={{
                     width: '200px',
-                    borderBottomColor: validationErrors.partyAContact ? '#ff4d4f' : undefined
+                    borderBottomColor: validationErrors.partyAContact ? '#ff4d4f' : undefined,
                   }}
                   placeholder="*请输入联系人"
                   value={formData.partyAContact || ''}
@@ -952,7 +970,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
                   style={{
-                    borderBottomColor: validationErrors.partyAPhone ? '#ff4d4f' : undefined
+                    borderBottomColor: validationErrors.partyAPhone ? '#ff4d4f' : undefined,
                   }}
                   placeholder="*请输入联系电话"
                   value={formData.partyAPhone || ''}
@@ -979,9 +997,9 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <span className={styles.detailLabel}>联系人：</span>
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
-                  style={{ 
+                  style={{
                     width: '200px',
-                    borderBottomColor: validationErrors.partyBContact ? '#ff4d4f' : undefined
+                    borderBottomColor: validationErrors.partyBContact ? '#ff4d4f' : undefined,
                   }}
                   placeholder="*请输入乙方联系人"
                   value={formData.partyBContact || ''}
@@ -994,7 +1012,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                 <Input
                   className={`${styles.detailValue} ${styles.inputField}`}
                   style={{
-                    borderBottomColor: validationErrors.partyBPhone ? '#ff4d4f' : undefined
+                    borderBottomColor: validationErrors.partyBPhone ? '#ff4d4f' : undefined,
                   }}
                   placeholder="*请输入乙方联系电话"
                   value={formData.partyBPhone || ''}
@@ -1479,10 +1497,19 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                       }
                       try {
                         const dayjsValue = dayjs(formData.partyASignDate)
-                        console.log('🗓️ [单项服务] 甲方签署日期解析:', formData.partyASignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        console.log(
+                          '🗓️ [单项服务] 甲方签署日期解析:',
+                          formData.partyASignDate,
+                          '->',
+                          dayjsValue.format('YYYY-MM-DD')
+                        )
                         return dayjsValue.isValid() ? dayjsValue : undefined
                       } catch (error) {
-                        console.error('🗓️ [单项服务] 甲方签署日期解析失败:', formData.partyASignDate, error)
+                        console.error(
+                          '🗓️ [单项服务] 甲方签署日期解析失败:',
+                          formData.partyASignDate,
+                          error
+                        )
                         return undefined
                       }
                     })()}
@@ -1529,10 +1556,19 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                       }
                       try {
                         const dayjsValue = dayjs(formData.partyBSignDate)
-                        console.log('🗓️ [单项服务] 乙方签署日期解析:', formData.partyBSignDate, '->', dayjsValue.format('YYYY-MM-DD'))
+                        console.log(
+                          '🗓️ [单项服务] 乙方签署日期解析:',
+                          formData.partyBSignDate,
+                          '->',
+                          dayjsValue.format('YYYY-MM-DD')
+                        )
                         return dayjsValue.isValid() ? dayjsValue : undefined
                       } catch (error) {
-                        console.error('🗓️ [单项服务] 乙方签署日期解析失败:', formData.partyBSignDate, error)
+                        console.error(
+                          '🗓️ [单项服务] 乙方签署日期解析失败:',
+                          formData.partyBSignDate,
+                          error
+                        )
                         return undefined
                       }
                     })()}

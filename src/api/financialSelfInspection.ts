@@ -49,7 +49,10 @@ export const updateRectificationCompletion = async (
   id: number,
   data: RectificationCompletionDto
 ): Promise<ApiResponse<FinancialSelfInspection>> => {
-  return request.patch(`/enterprise-service/financial-self-inspection/${id}/rectification-completion`, data)
+  return request.patch(
+    `/enterprise-service/financial-self-inspection/${id}/rectification-completion`,
+    data
+  )
 }
 
 // 更新抽查人确认
@@ -57,5 +60,8 @@ export const updateInspectorConfirmation = async (
   id: number,
   data: InspectorConfirmationDto
 ): Promise<ApiResponse<FinancialSelfInspection>> => {
-  return request.patch(`/enterprise-service/financial-self-inspection/${id}/inspector-confirmation`, data)
-} 
+  return request.patch(
+    `/enterprise-service/financial-self-inspection/${id}/inspector-confirmation`,
+    data
+  )
+}

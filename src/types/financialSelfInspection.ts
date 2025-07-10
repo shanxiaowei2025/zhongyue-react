@@ -61,4 +61,4 @@ export interface RectificationCompletionDto {
 export interface InspectorConfirmationDto {
   inspectorConfirmation: string
   remarks?: string
-} 
+}

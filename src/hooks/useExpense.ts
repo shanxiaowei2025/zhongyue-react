@@ -34,14 +34,14 @@ export const getExpenseDetailKey = (id?: number | null) => {
 // 定义获取费用收据的key
 export const getExpenseReceiptKey = (params?: { id?: number; receiptNo?: string } | null) => {
   if (!params || (!params.id && !params.receiptNo)) return null
-  
+
   // 生成唯一的key，优先使用id，其次使用receiptNo
   if (params.id) {
     return `/expense/receipt?id=${params.id}`
   } else if (params.receiptNo) {
     return `/expense/receipt?receiptNo=${params.receiptNo}`
   }
-  
+
   return null
 }
 
@@ -55,19 +55,19 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
     if (params.dateRange && Array.isArray(params.dateRange)) {
       queryParams.chargeDateStart = Array.isArray(params.dateRange[0])
         ? params.dateRange[0][0]
-        : params.dateRange[0]?.format?.('YYYY-MM-DD') || params.dateRange[0];
+        : params.dateRange[0]?.format?.('YYYY-MM-DD') || params.dateRange[0]
 
       queryParams.chargeDateEnd = Array.isArray(params.dateRange[1])
         ? params.dateRange[1][0]
-        : params.dateRange[1]?.format?.('YYYY-MM-DD') || params.dateRange[1];
+        : params.dateRange[1]?.format?.('YYYY-MM-DD') || params.dateRange[1]
 
       // 删除原始dateRange参数，避免发送不必要的数据
-      delete queryParams.dateRange;
+      delete queryParams.dateRange
     } else {
       // 确保当dateRange为undefined或null时，删除可能存在的日期参数
-      delete queryParams.dateRange;
-      delete queryParams.chargeDateStart;
-      delete queryParams.chargeDateEnd;
+      delete queryParams.dateRange
+      delete queryParams.chargeDateStart
+      delete queryParams.chargeDateEnd
     }
 
     // 确保page和pageSize参数是有效的数字
@@ -331,15 +331,16 @@ export const useExpenseDetail = (id?: number | null) => {
 
 // 费用收据Hook
 export const useExpenseReceipt = (params?: { id?: number; receiptNo?: string } | null) => {
-  const { data: receipt, error, isLoading, isValidating } = useSWR(
-    getExpenseReceiptKey(params),
-    params ? expenseReceiptFetcher : null,
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 5 * 60 * 1000, // 5分钟内不重复请求
-    }
-  )
+  const {
+    data: receipt,
+    error,
+    isLoading,
+    isValidating,
+  } = useSWR(getExpenseReceiptKey(params), params ? expenseReceiptFetcher : null, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 5 * 60 * 1000, // 5分钟内不重复请求
+  })
 
   return {
     receipt,

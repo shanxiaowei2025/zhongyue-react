@@ -89,8 +89,7 @@ function extractFileNameFromUrl(url: string): string {
 
   try {
     // 检查是否已经是使用MinIO拼接的URL，解析出文件名
-    const minioEndpoint =
-      import.meta.env.MINIO_ENDPOINT || 'https://minio-api.zhongyuekuaiji.cn'
+    const minioEndpoint = import.meta.env.MINIO_ENDPOINT || 'https://minio-api.zhongyuekuaiji.cn'
     if (url.startsWith(minioEndpoint)) {
       // 从URL中提取路径的最后一部分作为文件名
       const parts = url.split('/')

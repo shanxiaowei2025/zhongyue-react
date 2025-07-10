@@ -33,12 +33,13 @@ export interface TaxVerificationQueryParams {
 }
 
 // API响应接口
-export interface TaxVerificationListResponse extends ApiResponse<{
-  list: TaxVerification[]
-  total: number
-  page: number
-  pageSize: number
-}> {}
+export interface TaxVerificationListResponse
+  extends ApiResponse<{
+    list: TaxVerification[]
+    total: number
+    page: number
+    pageSize: number
+  }> {}
 
 // 创建税务核查记录DTO
 export interface CreateTaxVerificationDto {
@@ -51,4 +52,4 @@ export interface CreateTaxVerificationDto {
   responsibleAccountant: string
   solution: string
   attachments: TaxVerificationAttachment[]
-} 
+}

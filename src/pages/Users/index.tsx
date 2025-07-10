@@ -543,7 +543,10 @@ const Users = () => {
             label="身份证号"
             rules={[
               { required: false, message: '请输入身份证号' },
-              { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '请输入有效的身份证号' },
+              {
+                pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/,
+                message: '请输入有效的身份证号',
+              },
             ]}
           >
             <Input placeholder="请输入身份证号" />

@@ -90,7 +90,6 @@ const ContractDetail: React.FC = () => {
   const [signUrl, setSignUrl] = useState<string>('')
   const [hasProcessedGenerateLink, setHasProcessedGenerateLink] = useState(false)
 
-
   // 获取合同详情数据
   const {
     data: contractData,
@@ -1543,7 +1542,7 @@ const ContractDetail: React.FC = () => {
       // 关闭loading提示并显示成功消息
       message.destroy('contractImageGen')
       message.success('签署链接生成成功')
-      
+
       // 清除URL参数中的generateLink标志，防止刷新页面时重复调用
       const currentUrl = new URL(window.location.href)
       currentUrl.searchParams.delete('generateLink')
@@ -1587,7 +1586,7 @@ const ContractDetail: React.FC = () => {
     try {
       // 生成可分享的链接 - 使用固定域名
       const shareableLink = `https://manage.zhongyuekuaiji.cn/contract/view/${contractData.encryptedCode}`
-      
+
       // 生成包含公司名称的完整分享内容
       const partyACompany = contractData.partyACompany || '未知公司'
       const shareableContent = `【${partyACompany}】合同查看链接：\n${shareableLink}`
@@ -1632,8 +1631,6 @@ const ContractDetail: React.FC = () => {
       message.error('获取查看链接失败，请重试')
     }
   }
-
-
 
   // 面包屑导航配置
   const breadcrumbItems = [
@@ -1770,10 +1767,7 @@ const ContractDetail: React.FC = () => {
                 </>
               )}
               {contractData && contractData.contractStatus === '1' && (
-                <Button
-                  icon={<LinkOutlined />}
-                  onClick={handleGetViewLink}
-                >
+                <Button icon={<LinkOutlined />} onClick={handleGetViewLink}>
                   获取查看链接
                 </Button>
               )}
@@ -1897,8 +1891,6 @@ const ContractDetail: React.FC = () => {
           </p>
         </div>
       </Modal>
-
-
     </div>
   )
 }

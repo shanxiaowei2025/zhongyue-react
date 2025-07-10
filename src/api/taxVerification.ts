@@ -37,8 +37,6 @@ export const updateTaxVerification = async (
 }
 
 // 删除税务核查记录
-export const deleteTaxVerification = async (
-  id: number
-): Promise<ApiResponse<void>> => {
+export const deleteTaxVerification = async (id: number): Promise<ApiResponse<void>> => {
   return request.delete(`/enterprise-service/tax-verification/${id}`)
-} 
+}

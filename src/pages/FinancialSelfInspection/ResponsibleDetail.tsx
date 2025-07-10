@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import {
-  Card,
-  Button,
-  Typography,
-  Descriptions,
-  Spin,
-  Tag,
-  message,
-  Space,
-} from 'antd'
+import { Card, Button, Typography, Descriptions, Spin, Tag, message, Space } from 'antd'
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
@@ -27,7 +18,7 @@ const { Title, Text } = Typography
 const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  
+
   const [loading, setLoading] = useState<boolean>(false)
   const [data, setData] = useState<FinancialSelfInspection | null>(null)
 
@@ -41,7 +32,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
     try {
       setLoading(true)
       const response = await getMyResponsibleInspectionDetail(Number(id))
-      
+
       if (response.code === 0 && response.data) {
         setData(response.data)
       } else {
@@ -69,13 +60,25 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
     if (!data) return null
 
     if (data.inspectorConfirmation) {
-      return <Tag color="green" icon={<CheckCircleOutlined />}>已确认</Tag>
+      return (
+        <Tag color="green" icon={<CheckCircleOutlined />}>
+          已确认
+        </Tag>
+      )
     }
     if (data.rectificationCompletionDate) {
-      return <Tag color="blue" icon={<CalendarOutlined />}>整改完成</Tag>
+      return (
+        <Tag color="blue" icon={<CalendarOutlined />}>
+          整改完成
+        </Tag>
+      )
     }
     if (data.problem) {
-      return <Tag color="orange" icon={<ExclamationCircleOutlined />}>待整改</Tag>
+      return (
+        <Tag color="orange" icon={<ExclamationCircleOutlined />}>
+          待整改
+        </Tag>
+      )
     }
     return <Tag color="default">已提交</Tag>
   }
@@ -128,7 +131,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
       </div>
 
       {/* 基本信息 */}
-      <Card 
+      <Card
         title={
           <Space>
             <BuildOutlined />
@@ -166,7 +169,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
       </Card>
 
       {/* 问题与解决方案 */}
-      <Card 
+      <Card
         title={
           <Space>
             <ExclamationCircleOutlined />
@@ -179,14 +182,18 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
           <Descriptions.Item label="发现问题">
             <div className="whitespace-pre-wrap">
               {data.problem || (
-                <Text type="secondary" italic>暂无问题描述</Text>
+                <Text type="secondary" italic>
+                  暂无问题描述
+                </Text>
               )}
             </div>
           </Descriptions.Item>
           <Descriptions.Item label="解决方案">
             <div className="whitespace-pre-wrap">
               {data.solution || (
-                <Text type="secondary" italic>暂无解决方案</Text>
+                <Text type="secondary" italic>
+                  暂无解决方案
+                </Text>
               )}
             </div>
           </Descriptions.Item>
@@ -194,7 +201,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
       </Card>
 
       {/* 整改情况 */}
-      <Card 
+      <Card
         title={
           <Space>
             <CheckCircleOutlined />
@@ -218,7 +225,9 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
           <Descriptions.Item label="整改结果">
             <div className="whitespace-pre-wrap">
               {data.rectificationResult || (
-                <Text type="secondary" italic>暂无整改结果</Text>
+                <Text type="secondary" italic>
+                  暂无整改结果
+                </Text>
               )}
             </div>
           </Descriptions.Item>
@@ -236,7 +245,9 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
           <Descriptions.Item label="备注">
             <div className="whitespace-pre-wrap">
               {data.remarks || (
-                <Text type="secondary" italic>暂无备注</Text>
+                <Text type="secondary" italic>
+                  暂无备注
+                </Text>
               )}
             </div>
           </Descriptions.Item>
@@ -244,7 +255,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
       </Card>
 
       {/* 状态信息 */}
-      <Card 
+      <Card
         title={
           <Space>
             <CalendarOutlined />
@@ -256,9 +267,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
           <Descriptions.Item label="记录ID">
             <Text code>#{data.id}</Text>
           </Descriptions.Item>
-          <Descriptions.Item label="当前状态">
-            {renderStatusTag()}
-          </Descriptions.Item>
+          <Descriptions.Item label="当前状态">{renderStatusTag()}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
             <Text>{formatDateTime(data.createdAt)}</Text>
           </Descriptions.Item>
@@ -271,4 +280,4 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   )
 }
 
-export default FinancialSelfInspectionResponsibleDetail 
+export default FinancialSelfInspectionResponsibleDetail

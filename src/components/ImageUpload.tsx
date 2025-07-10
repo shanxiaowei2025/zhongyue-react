@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Button, message, Modal, Spin, Image, Popconfirm, Space } from 'antd'
-import { 
-  UploadOutlined, 
-  DeleteOutlined, 
-  EyeOutlined, 
+import {
+  UploadOutlined,
+  DeleteOutlined,
+  EyeOutlined,
   LoadingOutlined,
   FileOutlined,
   FilePdfOutlined,
@@ -11,7 +11,7 @@ import {
   FileExcelOutlined,
   FileTextOutlined,
   FileImageOutlined,
-  FileJpgOutlined
+  FileJpgOutlined,
 } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
@@ -105,22 +105,44 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     // 支持的文件格式：图片、PDF、Word、Excel、CSV
     const allowedTypes = [
       // 图片格式
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/webp',
       // PDF格式
       'application/pdf',
       // Word格式
-      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      // Excel格式  
-      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      // Excel格式
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       // CSV格式
-      'text/csv', 'application/csv'
+      'text/csv',
+      'application/csv',
     ]
 
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv']
-    
+    const allowedExtensions = [
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'bmp',
+      'webp',
+      'pdf',
+      'doc',
+      'docx',
+      'xls',
+      'xlsx',
+      'csv',
+    ]
+
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
-    const isAllowedType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)
-    
+    const isAllowedType =
+      allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)
+
     if (!isAllowedType) {
       message.error('只能上传图片、PDF、Word、Excel、CSV格式的文件！')
       return false
@@ -291,15 +313,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 description="删除后将无法恢复，是否确认删除？"
                 onConfirm={handleRemove}
                 okText="确认"
-                okType='danger'
+                okType="danger"
                 cancelText="取消"
               >
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  size="small"
-                >
+                <Button type="text" danger icon={<DeleteOutlined />} size="small">
                   删除
                 </Button>
               </Popconfirm>
@@ -342,8 +359,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 {value?.fileName ? getFileExtension(value.fileName) : ''}
               </div>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   onClick={() => {
                     const url = value?.fileName ? buildImageUrl(value.fileName) : value?.url
                     if (url) window.open(url, '_blank')

@@ -30,10 +30,7 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useDebouncedValue } from '../../hooks/useDebounce'
-import {
-  getTaxVerificationList,
-  createTaxVerification,
-} from '../../api/taxVerification'
+import { getTaxVerificationList, createTaxVerification } from '../../api/taxVerification'
 import { uploadFile } from '../../api/upload'
 import { searchCustomers } from '../../api/enterpriseService'
 import type {
@@ -78,7 +75,7 @@ const EllipsisText: React.FC<{
 
 const TaxReview: React.FC = () => {
   const navigate = useNavigate()
-  
+
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
@@ -113,7 +110,9 @@ const TaxReview: React.FC = () => {
   const [createLoading, setCreateLoading] = useState<boolean>(false)
 
   // 文件上传状态 - 使用MultiFileUpload的FileItem类型
-  const [attachmentFiles, setAttachmentFiles] = useState<Array<{ fileName: string; url: string }>>([])
+  const [attachmentFiles, setAttachmentFiles] = useState<Array<{ fileName: string; url: string }>>(
+    []
+  )
 
   // 企业名称搜索相关状态
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
@@ -146,7 +145,7 @@ const TaxReview: React.FC = () => {
       setState('taxVerificationPagination', { current, pageSize })
 
       const response = await getTaxVerificationList(params)
-      
+
       if (response.code === 0 && response.data) {
         setData(response.data.list)
         setTotal(response.data.total)
@@ -199,22 +198,22 @@ const TaxReview: React.FC = () => {
 
     try {
       setCustomerSearchLoading(true)
-      
+
       const currentPage = resetPage ? 1 : customerPage
-      
+
       const params: CustomerQueryParams = {
         page: currentPage,
         pageSize: 20, // 每次加载20条数据
-        companyName: searchValue.trim()
+        companyName: searchValue.trim(),
       }
-      
+
       const response = await searchCustomers(params)
-      
+
       if (response.code === 0 && response.data) {
         const { data: enterprises, total } = response.data
-        
+
         // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
           value: enterprise.companyName,
           label: (
             <div style={{ padding: '4px 0' }}>
@@ -231,19 +230,19 @@ const TaxReview: React.FC = () => {
               )}
             </div>
           ),
-          enterprise
+          enterprise,
         }))
-        
+
         if (resetPage) {
           setCustomerOptions(newOptions)
           setCustomerPage(1)
         } else {
           setCustomerOptions(prev => [...prev, ...newOptions])
         }
-        
+
         setCustomerTotal(total)
         setHasMoreCustomers(currentPage * 20 < total)
-        
+
         if (resetPage) {
           setCustomerPage(2) // 下次请求第二页
         } else {
@@ -308,31 +307,29 @@ const TaxReview: React.FC = () => {
 
     try {
       setCodeSearchLoading(true)
-      
+
       const currentPage = resetPage ? 1 : codePage
-      
+
       const params: CustomerQueryParams = {
         page: currentPage,
         pageSize: 20, // 每次加载20条数据
-        unifiedSocialCreditCode: searchValue.trim()
+        unifiedSocialCreditCode: searchValue.trim(),
       }
-      
+
       const response = await searchCustomers(params)
-      
+
       if (response.code === 0 && response.data) {
         const { data: enterprises, total } = response.data
-        
+
         // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
           value: enterprise.unifiedSocialCreditCode,
           label: (
             <div style={{ padding: '4px 0' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
                 {enterprise.unifiedSocialCreditCode}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                {enterprise.companyName}
-              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>{enterprise.companyName}</div>
               {enterprise.taxBureau && (
                 <div style={{ fontSize: '12px', color: '#999' }}>
                   所属分局: {enterprise.taxBureau}
@@ -340,19 +337,19 @@ const TaxReview: React.FC = () => {
               )}
             </div>
           ),
-          enterprise
+          enterprise,
         }))
-        
+
         if (resetPage) {
           setCodeOptions(newOptions)
           setCodePage(1)
         } else {
           setCodeOptions(prev => [...prev, ...newOptions])
         }
-        
+
         setCodeTotal(total)
         setHasMoreCodes(currentPage * 20 < total)
-        
+
         if (resetPage) {
           setCodePage(2) // 下次请求第二页
         } else {
@@ -551,8 +548,8 @@ const TaxReview: React.FC = () => {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="查看">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleViewDetail(record)}
@@ -567,19 +564,14 @@ const TaxReview: React.FC = () => {
     <div className="tax-review-page">
       <Card>
         {/* 搜索表单 */}
-        <Form
-          form={searchForm}
-          layout="vertical"
-          className="mb-4"
-          initialValues={searchParams}
-        >
+        <Form form={searchForm} layout="vertical" className="mb-4" initialValues={searchParams}>
           <Row gutter={16}>
             <Col span={6}>
               <Form.Item label="企业名称" name="companyName">
                 <Input
                   placeholder="请输入企业名称"
                   value={searchParams.companyName}
-                  onChange={(e) =>
+                  onChange={e =>
                     setSearchParams({
                       ...searchParams,
                       companyName: e.target.value,
@@ -593,7 +585,7 @@ const TaxReview: React.FC = () => {
                 <Input
                   placeholder="请输入统一社会信用代码"
                   value={searchParams.unifiedSocialCreditCode}
-                  onChange={(e) =>
+                  onChange={e =>
                     setSearchParams({
                       ...searchParams,
                       unifiedSocialCreditCode: e.target.value,
@@ -607,7 +599,7 @@ const TaxReview: React.FC = () => {
                 <Input
                   placeholder="请输入所属分局"
                   value={searchParams.taxBureau}
-                  onChange={(e) =>
+                  onChange={e =>
                     setSearchParams({
                       ...searchParams,
                       taxBureau: e.target.value,
@@ -616,39 +608,31 @@ const TaxReview: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-                         <Col span={6}>
-               <Form.Item label="风险期责任会计" name="responsibleAccountant">
-                 <Input
-                   placeholder="请输入风险期责任会计"
-                   value={searchParams.responsibleAccountant}
-                   onChange={(e) =>
-                     setSearchParams({
-                       ...searchParams,
-                       responsibleAccountant: e.target.value,
-                     })
-                   }
-                 />
-               </Form.Item>
-             </Col>
+            <Col span={6}>
+              <Form.Item label="风险期责任会计" name="responsibleAccountant">
+                <Input
+                  placeholder="请输入风险期责任会计"
+                  value={searchParams.responsibleAccountant}
+                  onChange={e =>
+                    setSearchParams({
+                      ...searchParams,
+                      responsibleAccountant: e.target.value,
+                    })
+                  }
+                />
+              </Form.Item>
+            </Col>
           </Row>
           <Row>
             <Col span={24}>
               <Space>
-                <Button
-                  type="primary"
-                  icon={<SearchOutlined />}
-                  onClick={handleSearch}
-                >
+                <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                   搜索
                 </Button>
                 <Button icon={<ReloadOutlined />} onClick={handleReset}>
                   重置
                 </Button>
-                <Button 
-                  type="primary" 
-                  icon={<PlusOutlined />}
-                  onClick={handleOpenCreateModal}
-                >
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreateModal}>
                   新建核查记录
                 </Button>
               </Space>
@@ -669,8 +653,7 @@ const TaxReview: React.FC = () => {
             total: total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) =>
-              `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
           }}
           onChange={handleTableChange}
         />
@@ -685,11 +668,7 @@ const TaxReview: React.FC = () => {
         confirmLoading={createLoading}
         width={800}
       >
-        <Form
-          form={createForm}
-          layout="vertical"
-          preserve={false}
-        >
+        <Form form={createForm} layout="vertical" preserve={false}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -705,7 +684,7 @@ const TaxReview: React.FC = () => {
                   placeholder="请输入企业名称进行搜索"
                   options={customerOptions}
                   value={customerSearchValue}
-                  onSearch={(value) => {
+                  onSearch={value => {
                     setCustomerSearchValue(value)
                     if (value && value.trim()) {
                       handleCustomerSearch(value.trim(), true)
@@ -716,7 +695,7 @@ const TaxReview: React.FC = () => {
                   onSelect={(value, option) => {
                     handleCustomerSelect(value, option)
                   }}
-                  onChange={(value) => {
+                  onChange={value => {
                     setCustomerSearchValue(value)
                     // 如果输入值为空，重置搜索状态
                     if (!value || !value.trim()) {
@@ -735,7 +714,7 @@ const TaxReview: React.FC = () => {
                       </div>
                     ) : null
                   }
-                  dropdownRender={(menu) => (
+                  dropdownRender={menu => (
                     <div>
                       {menu}
                       {hasMoreCustomers && (
@@ -745,7 +724,7 @@ const TaxReview: React.FC = () => {
                             padding: '8px 12px',
                             borderTop: '1px solid #f0f0f0',
                             cursor: 'pointer',
-                            color: '#1890ff'
+                            color: '#1890ff',
                           }}
                           onClick={handleLoadMoreCustomers}
                         >
@@ -760,13 +739,15 @@ const TaxReview: React.FC = () => {
                         </div>
                       )}
                       {customerTotal > 0 && (
-                        <div style={{
-                          textAlign: 'center',
-                          padding: '4px 12px',
-                          fontSize: '12px',
-                          color: '#999',
-                          borderTop: '1px solid #f0f0f0'
-                        }}>
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            color: '#999',
+                            borderTop: '1px solid #f0f0f0',
+                          }}
+                        >
                           共找到 {customerTotal} 条结果
                         </div>
                       )}
@@ -782,7 +763,10 @@ const TaxReview: React.FC = () => {
                 name="unifiedSocialCreditCode"
                 rules={[
                   { len: 18, message: '统一社会信用代码必须为18位' },
-                  { pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, message: '请输入正确的统一社会信用代码格式' },
+                  {
+                    pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/,
+                    message: '请输入正确的统一社会信用代码格式',
+                  },
                 ]}
                 extra="输入统一社会信用代码进行搜索，选择后将自动填入相关信息（可选）"
               >
@@ -790,7 +774,7 @@ const TaxReview: React.FC = () => {
                   placeholder="请输入统一社会信用代码进行搜索"
                   options={codeOptions}
                   value={codeSearchValue}
-                  onSearch={(value) => {
+                  onSearch={value => {
                     setCodeSearchValue(value)
                     if (value && value.trim()) {
                       handleCodeSearch(value.trim(), true)
@@ -801,7 +785,7 @@ const TaxReview: React.FC = () => {
                   onSelect={(value, option) => {
                     handleCodeSelect(value, option)
                   }}
-                  onChange={(value) => {
+                  onChange={value => {
                     setCodeSearchValue(value)
                     // 如果输入值为空，重置搜索状态
                     if (!value || !value.trim()) {
@@ -820,7 +804,7 @@ const TaxReview: React.FC = () => {
                       </div>
                     ) : null
                   }
-                  dropdownRender={(menu) => (
+                  dropdownRender={menu => (
                     <div>
                       {menu}
                       {hasMoreCodes && (
@@ -830,7 +814,7 @@ const TaxReview: React.FC = () => {
                             padding: '8px 12px',
                             borderTop: '1px solid #f0f0f0',
                             cursor: 'pointer',
-                            color: '#1890ff'
+                            color: '#1890ff',
                           }}
                           onClick={handleLoadMoreCodes}
                         >
@@ -845,13 +829,15 @@ const TaxReview: React.FC = () => {
                         </div>
                       )}
                       {codeTotal > 0 && (
-                        <div style={{
-                          textAlign: 'center',
-                          padding: '4px 12px',
-                          fontSize: '12px',
-                          color: '#999',
-                          borderTop: '1px solid #f0f0f0'
-                        }}>
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            color: '#999',
+                            borderTop: '1px solid #f0f0f0',
+                          }}
+                        >
                           共找到 {codeTotal} 条结果
                         </div>
                       )}
@@ -870,7 +856,11 @@ const TaxReview: React.FC = () => {
                 name="taxBureau"
                 extra="此字段将根据企业信息自动填入，无法编辑（可选）"
               >
-                <Input placeholder="所属分局将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+                <Input
+                  placeholder="所属分局将自动填入"
+                  readOnly
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -892,9 +882,7 @@ const TaxReview: React.FC = () => {
               <Form.Item
                 label="风险下发日期"
                 name="riskIssuedDate"
-                rules={[
-                  { required: true, message: '请选择风险下发日期' },
-                ]}
+                rules={[{ required: true, message: '请选择风险下发日期' }]}
               >
                 <DatePicker
                   style={{ width: '100%' }}
@@ -907,9 +895,7 @@ const TaxReview: React.FC = () => {
               <Form.Item
                 label="风险发生日期"
                 name="riskOccurredDate"
-                rules={[
-                  { required: true, message: '请选择风险发生日期' },
-                ]}
+                rules={[{ required: true, message: '请选择风险发生日期' }]}
               >
                 <DatePicker
                   style={{ width: '100%' }}
@@ -956,7 +942,7 @@ const TaxReview: React.FC = () => {
             <MultiFileUpload
               label="附件"
               value={attachmentFiles}
-              onChange={(files) => setAttachmentFiles(files)}
+              onChange={files => setAttachmentFiles(files)}
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.csv"
             />
             <div style={{ marginTop: 8, color: '#666', fontSize: 12 }}>
@@ -965,10 +951,8 @@ const TaxReview: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-
-
     </div>
   )
 }
 
-export default TaxReview 
+export default TaxReview

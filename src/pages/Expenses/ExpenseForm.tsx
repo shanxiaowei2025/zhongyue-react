@@ -75,14 +75,14 @@ const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
   // 计算最终是否受限
   // 创建模式：只有自动填写的字段才受限
   // 编辑模式：如果用户没有完全编辑权限，则所有开始日期字段都受限
-  const finalIsRestricted = mode === 'add' ? hasAutoFillValue : (!hasPermission || hasAutoFillValue)
-  
+  const finalIsRestricted = mode === 'add' ? hasAutoFillValue : !hasPermission || hasAutoFillValue
+
   // 如果是受限模式且有值，则只允许选择同年的月份
   const disabledDate = (current: Dayjs) => {
     if (!finalIsRestricted || !value) {
       return false
     }
-    
+
     // 只允许选择相同年份的月份
     return current.year() !== value.year()
   }
@@ -121,10 +121,7 @@ const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
   // 如果是受限模式，包装工具提示
   if (finalIsRestricted) {
     return (
-      <Tooltip 
-        title={getTooltipTitle()}
-        placement="top"
-      >
+      <Tooltip title={getTooltipTitle()} placement="top">
         {datePicker}
       </Tooltip>
     )
@@ -165,7 +162,7 @@ type FormData = Omit<ExpenseFormData, keyof FormDateFields> & FormDateFields
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCancel }) => {
   const [form] = Form.useForm<FormData>()
   const [activeTab, setActiveTab] = useState('1')
-  
+
   // 获取当前用户信息
   const { user } = useAuthStore()
   const [tabFeeSums, setTabFeeSums] = useState<Record<string, number>>({
@@ -243,10 +240,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     if (!user?.roles || !Array.isArray(user.roles)) {
       return false
     }
-    
+
     // 允许完全编辑的角色
-    const adminRoles = ['super_admin', 'admin', 'expense_auditor', '超级管理员', '管理员', '费用审核员']
-    
+    const adminRoles = [
+      'super_admin',
+      'admin',
+      'expense_auditor',
+      '超级管理员',
+      '管理员',
+      '费用审核员',
+    ]
+
     return user.roles.some(role => adminRoles.includes(role))
   }
 
@@ -261,7 +265,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const calculateTotalFeeSync = () => {
     try {
       console.log('同步计算总费用...')
-      
+
       // 从表单获取所有费用字段的当前值
       const values: Record<string, any> = {}
 
@@ -287,7 +291,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 立即更新总费用到表单
       form.setFieldValue('totalFee', total)
-      
+
       return total
     } catch (error) {
       console.error('同步计算总费用失败:', error)
@@ -300,26 +304,26 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     async (companyName?: string, unifiedSocialCreditCode?: string) => {
       // 只有在创建模式下才自动填写
       if (mode !== 'add') return
-      
+
       // 至少需要一个查询条件
       if (!companyName && !unifiedSocialCreditCode) return
 
       try {
         setLoadingAutoFill(true)
         const params: { companyName?: string; unifiedSocialCreditCode?: string } = {}
-        
+
         if (companyName) params.companyName = companyName
         if (unifiedSocialCreditCode) params.unifiedSocialCreditCode = unifiedSocialCreditCode
 
         const response = await getMaxDatesNextDay(params)
-        
+
         if (response.code === 0 && response.data?.dates) {
           const dates = response.data.dates
           setAutoFillDates(dates)
 
           // 自动填写有值的日期字段
           const fieldsToUpdate: Record<string, any> = {}
-          
+
           if (dates.agencyStartDate) {
             fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
           }
@@ -361,13 +365,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const calculateFees = useDebounce(
     () => {
       if (!visible || !formMountedRef.current || !formInitializedRef.current) {
-        console.log('计算费用被跳过:', { visible, formMounted: formMountedRef.current, formInitialized: formInitializedRef.current })
+        console.log('计算费用被跳过:', {
+          visible,
+          formMounted: formMountedRef.current,
+          formInitialized: formInitializedRef.current,
+        })
         return
       }
 
       try {
         console.log('开始计算费用...')
-        
+
         // 从表单获取所有费用字段的当前值
         const values: Record<string, any> = {}
 
@@ -413,7 +421,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           fieldsInTab.forEach(field => {
             const value = values[field]
             if (value) {
-              const numValue = typeof value === 'string' ? parseFloat(value) || 0 : Number(value) || 0
+              const numValue =
+                typeof value === 'string' ? parseFloat(value) || 0 : Number(value) || 0
               sum += numValue
             }
           })
@@ -424,13 +433,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         console.log('更新标签页费用:', {
           new: newTabFeeSums,
         })
-        
+
         // 使用setTimeout将状态更新推迟到下一个事件循环，避免循环引用
         setTimeout(() => {
           setFeeFieldsCache(values)
-        setTabFeeSums(newTabFeeSums)
+          setTabFeeSums(newTabFeeSums)
         }, 0)
-        
       } catch (error) {
         console.error('计算费用失败:', error)
       }
@@ -462,17 +470,26 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 计算代理日期时长
   useEffect(() => {
-    if (agencyStartDate && agencyEndDate && dayjs.isDayjs(agencyStartDate) && dayjs.isDayjs(agencyEndDate)) {
+    if (
+      agencyStartDate &&
+      agencyEndDate &&
+      dayjs.isDayjs(agencyStartDate) &&
+      dayjs.isDayjs(agencyEndDate)
+    ) {
       // 计算开始日期和结束日期之间的年数
       const startDate = agencyStartDate.startOf('day')
       const endDate = agencyEndDate.startOf('day')
-      
+
       // 计算年数差异（精确到小数点后两位）
       const yearsDiff = endDate.diff(startDate, 'year', true).toFixed(2)
       const years = parseFloat(yearsDiff)
-      
-      console.log('代理时长计算：', { startDate: startDate.format('YYYY-MM'), endDate: endDate.format('YYYY-MM'), years })
-      
+
+      console.log('代理时长计算：', {
+        startDate: startDate.format('YYYY-MM'),
+        endDate: endDate.format('YYYY-MM'),
+        years,
+      })
+
       setAgencyDurationYears(years)
     } else {
       setAgencyDurationYears(0)
@@ -518,10 +535,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 更新费用缓存，确保计算时公积金费用为0 - 使用setTimeout避免循环引用
       setTimeout(() => {
-      setFeeFieldsCache(prev => ({
-        ...prev,
-        housingFundAgencyFee: 0,
-      }))
+        setFeeFieldsCache(prev => ({
+          ...prev,
+          housingFundAgencyFee: 0,
+        }))
       }, 0)
 
       console.log('公积金选项已关闭，已清空相关字段')
@@ -576,12 +593,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         // 确保赠送代理时长字段正确设置
         if (formData.giftAgencyDuration === null || formData.giftAgencyDuration === undefined) {
-          formData.giftAgencyDuration = '';
+          formData.giftAgencyDuration = ''
         }
 
         // 确保社保业务类型字段正确设置
-        if (formData.socialInsuranceBusinessType === null || formData.socialInsuranceBusinessType === undefined) {
-          formData.socialInsuranceBusinessType = '';
+        if (
+          formData.socialInsuranceBusinessType === null ||
+          formData.socialInsuranceBusinessType === undefined
+        ) {
+          formData.socialInsuranceBusinessType = ''
         }
 
         // 处理contractImage
@@ -649,7 +669,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         })
         // 使用setTimeout避免循环引用
         setTimeout(() => {
-        setFeeFieldsCache(initialFeeValues)
+          setFeeFieldsCache(initialFeeValues)
         }, 0)
 
         // 初始化标签页费用合计
@@ -675,18 +695,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         // 使用setTimeout避免循环引用
         setTimeout(() => {
-        setTabFeeSums(initialTabFeeSums)
+          setTabFeeSums(initialTabFeeSums)
         }, 0)
 
         // 标记表单已初始化
         formInitializedRef.current = true
 
         // 标记表单已初始化，费用计算将通过useEffect触发
-        console.log('编辑模式：表单初始化完成', { 
-            formInitialized: formInitializedRef.current, 
-            visible,
-            initialTabFeeSums 
-          })
+        console.log('编辑模式：表单初始化完成', {
+          formInitialized: formInitializedRef.current,
+          visible,
+          initialTabFeeSums,
+        })
       } else {
         // 添加模式，设置默认值
         const today = dayjs()
@@ -707,20 +727,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         })
         // 使用setTimeout避免循环引用
         setTimeout(() => {
-        setFeeFieldsCache(initialFeeValues)
+          setFeeFieldsCache(initialFeeValues)
         }, 0)
 
         // 新建模式下重置所有标签页费用为0 - 使用setTimeout避免循环引用
         setTimeout(() => {
-        setTabFeeSums({
-          '1': 0,
-          '2': 0,
-          '3': 0,
-          '4': 0,
-          '5': 0,
-          '6': 0,
-          '7': 0,
-        })
+          setTabFeeSums({
+            '1': 0,
+            '2': 0,
+            '3': 0,
+            '4': 0,
+            '5': 0,
+            '6': 0,
+            '7': 0,
+          })
         }, 0)
 
         // 重置自动填写状态
@@ -742,27 +762,33 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   useEffect(() => {
     if (formInitializedRef.current && visible) {
       // 直接调用计算函数，不使用setTimeout避免循环引用
-        calculateFees()
+      calculateFees()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formInitializedRef.current ? 1 : 0, visible]) // 仅在初始化完成时执行一次
 
   // 处理表单值变化，用于自动填写开始日期
-  const handleFormValuesChange = useCallback((changedValues: any, allValues: any) => {
-    // 只有在创建模式下才自动填写
-    if (mode !== 'add') return
+  const handleFormValuesChange = useCallback(
+    (changedValues: any, allValues: any) => {
+      // 只有在创建模式下才自动填写
+      if (mode !== 'add') return
 
-    // 检查是否改变了企业名称或统一社会信用代码
-    if (changedValues.companyName !== undefined || changedValues.unifiedSocialCreditCode !== undefined) {
-      const companyName = allValues.companyName
-      const unifiedSocialCreditCode = allValues.unifiedSocialCreditCode
-      
-      // 至少需要一个有值才触发
-      if (companyName || unifiedSocialCreditCode) {
-        fetchAndFillDates(companyName, unifiedSocialCreditCode)
+      // 检查是否改变了企业名称或统一社会信用代码
+      if (
+        changedValues.companyName !== undefined ||
+        changedValues.unifiedSocialCreditCode !== undefined
+      ) {
+        const companyName = allValues.companyName
+        const unifiedSocialCreditCode = allValues.unifiedSocialCreditCode
+
+        // 至少需要一个有值才触发
+        if (companyName || unifiedSocialCreditCode) {
+          fetchAndFillDates(companyName, unifiedSocialCreditCode)
+        }
       }
-    }
-  }, [mode, fetchAndFillDates])
+    },
+    [mode, fetchAndFillDates]
+  )
 
   // 跟踪新上传的附件
   const [uploadedFiles, setUploadedFiles] = useState<{
@@ -790,7 +816,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     try {
       // 在提交前同步计算一次总费用，确保费用正确
       calculateTotalFeeSync()
-      
+
       // 验证表单
       const values = await form.validateFields()
 
@@ -824,15 +850,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 确保 giftAgencyDuration 字段在未显示时为空字符串
       if (agencyDurationYears < 2) {
-        formattedValues.giftAgencyDuration = '';
+        formattedValues.giftAgencyDuration = ''
       } else if (!formattedValues.giftAgencyDuration) {
         // 如果显示了但未选择，则默认为"无赠送"
-        formattedValues.giftAgencyDuration = '';
+        formattedValues.giftAgencyDuration = ''
       }
 
       // 确保 socialInsuranceBusinessType 字段在未选择时为空字符串
       if (!formattedValues.socialInsuranceBusinessType) {
-        formattedValues.socialInsuranceBusinessType = '';
+        formattedValues.socialInsuranceBusinessType = ''
       }
 
       // 处理费用字段，确保它们是有效的数值
@@ -871,17 +897,21 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
       // 对于其他使用tags模式的字段，保持数组格式
       // 后端API应该能够处理字符串数组，如果后端需要字符串，可以在这里使用join方法
-      ;['changeBusiness', 'administrativeLicense', 'otherBusiness', 'otherBusinessOutsourcing', 'insuranceTypes'].forEach(
-        field => {
-          if (formattedValues[field] && !Array.isArray(formattedValues[field])) {
-            // 如果不是数组，转换为包含单个元素的数组
-            formattedValues[field] = [formattedValues[field]]
-          } else if (formattedValues[field] === undefined || formattedValues[field] === null) {
-            // 如果是undefined或null，设置为空数组
-            formattedValues[field] = []
-          }
+      ;[
+        'changeBusiness',
+        'administrativeLicense',
+        'otherBusiness',
+        'otherBusinessOutsourcing',
+        'insuranceTypes',
+      ].forEach(field => {
+        if (formattedValues[field] && !Array.isArray(formattedValues[field])) {
+          // 如果不是数组，转换为包含单个元素的数组
+          formattedValues[field] = [formattedValues[field]]
+        } else if (formattedValues[field] === undefined || formattedValues[field] === null) {
+          // 如果是undefined或null，设置为空数组
+          formattedValues[field] = []
         }
-      )
+      })
 
       // 处理合同图片 - 将对象数组转换为文件名数组
       if (formattedValues.contractImage && Array.isArray(formattedValues.contractImage)) {
@@ -1179,16 +1209,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   <Input placeholder="请输入企业名称" />
                 </Form.Item>
 
-                <Form.Item 
-                  name="unifiedSocialCreditCode" 
+                <Form.Item
+                  name="unifiedSocialCreditCode"
                   label="统一社会信用代码"
                   rules={[{ required: true, message: '请输入统一社会信用代码' }]}
                 >
                   <Input placeholder="请输入统一社会信用代码" />
                 </Form.Item>
 
-                <Form.Item 
-                  name="companyType" 
+                <Form.Item
+                  name="companyType"
                   label="企业类型"
                   rules={[{ required: true, message: '请选择企业类型' }]}
                 >
@@ -1218,16 +1248,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   </Select>
                 </Form.Item>
 
-                <Form.Item 
-                  name="chargeDate" 
+                <Form.Item
+                  name="chargeDate"
                   label="收费日期"
                   rules={[{ required: true, message: '请选择收费日期' }]}
                 >
                   <DatePicker style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item 
-                  name="chargeMethod" 
+                <Form.Item
+                  name="chargeMethod"
                   label="收费方式"
                   rules={[{ required: true, message: '请选择收费方式' }]}
                 >
@@ -1410,8 +1440,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           gap: '16px',
                         }}
                       >
-                        <Form.Item 
-                          name="businessType" 
+                        <Form.Item
+                          name="businessType"
                           label="业务类型"
                           dependencies={['agencyFee']}
                           rules={[
@@ -1422,8 +1452,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                   return Promise.reject(new Error('代理费有值时，业务类型为必填'))
                                 }
                                 return Promise.resolve()
-                              }
-                            })
+                              },
+                            }),
                           ]}
                         >
                           <Select placeholder="请选择业务类型">
@@ -1432,8 +1462,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           </Select>
                         </Form.Item>
 
-                        <Form.Item 
-                          name="agencyType" 
+                        <Form.Item
+                          name="agencyType"
                           label="代理类型"
                           dependencies={['agencyFee']}
                           rules={[
@@ -1444,8 +1474,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                   return Promise.reject(new Error('代理费有值时，代理类型为必填'))
                                 }
                                 return Promise.resolve()
-                              }
-                            })
+                              },
+                            }),
                           ]}
                         >
                           <Select placeholder="请选择代理类型">
@@ -1455,8 +1485,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           </Select>
                         </Form.Item>
 
-                        <Form.Item 
-                          name="contractType" 
+                        <Form.Item
+                          name="contractType"
                           label="合同类型"
                           dependencies={['agencyFee']}
                           rules={[
@@ -1467,8 +1497,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                   return Promise.reject(new Error('代理费有值时，合同类型为必填'))
                                 }
                                 return Promise.resolve()
-                              }
-                            })
+                              },
+                            }),
                           ]}
                         >
                           <Select placeholder="请选择合同类型">
@@ -1488,12 +1518,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           />
                         </Form.Item>
 
-                        <Form.Item label="代理日期" style={{ gridColumn: agencyDurationYears >= 2 ? 'span 1' : 'span 2' }}>
+                        <Form.Item
+                          label="代理日期"
+                          style={{ gridColumn: agencyDurationYears >= 2 ? 'span 1' : 'span 2' }}
+                        >
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="agencyStartDate" noStyle>
-                              <RestrictedDatePicker 
-                                placeholder="开始日期" 
-                                style={{ width: '100%' }} 
+                              <RestrictedDatePicker
+                                placeholder="开始日期"
+                                style={{ width: '100%' }}
                                 fieldName="代理开始日期"
                                 mode={mode}
                                 hasPermission={hasFullDateEditPermission()}
@@ -1502,16 +1535,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="agencyEndDate" noStyle>
-                              <DatePicker 
-                                placeholder="结束日期" 
-                                style={{ width: '100%' }} 
+                              <DatePicker
+                                placeholder="结束日期"
+                                style={{ width: '100%' }}
                                 picker="month"
                                 format="YYYY-MM"
                               />
                             </Form.Item>
                           </Space>
                         </Form.Item>
-                        
+
                         {/* 赠送代理时长字段，仅当代理时长大于等于两年时显示 */}
                         {agencyDurationYears >= 2 && (
                           <Form.Item name="giftAgencyDuration" label="赠送代理时长">
@@ -1537,9 +1570,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="记账软件日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="accountingSoftwareStartDate" noStyle>
-                              <RestrictedDatePicker 
-                                placeholder="开始日期" 
-                                style={{ width: '100%' }} 
+                              <RestrictedDatePicker
+                                placeholder="开始日期"
+                                style={{ width: '100%' }}
                                 fieldName="记账软件开始日期"
                                 mode={mode}
                                 hasPermission={hasFullDateEditPermission()}
@@ -1548,9 +1581,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="accountingSoftwareEndDate" noStyle>
-                              <DatePicker 
-                                placeholder="结束日期" 
-                                style={{ width: '100%' }} 
+                              <DatePicker
+                                placeholder="结束日期"
+                                style={{ width: '100%' }}
                                 picker="month"
                                 format="YYYY-MM"
                               />
@@ -1572,9 +1605,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="开票软件日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="invoiceSoftwareStartDate" noStyle>
-                              <RestrictedDatePicker 
-                                placeholder="开始日期" 
-                                style={{ width: '100%' }} 
+                              <RestrictedDatePicker
+                                placeholder="开始日期"
+                                style={{ width: '100%' }}
                                 fieldName="开票软件开始日期"
                                 mode={mode}
                                 hasPermission={hasFullDateEditPermission()}
@@ -1583,9 +1616,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="invoiceSoftwareEndDate" noStyle>
-                              <DatePicker 
-                                placeholder="结束日期" 
-                                style={{ width: '100%' }} 
+                              <DatePicker
+                                placeholder="结束日期"
+                                style={{ width: '100%' }}
                                 picker="month"
                                 format="YYYY-MM"
                               />
@@ -1606,21 +1639,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           gap: '16px',
                         }}
                       >
-                        <Form.Item 
-                          name="socialInsuranceBusinessType" 
+                        <Form.Item
+                          name="socialInsuranceBusinessType"
                           label="业务类型"
                           dependencies={['socialInsuranceAgencyFee']}
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
-                                const socialInsuranceAgencyFee = getFieldValue('socialInsuranceAgencyFee')
+                                const socialInsuranceAgencyFee = getFieldValue(
+                                  'socialInsuranceAgencyFee'
+                                )
                                 const fee = parseNumberInput(socialInsuranceAgencyFee)
-                                
+
                                 // 如果社保代理费有值且大于0，则业务类型必填
                                 if (fee > 0 && (!value || value.trim() === '')) {
                                   return Promise.reject(new Error('社保代理费有值时，业务类型必填'))
                                 }
-                                
+
                                 return Promise.resolve()
                               },
                             }),
@@ -1675,9 +1710,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="社保日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="socialInsuranceStartDate" noStyle>
-                              <RestrictedDatePicker 
-                                placeholder="开始日期" 
-                                style={{ width: '100%' }} 
+                              <RestrictedDatePicker
+                                placeholder="开始日期"
+                                style={{ width: '100%' }}
                                 fieldName="社保开始日期"
                                 mode={mode}
                                 hasPermission={hasFullDateEditPermission()}
@@ -1686,9 +1721,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="socialInsuranceEndDate" noStyle>
-                              <DatePicker 
-                                placeholder="结束日期" 
-                                style={{ width: '100%' }} 
+                              <DatePicker
+                                placeholder="结束日期"
+                                style={{ width: '100%' }}
                                 picker="month"
                                 format="YYYY-MM"
                               />
@@ -1798,9 +1833,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="统计日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="statisticalStartDate" noStyle>
-                              <RestrictedDatePicker 
-                                placeholder="开始日期" 
-                                style={{ width: '100%' }} 
+                              <RestrictedDatePicker
+                                placeholder="开始日期"
+                                style={{ width: '100%' }}
                                 fieldName="统计开始日期"
                                 mode={mode}
                                 hasPermission={hasFullDateEditPermission()}
@@ -1809,9 +1844,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="statisticalEndDate" noStyle>
-                              <DatePicker 
-                                placeholder="结束日期" 
-                                style={{ width: '100%' }} 
+                              <DatePicker
+                                placeholder="结束日期"
+                                style={{ width: '100%' }}
                                 picker="month"
                                 format="YYYY-MM"
                               />
@@ -1900,9 +1935,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
                           <Space style={{ width: '100%' }}>
                             <Form.Item name="addressStartDate" noStyle>
-                              <RestrictedDatePicker 
-                                placeholder="开始日期" 
-                                style={{ width: '100%' }} 
+                              <RestrictedDatePicker
+                                placeholder="开始日期"
+                                style={{ width: '100%' }}
                                 fieldName="地址开始日期"
                                 mode={mode}
                                 hasPermission={hasFullDateEditPermission()}
@@ -1911,9 +1946,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             </Form.Item>
                             <span>至</span>
                             <Form.Item name="addressEndDate" noStyle>
-                              <DatePicker 
-                                placeholder="结束日期" 
-                                style={{ width: '100%' }} 
+                              <DatePicker
+                                placeholder="结束日期"
+                                style={{ width: '100%' }}
                                 picker="month"
                                 format="YYYY-MM"
                               />

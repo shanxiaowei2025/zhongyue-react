@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Upload, Button, message, Modal, Spin, Input, Form, Space, Card, Image, Popconfirm } from 'antd'
+import {
+  Upload,
+  Button,
+  message,
+  Modal,
+  Spin,
+  Input,
+  Form,
+  Space,
+  Card,
+  Image,
+  Popconfirm,
+} from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -131,22 +143,44 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
     // 支持的文件格式：图片、PDF、Word、Excel、CSV
     const allowedTypes = [
       // 图片格式
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/webp',
       // PDF格式
       'application/pdf',
       // Word格式
-      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      // Excel格式  
-      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      // Excel格式
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       // CSV格式
-      'text/csv', 'application/csv'
+      'text/csv',
+      'application/csv',
     ]
 
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv']
-    
+    const allowedExtensions = [
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'bmp',
+      'webp',
+      'pdf',
+      'doc',
+      'docx',
+      'xls',
+      'xlsx',
+      'csv',
+    ]
+
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
-    const isAllowedType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)
-    
+    const isAllowedType =
+      allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension)
+
     if (!isAllowedType) {
       message.error('只能上传图片、PDF、Word、Excel、CSV格式的文件！')
       return false
@@ -411,7 +445,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                             description="删除后将无法恢复，是否确认删除？"
                             onConfirm={() => handleRemove(item)}
                             okText="确认"
-                            okType='danger'
+                            okType="danger"
                             cancelText="取消"
                           >
                             <DeleteOutlined key="delete-icon" />
@@ -455,19 +489,29 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
             // 非图片文件预览
             <div className="flex flex-col items-center justify-center p-8">
               <div className="text-6xl mb-4">
-                {safeValue[previewTitle]?.fileName ? getFileIcon(safeValue[previewTitle].fileName) : <FileOutlined />}
+                {safeValue[previewTitle]?.fileName ? (
+                  getFileIcon(safeValue[previewTitle].fileName)
+                ) : (
+                  <FileOutlined />
+                )}
               </div>
-              <div className="text-xl font-bold">{safeValue[previewTitle]?.fileName || '未知文件'}</div>
+              <div className="text-xl font-bold">
+                {safeValue[previewTitle]?.fileName || '未知文件'}
+              </div>
               <div className="text-gray-500 mb-4">
-                {safeValue[previewTitle]?.fileName ? getFileExtension(safeValue[previewTitle].fileName) : ''}
+                {safeValue[previewTitle]?.fileName
+                  ? getFileExtension(safeValue[previewTitle].fileName)
+                  : ''}
               </div>
               <Space>
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   onClick={() => {
                     const fileData = safeValue[previewTitle]
                     if (fileData) {
-                      const url = fileData.fileName ? buildImageUrl(fileData.fileName) : fileData.url
+                      const url = fileData.fileName
+                        ? buildImageUrl(fileData.fileName)
+                        : fileData.url
                       if (url) window.open(url, '_blank')
                     }
                   }}

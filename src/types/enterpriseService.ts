@@ -40,10 +40,11 @@ export interface EnterpriseQueryParams {
   customerLevel?: string
 }
 
-export interface EnterpriseListResponse extends ApiResponse<{
-  data: Enterprise[]
-  total: number
-}> {}
+export interface EnterpriseListResponse
+  extends ApiResponse<{
+    data: Enterprise[]
+    total: number
+  }> {}
 
 // 服务历程相关类型
 export interface ServiceHistory {
@@ -103,7 +104,8 @@ export interface CustomerSearchOption {
   enterprise: Enterprise
 }
 
-export interface CustomerSearchResponse extends ApiResponse<{
-  data: Enterprise[]
-  total: number
-}> {} 
+export interface CustomerSearchResponse
+  extends ApiResponse<{
+    data: Enterprise[]
+    total: number
+  }> {}

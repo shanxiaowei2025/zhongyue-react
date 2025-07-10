@@ -321,7 +321,7 @@ const ContractSign: React.FC<ContractSignProps> = () => {
 
       // 生成可分享的链接 - 使用固定域名
       const shareableLink = `https://manage.zhongyuekuaiji.cn/contract/view/${encryptedCode}`
-      
+
       // 生成包含公司名称的完整分享内容
       const shareableContent = `【${partyACompany}】合同查看链接：\n${shareableLink}`
 

@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Card, Button, Form, Input, Upload, message, Tabs, Spin, Tag, Descriptions } from 'antd'
-import {
-  UserOutlined,
-  LockOutlined,
-  UploadOutlined,
-  PhoneOutlined,
-} from '@ant-design/icons'
+import { UserOutlined, LockOutlined, UploadOutlined, PhoneOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useAuthStore } from '../../store/auth'
 import { getUserProfile, updateUserProfile, changePassword } from '../../api/auth'
@@ -253,10 +248,10 @@ const Profile = () => {
                   name="idCardNumber"
                   label="身份证号"
                   rules={[
-                    { 
-                      pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, 
+                    {
+                      pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/,
                       message: '请输入有效的身份证号码',
-                      validateTrigger: 'onBlur' 
+                      validateTrigger: 'onBlur',
                     },
                   ]}
                 >

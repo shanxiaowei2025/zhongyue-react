@@ -91,7 +91,10 @@ export const getContractViewLink = (contractId: number) => {
 }
 
 // 获取代理记账合同的委托日期
-export const getAgencyContractDates = (params: { companyName?: string; unifiedSocialCreditCode?: string }) => {
+export const getAgencyContractDates = (params: {
+  companyName?: string
+  unifiedSocialCreditCode?: string
+}) => {
   return request.get<
     ApiResponse<{
       agencyStartDate: string

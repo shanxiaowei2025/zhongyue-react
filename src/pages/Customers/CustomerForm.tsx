@@ -24,7 +24,12 @@ import type {
 } from '../../types'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
-import { PlusOutlined, DeleteOutlined, InfoCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  InfoCircleOutlined,
+  QuestionCircleOutlined,
+} from '@ant-design/icons'
 import ImageUpload from '../../components/ImageUpload'
 import MultiImageUpload from '../../components/MultiImageUpload'
 import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
@@ -1017,8 +1022,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input disabled={mode === 'edit' || mode === 'view'} />
           </Form.Item>
 
-          <Form.Item 
-            name="customerLevel" 
+          <Form.Item
+            name="customerLevel"
             label={
               <div className="flex items-center gap-2">
                 <span>客户分级</span>
@@ -1028,9 +1033,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   placement="rightTop"
                   overlayStyle={{ maxWidth: '95vw' }}
                 >
-                  <Button 
-                    type="link" 
-                    size="small" 
+                  <Button
+                    type="link"
+                    size="small"
                     icon={<QuestionCircleOutlined />}
                     className="p-0 h-auto"
                   >
@@ -1041,22 +1046,38 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             }
           >
             <Select placeholder="请选择客户分级" allowClear>
-              {(['AA', 'AB', 'AC', 'AD', 'BA', 'BB', 'BC', 'BD', 'CA', 'CB', 'CC', 'CD', 'DA', 'DB', 'DC', 'DD'] as const).map((level) => (
+              {(
+                [
+                  'AA',
+                  'AB',
+                  'AC',
+                  'AD',
+                  'BA',
+                  'BB',
+                  'BC',
+                  'BD',
+                  'CA',
+                  'CB',
+                  'CC',
+                  'CD',
+                  'DA',
+                  'DB',
+                  'DC',
+                  'DD',
+                ] as const
+              ).map(level => (
                 <Select.Option key={level} value={level}>
                   <div className="flex items-center justify-between w-full">
-                    <CustomerLevelDisplay 
-                      level={level}
-                      showPopover={false}
-                    />
+                    <CustomerLevelDisplay level={level} showPopover={false} />
                     <Popover
                       content={<CustomerLevelTipComponent level={level} />}
                       trigger={['hover']}
                       placement="right"
                       overlayStyle={{ maxWidth: '90vw' }}
                     >
-                      <InfoCircleOutlined 
+                      <InfoCircleOutlined
                         className="text-blue-500 ml-2 cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
                       />
                     </Popover>
                   </div>
@@ -1910,9 +1931,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             )}
           </Form.Item>
 
-          <Form.Item 
-            name="archiveStorageRemarks" 
-            label="档案存放备注" 
+          <Form.Item
+            name="archiveStorageRemarks"
+            label="档案存放备注"
             className="col-span-1 md:col-span-2"
           >
             {mode === 'view' ? (
@@ -1920,10 +1941,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 {form.getFieldValue('archiveStorageRemarks') || '-'}
               </div>
             ) : (
-              <Input.TextArea 
-                rows={3} 
-                placeholder="请输入档案存放相关备注信息" 
-              />
+              <Input.TextArea rows={3} placeholder="请输入档案存放相关备注信息" />
             )}
           </Form.Item>
         </div>

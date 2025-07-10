@@ -1,6 +1,6 @@
 import request from './request'
-import type { 
-  EnterpriseQueryParams, 
+import type {
+  EnterpriseQueryParams,
   EnterpriseListResponse,
   ServiceHistoryQueryParams,
   ServiceHistoryResponse,
@@ -8,7 +8,7 @@ import type {
   ExpenseContributionResponse,
   Enterprise,
   CustomerQueryParams,
-  CustomerSearchResponse
+  CustomerSearchResponse,
 } from '../types/enterpriseService'
 import type { ApiResponse } from '../types'
 
@@ -33,9 +33,9 @@ export const searchCustomers = (params: CustomerQueryParams) => {
  * @param companyName 企业名称
  * @param unifiedSocialCreditCode 统一社会信用代码
  */
-export const getEnterpriseByNameOrCode = (params: { 
+export const getEnterpriseByNameOrCode = (params: {
   companyName?: string
-  unifiedSocialCreditCode?: string 
+  unifiedSocialCreditCode?: string
 }) => {
   return request.get<ApiResponse<{ data: Enterprise[] }>>('/enterprise-service/customer', params)
 }
@@ -53,7 +53,10 @@ export const getEnterpriseById = (id: number) => {
  * @param params 查询参数
  */
 export const getServiceHistory = (params: ServiceHistoryQueryParams) => {
-  return request.get<ServiceHistoryResponse>('/enterprise-service/service-history/find-company-history', params)
+  return request.get<ServiceHistoryResponse>(
+    '/enterprise-service/service-history/find-company-history',
+    params
+  )
 }
 
 /**
@@ -61,5 +64,8 @@ export const getServiceHistory = (params: ServiceHistoryQueryParams) => {
  * @param params 查询参数
  */
 export const getExpenseContribution = (params: ExpenseContributionQueryParams) => {
-  return request.get<ExpenseContributionResponse>('/enterprise-service/expense-contribution/find-company-expenses', params)
-} 
+  return request.get<ExpenseContributionResponse>(
+    '/enterprise-service/expense-contribution/find-company-expenses',
+    params
+  )
+}

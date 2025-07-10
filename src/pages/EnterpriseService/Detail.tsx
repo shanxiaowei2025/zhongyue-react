@@ -22,7 +22,12 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons'
 import { getServiceHistory, getExpenseContribution } from '../../api/enterpriseService'
-import type { Enterprise, ServiceHistory, ExpenseRecord, ExpenseContribution } from '../../types/enterpriseService'
+import type {
+  Enterprise,
+  ServiceHistory,
+  ExpenseRecord,
+  ExpenseContribution,
+} from '../../types/enterpriseService'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
@@ -52,7 +57,7 @@ const STATUS_MAPPING: Record<string, { text: string; color: string }> = {
 const EnterpriseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  
+
   const [loading, setLoading] = useState<boolean>(false)
   const [serviceHistory, setServiceHistory] = useState<ServiceHistory[]>([])
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null)
@@ -78,18 +83,18 @@ const EnterpriseDetail: React.FC = () => {
 
     try {
       setLoading(true)
-      
+
       // 优先使用统一社会信用代码，没有则使用企业名称
       const params = enterprise.unifiedSocialCreditCode
         ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
         : { companyName: enterprise.companyName }
 
       const response = await getServiceHistory(params)
-      
+
       if (response.code === 0 && response.data) {
         // 按创建时间从早到晚排序（从上往下显示）
-        const sortedHistory = response.data.sort((a, b) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        const sortedHistory = response.data.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         )
         setServiceHistory(sortedHistory)
       }
@@ -107,29 +112,30 @@ const EnterpriseDetail: React.FC = () => {
 
     try {
       setExpenseLoading(true)
-      
+
       // 优先使用统一社会信用代码，没有则使用企业名称
       const params = enterprise.unifiedSocialCreditCode
         ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
         : { companyName: enterprise.companyName }
 
       const response = await getExpenseContribution(params)
-      
+
       if (response.code === 0 && response.data) {
         // 按收费时间从早到晚排序，时间相同时按收据编号排序
         const sortedExpenses = {
           ...response.data,
           expenses: response.data.expenses.sort((a, b) => {
             // 首先按时间排序（从早到晚）
-            const timeComparison = new Date(a.chargeDate).getTime() - new Date(b.chargeDate).getTime()
-            
+            const timeComparison =
+              new Date(a.chargeDate).getTime() - new Date(b.chargeDate).getTime()
+
             // 如果时间相同，则按收据编号排序
             if (timeComparison === 0) {
               return a.receiptNo.localeCompare(b.receiptNo)
             }
-            
+
             return timeComparison
-          })
+          }),
         }
         setExpenseContribution(sortedExpenses)
       }
@@ -167,7 +173,7 @@ const EnterpriseDetail: React.FC = () => {
   const formatAmount = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
     if (isNaN(numAmount)) return '¥0.00'
-    
+
     return new Intl.NumberFormat('zh-CN', {
       style: 'currency',
       currency: 'CNY',
@@ -218,15 +224,15 @@ const EnterpriseDetail: React.FC = () => {
   // 检查历程记录是否包含注销状态
   const isTerminationRecord = (history: ServiceHistory) => {
     const updatedFields = history.updatedFields
-    return Object.values(updatedFields).some(value => 
-      value === 'cancelled' || value === 'logged_out'
+    return Object.values(updatedFields).some(
+      value => value === 'cancelled' || value === 'logged_out'
     )
   }
 
   // 渲染服务历程项
   const renderHistoryItem = (history: ServiceHistory) => {
     const updatedFieldsEntries = Object.entries(history.updatedFields)
-    
+
     return (
       <div key={history.id}>
         <div style={{ marginBottom: 8 }}>
@@ -236,9 +242,7 @@ const EnterpriseDetail: React.FC = () => {
           {updatedFieldsEntries.map(([key, value]) => (
             <div key={key} style={{ marginBottom: 4 }}>
               <Text type="secondary">{FIELD_MAPPING[key] || key}：</Text>
-              <span style={{ marginLeft: 8 }}>
-                {formatFieldValue(key, value)}
-              </span>
+              <span style={{ marginLeft: 8 }}>{formatFieldValue(key, value)}</span>
             </div>
           ))}
         </div>
@@ -264,7 +268,7 @@ const EnterpriseDetail: React.FC = () => {
       </div>
 
       <Title level={2}>{enterprise.companyName}</Title>
-      
+
       <Card style={{ marginBottom: 24 }}>
         <Descriptions column={2}>
           <Descriptions.Item label="企业名称">{enterprise.companyName}</Descriptions.Item>
@@ -277,9 +281,7 @@ const EnterpriseDetail: React.FC = () => {
           <Descriptions.Item label="记账会计">
             {enterprise.bookkeepingAccountant || '未设置'}
           </Descriptions.Item>
-          <Descriptions.Item label="归属地">
-            {enterprise.location || '未设置'}
-          </Descriptions.Item>
+          <Descriptions.Item label="归属地">{enterprise.location || '未设置'}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {enterprise.createTime ? formatDate(enterprise.createTime) : '未设置'}
           </Descriptions.Item>
@@ -288,7 +290,7 @@ const EnterpriseDetail: React.FC = () => {
 
       <Row gutter={24}>
         <Col xs={24} lg={12}>
-          <Card 
+          <Card
             title={
               <span>
                 <ClockCircleOutlined style={{ marginRight: 8 }} />
@@ -303,16 +305,18 @@ const EnterpriseDetail: React.FC = () => {
                   <Timeline.Item color="green">
                     <div>
                       <div style={{ marginBottom: 8 }}>
-                        <Text strong>{enterprise.createTime ? formatDate(enterprise.createTime) : '未知时间'}</Text>
+                        <Text strong>
+                          {enterprise.createTime ? formatDate(enterprise.createTime) : '未知时间'}
+                        </Text>
                       </div>
                       <div>
                         <Text type="secondary">服务开始</Text>
                       </div>
                     </div>
                   </Timeline.Item>
-                  
-                  {serviceHistory.map((history) => (
-                    <Timeline.Item 
+
+                  {serviceHistory.map(history => (
+                    <Timeline.Item
                       key={history.id}
                       color={isTerminationRecord(history) ? 'red' : 'blue'}
                     >
@@ -325,7 +329,9 @@ const EnterpriseDetail: React.FC = () => {
                   <Timeline.Item color="green">
                     <div>
                       <div style={{ marginBottom: 8 }}>
-                        <Text strong>{enterprise.createTime ? formatDate(enterprise.createTime) : '未知时间'}</Text>
+                        <Text strong>
+                          {enterprise.createTime ? formatDate(enterprise.createTime) : '未知时间'}
+                        </Text>
                       </div>
                       <div>
                         <Text type="secondary">服务开始</Text>
@@ -337,9 +343,9 @@ const EnterpriseDetail: React.FC = () => {
             </Spin>
           </Card>
         </Col>
-        
+
         <Col xs={24} lg={12}>
-          <Card 
+          <Card
             title={
               <span>
                 <DollarCircleOutlined style={{ marginRight: 8 }} />
@@ -410,4 +416,4 @@ const EnterpriseDetail: React.FC = () => {
   )
 }
 
-export default EnterpriseDetail 
+export default EnterpriseDetail

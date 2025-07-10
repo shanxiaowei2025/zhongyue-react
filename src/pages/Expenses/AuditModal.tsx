@@ -34,19 +34,28 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
     const items: any[] = []
 
     // 其他业务（自有）
-    if (expense.otherBusiness && Array.isArray(expense.otherBusiness) && expense.otherBusiness.length > 0) {
+    if (
+      expense.otherBusiness &&
+      Array.isArray(expense.otherBusiness) &&
+      expense.otherBusiness.length > 0
+    ) {
       items.push({
         key: 'otherBusiness',
         label: '其他业务（自有）',
         children: expense.otherBusiness.map((item: string, index: number) => (
-          <Tag key={index} color="blue">{item}</Tag>
+          <Tag key={index} color="blue">
+            {item}
+          </Tag>
         )),
       })
     }
 
     // 其他业务收费（自有）
     if (expense.otherBusinessFee !== undefined && expense.otherBusinessFee !== null) {
-      const fee = typeof expense.otherBusinessFee === 'string' ? parseFloat(expense.otherBusinessFee || '0') : Number(expense.otherBusinessFee || 0)
+      const fee =
+        typeof expense.otherBusinessFee === 'string'
+          ? parseFloat(expense.otherBusinessFee || '0')
+          : Number(expense.otherBusinessFee || 0)
       items.push({
         key: 'otherBusinessFee',
         label: '其他业务收费（自有）',
@@ -55,19 +64,31 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
     }
 
     // 其他业务（外包）
-    if (expense.otherBusinessOutsourcing && Array.isArray(expense.otherBusinessOutsourcing) && expense.otherBusinessOutsourcing.length > 0) {
+    if (
+      expense.otherBusinessOutsourcing &&
+      Array.isArray(expense.otherBusinessOutsourcing) &&
+      expense.otherBusinessOutsourcing.length > 0
+    ) {
       items.push({
         key: 'otherBusinessOutsourcing',
         label: '其他业务（外包）',
         children: expense.otherBusinessOutsourcing.map((item: string, index: number) => (
-          <Tag key={index} color="orange">{item}</Tag>
+          <Tag key={index} color="orange">
+            {item}
+          </Tag>
         )),
       })
     }
 
     // 其他业务收费（外包）
-    if (expense.otherBusinessOutsourcingFee !== undefined && expense.otherBusinessOutsourcingFee !== null) {
-      const fee = typeof expense.otherBusinessOutsourcingFee === 'string' ? parseFloat(expense.otherBusinessOutsourcingFee || '0') : Number(expense.otherBusinessOutsourcingFee || 0)
+    if (
+      expense.otherBusinessOutsourcingFee !== undefined &&
+      expense.otherBusinessOutsourcingFee !== null
+    ) {
+      const fee =
+        typeof expense.otherBusinessOutsourcingFee === 'string'
+          ? parseFloat(expense.otherBusinessOutsourcingFee || '0')
+          : Number(expense.otherBusinessOutsourcingFee || 0)
       items.push({
         key: 'otherBusinessOutsourcingFee',
         label: '其他业务收费（外包）',
@@ -94,20 +115,17 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
               {expense.unifiedSocialCreditCode || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="总费用">
-              ¥{typeof expense.totalFee === 'string' ? parseFloat(expense.totalFee).toFixed(2) : Number(expense.totalFee || 0).toFixed(2)}
+              ¥
+              {typeof expense.totalFee === 'string'
+                ? parseFloat(expense.totalFee).toFixed(2)
+                : Number(expense.totalFee || 0).toFixed(2)}
             </Descriptions.Item>
-            <Descriptions.Item label="业务类型">
-              {expense.businessType || '-'}
-            </Descriptions.Item>
+            <Descriptions.Item label="业务类型">{expense.businessType || '-'}</Descriptions.Item>
             <Descriptions.Item label="收费日期">
               {expense.chargeDate ? dayjs(expense.chargeDate).format('YYYY-MM-DD') : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="收费方式">
-              {expense.chargeMethod || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="业务员">
-              {expense.salesperson || '-'}
-            </Descriptions.Item>
+            <Descriptions.Item label="收费方式">{expense.chargeMethod || '-'}</Descriptions.Item>
+            <Descriptions.Item label="业务员">{expense.salesperson || '-'}</Descriptions.Item>
           </Descriptions>
 
           {/* 其他业务详情 */}

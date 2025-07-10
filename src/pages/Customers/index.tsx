@@ -478,12 +478,12 @@ export default function Customers() {
   const handleExport = async () => {
     try {
       message.loading('正在导出数据，请稍候...', 0)
-      
+
       // 使用当前搜索和分页参数导出数据
       // 移除分页大小参数，导出所有匹配条件的数据
       const { pageSize: _, ...exportParams } = requestParams
       const response = await exportCustomerCSV(exportParams)
-      
+
       message.destroy()
 
       // 创建Blob对象
@@ -766,11 +766,7 @@ export default function Customers() {
       width: isMobile ? 120 : 150,
       responsive: ['md'],
       render: (text: string) => (
-        <CustomerLevelDisplay 
-          level={text}
-          maxWidth={isMobile ? 100 : 130}
-          placement="right"
-        />
+        <CustomerLevelDisplay level={text} maxWidth={isMobile ? 100 : 130} placement="right" />
       ),
     },
     {
@@ -1016,13 +1012,28 @@ export default function Customers() {
                   allowClear
                   className="w-40"
                 >
-                  {(['AA', 'AB', 'AC', 'AD', 'BA', 'BB', 'BC', 'BD', 'CA', 'CB', 'CC', 'CD', 'DA', 'DB', 'DC', 'DD'] as const).map((level) => (
+                  {(
+                    [
+                      'AA',
+                      'AB',
+                      'AC',
+                      'AD',
+                      'BA',
+                      'BB',
+                      'BC',
+                      'BD',
+                      'CA',
+                      'CB',
+                      'CC',
+                      'CD',
+                      'DA',
+                      'DB',
+                      'DC',
+                      'DD',
+                    ] as const
+                  ).map(level => (
                     <Select.Option key={level} value={level}>
-                      <CustomerLevelDisplay 
-                        level={level}
-                        showPopover={false}
-                        maxWidth={100}
-                      />
+                      <CustomerLevelDisplay level={level} showPopover={false} maxWidth={100} />
                     </Select.Option>
                   ))}
                 </Select>
@@ -1594,8 +1605,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         }
 
         return (
-          <div className="customer-file-preview cursor-pointer border border-gray-200 rounded-md p-4 h-24 flex flex-col items-center justify-center hover:border-blue-500 hover:shadow-md transition-all" 
-               onClick={handleDownloadClick}>
+          <div
+            className="customer-file-preview cursor-pointer border border-gray-200 rounded-md p-4 h-24 flex flex-col items-center justify-center hover:border-blue-500 hover:shadow-md transition-all"
+            onClick={handleDownloadClick}
+          >
             <div className="text-2xl mb-1 text-gray-600">
               {image.fileName ? getFileIcon(image.fileName) : <FileOutlined />}
             </div>
@@ -1696,7 +1709,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         {Object.entries(images).map(([key, img], index) => {
           const fileData = img as ImageType
           const fileUrl = fileData.url || '#'
-          
+
           // 检查是否为图片文件
           const isImage = fileData.fileName ? checkIsImage(fileData.fileName) : true // 兼容旧数据
 
@@ -1733,7 +1746,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             // 非图片文件 - 显示文件图标
             return (
               <div key={index} className="mb-2 flex flex-col items-center">
-                <div 
+                <div
                   className="relative group cursor-pointer border border-gray-200 rounded p-2 hover:border-blue-500 hover:shadow-md transition-all"
                   style={{ width: isMobile ? 80 : 100, height: isMobile ? 80 : 100 }}
                   onClick={() => window.open(fileUrl, '_blank')}

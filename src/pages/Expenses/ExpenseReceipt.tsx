@@ -50,9 +50,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
   onClose,
   previewMode = false,
 }) => {
-  const { receipt, isLoading } = useExpenseReceipt(
-    visible && expenseId ? { id: expenseId } : null
-  )
+  const { receipt, isLoading } = useExpenseReceipt(visible && expenseId ? { id: expenseId } : null)
   const { expense, updateExpense, refreshExpenseDetail } = useExpenseDetail(
     visible ? expenseId : null
   )

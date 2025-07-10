@@ -248,8 +248,12 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             </div>
             {/* 备注行 */}
             <div className={styles.otherBusiness}>
-              <div className={styles.otherBusinessLabel} style={{ fontWeight: 'bold' }}>备注：</div>
-              <div className={styles.otherBusinessValue} style={{ fontWeight: 'bold' }}>{formatText(contractData.remarks)}</div>
+              <div className={styles.otherBusinessLabel} style={{ fontWeight: 'bold' }}>
+                备注：
+              </div>
+              <div className={styles.otherBusinessValue} style={{ fontWeight: 'bold' }}>
+                {formatText(contractData.remarks)}
+              </div>
             </div>
           </div>
         </div>

@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import {
-  Card,
-  Descriptions,
-  Button,
-  Space,
-  Typography,
-  Spin,
-  message,
-  Tag,
-  List,
-} from 'antd'
-import {
-  ArrowLeftOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons'
+import { Card, Descriptions, Button, Space, Typography, Spin, message, Tag, List } from 'antd'
+import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { getTaxVerificationDetail } from '../../api/taxVerification'
@@ -24,7 +11,7 @@ const { Title } = Typography
 const TaxReviewDetail: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  
+
   // 状态管理
   const [loading, setLoading] = useState<boolean>(false)
   const [data, setData] = useState<TaxVerification | null>(null)
@@ -39,7 +26,7 @@ const TaxReviewDetail: React.FC = () => {
     try {
       setLoading(true)
       const response = await getTaxVerificationDetail(Number(id))
-      
+
       if (response.code === 0 && response.data) {
         setData(response.data)
       } else {
@@ -118,23 +105,19 @@ const TaxReviewDetail: React.FC = () => {
           <Descriptions.Item label="企业名称" span={2}>
             {data.companyName}
           </Descriptions.Item>
-          
+
           <Descriptions.Item label="统一社会信用代码" span={2}>
             {data.unifiedSocialCreditCode}
           </Descriptions.Item>
-          
-          <Descriptions.Item label="所属分局">
-            {data.taxBureau}
-          </Descriptions.Item>
-          
-          <Descriptions.Item label="风险期责任会计">
-            {data.responsibleAccountant}
-          </Descriptions.Item>
-          
+
+          <Descriptions.Item label="所属分局">{data.taxBureau}</Descriptions.Item>
+
+          <Descriptions.Item label="风险期责任会计">{data.responsibleAccountant}</Descriptions.Item>
+
           <Descriptions.Item label="风险下发日期">
             {data.riskIssuedDate ? dayjs(data.riskIssuedDate).format('YYYY-MM-DD') : '-'}
           </Descriptions.Item>
-          
+
           <Descriptions.Item label="风险发生日期">
             {data.riskOccurredDate ? dayjs(data.riskOccurredDate).format('YYYY-MM-DD') : '-'}
           </Descriptions.Item>
@@ -152,7 +135,7 @@ const TaxReviewDetail: React.FC = () => {
                 {data.riskReason || '-'}
               </div>
             </Descriptions.Item>
-            
+
             <Descriptions.Item label="解决方案">
               <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {data.solution || '-'}
@@ -177,7 +160,7 @@ const TaxReviewDetail: React.FC = () => {
                       onClick={() => handleDownload(attachment)}
                     >
                       下载
-                    </Button>
+                    </Button>,
                   ]}
                 >
                   <List.Item.Meta
@@ -194,4 +177,4 @@ const TaxReviewDetail: React.FC = () => {
   )
 }
 
-export default TaxReviewDetail 
+export default TaxReviewDetail

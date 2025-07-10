@@ -27,7 +27,9 @@ const EnterpriseService = lazy(() => import('../pages/EnterpriseService'))
 const EnterpriseDetail = lazy(() => import('../pages/EnterpriseService/Detail'))
 const FinancialSelfInspection = lazy(() => import('../pages/FinancialSelfInspection'))
 const FinancialSelfInspectionDetail = lazy(() => import('../pages/FinancialSelfInspection/Detail'))
-const FinancialSelfInspectionResponsibleDetail = lazy(() => import('../pages/FinancialSelfInspection/ResponsibleDetail'))
+const FinancialSelfInspectionResponsibleDetail = lazy(
+  () => import('../pages/FinancialSelfInspection/ResponsibleDetail')
+)
 const TaxReview = lazy(() => import('../pages/TaxReview'))
 const TaxReviewDetail = lazy(() => import('../pages/TaxReview/Detail'))
 const NotFound = lazy(() => import('../pages/NotFound'))
@@ -115,7 +117,18 @@ const routes: RouteObject[] = [
       {
         path: 'enterprise-service',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <EnterpriseService />
           </AuthorizedRoute>
         ),
@@ -123,7 +136,18 @@ const routes: RouteObject[] = [
       {
         path: 'enterprise-service/detail/:id',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <EnterpriseDetail />
           </AuthorizedRoute>
         ),
@@ -131,7 +155,18 @@ const routes: RouteObject[] = [
       {
         path: 'financial-self-inspection',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <FinancialSelfInspection />
           </AuthorizedRoute>
         ),
@@ -139,7 +174,18 @@ const routes: RouteObject[] = [
       {
         path: 'financial-self-inspection/detail/:id',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <FinancialSelfInspectionDetail />
           </AuthorizedRoute>
         ),
@@ -147,7 +193,18 @@ const routes: RouteObject[] = [
       {
         path: 'financial-self-inspection/responsible-detail/:id',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <FinancialSelfInspectionResponsibleDetail />
           </AuthorizedRoute>
         ),
@@ -155,7 +212,18 @@ const routes: RouteObject[] = [
       {
         path: 'tax-review',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <TaxReview />
           </AuthorizedRoute>
         ),
@@ -163,7 +231,18 @@ const routes: RouteObject[] = [
       {
         path: 'tax-review/:id',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']}>
+          <AuthorizedRoute
+            requiredRoles={[
+              'super_admin',
+              'admin',
+              'consultantAccountant',
+              'bookkeepingAccountant',
+              '超级管理员',
+              '管理员',
+              '顾问会计',
+              '记账会计',
+            ]}
+          >
             <TaxReviewDetail />
           </AuthorizedRoute>
         ),

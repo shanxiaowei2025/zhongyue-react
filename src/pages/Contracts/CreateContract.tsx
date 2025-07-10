@@ -34,7 +34,7 @@ const CreateContract: React.FC = () => {
   const state = location.state as LocationState
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmittingInProgress, setIsSubmittingInProgress] = useState(false)
-  
+
   // 使用重构后的store
   const {
     contractType,
@@ -44,9 +44,9 @@ const CreateContract: React.FC = () => {
     setSignatory,
     batchUpdateFormData,
     clearAllCache,
-    lastUpdated
+    lastUpdated,
   } = useContractFormStore()
-  
+
   const productServiceAgreementRef = useRef<ProductServiceAgreementRef>(null)
   const agencyAccountingAgreementRef = useRef<AgencyAccountingAgreementRef>(null)
   const singleServiceAgreementRef = useRef<SingleServiceAgreementRef>(null)
@@ -59,7 +59,7 @@ const CreateContract: React.FC = () => {
 
     try {
       let currentData: Record<string, any> = {}
-      
+
       // 根据合同类型获取当前表单数据
       if (contractType === '产品服务协议' && productServiceAgreementRef.current) {
         currentData = productServiceAgreementRef.current.getFormData?.() || {}
@@ -81,9 +81,9 @@ const CreateContract: React.FC = () => {
           partyBPhone: currentData.partyBPhone || '',
         }
 
-              batchUpdateFormData(currentData)
-      console.log('💾 自动保存表单数据:', currentData)
-        
+        batchUpdateFormData(currentData)
+        console.log('💾 自动保存表单数据:', currentData)
+
         // 特别监控日期字段的保存
         if (currentData.partyASignDate) {
           console.log('📅 保存甲方签署日期:', currentData.partyASignDate)
@@ -96,7 +96,7 @@ const CreateContract: React.FC = () => {
       console.error('保存表单数据失败:', error)
     }
   }
-  
+
   // 使用防抖的保存表单数据方法
   const debouncedSaveFormData = useDebounce(saveCurrentFormData, 500, [contractType])
 
@@ -107,7 +107,7 @@ const CreateContract: React.FC = () => {
       // 检查是否是不同的签署方或合同类型
       const isSignatoryChanged = signatory && signatory !== state.signatory
       const isContractTypeChanged = contractType && contractType !== state.contractType
-      
+
       if (isSignatoryChanged || isContractTypeChanged) {
         console.log('🔄 检测到签署方或合同类型变化，清理旧缓存:', {
           oldSignatory: signatory,
@@ -115,22 +115,33 @@ const CreateContract: React.FC = () => {
           oldContractType: contractType,
           newContractType: state.contractType,
           signatory_changed: isSignatoryChanged,
-          contract_type_changed: isContractTypeChanged
+          contract_type_changed: isContractTypeChanged,
         })
-        
+
         // 清理旧的表单数据
         clearAllCache()
       }
-      
+
       setSignatory(state.signatory)
       setContractType(state.contractType)
-      console.log('💾 保存新的合同创建参数:', { signatory: state.signatory, contractType: state.contractType })
+      console.log('💾 保存新的合同创建参数:', {
+        signatory: state.signatory,
+        contractType: state.contractType,
+      })
       return
     }
 
     // 否则zustand中已有存储的数据会自动加载
     console.log('🔄 使用已存储的合同参数:', { signatory, contractType })
-  }, [state?.signatory, state?.contractType, setContractType, setSignatory, signatory, contractType, clearAllCache])
+  }, [
+    state?.signatory,
+    state?.contractType,
+    setContractType,
+    setSignatory,
+    signatory,
+    contractType,
+    clearAllCache,
+  ])
 
   // 组件卸载时的清理逻辑 - 只保存数据，不自动清理
   useEffect(() => {
@@ -156,7 +167,7 @@ const CreateContract: React.FC = () => {
     const handleClearCacheEvent = (event: CustomEvent) => {
       const { tabKey, reason } = event.detail || {}
       console.log('📨 接收到清理缓存事件:', { tabKey, reason })
-      
+
       // 如果是针对当前页面的清理事件，执行清理
       if (tabKey === '/contracts/create') {
         console.log('🧹 响应清理缓存事件，清理表单数据')
@@ -231,11 +242,11 @@ const CreateContract: React.FC = () => {
       // 提交成功后清理数据，关闭标签页并返回合同列表
       clearAllCache()
       message.success('合同创建成功！', 2)
-      
+
       setTimeout(() => {
         // 先跳转到合同列表页，确保标签页存在
         navigate('/contracts')
-        
+
         // 延迟关闭创建合同标签页，确保跳转完成
         setTimeout(() => {
           if (window.closeTab) {
@@ -286,26 +297,28 @@ const CreateContract: React.FC = () => {
   useEffect(() => {
     // 只有在有合同类型和签署方时才监听
     if (!contractType || !signatory) return
-    
+
     // 监听整个文档的变更事件，通过事件委托来捕获表单变化
     const handleFormChange = () => {
       // 使用防抖保存表单数据
       debouncedSaveFormData()
     }
-    
+
     // 监听数据恢复事件，用于触发额外的恢复操作
     const handleDataRestored = () => {
       console.log('📣 监听到表单数据恢复事件')
-      
+
       // 如果需要，可以在这里添加额外的恢复操作
       // 对于产品服务协议，强制同步客户信息
-      if (contractType === '产品服务协议' && 
-          productServiceAgreementRef.current && 
-          formData.partyACompany) {
+      if (
+        contractType === '产品服务协议' &&
+        productServiceAgreementRef.current &&
+        formData.partyACompany
+      ) {
         const syncEvent = new CustomEvent('syncCustomerData', {
           detail: {
             customerName: formData.partyACompany,
-          }
+          },
         })
         document.dispatchEvent(syncEvent)
       }
@@ -315,27 +328,29 @@ const CreateContract: React.FC = () => {
     document.addEventListener('change', handleFormChange)
     document.addEventListener('input', handleFormChange)
     document.addEventListener('formDataRestored', handleDataRestored)
-    
+
     // 监听合同组件的自定义表单变化事件（特别针对DatePicker等Antd组件）
     const handleContractFormFieldChange = (event: any) => {
       const { field, value, contractType: eventContractType } = event.detail || {}
-      console.log(`📅 [CreateContract] 收到合同字段变化事件: ${field}=${value} (${eventContractType})`)
+      console.log(
+        `📅 [CreateContract] 收到合同字段变化事件: ${field}=${value} (${eventContractType})`
+      )
       // 触发自动保存
       debouncedSaveFormData()
     }
     document.addEventListener('contractFormFieldChange', handleContractFormFieldChange)
-    
+
     // 强制初始恢复
     setTimeout(() => {
       const event = new Event('formDataRestored', { bubbles: true })
       document.dispatchEvent(event)
     }, 500)
-    
+
     // 定期自动保存表单（备份方案）
     const autoSaveInterval = setInterval(() => {
       saveCurrentFormData()
     }, 60000) // 每1分钟自动保存一次
-    
+
     return () => {
       document.removeEventListener('change', handleFormChange)
       document.removeEventListener('input', handleFormChange)
@@ -349,10 +364,10 @@ const CreateContract: React.FC = () => {
     if (!contractType) {
       return (
         <div className="text-center py-8">
-          <Alert 
-            message="请选择合同类型" 
+          <Alert
+            message="请选择合同类型"
             description='请返回合同列表页面，通过"发起合同"按钮重新创建合同。'
-            type="warning" 
+            type="warning"
             action={
               <Button size="small" onClick={handleBack}>
                 返回合同列表
@@ -366,10 +381,10 @@ const CreateContract: React.FC = () => {
     if (!signatory) {
       return (
         <div className="text-center py-8">
-          <Alert 
-            message="请选择签署方" 
+          <Alert
+            message="请选择签署方"
             description='请返回合同列表页面，通过"发起合同"按钮重新创建合同。'
-            type="warning" 
+            type="warning"
             action={
               <Button size="small" onClick={handleBack}>
                 返回合同列表
@@ -385,11 +400,13 @@ const CreateContract: React.FC = () => {
         return (
           <ProductServiceAgreement
             signatory={signatory || ''}
-            contractData={{
-              signatory: signatory as string,
-              contractType: contractType as string,
-              ...formData
-            } as any}
+            contractData={
+              {
+                signatory: signatory as string,
+                contractType: contractType as string,
+                ...formData,
+              } as any
+            }
             onSubmit={async contractData => {
               await createContractData(contractData)
             }}
@@ -401,11 +418,13 @@ const CreateContract: React.FC = () => {
         return (
           <AgencyAccountingAgreement
             signatory={signatory || ''}
-            contractData={{
-              signatory: signatory as string,
-              contractType: contractType as string,
-              ...formData
-            } as any}
+            contractData={
+              {
+                signatory: signatory as string,
+                contractType: contractType as string,
+                ...formData,
+              } as any
+            }
             onSubmit={async contractData => {
               await createContractData(contractData)
             }}
@@ -417,11 +436,13 @@ const CreateContract: React.FC = () => {
         return (
           <SingleServiceAgreement
             signatory={signatory || ''}
-            contractData={{
-              signatory: signatory as string,
-              contractType: contractType as string,
-              ...formData
-            } as any}
+            contractData={
+              {
+                signatory: signatory as string,
+                contractType: contractType as string,
+                ...formData,
+              } as any
+            }
             onSubmit={async contractData => {
               await createContractData(contractData)
             }}
@@ -484,10 +505,7 @@ const CreateContract: React.FC = () => {
             <span className="text-gray-600 w-24">签署方：</span>
             <span className="font-medium text-blue-600">
               {signatory || (
-                <span 
-                  className="text-orange-500"
-                  title="未选择签署方"
-                >
+                <span className="text-orange-500" title="未选择签署方">
                   未选择
                 </span>
               )}
@@ -497,23 +515,27 @@ const CreateContract: React.FC = () => {
             <span className="text-gray-600 w-24">合同类型：</span>
             <span className="font-medium text-green-600">
               {contractType || (
-                <span 
-                  className="text-orange-500"
-                  title="未选择合同类型"
-                >
+                <span className="text-orange-500" title="未选择合同类型">
                   未选择
                 </span>
               )}
             </span>
           </div>
-          
+
           {/* 调试信息显示（开发环境下） */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mt-2 p-2 bg-gray-100 rounded text-sm">
               <div className="text-gray-600">调试信息:</div>
               <div>Zustand 存储: {lastUpdated ? '✅ 存在' : '❌ 不存在'}</div>
-              <div>Current State: signatory={signatory || 'null'}, type={contractType || 'null'}</div>
-              <div>Saved Data Keys: {formData && Object.keys(formData).length > 0 ? Object.keys(formData).join(', ') : '无'}</div>
+              <div>
+                Current State: signatory={signatory || 'null'}, type={contractType || 'null'}
+              </div>
+              <div>
+                Saved Data Keys:{' '}
+                {formData && Object.keys(formData).length > 0
+                  ? Object.keys(formData).join(', ')
+                  : '无'}
+              </div>
               {formData && formData.partyASignDate && (
                 <div>甲方签署日期: {formData.partyASignDate}</div>
               )}
@@ -529,7 +551,8 @@ const CreateContract: React.FC = () => {
                 </Button>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                上次保存时间: {lastUpdated ? new Date(lastUpdated).toLocaleTimeString('zh-CN') : '未保存'}
+                上次保存时间:{' '}
+                {lastUpdated ? new Date(lastUpdated).toLocaleTimeString('zh-CN') : '未保存'}
               </div>
             </div>
           )}

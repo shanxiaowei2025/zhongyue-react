@@ -47,7 +47,11 @@ import type {
   CreateFinancialSelfInspectionDto,
 } from '../../types/financialSelfInspection'
 import { getEnterpriseByNameOrCode, searchCustomers } from '../../api/enterpriseService'
-import type { Enterprise, CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
+import type {
+  Enterprise,
+  CustomerSearchOption,
+  CustomerQueryParams,
+} from '../../types/enterpriseService'
 import { useAuthStore } from '../../store/auth'
 
 const { Title } = Typography
@@ -83,11 +87,11 @@ const EllipsisText: React.FC<{
 
 const FinancialSelfInspection: React.FC = () => {
   const navigate = useNavigate()
-  
+
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
-  
+
   // 获取当前用户信息
   const { user } = useAuthStore()
 
@@ -101,7 +105,7 @@ const FinancialSelfInspection: React.FC = () => {
   // 状态管理
   const [activeTab, setActiveTab] = useState<string>(savedActiveTab)
   const [loading, setLoading] = useState<boolean>(false)
-  
+
   // 我提交的数据
   const [submittedData, setSubmittedData] = useState<FinancialSelfInspection[]>([])
   const [submittedTotal, setSubmittedTotal] = useState<number>(0)
@@ -111,13 +115,14 @@ const FinancialSelfInspection: React.FC = () => {
   const [submittedPageSize, setSubmittedPageSize] = useState<number>(
     savedSubmittedPagination?.pageSize || 10
   )
-  const [submittedSearchParams, setSubmittedSearchParams] = useState<FinancialSelfInspectionQueryParams>({
-    companyName: '',
-    unifiedSocialCreditCode: '',
-    bookkeepingAccountant: '',
-    consultantAccountant: '',
-    ...(savedSubmittedSearchParams || {}),
-  })
+  const [submittedSearchParams, setSubmittedSearchParams] =
+    useState<FinancialSelfInspectionQueryParams>({
+      companyName: '',
+      unifiedSocialCreditCode: '',
+      bookkeepingAccountant: '',
+      consultantAccountant: '',
+      ...(savedSubmittedSearchParams || {}),
+    })
 
   // 我负责的数据
   const [responsibleData, setResponsibleData] = useState<FinancialSelfInspection[]>([])
@@ -128,14 +133,15 @@ const FinancialSelfInspection: React.FC = () => {
   const [responsiblePageSize, setResponsiblePageSize] = useState<number>(
     savedResponsiblePagination?.pageSize || 10
   )
-  const [responsibleSearchParams, setResponsibleSearchParams] = useState<FinancialSelfInspectionQueryParams>({
-    companyName: '',
-    unifiedSocialCreditCode: '',
-    inspector: '',
-    bookkeepingAccountant: '',
-    consultantAccountant: '',
-    ...(savedResponsibleSearchParams || {}),
-  })
+  const [responsibleSearchParams, setResponsibleSearchParams] =
+    useState<FinancialSelfInspectionQueryParams>({
+      companyName: '',
+      unifiedSocialCreditCode: '',
+      inspector: '',
+      bookkeepingAccountant: '',
+      consultantAccountant: '',
+      ...(savedResponsibleSearchParams || {}),
+    })
 
   // 防抖搜索参数
   const debouncedSubmittedSearchParams = useDebouncedValue(submittedSearchParams, 500)
@@ -149,19 +155,21 @@ const FinancialSelfInspection: React.FC = () => {
   // 整改弹窗状态
   const [rectificationModalVisible, setRectificationModalVisible] = useState<boolean>(false)
   const [rectificationLoading, setRectificationLoading] = useState<boolean>(false)
-  const [currentRectificationRecord, setCurrentRectificationRecord] = useState<FinancialSelfInspection | null>(null)
+  const [currentRectificationRecord, setCurrentRectificationRecord] =
+    useState<FinancialSelfInspection | null>(null)
 
   // 抽查人确认弹窗状态
   const [confirmationModalVisible, setConfirmationModalVisible] = useState<boolean>(false)
   const [confirmationLoading, setConfirmationLoading] = useState<boolean>(false)
-  const [currentConfirmationRecord, setCurrentConfirmationRecord] = useState<FinancialSelfInspection | null>(null)
+  const [currentConfirmationRecord, setCurrentConfirmationRecord] =
+    useState<FinancialSelfInspection | null>(null)
   const [confirmationForm] = Form.useForm()
 
   // 新建自查记录弹窗状态
   const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
   const [createLoading, setCreateLoading] = useState<boolean>(false)
   const [createForm] = Form.useForm()
-  
+
   // 企业信息查询状态
   const [enterpriseSearchLoading, setEnterpriseSearchLoading] = useState<boolean>(false)
 
@@ -187,13 +195,13 @@ const FinancialSelfInspection: React.FC = () => {
       console.log('用户角色信息不存在或格式错误:', user?.roles)
       return false
     }
-    
+
     // 允许的角色：记账会计、管理员、超级管理员
     const allowedRoles = ['记账会计', 'admin', 'super_admin', '管理员', '超级管理员']
-    
+
     const hasPermission = user.roles.some(role => allowedRoles.includes(role))
     console.log('用户角色:', user.roles, '是否有整改权限:', hasPermission)
-    
+
     return hasPermission
   }
 
@@ -209,13 +217,13 @@ const FinancialSelfInspection: React.FC = () => {
 
       // 保存状态
       setState('financialInspectionSubmittedSearchParams', submittedSearchParams)
-      setState('financialInspectionSubmittedPagination', { 
-        current: submittedCurrent, 
-        pageSize: submittedPageSize 
+      setState('financialInspectionSubmittedPagination', {
+        current: submittedCurrent,
+        pageSize: submittedPageSize,
       })
 
       const response = await getMySubmittedInspections(params)
-      
+
       if (response.code === 0 && response.data) {
         setSubmittedData(response.data.items)
         setSubmittedTotal(response.data.total)
@@ -239,13 +247,13 @@ const FinancialSelfInspection: React.FC = () => {
 
       // 保存状态
       setState('financialInspectionResponsibleSearchParams', responsibleSearchParams)
-      setState('financialInspectionResponsiblePagination', { 
-        current: responsibleCurrent, 
-        pageSize: responsiblePageSize 
+      setState('financialInspectionResponsiblePagination', {
+        current: responsibleCurrent,
+        pageSize: responsiblePageSize,
       })
 
       const response = await getMyResponsibleInspections(params)
-      
+
       if (response.code === 0 && response.data) {
         setResponsibleData(response.data.items)
         setResponsibleTotal(response.data.total)
@@ -264,7 +272,7 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }, [submittedCurrent, submittedPageSize, debouncedSubmittedSearchParams])
 
-  useEffect(() => {    
+  useEffect(() => {
     if (activeTab === 'responsible') {
       loadResponsibleData()
     }
@@ -274,7 +282,7 @@ const FinancialSelfInspection: React.FC = () => {
   const handleTabChange = (key: string) => {
     setActiveTab(key)
     setState('financialInspectionActiveTab', key)
-    
+
     // 切换时加载对应数据
     if (key === 'submitted') {
       loadSubmittedData()
@@ -377,7 +385,10 @@ const FinancialSelfInspection: React.FC = () => {
         rectificationResult: values.rectificationResult,
       }
 
-      const response = await updateRectificationCompletion(currentRectificationRecord.id, rectificationData)
+      const response = await updateRectificationCompletion(
+        currentRectificationRecord.id,
+        rectificationData
+      )
 
       if (response.code === 0) {
         message.success('整改提交成功')
@@ -430,7 +441,10 @@ const FinancialSelfInspection: React.FC = () => {
         remarks: values.remarks,
       }
 
-      const response = await updateInspectorConfirmation(currentConfirmationRecord.id, confirmationData)
+      const response = await updateInspectorConfirmation(
+        currentConfirmationRecord.id,
+        confirmationData
+      )
 
       if (response.code === 0) {
         message.success('抽查人确认提交成功')
@@ -457,23 +471,31 @@ const FinancialSelfInspection: React.FC = () => {
   }
 
   // 查询企业信息（根据名称或代码）
-  const handleEnterpriseSearch = async (value: string, field: 'companyName' | 'unifiedSocialCreditCode') => {
+  const handleEnterpriseSearch = async (
+    value: string,
+    field: 'companyName' | 'unifiedSocialCreditCode'
+  ) => {
     if (!value || !value.trim()) {
       return
     }
 
     try {
       setEnterpriseSearchLoading(true)
-      
+
       const params = {
-        [field]: value.trim()
+        [field]: value.trim(),
       }
-      
+
       const response = await getEnterpriseByNameOrCode(params)
-      
-      if (response.code === 0 && response.data && response.data.data && response.data.data.length > 0) {
+
+      if (
+        response.code === 0 &&
+        response.data &&
+        response.data.data &&
+        response.data.data.length > 0
+      ) {
         const enterprise = response.data.data[0]
-        
+
         // 自动填入相关信息
         createForm.setFieldsValue({
           companyName: enterprise.companyName,
@@ -481,7 +503,7 @@ const FinancialSelfInspection: React.FC = () => {
           bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
           consultantAccountant: enterprise.consultantAccountant || '',
         })
-        
+
         message.success('企业信息已自动填入')
       } else {
         // 如果没有找到完全匹配的结果，尝试模糊搜索
@@ -494,7 +516,7 @@ const FinancialSelfInspection: React.FC = () => {
     } catch (error) {
       console.error('查询企业信息失败:', error)
       message.error('查询企业信息失败')
-      
+
       // 如果查询失败且是企业名称搜索，尝试模糊搜索
       if (field === 'companyName') {
         handleCustomerSearch(value.trim(), true)
@@ -515,22 +537,22 @@ const FinancialSelfInspection: React.FC = () => {
 
     try {
       setCustomerSearchLoading(true)
-      
+
       const currentPage = resetPage ? 1 : customerPage
-      
+
       const params: CustomerQueryParams = {
         page: currentPage,
         pageSize: 20, // 每次加载20条数据
-        companyName: searchValue.trim()
+        companyName: searchValue.trim(),
       }
-      
+
       const response = await searchCustomers(params)
-      
+
       if (response.code === 0 && response.data) {
         const { data: enterprises, total } = response.data
-        
+
         // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
           value: enterprise.companyName,
           label: (
             <div style={{ padding: '4px 0' }}>
@@ -549,19 +571,19 @@ const FinancialSelfInspection: React.FC = () => {
               )}
             </div>
           ),
-          enterprise
+          enterprise,
         }))
-        
+
         if (resetPage) {
           setCustomerOptions(newOptions)
           setCustomerPage(1)
         } else {
           setCustomerOptions(prev => [...prev, ...newOptions])
         }
-        
+
         setCustomerTotal(total)
         setHasMoreCustomers(currentPage * 20 < total)
-        
+
         if (resetPage) {
           setCustomerPage(2) // 下次请求第二页
         } else {
@@ -627,31 +649,29 @@ const FinancialSelfInspection: React.FC = () => {
 
     try {
       setCodeSearchLoading(true)
-      
+
       const currentPage = resetPage ? 1 : codePage
-      
+
       const params: CustomerQueryParams = {
         page: currentPage,
         pageSize: 20, // 每次加载20条数据
-        unifiedSocialCreditCode: searchValue.trim()
+        unifiedSocialCreditCode: searchValue.trim(),
       }
-      
+
       const response = await searchCustomers(params)
-      
+
       if (response.code === 0 && response.data) {
         const { data: enterprises, total } = response.data
-        
+
         // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map((enterprise) => ({
+        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
           value: enterprise.unifiedSocialCreditCode,
           label: (
             <div style={{ padding: '4px 0' }}>
               <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
                 {enterprise.unifiedSocialCreditCode}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                {enterprise.companyName}
-              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>{enterprise.companyName}</div>
               {(enterprise.bookkeepingAccountant || enterprise.consultantAccountant) && (
                 <div style={{ fontSize: '12px', color: '#999' }}>
                   {enterprise.bookkeepingAccountant && `记账: ${enterprise.bookkeepingAccountant}`}
@@ -661,19 +681,19 @@ const FinancialSelfInspection: React.FC = () => {
               )}
             </div>
           ),
-          enterprise
+          enterprise,
         }))
-        
+
         if (resetPage) {
           setCodeOptions(newOptions)
           setCodePage(1)
         } else {
           setCodeOptions(prev => [...prev, ...newOptions])
         }
-        
+
         setCodeTotal(total)
         setHasMoreCodes(currentPage * 20 < total)
-        
+
         if (resetPage) {
           setCodePage(2) // 下次请求第二页
         } else {
@@ -734,13 +754,13 @@ const FinancialSelfInspection: React.FC = () => {
     const inspectorValue = user?.username || ''
     console.log('当前用户信息:', user)
     console.log('设置抽查人为:', inspectorValue)
-    
+
     // 重置表单并设置初始值
     createForm.resetFields()
     createForm.setFieldsValue({
-      inspector: inspectorValue
+      inspector: inspectorValue,
     })
-    
+
     // 打开弹窗
     setCreateModalVisible(true)
   }
@@ -875,8 +895,8 @@ const FinancialSelfInspection: React.FC = () => {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="查看">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleViewDetail(record)}
@@ -884,8 +904,8 @@ const FinancialSelfInspection: React.FC = () => {
           </Tooltip>
           {record.rectificationCompletionDate && !record.inspectorConfirmation && (
             <Tooltip title="抽查人确认">
-              <Button 
-                type="link" 
+              <Button
+                type="link"
                 size="small"
                 icon={<CheckCircleOutlined />}
                 style={{ color: '#52c41a' }}
@@ -963,8 +983,8 @@ const FinancialSelfInspection: React.FC = () => {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="查看">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleViewResponsibleDetail(record)}
@@ -972,8 +992,8 @@ const FinancialSelfInspection: React.FC = () => {
           </Tooltip>
           {!record.rectificationCompletionDate && hasRectificationPermission() && (
             <Tooltip title="整改">
-              <Button 
-                type="link" 
+              <Button
+                type="link"
                 size="small"
                 icon={<EditOutlined />}
                 style={{ color: '#faad14' }}
@@ -1006,7 +1026,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入企业名称"
                     value={submittedSearchParams.companyName}
-                    onChange={(e) =>
+                    onChange={e =>
                       setSubmittedSearchParams({
                         ...submittedSearchParams,
                         companyName: e.target.value,
@@ -1020,7 +1040,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入统一社会信用代码"
                     value={submittedSearchParams.unifiedSocialCreditCode}
-                    onChange={(e) =>
+                    onChange={e =>
                       setSubmittedSearchParams({
                         ...submittedSearchParams,
                         unifiedSocialCreditCode: e.target.value,
@@ -1034,7 +1054,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入记账会计"
                     value={submittedSearchParams.bookkeepingAccountant}
-                    onChange={(e) =>
+                    onChange={e =>
                       setSubmittedSearchParams({
                         ...submittedSearchParams,
                         bookkeepingAccountant: e.target.value,
@@ -1048,7 +1068,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入顾问会计"
                     value={submittedSearchParams.consultantAccountant}
-                    onChange={(e) =>
+                    onChange={e =>
                       setSubmittedSearchParams({
                         ...submittedSearchParams,
                         consultantAccountant: e.target.value,
@@ -1061,21 +1081,13 @@ const FinancialSelfInspection: React.FC = () => {
             <Row>
               <Col span={24}>
                 <Space>
-                  <Button
-                    type="primary"
-                    icon={<SearchOutlined />}
-                    onClick={handleSubmittedSearch}
-                  >
+                  <Button type="primary" icon={<SearchOutlined />} onClick={handleSubmittedSearch}>
                     搜索
                   </Button>
                   <Button icon={<ReloadOutlined />} onClick={handleSubmittedReset}>
                     重置
                   </Button>
-                  <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />}
-                    onClick={handleOpenCreateModal}
-                  >
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreateModal}>
                     新建自查记录
                   </Button>
                 </Space>
@@ -1096,13 +1108,12 @@ const FinancialSelfInspection: React.FC = () => {
               total: submittedTotal,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) =>
-                `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
             }}
             onChange={handleSubmittedTableChange}
           />
         </>
-      )
+      ),
     },
     {
       key: 'responsible',
@@ -1122,7 +1133,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入企业名称"
                     value={responsibleSearchParams.companyName}
-                    onChange={(e) =>
+                    onChange={e =>
                       setResponsibleSearchParams({
                         ...responsibleSearchParams,
                         companyName: e.target.value,
@@ -1136,7 +1147,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入统一社会信用代码"
                     value={responsibleSearchParams.unifiedSocialCreditCode}
-                    onChange={(e) =>
+                    onChange={e =>
                       setResponsibleSearchParams({
                         ...responsibleSearchParams,
                         unifiedSocialCreditCode: e.target.value,
@@ -1150,7 +1161,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入抽查人"
                     value={responsibleSearchParams.inspector}
-                    onChange={(e) =>
+                    onChange={e =>
                       setResponsibleSearchParams({
                         ...responsibleSearchParams,
                         inspector: e.target.value,
@@ -1164,7 +1175,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Input
                     placeholder="请输入记账会计"
                     value={responsibleSearchParams.bookkeepingAccountant}
-                    onChange={(e) =>
+                    onChange={e =>
                       setResponsibleSearchParams({
                         ...responsibleSearchParams,
                         bookkeepingAccountant: e.target.value,
@@ -1205,14 +1216,13 @@ const FinancialSelfInspection: React.FC = () => {
               total: responsibleTotal,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) =>
-                `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
             }}
             onChange={handleResponsibleTableChange}
           />
         </>
-      )
-    }
+      ),
+    },
   ]
 
   return (
@@ -1231,17 +1241,11 @@ const FinancialSelfInspection: React.FC = () => {
         width={600}
         destroyOnClose
       >
-        <Form
-          form={rectificationForm}
-          layout="vertical"
-          preserve={false}
-        >
+        <Form form={rectificationForm} layout="vertical" preserve={false}>
           <Form.Item
             label="整改完成日期"
             name="rectificationCompletionDate"
-            rules={[
-              { required: true, message: '请选择整改完成日期' },
-            ]}
+            rules={[{ required: true, message: '请选择整改完成日期' }]}
           >
             <DatePicker
               style={{ width: '100%' }}
@@ -1249,7 +1253,7 @@ const FinancialSelfInspection: React.FC = () => {
               format="YYYY-MM-DD"
             />
           </Form.Item>
-          
+
           <Form.Item
             label="整改结果"
             name="rectificationResult"
@@ -1278,17 +1282,11 @@ const FinancialSelfInspection: React.FC = () => {
         width={600}
         destroyOnClose
       >
-        <Form
-          form={confirmationForm}
-          layout="vertical"
-          preserve={false}
-        >
+        <Form form={confirmationForm} layout="vertical" preserve={false}>
           <Form.Item
             label="确认日期"
             name="inspectorConfirmation"
-            rules={[
-              { required: true, message: '请选择确认日期' },
-            ]}
+            rules={[{ required: true, message: '请选择确认日期' }]}
           >
             <DatePicker
               style={{ width: '100%' }}
@@ -1296,13 +1294,11 @@ const FinancialSelfInspection: React.FC = () => {
               format="YYYY-MM-DD"
             />
           </Form.Item>
-          
+
           <Form.Item
             label="备注"
             name="remarks"
-            rules={[
-              { max: 500, message: '备注不能超过500个字符' },
-            ]}
+            rules={[{ max: 500, message: '备注不能超过500个字符' }]}
           >
             <Input.TextArea
               rows={4}
@@ -1328,7 +1324,7 @@ const FinancialSelfInspection: React.FC = () => {
           layout="vertical"
           preserve={false}
           initialValues={{
-            inspector: user?.username || ''
+            inspector: user?.username || '',
           }}
         >
           <Row gutter={16}>
@@ -1336,9 +1332,7 @@ const FinancialSelfInspection: React.FC = () => {
               <Form.Item
                 label="抽查日期"
                 name="inspectionDate"
-                rules={[
-                  { required: true, message: '请选择抽查日期' },
-                ]}
+                rules={[{ required: true, message: '请选择抽查日期' }]}
               >
                 <DatePicker
                   style={{ width: '100%' }}
@@ -1361,7 +1355,7 @@ const FinancialSelfInspection: React.FC = () => {
                   placeholder="请输入企业名称进行搜索"
                   options={customerOptions}
                   value={customerSearchValue}
-                  onSearch={(value) => {
+                  onSearch={value => {
                     setCustomerSearchValue(value)
                     if (value && value.trim()) {
                       handleCustomerSearch(value.trim(), true)
@@ -1372,7 +1366,7 @@ const FinancialSelfInspection: React.FC = () => {
                   onSelect={(value, option) => {
                     handleCustomerSelect(value, option)
                   }}
-                  onChange={(value) => {
+                  onChange={value => {
                     setCustomerSearchValue(value)
                     // 如果输入值为空，重置搜索状态
                     if (!value || !value.trim()) {
@@ -1391,7 +1385,7 @@ const FinancialSelfInspection: React.FC = () => {
                       </div>
                     ) : null
                   }
-                  dropdownRender={(menu) => (
+                  dropdownRender={menu => (
                     <div>
                       {menu}
                       {hasMoreCustomers && (
@@ -1401,7 +1395,7 @@ const FinancialSelfInspection: React.FC = () => {
                             padding: '8px 12px',
                             borderTop: '1px solid #f0f0f0',
                             cursor: 'pointer',
-                            color: '#1890ff'
+                            color: '#1890ff',
                           }}
                           onClick={handleLoadMoreCustomers}
                         >
@@ -1416,13 +1410,15 @@ const FinancialSelfInspection: React.FC = () => {
                         </div>
                       )}
                       {customerTotal > 0 && (
-                        <div style={{
-                          textAlign: 'center',
-                          padding: '4px 12px',
-                          fontSize: '12px',
-                          color: '#999',
-                          borderTop: '1px solid #f0f0f0'
-                        }}>
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            color: '#999',
+                            borderTop: '1px solid #f0f0f0',
+                          }}
+                        >
                           共找到 {customerTotal} 条结果
                         </div>
                       )}
@@ -1441,7 +1437,10 @@ const FinancialSelfInspection: React.FC = () => {
                 name="unifiedSocialCreditCode"
                 rules={[
                   { len: 18, message: '统一社会信用代码必须为18位' },
-                  { pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/, message: '请输入正确的统一社会信用代码格式' },
+                  {
+                    pattern: /^[0-9A-HJ-NPQRTUWXY]{2}\d{6}[0-9A-HJ-NPQRTUWXY]{10}$/,
+                    message: '请输入正确的统一社会信用代码格式',
+                  },
                 ]}
                 extra="输入统一社会信用代码进行搜索，选择后将自动填入相关信息（可选）"
               >
@@ -1449,7 +1448,7 @@ const FinancialSelfInspection: React.FC = () => {
                   placeholder="请输入统一社会信用代码进行搜索"
                   options={codeOptions}
                   value={codeSearchValue}
-                  onSearch={(value) => {
+                  onSearch={value => {
                     setCodeSearchValue(value)
                     if (value && value.trim()) {
                       handleCodeSearch(value.trim(), true)
@@ -1460,7 +1459,7 @@ const FinancialSelfInspection: React.FC = () => {
                   onSelect={(value, option) => {
                     handleCodeSelect(value, option)
                   }}
-                  onChange={(value) => {
+                  onChange={value => {
                     setCodeSearchValue(value)
                     // 如果输入值为空，重置搜索状态
                     if (!value || !value.trim()) {
@@ -1479,7 +1478,7 @@ const FinancialSelfInspection: React.FC = () => {
                       </div>
                     ) : null
                   }
-                  dropdownRender={(menu) => (
+                  dropdownRender={menu => (
                     <div>
                       {menu}
                       {hasMoreCodes && (
@@ -1489,7 +1488,7 @@ const FinancialSelfInspection: React.FC = () => {
                             padding: '8px 12px',
                             borderTop: '1px solid #f0f0f0',
                             cursor: 'pointer',
-                            color: '#1890ff'
+                            color: '#1890ff',
                           }}
                           onClick={handleLoadMoreCodes}
                         >
@@ -1504,13 +1503,15 @@ const FinancialSelfInspection: React.FC = () => {
                         </div>
                       )}
                       {codeTotal > 0 && (
-                        <div style={{
-                          textAlign: 'center',
-                          padding: '4px 12px',
-                          fontSize: '12px',
-                          color: '#999',
-                          borderTop: '1px solid #f0f0f0'
-                        }}>
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            color: '#999',
+                            borderTop: '1px solid #f0f0f0',
+                          }}
+                        >
                           共找到 {codeTotal} 条结果
                         </div>
                       )}
@@ -1526,7 +1527,11 @@ const FinancialSelfInspection: React.FC = () => {
                 name="bookkeepingAccountant"
                 extra="此字段将根据企业信息自动填入，无法编辑（可选）"
               >
-                <Input placeholder="记账会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+                <Input
+                  placeholder="记账会计将自动填入"
+                  readOnly
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -1538,19 +1543,25 @@ const FinancialSelfInspection: React.FC = () => {
                 name="consultantAccountant"
                 extra="此字段将根据企业信息自动填入，无法编辑（可选）"
               >
-                <Input placeholder="顾问会计将自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+                <Input
+                  placeholder="顾问会计将自动填入"
+                  readOnly
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 label="抽查人"
                 name="inspector"
-                rules={[
-                  { required: true, message: '抽查人不能为空' },
-                ]}
+                rules={[{ required: true, message: '抽查人不能为空' }]}
                 extra="此字段自动填入当前登录用户，无法编辑"
               >
-                <Input placeholder="抽查人自动填入" readOnly style={{ backgroundColor: '#f5f5f5' }} />
+                <Input
+                  placeholder="抽查人自动填入"
+                  readOnly
+                  style={{ backgroundColor: '#f5f5f5' }}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -1592,4 +1603,4 @@ const FinancialSelfInspection: React.FC = () => {
   )
 }
 
-export default FinancialSelfInspection 
+export default FinancialSelfInspection

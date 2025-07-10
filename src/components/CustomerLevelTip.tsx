@@ -19,7 +19,7 @@ interface TableDataType {
 
 const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) => {
   // 准备表格数据
-  const tableData: TableDataType[] = level 
+  const tableData: TableDataType[] = level
     ? [CUSTOMER_LEVEL_TIPS[level]].filter(Boolean).map(tip => ({
         key: tip.level,
         level: tip.level,
@@ -60,9 +60,7 @@ const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) =
           width: 120,
           align: 'center' as const,
           render: (text: string) => (
-            <Text style={{ fontSize: '12px', fontWeight: 'bold', color: '#52c41a' }}>
-              {text}
-            </Text>
+            <Text style={{ fontSize: '12px', fontWeight: 'bold', color: '#52c41a' }}>{text}</Text>
           ),
         },
         {
@@ -92,9 +90,7 @@ const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) =
           width: 120,
           align: 'center' as const,
           render: (text: string) => (
-            <Text style={{ fontSize: '12px', fontWeight: 'bold', color: '#fa8c16' }}>
-              {text}
-            </Text>
+            <Text style={{ fontSize: '12px', fontWeight: 'bold', color: '#fa8c16' }}>{text}</Text>
           ),
         },
         {
@@ -127,7 +123,7 @@ const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) =
           客户分级释义表
         </Title>
       )}
-      
+
       <Table
         dataSource={tableData}
         columns={columns}
@@ -139,15 +135,15 @@ const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) =
         rowClassName={(record, index) => {
           const levelGroup = record.level.charAt(0)
           const colorMap: Record<string, string> = {
-            'A': 'rgba(24, 144, 255, 0.05)', // 蓝色背景
-            'B': 'rgba(82, 196, 26, 0.05)',  // 绿色背景
-            'C': 'rgba(250, 140, 22, 0.05)', // 橙色背景
-            'D': 'rgba(245, 34, 45, 0.05)',  // 红色背景
+            A: 'rgba(24, 144, 255, 0.05)', // 蓝色背景
+            B: 'rgba(82, 196, 26, 0.05)', // 绿色背景
+            C: 'rgba(250, 140, 22, 0.05)', // 橙色背景
+            D: 'rgba(245, 34, 45, 0.05)', // 红色背景
           }
           return levelGroup ? `customer-level-${levelGroup.toLowerCase()}` : ''
         }}
       />
-      
+
       <style>
         {`
           .customer-level-a td {
@@ -174,4 +170,4 @@ const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) =
   )
 }
 
-export default CustomerLevelTipComponent 
+export default CustomerLevelTipComponent

@@ -57,10 +57,10 @@ const STAMP_IMAGE_MAP = {
 
 // 邮政编码映射配置
 const POSTAL_CODE_MAP: Record<string, string> = {
-  '定兴县': '072650',
-  '雄安新区': '071701',
-  '高碑店市': '074000',
-  '容城县': '071700',
+  定兴县: '072650',
+  雄安新区: '071701',
+  高碑店市: '074000',
+  容城县: '071700',
 }
 
 // 获取乙方盖章图片
@@ -71,7 +71,7 @@ const getPartyBStampImage = (signatory: string): string => {
 // 根据地址识别邮政编码
 const getPostalCodeFromAddress = (address: string): string => {
   if (!address) return ''
-  
+
   // 遍历邮政编码映射，检查地址中是否包含关键词
   for (const [keyword, postalCode] of Object.entries(POSTAL_CODE_MAP)) {
     if (address.includes(keyword)) {
@@ -79,7 +79,7 @@ const getPostalCodeFromAddress = (address: string): string => {
       return postalCode
     }
   }
-  
+
   return ''
 }
 
@@ -124,7 +124,7 @@ const AgencyAccountingAgreement = forwardRef<
       configExists: !!config,
       configAddress: config?.address,
       configTitle: config?.title,
-      allConfigKeys: Object.keys(SIGNATORY_CONFIG)
+      allConfigKeys: Object.keys(SIGNATORY_CONFIG),
     })
   }, [signatory, config])
 
@@ -151,16 +151,16 @@ const AgencyAccountingAgreement = forwardRef<
       console.log('🔄 [代理记账合同] 更新签署方默认信息:', {
         signatory,
         address: config.address,
-        phone: config.phone
+        phone: config.phone,
       })
-      
+
       // 根据默认乙方地址自动填写邮政编码
       const defaultPostalCode = getPostalCodeFromAddress(config.address)
       if (defaultPostalCode) {
         setCreateModeFormData(prev => ({
           ...prev,
           partyAPostalCode: defaultPostalCode,
-          partyBPostalCode: defaultPostalCode
+          partyBPostalCode: defaultPostalCode,
         }))
         console.log(`🔄 [代理记账合同] 根据默认乙方地址自动填写邮政编码: ${defaultPostalCode}`)
       }
@@ -249,7 +249,7 @@ const AgencyAccountingAgreement = forwardRef<
         }
         console.log('✅ [代理记账合同] 成功获取并设置委托日期:', {
           agencyStartDate,
-          agencyEndDate
+          agencyEndDate,
         })
       }
     } catch (error) {
@@ -277,7 +277,7 @@ const AgencyAccountingAgreement = forwardRef<
             setEditModeFormData(prev => ({
               ...prev,
               partyAPostalCode: contractData.partyAPostalCode || postalCode,
-              partyBPostalCode: contractData.partyBPostalCode || postalCode
+              partyBPostalCode: contractData.partyBPostalCode || postalCode,
             }))
             console.log(`🔄 [代理记账合同] 编辑模式：根据乙方地址自动补充邮政编码: ${postalCode}`)
           }
@@ -462,7 +462,7 @@ const AgencyAccountingAgreement = forwardRef<
 
     // 重置客户搜索框
     setCustomerSearchValue(value)
-    
+
     // 更新客户基本信息
     const customerData = {
       partyACompany: value,
@@ -472,7 +472,7 @@ const AgencyAccountingAgreement = forwardRef<
       partyALegalPerson: option.legalPerson || '',
       partyACreditCode: option.unifiedSocialCreditCode || '',
     }
-    
+
     // 应用到表单
     if (mode === 'edit') {
       setEditModeFormData(prev => ({
@@ -485,32 +485,33 @@ const AgencyAccountingAgreement = forwardRef<
         ...customerData,
       }))
     }
-    
+
     // 尝试根据乙方地址自动填写邮政编码
-    const partyBAddress = mode === 'edit' 
-      ? (editModeFormData.partyBAddress || config?.address || '') 
-      : (createModeFormData.partyBAddress || config?.address || '')
-      
+    const partyBAddress =
+      mode === 'edit'
+        ? editModeFormData.partyBAddress || config?.address || ''
+        : createModeFormData.partyBAddress || config?.address || ''
+
     const postalCode = getPostalCodeFromAddress(partyBAddress)
     if (postalCode) {
       if (mode === 'edit') {
         setEditModeFormData(prev => ({
           ...prev,
           partyAPostalCode: postalCode,
-          partyBPostalCode: postalCode
+          partyBPostalCode: postalCode,
         }))
       } else {
         setCreateModeFormData(prev => ({
           ...prev,
           partyAPostalCode: postalCode,
-          partyBPostalCode: postalCode
+          partyBPostalCode: postalCode,
         }))
       }
       console.log(`💾 选择客户后，根据现有乙方地址自动填写邮政编码: ${postalCode}`)
     }
-    
+
     console.log('💾 客户选择完成，更新表单数据:', customerData)
-    
+
     // 获取委托日期
     fetchAgencyDates()
   }
@@ -622,7 +623,11 @@ const AgencyAccountingAgreement = forwardRef<
       }
 
       // 自动填写联系人和联系电话（从实际负责人的第一条记录）
-      if (enterprise.actualResponsibles && Array.isArray(enterprise.actualResponsibles) && enterprise.actualResponsibles.length > 0) {
+      if (
+        enterprise.actualResponsibles &&
+        Array.isArray(enterprise.actualResponsibles) &&
+        enterprise.actualResponsibles.length > 0
+      ) {
         const firstResponsible = enterprise.actualResponsibles[0]
         if (firstResponsible.name) {
           updateData.partyAContact = firstResponsible.name
@@ -670,16 +675,16 @@ const AgencyAccountingAgreement = forwardRef<
         setTimeout(() => {
           // 同时更新甲方和乙方的邮政编码（根据需求）
           if (mode === 'edit') {
-            setEditModeFormData(prev => ({ 
-              ...prev, 
-              partyAPostalCode: postalCode, 
-              partyBPostalCode: postalCode 
+            setEditModeFormData(prev => ({
+              ...prev,
+              partyAPostalCode: postalCode,
+              partyBPostalCode: postalCode,
             }))
           } else {
             setCreateModeFormData(prev => ({
               ...prev,
               partyAPostalCode: postalCode,
-              partyBPostalCode: postalCode
+              partyBPostalCode: postalCode,
             }))
           }
           console.log(`💾 根据乙方地址自动填写邮政编码: ${postalCode}`)
@@ -937,11 +942,17 @@ const AgencyAccountingAgreement = forwardRef<
 
       // 处理委托日期格式：将年月格式转换为年月日格式（日期默认为1号）
       const processedFormData = { ...filteredFormData }
-      if (processedFormData.entrustmentStartDate && processedFormData.entrustmentStartDate.length === 7) {
+      if (
+        processedFormData.entrustmentStartDate &&
+        processedFormData.entrustmentStartDate.length === 7
+      ) {
         // 如果是年月格式 (YYYY-MM)，转换为年月日格式 (YYYY-MM-01)
         processedFormData.entrustmentStartDate = `${processedFormData.entrustmentStartDate}-01`
       }
-      if (processedFormData.entrustmentEndDate && processedFormData.entrustmentEndDate.length === 7) {
+      if (
+        processedFormData.entrustmentEndDate &&
+        processedFormData.entrustmentEndDate.length === 7
+      ) {
         // 如果是年月格式 (YYYY-MM)，转换为年月日格式 (YYYY-MM-01)
         processedFormData.entrustmentEndDate = `${processedFormData.entrustmentEndDate}-01`
       }
@@ -1401,7 +1412,9 @@ const AgencyAccountingAgreement = forwardRef<
             </div>
             {/* 备注行 */}
             <div className={styles.otherBusiness}>
-              <div className={styles.otherBusinessLabel} style={{ fontWeight: 'bold' }}>备注：</div>
+              <div className={styles.otherBusinessLabel} style={{ fontWeight: 'bold' }}>
+                备注：
+              </div>
               <Input
                 placeholder="请填写备注"
                 value={formData.remarks || ''}

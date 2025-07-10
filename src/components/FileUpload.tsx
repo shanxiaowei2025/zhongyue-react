@@ -347,15 +347,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 description="删除后将无法恢复，是否确认删除？"
                 onConfirm={handleRemove}
                 okText="确认"
-                okType='danger'
+                okType="danger"
                 cancelText="取消"
               >
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  size="small"
-                >
+                <Button type="text" danger icon={<DeleteOutlined />} size="small">
                   删除
                 </Button>
               </Popconfirm>

@@ -143,7 +143,7 @@ export const exportCustomerCSV = (params?: Record<string, any>) => {
     })
     queryString = queryParams.toString()
   }
-  
+
   return request.get(`/customer/export/csv${queryString ? `?${queryString}` : ''}`, {}, 'blob')
 }
 

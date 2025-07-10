@@ -6,7 +6,19 @@ import CustomerLevelTipComponent from './CustomerLevelTip'
 interface CustomerLevelDisplayProps {
   level?: string | null
   showPopover?: boolean
-  placement?: 'top' | 'left' | 'right' | 'bottom' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' | 'leftTop' | 'leftBottom' | 'rightTop' | 'rightBottom'
+  placement?:
+    | 'top'
+    | 'left'
+    | 'right'
+    | 'bottom'
+    | 'topLeft'
+    | 'topRight'
+    | 'bottomLeft'
+    | 'bottomRight'
+    | 'leftTop'
+    | 'leftBottom'
+    | 'rightTop'
+    | 'rightBottom'
   maxWidth?: number
   className?: string
   style?: React.CSSProperties
@@ -18,16 +30,16 @@ const CustomerLevelDisplay: React.FC<CustomerLevelDisplayProps> = ({
   placement = 'right',
   maxWidth,
   className = '',
-  style = {}
+  style = {},
 }) => {
   // 如果没有分级信息，显示 "-"
   if (!level) {
     return (
-      <span 
+      <span
         className={className}
         style={{
           color: '#999',
-          ...style
+          ...style,
         }}
       >
         -
@@ -36,12 +48,12 @@ const CustomerLevelDisplay: React.FC<CustomerLevelDisplayProps> = ({
   }
 
   const levelColor = getCustomerLevelColor(level)
-  
+
   const spanStyle: React.CSSProperties = {
     color: levelColor,
     fontWeight: 'bold',
     cursor: showPopover ? 'help' : 'default',
-    ...style
+    ...style,
   }
 
   // 如果设置了最大宽度，添加文本溢出样式
@@ -54,11 +66,7 @@ const CustomerLevelDisplay: React.FC<CustomerLevelDisplayProps> = ({
   }
 
   const levelSpan = (
-    <span 
-      className={className}
-      style={spanStyle}
-      title={level}
-    >
+    <span className={className} style={spanStyle} title={level}>
       {level}
     </span>
   )
@@ -81,4 +89,4 @@ const CustomerLevelDisplay: React.FC<CustomerLevelDisplayProps> = ({
   )
 }
 
-export default CustomerLevelDisplay 
+export default CustomerLevelDisplay

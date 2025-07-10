@@ -43,78 +43,81 @@ interface TabItem {
 }
 
 interface ModuleState {
-  lastPath: string        // 最后访问的路径
-  defaultPath: string     // 默认路径
-  label: string          // 模块名称
-  icon: React.ReactNode  // 图标
+  lastPath: string // 最后访问的路径
+  defaultPath: string // 默认路径
+  label: string // 模块名称
+  icon: React.ReactNode // 图标
 }
 
 // 模块配置
-const MODULE_CONFIG: Record<string, {
-  defaultPath: string
-  label: string
-  icon: React.ReactNode
-  pathPatterns: string[]
-}> = {
+const MODULE_CONFIG: Record<
+  string,
+  {
+    defaultPath: string
+    label: string
+    icon: React.ReactNode
+    pathPatterns: string[]
+  }
+> = {
   '/contracts': {
     defaultPath: '/contracts',
     label: '合同管理',
     icon: <FileTextOutlined />,
-    pathPatterns: ['/contracts']
+    pathPatterns: ['/contracts'],
   },
   '/customers': {
     defaultPath: '/customers',
     label: '客户管理',
     icon: <ShopOutlined />,
-    pathPatterns: ['/customers']
+    pathPatterns: ['/customers'],
   },
   '/expenses': {
     defaultPath: '/expenses',
     label: '费用管理',
     icon: <DollarOutlined />,
-    pathPatterns: ['/expenses']
+    pathPatterns: ['/expenses'],
   },
   '/enterprise-service': {
     defaultPath: '/enterprise-service',
     label: '企业服务详情',
     icon: <AppstoreOutlined />,
-    pathPatterns: ['/enterprise-service']
+    pathPatterns: ['/enterprise-service'],
   },
   '/financial-self-inspection': {
     defaultPath: '/financial-self-inspection',
     label: '账务自查',
     icon: <AuditOutlined />,
-    pathPatterns: ['/financial-self-inspection']
+    pathPatterns: ['/financial-self-inspection'],
   },
   '/tax-review': {
     defaultPath: '/tax-review',
     label: '税务核查',
     icon: <FileDoneOutlined />,
-    pathPatterns: ['/tax-review']
+    pathPatterns: ['/tax-review'],
   },
   '/users': {
     defaultPath: '/users',
     label: '用户管理',
     icon: <UserOutlined />,
-    pathPatterns: ['/users']
+    pathPatterns: ['/users'],
   },
   '/roles': {
     defaultPath: '/roles',
     label: '角色管理',
     icon: <TeamOutlined />,
-    pathPatterns: ['/roles']
+    pathPatterns: ['/roles'],
   },
   '/permissions': {
     defaultPath: '/permissions',
     label: '权限管理',
     icon: <LockOutlined />,
-    pathPatterns: ['/permissions']
+    pathPatterns: ['/permissions'],
   },
   '/departments': {
     defaultPath: '/departments',
     label: '部门管理',
     icon: <ApartmentOutlined />,
-    pathPatterns: ['/departments']
+    pathPatterns: ['/departments'],
   },
 }
 
@@ -174,36 +177,39 @@ const useTabsStore = () => {
       if (prevStates[moduleKey]?.lastPath === path) {
         return prevStates
       }
-      
+
       const newStates = {
         ...prevStates,
         [moduleKey]: {
           ...prevStates[moduleKey],
           lastPath: path,
-        }
+        },
       }
-      
+
       // 持久化保存到 localStorage（只保存必要的数据）
       const statesToSave: Record<string, { lastPath: string }> = {}
       Object.entries(newStates).forEach(([key, state]) => {
         statesToSave[key] = { lastPath: state.lastPath }
       })
-      
+
       try {
         localStorage.setItem('moduleStates', JSON.stringify(statesToSave))
       } catch (error) {
         console.warn('⚠️ 保存模块状态失败:', error)
       }
-      
+
       return newStates
     })
   }, [])
 
   // 获取模块的目标路径
-  const getModuleTargetPath = useCallback((moduleKey: string): string => {
-    const moduleState = moduleStates[moduleKey]
-    return moduleState ? moduleState.lastPath : moduleKey
-  }, [moduleStates])
+  const getModuleTargetPath = useCallback(
+    (moduleKey: string): string => {
+      const moduleState = moduleStates[moduleKey]
+      return moduleState ? moduleState.lastPath : moduleKey
+    },
+    [moduleStates]
+  )
 
   // 识别路径属于哪个模块
   const identifyModule = useCallback((pathname: string): string | null => {
@@ -216,9 +222,9 @@ const useTabsStore = () => {
       '/financial-self-inspection/detail/',
       '/financial-self-inspection/responsible-detail/',
       '/tax-review/',
-      '/profile'
+      '/profile',
     ]
-    
+
     // 检查是否是特殊路径
     const isSpecialPath = specialPaths.some(specialPath => {
       if (specialPath.endsWith('/')) {
@@ -226,12 +232,12 @@ const useTabsStore = () => {
       }
       return pathname === specialPath
     })
-    
+
     // 如果是特殊路径，不识别为任何模块
     if (isSpecialPath) {
       return null
     }
-    
+
     for (const [moduleKey, config] of Object.entries(MODULE_CONFIG)) {
       if (config.pathPatterns.some(pattern => pathname.startsWith(pattern))) {
         return moduleKey
@@ -262,22 +268,27 @@ const useTabsStore = () => {
         sessionStorage.removeItem('contractCreateParams')
         sessionStorage.removeItem('contractCreateData')
         sessionStorage.removeItem('lastFormSaveTime')
-        
+
         // 清理新的Zustand缓存数据
         sessionStorage.removeItem('contract-form-storage')
-        
+
         // 如果窗口对象存在，也触发store的清理方法
         if (typeof window !== 'undefined' && window.dispatchEvent) {
           const clearCacheEvent = new CustomEvent('clearContractFormCache', {
-            detail: { tabKey, reason: 'tab-close' }
+            detail: { tabKey, reason: 'tab-close' },
           })
           window.dispatchEvent(clearCacheEvent)
         }
-        
-        console.log('🧹 清理合同表单缓存数据:', { 
-          tabKey, 
-          cleared: ['contractCreateParams', 'contractCreateData', 'lastFormSaveTime', 'contract-form-storage'],
-          reason: 'tab-close'
+
+        console.log('🧹 清理合同表单缓存数据:', {
+          tabKey,
+          cleared: [
+            'contractCreateParams',
+            'contractCreateData',
+            'lastFormSaveTime',
+            'contract-form-storage',
+          ],
+          reason: 'tab-close',
         })
       }
     } catch (error) {
@@ -312,17 +323,17 @@ const useTabsStore = () => {
   // 检查视图是否被缓存
   const isCached = (key: string) => !!cachedViews[key]
 
-  return { 
-    tabs, 
-    activeKey, 
-    setActiveKey, 
-    addTab, 
-    removeTab, 
+  return {
+    tabs,
+    activeKey,
+    setActiveKey,
+    addTab,
+    removeTab,
     isCached,
     moduleStates,
     updateModuleState,
     getModuleTargetPath,
-    identifyModule
+    identifyModule,
   }
 }
 
@@ -352,10 +363,19 @@ const MainLayout = () => {
     if (!user?.roles || !Array.isArray(user.roles)) {
       return false
     }
-    
+
     // 允许访问企业服务的角色
-    const allowedRoles = ['super_admin', 'admin', 'consultantAccountant', 'bookkeepingAccountant', '超级管理员', '管理员', '顾问会计', '记账会计']
-    
+    const allowedRoles = [
+      'super_admin',
+      'admin',
+      'consultantAccountant',
+      'bookkeepingAccountant',
+      '超级管理员',
+      '管理员',
+      '顾问会计',
+      '记账会计',
+    ]
+
     return user.roles.some(role => allowedRoles.includes(role))
   }
 
@@ -382,28 +402,32 @@ const MainLayout = () => {
       label: '合同管理',
     },
     // 根据用户角色决定是否显示企业服务菜单
-    ...(hasEnterpriseServicePermission() ? [{
-      key: 'enterprise',
-      icon: <AppstoreOutlined />,
-      label: '企业服务',
-      children: [
-        {
-          key: '/enterprise-service',
-          icon: <AppstoreOutlined />,
-          label: '企业服务详情',
-        },
-        {
-          key: '/financial-self-inspection',
-          icon: <AuditOutlined />,
-          label: '账务自查',
-        },
-        {
-          key: '/tax-review',
-          icon: <FileDoneOutlined />,
-          label: '税务核查',
-        },
-      ],
-    }] : []),
+    ...(hasEnterpriseServicePermission()
+      ? [
+          {
+            key: 'enterprise',
+            icon: <AppstoreOutlined />,
+            label: '企业服务',
+            children: [
+              {
+                key: '/enterprise-service',
+                icon: <AppstoreOutlined />,
+                label: '企业服务详情',
+              },
+              {
+                key: '/financial-self-inspection',
+                icon: <AuditOutlined />,
+                label: '账务自查',
+              },
+              {
+                key: '/tax-review',
+                icon: <FileDoneOutlined />,
+                label: '税务核查',
+              },
+            ],
+          },
+        ]
+      : []),
   ]
 
   // 系统管理菜单项
@@ -674,7 +698,7 @@ const MainLayout = () => {
       if (targetMenuItem) {
         // 智能导航：获取模块的最后访问路径
         const smartTargetPath = tabsStore.getModuleTargetPath(mainTabPath)
-        
+
         // 检查tab是否已经存在
         const tabExists = tabsStore.tabs.some(tab => tab.key === mainTabPath)
 
@@ -694,7 +718,7 @@ const MainLayout = () => {
 
         // 智能导航：优先使用保存的状态路径，否则使用传入的目标路径
         const finalTargetPath = smartTargetPath !== mainTabPath ? smartTargetPath : targetPath
-        
+
         console.log(`🎯 全局智能导航：${mainTabPath} → ${finalTargetPath}`)
 
         // 再导航到目标路径
@@ -713,13 +737,13 @@ const MainLayout = () => {
     window.closeTab = (tabKey: string) => {
       // 检查标签页是否存在
       const tabExists = tabsStore.tabs.some(tab => tab.key === tabKey)
-      
+
       if (tabExists) {
         console.log(`🗑️ 全局关闭标签页: ${tabKey}`)
         tabsStore.removeTab(tabKey)
         return true
       }
-      
+
       console.warn(`⚠️ 尝试关闭不存在的标签页: ${tabKey}`)
       return false
     }
@@ -768,12 +792,12 @@ const MainLayout = () => {
     } else {
       // 核心改进：智能导航到模块的最后访问路径
       const targetPath = tabsStore.getModuleTargetPath(key)
-      
+
       // 如果路径不同，说明有历史状态，显示智能跳转提示
       if (targetPath !== key) {
         console.log(`🎯 智能导航：${key} → ${targetPath}`)
       }
-      
+
       navigate(targetPath)
       if (isMobile) {
         setDrawerVisible(false)
@@ -904,7 +928,7 @@ const MainLayout = () => {
           <div className="flex items-center">
             {/* 开发模式下显示模块状态调试信息 */}
             {process.env.NODE_ENV === 'development' && !isMobile && (
-              <Tooltip 
+              <Tooltip
                 title={
                   <div style={{ maxWidth: '300px' }}>
                     <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>📋 模块状态保持</div>
@@ -922,11 +946,11 @@ const MainLayout = () => {
               >
                 <Button
                   type="text"
-                  style={{ 
-                    fontSize: '12px', 
+                  style={{
+                    fontSize: '12px',
                     padding: '4px 8px',
                     height: 'auto',
-                    color: '#1890ff'
+                    color: '#1890ff',
                   }}
                   className="mx-2"
                 >
