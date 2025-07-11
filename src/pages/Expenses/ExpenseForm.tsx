@@ -19,6 +19,7 @@ import {
 } from 'antd'
 import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
+import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import {
   Expense,
@@ -39,6 +40,7 @@ import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
 import { getMaxDatesNextDay } from '../../api/expense'
 import { useAuthStore } from '../../store/auth'
+import type { Enterprise } from '../../types/enterpriseService'
 import './expenses.css'
 
 // 定义状态标签映射
@@ -1224,7 +1226,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   label="企业名称"
                   rules={[{ required: true, message: '请输入企业名称' }]}
                 >
-                  <Input placeholder="请输入企业名称" />
+                  <CustomerAutoComplete
+                    searchType="companyName"
+                    placeholder="请输入企业名称进行搜索"
+                    onSelect={(enterprise: Enterprise) => {
+                      form.setFieldsValue({
+                        companyName: enterprise.companyName,
+                        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+                        companyType: enterprise.enterpriseType || '',
+                        companyLocation: enterprise.location || '',
+                      })
+                    }}
+                  />
                 </Form.Item>
 
                 <Form.Item
@@ -1232,7 +1245,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   label="统一社会信用代码"
                   rules={[{ required: true, message: '请输入统一社会信用代码' }]}
                 >
-                  <Input placeholder="请输入统一社会信用代码" />
+                  <CustomerAutoComplete
+                    searchType="unifiedSocialCreditCode"
+                    placeholder="请输入统一社会信用代码进行搜索"
+                    onSelect={(enterprise: Enterprise) => {
+                      form.setFieldsValue({
+                        companyName: enterprise.companyName,
+                        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+                        companyType: enterprise.enterpriseType || '',
+                        companyLocation: enterprise.location || '',
+                      })
+                    }}
+                  />
                 </Form.Item>
 
                 <Form.Item

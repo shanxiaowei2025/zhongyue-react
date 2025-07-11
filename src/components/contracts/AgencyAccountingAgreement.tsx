@@ -1,13 +1,13 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { Input, DatePicker, Checkbox, message, AutoComplete, Spin } from 'antd'
+import { Input, DatePicker, Checkbox, message } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import { getAgencyContractDates } from '../../api/contract'
-import { searchCustomers } from '../../api/enterpriseService'
 import type { CreateContractDto } from '../../types/contract'
-import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
+import type { Enterprise } from '../../types/enterpriseService'
+import CustomerAutoComplete from '../CustomerAutoComplete'
 import { formatAmount, parseAmount } from '../../utils/numberToChinese'
 import { getAgencySignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import styles from './AgencyAccountingAgreement.module.css'
@@ -163,21 +163,7 @@ const AgencyAccountingAgreement = forwardRef<
   const debouncedCompanyName = useDebouncedValue(formData.partyACompany || '', 800)
   const debouncedCreditCode = useDebouncedValue(formData.partyACreditCode || '', 800)
 
-  // 企业搜索相关状态
-  const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
-  const [customerOptions, setCustomerOptions] = useState<CustomerSearchOption[]>([])
-  const [customerSearchValue, setCustomerSearchValue] = useState<string>('')
-  const [customerPage, setCustomerPage] = useState<number>(1)
-  const [customerTotal, setCustomerTotal] = useState<number>(0)
-  const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
-
-  // 统一社会信用代码搜索相关状态
-  const [codeSearchLoading, setCodeSearchLoading] = useState<boolean>(false)
-  const [codeOptions, setCodeOptions] = useState<CustomerSearchOption[]>([])
-  const [codeSearchValue, setCodeSearchValue] = useState<string>('')
-  const [codePage, setCodePage] = useState<number>(1)
-  const [codeTotal, setCodeTotal] = useState<number>(0)
-  const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
+  // 企业搜索相关状态已移除，使用CustomerAutoComplete组件
 
   // 自动获取委托日期函数
   const fetchAgencyDates = async () => {
@@ -325,108 +311,18 @@ const AgencyAccountingAgreement = forwardRef<
     fetchAgencyDates()
   }, [debouncedCompanyName, debouncedCreditCode, mode, fetchAgencyDates])
 
-  // 搜索客户信息（模糊搜索）
-  const handleCustomerSearch = async (searchValue: string, resetPage: boolean = false) => {
-    if (!searchValue || !searchValue.trim()) {
-      setCustomerOptions([])
-      setCustomerTotal(0)
-      setHasMoreCustomers(false)
-      return
-    }
-
-    try {
-      setCustomerSearchLoading(true)
-
-      const currentPage = resetPage ? 1 : customerPage
-
-      const params: CustomerQueryParams = {
-        page: currentPage,
-        pageSize: 20, // 每次加载20条数据
-        companyName: searchValue.trim(),
-      }
-
-      const response = await searchCustomers(params)
-
-      if (response.code === 0 && response.data) {
-        const { data: enterprises, total } = response.data
-
-        // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
-          value: enterprise.companyName,
-          label: (
-            <div style={{ padding: '4px 0' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                {enterprise.companyName}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                {enterprise.unifiedSocialCreditCode}
-              </div>
-              {(enterprise as any).registeredAddress && (
-                <div style={{ fontSize: '12px', color: '#999' }}>
-                  地址: {(enterprise as any).registeredAddress}
-                </div>
-              )}
-            </div>
-          ),
-          enterprise,
-        }))
-
-        if (resetPage) {
-          setCustomerOptions(newOptions)
-          setCustomerPage(1)
-        } else {
-          setCustomerOptions(prev => [...prev, ...newOptions])
-        }
-
-        setCustomerTotal(total)
-        setHasMoreCustomers(currentPage * 20 < total)
-
-        if (resetPage) {
-          setCustomerPage(2) // 下次请求第二页
-        } else {
-          setCustomerPage(currentPage + 1)
-        }
-      } else {
-        if (resetPage) {
-          setCustomerOptions([])
-          setCustomerTotal(0)
-          setHasMoreCustomers(false)
-        }
-      }
-    } catch (error) {
-      console.error('搜索客户信息失败:', error)
-      if (resetPage) {
-        setCustomerOptions([])
-        setCustomerTotal(0)
-        setHasMoreCustomers(false)
-      }
-    } finally {
-      setCustomerSearchLoading(false)
-    }
-  }
-
-  // 加载更多客户数据
-  const handleLoadMoreCustomers = () => {
-    if (!customerSearchLoading && hasMoreCustomers && customerSearchValue) {
-      handleCustomerSearch(customerSearchValue, false)
-    }
-  }
-
-  // 选择客户时自动填入信息
-  const handleCustomerSelect = (value: string, option: any) => {
-    console.log('📋 选择客户:', option)
-
-    // 重置客户搜索框
-    setCustomerSearchValue(value)
+  // 处理企业名称选择的自动填写
+  const handleCompanyNameSelect = (enterprise: Enterprise) => {
+    console.log('📋 选择客户:', enterprise)
 
     // 更新客户基本信息
     const customerData = {
-      partyACompany: value,
-      partyAAddress: option.address || '',
-      partyAPhone: option.phone || '',
-      partyAContact: option.contact || '',
-      partyALegalPerson: option.legalPerson || '',
-      partyACreditCode: option.unifiedSocialCreditCode || '',
+      partyACompany: enterprise.companyName,
+      partyAAddress: (enterprise as any).registeredAddress || '',
+      partyAPhone: enterprise.actualResponsibles?.[0]?.phone || '',
+      partyAContact: enterprise.actualResponsibles?.[0]?.name || '',
+      partyALegalPerson: enterprise.legalRepresentativeName || '',
+      partyACreditCode: enterprise.unifiedSocialCreditCode || '',
     }
 
     // 应用到表单
@@ -467,18 +363,10 @@ const AgencyAccountingAgreement = forwardRef<
     }
 
     console.log('💾 客户选择完成，更新表单数据:', customerData)
+    message.success('企业信息已自动填入')
 
     // 获取委托日期
     fetchAgencyDates()
-  }
-
-  // 重置客户搜索状态
-  const resetCustomerSearch = () => {
-    setCustomerOptions([])
-    setCustomerSearchValue('')
-    setCustomerPage(1)
-    setCustomerTotal(0)
-    setHasMoreCustomers(false)
   }
 
   // 搜索统一社会信用代码（模糊搜索）

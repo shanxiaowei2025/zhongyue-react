@@ -32,14 +32,14 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import { getTaxVerificationList, createTaxVerification } from '../../api/taxVerification'
 import { uploadFile } from '../../api/upload'
-import { searchCustomers } from '../../api/enterpriseService'
 import type {
   TaxVerification,
   TaxVerificationQueryParams,
   CreateTaxVerificationDto,
   TaxVerificationAttachment,
 } from '../../types/taxVerification'
-import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
+import type { Enterprise } from '../../types/enterpriseService'
+import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import type { ImageType } from '../../types'
 import MultiFileUpload from '../../components/MultiFileUpload'
 
@@ -705,80 +705,16 @@ const TaxReview: React.FC = () => {
                 ]}
                 extra="输入企业名称进行搜索，选择后将自动填入相关信息"
               >
-                <AutoComplete
+                <CustomerAutoComplete
                   placeholder="请输入企业名称进行搜索"
-                  options={customerOptions}
-                  value={customerSearchValue}
-                  onSearch={value => {
-                    setCustomerSearchValue(value)
-                    if (value && value.trim()) {
-                      handleCustomerSearch(value.trim(), true)
-                    } else {
-                      resetCustomerSearch()
-                    }
+                  searchType="companyName"
+                  onSelect={(enterprise: Enterprise) => {
+                    createForm.setFieldsValue({
+                      companyName: enterprise.companyName,
+                      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+                      taxBureau: enterprise.taxBureau || '',
+                    })
                   }}
-                  onSelect={(value, option) => {
-                    handleCustomerSelect(value, option)
-                  }}
-                  onChange={value => {
-                    setCustomerSearchValue(value)
-                    // 如果输入值为空，重置搜索状态
-                    if (!value || !value.trim()) {
-                      resetCustomerSearch()
-                    }
-                  }}
-                  notFoundContent={
-                    customerSearchLoading ? (
-                      <div style={{ textAlign: 'center', padding: '12px' }}>
-                        <Spin size="small" />
-                        <span style={{ marginLeft: '8px' }}>搜索中...</span>
-                      </div>
-                    ) : customerSearchValue && customerOptions.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
-                        暂无匹配结果
-                      </div>
-                    ) : null
-                  }
-                  dropdownRender={menu => (
-                    <div>
-                      {menu}
-                      {hasMoreCustomers && (
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            padding: '8px 12px',
-                            borderTop: '1px solid #f0f0f0',
-                            cursor: 'pointer',
-                            color: '#1890ff',
-                          }}
-                          onClick={handleLoadMoreCustomers}
-                        >
-                          {customerSearchLoading ? (
-                            <>
-                              <LoadingOutlined style={{ marginRight: '4px' }} />
-                              加载中...
-                            </>
-                          ) : (
-                            '加载更多'
-                          )}
-                        </div>
-                      )}
-                      {customerTotal > 0 && (
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            padding: '4px 12px',
-                            fontSize: '12px',
-                            color: '#999',
-                            borderTop: '1px solid #f0f0f0',
-                          }}
-                        >
-                          共找到 {customerTotal} 条结果
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  filterOption={false} // 禁用本地过滤，使用服务器端搜索
                 />
               </Form.Item>
             </Col>
@@ -795,80 +731,16 @@ const TaxReview: React.FC = () => {
                 ]}
                 extra="输入统一社会信用代码进行搜索，选择后将自动填入相关信息（可选）"
               >
-                <AutoComplete
+                <CustomerAutoComplete
                   placeholder="请输入统一社会信用代码进行搜索"
-                  options={codeOptions}
-                  value={codeSearchValue}
-                  onSearch={value => {
-                    setCodeSearchValue(value)
-                    if (value && value.trim()) {
-                      handleCodeSearch(value.trim(), true)
-                    } else {
-                      resetCodeSearch()
-                    }
+                  searchType="unifiedSocialCreditCode"
+                  onSelect={(enterprise: Enterprise) => {
+                    createForm.setFieldsValue({
+                      companyName: enterprise.companyName,
+                      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+                      taxBureau: enterprise.taxBureau || '',
+                    })
                   }}
-                  onSelect={(value, option) => {
-                    handleCodeSelect(value, option)
-                  }}
-                  onChange={value => {
-                    setCodeSearchValue(value)
-                    // 如果输入值为空，重置搜索状态
-                    if (!value || !value.trim()) {
-                      resetCodeSearch()
-                    }
-                  }}
-                  notFoundContent={
-                    codeSearchLoading ? (
-                      <div style={{ textAlign: 'center', padding: '12px' }}>
-                        <Spin size="small" />
-                        <span style={{ marginLeft: '8px' }}>搜索中...</span>
-                      </div>
-                    ) : codeSearchValue && codeOptions.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
-                        暂无匹配结果
-                      </div>
-                    ) : null
-                  }
-                  dropdownRender={menu => (
-                    <div>
-                      {menu}
-                      {hasMoreCodes && (
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            padding: '8px 12px',
-                            borderTop: '1px solid #f0f0f0',
-                            cursor: 'pointer',
-                            color: '#1890ff',
-                          }}
-                          onClick={handleLoadMoreCodes}
-                        >
-                          {codeSearchLoading ? (
-                            <>
-                              <LoadingOutlined style={{ marginRight: '4px' }} />
-                              加载中...
-                            </>
-                          ) : (
-                            '加载更多'
-                          )}
-                        </div>
-                      )}
-                      {codeTotal > 0 && (
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            padding: '4px 12px',
-                            fontSize: '12px',
-                            color: '#999',
-                            borderTop: '1px solid #f0f0f0',
-                          }}
-                        >
-                          共找到 {codeTotal} 条结果
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  filterOption={false} // 禁用本地过滤，使用服务器端搜索
                 />
               </Form.Item>
             </Col>
