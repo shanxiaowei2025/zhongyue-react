@@ -195,7 +195,7 @@ export const useContractDetail = (id?: number | null) => {
       const response = await createContractApi(createData)
       if (response.code === 0) {
         // 检查是否有自动创建客户的消息
-        const dataMessage = (response as any).data?.data?.message || response.message
+        const dataMessage = (response as any).data?.message || response.message
         if (dataMessage && dataMessage.includes('自动创建客户')) {
           message.success(dataMessage)
         } else {

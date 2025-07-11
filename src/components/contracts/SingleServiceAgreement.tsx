@@ -800,7 +800,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         } else if (mode === 'create') {
           // 默认创建行为
           await createContractData(submitData)
-          message.success('合同创建成功')
+          // 成功消息由 useContract 统一处理，避免重复显示
         } else {
           throw new Error('未配置相应的提交处理方法')
         }

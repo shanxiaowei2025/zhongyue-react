@@ -241,7 +241,7 @@ const CreateContract: React.FC = () => {
 
       // 提交成功后清理数据，关闭标签页并返回合同列表
       clearAllCache()
-      message.success('合同创建成功！', 2)
+      // 成功消息由 useContract 统一处理，避免重复显示
 
       setTimeout(() => {
         // 先跳转到合同列表页，确保标签页存在

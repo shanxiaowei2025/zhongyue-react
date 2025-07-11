@@ -934,7 +934,10 @@ const AgencyAccountingAgreement = forwardRef<
         await createContractData(contractSubmitData)
       }
 
-      message.success(`合同${mode === 'create' ? '创建' : '更新'}成功`)
+      // 成功消息由 useContract 统一处理，避免重复显示
+      if (mode === 'edit') {
+        message.success('合同更新成功')
+      }
     } catch (error) {
       console.error('提交合同失败:', error)
       message.error(`合同${mode === 'create' ? '创建' : '更新'}失败，请重试`)
