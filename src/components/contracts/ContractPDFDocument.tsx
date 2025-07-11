@@ -1097,8 +1097,20 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             </View>
             {/* 备注行 */}
             <View style={styles.otherBusiness}>
-              <Text style={[styles.otherBusinessLabel, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>备注：</Text>
-              <Text style={[styles.otherBusinessValue, { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' }]}>
+              <Text
+                style={[
+                  styles.otherBusinessLabel,
+                  { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' },
+                ]}
+              >
+                备注：
+              </Text>
+              <Text
+                style={[
+                  styles.otherBusinessValue,
+                  { fontWeight: 'bold', fontFamily: 'SourceHanSerifCN-Bold' },
+                ]}
+              >
                 {formatText(contractData.remarks)}
               </Text>
             </View>
@@ -1480,6 +1492,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <Text style={styles.partyCompanyName}>{formatText(contractData.partyACompany)}</Text>
           </View>
 
+          {/* 甲方统一社会信用代码 */}
+          <View style={[styles.detailRow, { marginLeft: 15 }]}>
+            <Text style={styles.detailLabel}>统一社会信用代码：</Text>
+            <Text style={styles.detailValue}>{formatText(contractData.partyACreditCode)}</Text>
+          </View>
+
           <View style={styles.partyDetails}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>通讯地址：</Text>
@@ -1499,6 +1517,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <View style={styles.partyHeader}>
             <Text style={styles.partyLabel}>【受托方】（乙方）：</Text>
             <Text style={styles.partyCompanyName}>{config.title}</Text>
+          </View>
+
+          {/* 乙方统一社会信用代码 */}
+          <View style={[styles.detailRow, { marginLeft: 15 }]}>
+            <Text style={styles.detailLabel}>统一社会信用代码：</Text>
+            <Text style={styles.detailValue}>{contractData.partyBCreditCode || config.creditCode}</Text>
           </View>
 
           <View style={styles.partyDetails}>
@@ -1868,6 +1892,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <Text style={styles.partyCompanyName}>{formatText(contractData.partyACompany)}</Text>
           </View>
 
+          {/* 甲方统一社会信用代码 */}
+          <View style={[styles.detailRow, { marginLeft: 15 }]}>
+            <Text style={styles.detailLabel}>统一社会信用代码：</Text>
+            <Text style={styles.detailValue}>{formatText(contractData.partyACreditCode)}</Text>
+          </View>
+
           <View style={styles.partyDetails}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>通讯地址：</Text>
@@ -1887,6 +1917,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <View style={styles.partyHeader}>
             <Text style={styles.partyLabel}>【受托方】（乙方）：</Text>
             <Text style={styles.partyCompanyName}>{config.title}</Text>
+          </View>
+
+          {/* 乙方统一社会信用代码 */}
+          <View style={[styles.detailRow, { marginLeft: 15 }]}>
+            <Text style={styles.detailLabel}>统一社会信用代码：</Text>
+            <Text style={styles.detailValue}>{contractData.partyBCreditCode || config.creditCode}</Text>
           </View>
 
           <View style={styles.partyDetails}>

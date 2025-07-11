@@ -99,6 +99,28 @@
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
+/* 统一社会信用代码字段 */
+.partyCreditCode {
+  display: flex;
+  margin-bottom: 12px;
+  gap: 10px;
+  margin-left: 20px;
+}
+
+.creditCodeLabel {
+  font-weight: normal;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.creditCodeValue {
+  font-size: 12px;
+  color: #000;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
 .partyDetails {
   margin-left: 20px;
 }

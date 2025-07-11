@@ -14,6 +14,7 @@ const SIGNATORY_CONFIG = {
     address: '河北省保定市定兴县繁兴街佶地国际D-1-120',
     phone: '15030201110',
     footer: '定兴县中岳会计服务有限公司Tel: 15030201110',
+    creditCode: '91130626MA07RHGE9T',
   },
   定兴县中岳会计服务有限公司河北雄安分公司: {
     title: '定兴县中岳会计服务有限公司河北雄安分公司',
@@ -21,6 +22,7 @@ const SIGNATORY_CONFIG = {
     address: '河北省雄安新区容城县容城镇容善路39号',
     phone: '15030201110',
     footer: '定兴县中岳会计服务有限公司河北雄安分公司Tel: 15030201110',
+    creditCode: '91130629MA0FKMFA1F',
   },
   定兴县中岳会计服务有限公司高碑店分公司: {
     title: '定兴县中岳会计服务有限公司高碑店分公司',
@@ -28,6 +30,7 @@ const SIGNATORY_CONFIG = {
     address: '高碑店市北城街道京广北大街188号A07',
     phone: '15030201110',
     footer: '定兴县中岳会计服务有限公司高碑店分公司Tel: 15030201110',
+    creditCode: '91130684MA0FQMPB6X',
   },
   保定脉信会计服务有限公司: {
     title: '保定脉信会计服务有限公司',
@@ -35,6 +38,7 @@ const SIGNATORY_CONFIG = {
     address: '河北省保定市容城县容城镇容美路',
     phone: '15030201110',
     footer: '保定脉信会计服务有限公司Tel: 15030201110',
+    creditCode: '91130600MA0EJPT1X6',
   },
 }
 
@@ -334,6 +338,12 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
             <span className="party-company-name">{formatText(contractData.partyACompany)}</span>
           </div>
 
+          {/* 甲方统一社会信用代码 */}
+          <div className="party-credit-code">
+            <span className="credit-code-label">统一社会信用代码：</span>
+            <span className="credit-code-value">{formatText(contractData.partyACreditCode)}</span>
+          </div>
+
           <div className="party-details">
             <div className="detail-row">
               <span className="detail-label">通讯地址：</span>
@@ -358,6 +368,12 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
           <div className="party-header">
             <span className="party-label">【受托方】（乙方）：</span>
             <span className="party-company-name">{config.title}</span>
+          </div>
+
+          {/* 乙方统一社会信用代码 */}
+          <div className="party-credit-code">
+            <span className="credit-code-label">统一社会信用代码：</span>
+            <span className="credit-code-value">{contractData.partyBCreditCode || config.creditCode}</span>
           </div>
 
           <div className="party-details">
