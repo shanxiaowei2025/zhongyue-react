@@ -919,6 +919,11 @@ const AgencyAccountingAgreement = forwardRef<
         contractType: '代理记账合同',
         signatory,
         remarks: formData.remarks,
+        // 确保乙方信息正确保存
+        partyBCompany: config?.title || '',
+        partyBAddress: formData.partyBAddress || config?.address || '',
+        partyBCreditCode: config?.creditCode || '',
+        partyBLegalPerson: formData.partyBLegalPerson || '刘菲',
       }
 
       if (mode === 'create' && onSubmit) {
