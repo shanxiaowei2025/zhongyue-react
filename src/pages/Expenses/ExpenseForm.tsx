@@ -1325,6 +1325,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                       required: true,
                       message: '请至少上传一个收据凭证',
                       validator: (_, value) => {
+                        // MultiFileUpload 组件返回的是对象格式 Record<string, ImageType>
+                        if (value && typeof value === 'object' && Object.keys(value).length > 0) {
+                          return Promise.resolve()
+                        }
+                        // 兼容数组格式（旧数据）
                         if (value && Array.isArray(value) && value.length > 0) {
                           return Promise.resolve()
                         }
