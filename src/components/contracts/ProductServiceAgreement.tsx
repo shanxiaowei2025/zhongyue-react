@@ -92,6 +92,7 @@ const ProductServiceAgreement = forwardRef<
     // 便捷的getter函数
     const checkedItems = formData.checkedItems || {}
     const itemAmounts = formData.itemAmounts || {}
+    const itemDates = formData.itemDates || {}
     const amountDisplayValues = formData.amountDisplayValues || {
       businessServiceFee: '',
       taxServiceFee: '',
@@ -125,6 +126,7 @@ const ProductServiceAgreement = forwardRef<
           // 处理服务项目数组数据，转换为勾选状态
           const newCheckedItems: Record<string, boolean> = {}
           const newItemAmounts: Record<string, string> = {}
+          const newItemDates: Record<string, { startDate?: string; endDate?: string }> = {}
 
           const serviceArrays = [
             contractData.businessEstablishment,
@@ -144,6 +146,13 @@ const ProductServiceAgreement = forwardRef<
                 if (item.itemKey) {
                   newCheckedItems[item.itemKey] = true
                   newItemAmounts[item.itemKey] = String(item.amount || '')
+                  // 处理日期数据
+                  if (item.startDate || item.endDate) {
+                    newItemDates[item.itemKey] = {
+                      startDate: item.startDate,
+                      endDate: item.endDate,
+                    }
+                  }
                 }
               })
             }
@@ -169,6 +178,7 @@ const ProductServiceAgreement = forwardRef<
           setEditModeFormData({
             checkedItems: newCheckedItems,
             itemAmounts: newItemAmounts,
+            itemDates: newItemDates,
             amountDisplayValues: newAmountDisplayValues,
             customerSearchValue: contractData.partyACompany || '',
           })
@@ -220,6 +230,7 @@ const ProductServiceAgreement = forwardRef<
           // 初始化勾选状态和项目金额
           const newCheckedItems: Record<string, boolean> = {}
           const newItemAmounts: Record<string, string> = {}
+          const newItemDates: Record<string, { startDate?: string; endDate?: string }> = {}
 
           // 处理各类服务项目数据
           const serviceArrays = [
@@ -240,6 +251,13 @@ const ProductServiceAgreement = forwardRef<
                 if (item.itemKey) {
                   newCheckedItems[item.itemKey] = true
                   newItemAmounts[item.itemKey] = String(item.amount || '')
+                  // 处理日期数据
+                  if (item.startDate || item.endDate) {
+                    newItemDates[item.itemKey] = {
+                      startDate: item.startDate,
+                      endDate: item.endDate,
+                    }
+                  }
                 }
               })
             }
@@ -250,6 +268,7 @@ const ProductServiceAgreement = forwardRef<
             ...initData,
             checkedItems: newCheckedItems,
             itemAmounts: newItemAmounts,
+            itemDates: newItemDates,
             amountDisplayValues: newAmountDisplayValues,
             customerSearchValue: initData.partyACompany || initData.customerSearchValue || '',
           })
@@ -571,10 +590,12 @@ const ProductServiceAgreement = forwardRef<
       (itemKey: string, checked: boolean) => {
         const newCheckedItems = { ...checkedItems, [itemKey]: checked }
         const newItemAmounts = { ...itemAmounts }
+        const newItemDates = { ...itemDates }
 
-        // 如果取消勾选，清空对应金额
+        // 如果取消勾选，清空对应金额和日期
         if (!checked) {
           newItemAmounts[itemKey] = ''
+          delete newItemDates[itemKey]
         }
 
         if (mode === 'edit') {
@@ -583,6 +604,7 @@ const ProductServiceAgreement = forwardRef<
             ...prev,
             checkedItems: newCheckedItems,
             itemAmounts: newItemAmounts,
+            itemDates: newItemDates,
           }))
           console.log(`💾 [编辑模式] 复选框变化: ${itemKey}=${checked}`)
         } else {
@@ -590,11 +612,12 @@ const ProductServiceAgreement = forwardRef<
           batchUpdateFormData({
             checkedItems: newCheckedItems,
             itemAmounts: newItemAmounts,
+            itemDates: newItemDates,
           })
           console.log(`💾 [创建模式] 复选框变化: ${itemKey}=${checked}`)
         }
       },
-      [checkedItems, itemAmounts, mode, batchUpdateFormData]
+      [checkedItems, itemAmounts, itemDates, mode, batchUpdateFormData]
     )
 
     // 处理金额输入变化
@@ -620,6 +643,43 @@ const ProductServiceAgreement = forwardRef<
         }
       },
       [itemAmounts, mode, batchUpdateFormData]
+    )
+
+    // 处理日期变化
+    const handleDateChange = useCallback(
+      (itemKey: string, dateType: 'startDate' | 'endDate', value: string) => {
+        const newItemDates = { ...itemDates }
+
+        if (!newItemDates[itemKey]) {
+          newItemDates[itemKey] = {}
+        }
+
+        if (value) {
+          newItemDates[itemKey][dateType] = value
+        } else {
+          delete newItemDates[itemKey][dateType]
+          // 如果两个日期都为空，删除整个条目
+          if (!newItemDates[itemKey].startDate && !newItemDates[itemKey].endDate) {
+            delete newItemDates[itemKey]
+          }
+        }
+
+        if (mode === 'edit') {
+          // 编辑模式：使用本地状态
+          setEditModeFormData(prev => ({
+            ...prev,
+            itemDates: newItemDates,
+          }))
+          console.log(`💾 [编辑模式] 日期变化: ${itemKey}.${dateType}=${value}`)
+        } else {
+          // 创建模式：使用store缓存
+          batchUpdateFormData({
+            itemDates: newItemDates,
+          })
+          console.log(`💾 [创建模式] 日期变化: ${itemKey}.${dateType}=${value}`)
+        }
+      },
+      [itemDates, mode, batchUpdateFormData]
     )
 
     // 处理表单金额字段变化
@@ -673,6 +733,8 @@ const ProductServiceAgreement = forwardRef<
           itemKey: key,
           itemName: getItemName(key),
           amount: parseAmount(itemAmounts[key] || '0'),
+          ...(itemDates[key]?.startDate && { startDate: itemDates[key].startDate }),
+          ...(itemDates[key]?.endDate && { endDate: itemDates[key].endDate }),
         }))
 
       if (businessItems.length > 0) {
@@ -698,6 +760,8 @@ const ProductServiceAgreement = forwardRef<
           itemKey: key,
           itemName: getItemName(key),
           amount: parseAmount(itemAmounts[key] || '0'),
+          ...(itemDates[key]?.startDate && { startDate: itemDates[key].startDate }),
+          ...(itemDates[key]?.endDate && { endDate: itemDates[key].endDate }),
         }))
 
       if (taxItems.length > 0) {
@@ -711,6 +775,8 @@ const ProductServiceAgreement = forwardRef<
           itemKey: key,
           itemName: getItemName(key),
           amount: parseAmount(itemAmounts[key] || '0'),
+          ...(itemDates[key]?.startDate && { startDate: itemDates[key].startDate }),
+          ...(itemDates[key]?.endDate && { endDate: itemDates[key].endDate }),
         }))
 
       if (bankItems.length > 0) {
@@ -727,6 +793,8 @@ const ProductServiceAgreement = forwardRef<
           itemKey: key,
           itemName: getItemName(key),
           amount: parseAmount(itemAmounts[key] || '0'),
+          ...(itemDates[key]?.startDate && { startDate: itemDates[key].startDate }),
+          ...(itemDates[key]?.endDate && { endDate: itemDates[key].endDate }),
         }))
 
       if (socialItems.length > 0) {
@@ -740,6 +808,8 @@ const ProductServiceAgreement = forwardRef<
           itemKey: key,
           itemName: getItemName(key),
           amount: parseAmount(itemAmounts[key] || '0'),
+          ...(itemDates[key]?.startDate && { startDate: itemDates[key].startDate }),
+          ...(itemDates[key]?.endDate && { endDate: itemDates[key].endDate }),
         }))
 
       if (licenseItems.length > 0) {
@@ -990,6 +1060,15 @@ const ProductServiceAgreement = forwardRef<
       }
     }
 
+    // 需要日期的服务项目
+    const serviceItemsWithDates = [
+      'tax_filing', // 报税
+      'tax_software', // 记账软件
+      'tax_invoice_software', // 开票软件
+      'social_security_hosting', // 社保托管
+      'fund_hosting', // 公积金托管
+    ]
+
     // 渲染带金额输入框的复选框
     const renderCheckboxWithAmount = (itemKey: string, label: string) => {
       const isChecked = checkedItems[itemKey] || false
@@ -1017,6 +1096,73 @@ const ProductServiceAgreement = forwardRef<
           )}
         </div>
       )
+    }
+
+    // 渲染带金额和日期输入框的复选框
+    const renderCheckboxWithAmountAndDates = (itemKey: string, label: string) => {
+      const isChecked = checkedItems[itemKey] || false
+      const amount = itemAmounts[itemKey] || ''
+      const dates = itemDates[itemKey] || {}
+
+      return (
+        <div className={`checkbox-with-amount-and-dates ${isChecked ? 'checked' : 'unchecked'}`}>
+          <Checkbox
+            checked={isChecked}
+            onChange={e => handleCheckboxChange(itemKey, e.target.checked)}
+          >
+            {label}
+          </Checkbox>
+          {isChecked && (
+            <>
+              <div className="amount-input-group">
+                <Input
+                  className="amount-inline-input"
+                  value={amount}
+                  onChange={e => handleAmountChange(itemKey, e.target.value)}
+                  placeholder="金额"
+                  size="small"
+                />
+                <span className="amount-unit">元</span>
+              </div>
+              <div className="date-input-group">
+                <DatePicker
+                  className="date-inline-input"
+                  picker="month"
+                  format="YYYY年MM月"
+                  placeholder="开始时间"
+                  size="small"
+                  value={dates.startDate ? dayjs(dates.startDate, 'YYYY-MM') : undefined}
+                  onChange={date => {
+                    const formatted = date?.format('YYYY-MM') || ''
+                    handleDateChange(itemKey, 'startDate', formatted)
+                  }}
+                />
+                <span className="date-separator">至</span>
+                <DatePicker
+                  className="date-inline-input"
+                  picker="month"
+                  format="YYYY年MM月"
+                  placeholder="结束时间"
+                  size="small"
+                  value={dates.endDate ? dayjs(dates.endDate, 'YYYY-MM') : undefined}
+                  onChange={date => {
+                    const formatted = date?.format('YYYY-MM') || ''
+                    handleDateChange(itemKey, 'endDate', formatted)
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )
+    }
+
+    // 智能渲染复选框（根据是否需要日期选择合适的渲染函数）
+    const renderServiceCheckbox = (itemKey: string, label: string) => {
+      if (serviceItemsWithDates.includes(itemKey)) {
+        return renderCheckboxWithAmountAndDates(itemKey, label)
+      }
+      return renderCheckboxWithAmount(itemKey, label)
     }
 
     // 检查某个类别是否有勾选项
@@ -1575,17 +1721,17 @@ const ProductServiceAgreement = forwardRef<
           <div className="service-category">
             <h4>2、税务：</h4>
             <div className="checkbox-group">
-              {renderCheckboxWithAmount('tax_assessment', '核定税种')}
-              {renderCheckboxWithAmount('tax_filing', '报税')}
-              {renderCheckboxWithAmount('tax_cancellation', '注销')}
-              {renderCheckboxWithAmount('tax_invoice_apply', '申请发票')}
-              {renderCheckboxWithAmount('tax_invoice_issue', '代开发票')}
-              {renderCheckboxWithAmount('tax_change', '税务变更')}
+              {renderServiceCheckbox('tax_assessment', '核定税种')}
+              {renderServiceCheckbox('tax_filing', '报税')}
+              {renderServiceCheckbox('tax_cancellation', '注销')}
+              {renderServiceCheckbox('tax_invoice_apply', '申请发票')}
+              {renderServiceCheckbox('tax_invoice_issue', '代开发票')}
+              {renderServiceCheckbox('tax_change', '税务变更')}
               <br />
-              {renderCheckboxWithAmount('tax_remove_exception', '解除异常')}
-              {renderCheckboxWithAmount('tax_supplement', '补充申报')}
-              {renderCheckboxWithAmount('tax_software', '记账软件')}
-              {renderCheckboxWithAmount('tax_invoice_software', '开票软件')}
+              {renderServiceCheckbox('tax_remove_exception', '解除异常')}
+              {renderServiceCheckbox('tax_supplement', '补充申报')}
+              {renderServiceCheckbox('tax_software', '记账软件')}
+              {renderServiceCheckbox('tax_invoice_software', '开票软件')}
             </div>
             <div className="service-remark">
               <span>备注：</span>
@@ -1696,12 +1842,12 @@ const ProductServiceAgreement = forwardRef<
           <div className="service-category">
             <h4>4、社保：</h4>
             <div className="checkbox-group">
-              {renderCheckboxWithAmount('social_security_open', '社保开户')}
-              {renderCheckboxWithAmount('social_security_hosting', '社保托管')}
-              {renderCheckboxWithAmount('social_security_cancel', '社保账户注销')}
-              {renderCheckboxWithAmount('fund_open', '公积金开户')}
-              {renderCheckboxWithAmount('fund_hosting', '公积金托管')}
-              {renderCheckboxWithAmount('fund_change', '公积金变更')}
+              {renderServiceCheckbox('social_security_open', '社保开户')}
+              {renderServiceCheckbox('social_security_hosting', '社保托管')}
+              {renderServiceCheckbox('social_security_cancel', '社保账户注销')}
+              {renderServiceCheckbox('fund_open', '公积金开户')}
+              {renderServiceCheckbox('fund_hosting', '公积金托管')}
+              {renderServiceCheckbox('fund_change', '公积金变更')}
             </div>
             <div className="service-remark">
               <span>备注：</span>

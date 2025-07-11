@@ -940,6 +940,59 @@
   margin-bottom: 8px;
 }
 
+/* 带金额和日期输入框的复选框容器 */
+.checkbox-with-amount-and-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 15px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+/* 勾选状态时的样式 */
+.checkbox-with-amount-and-dates.checked {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  white-space: normal;
+}
+
+/* 未勾选状态时的样式 */
+.checkbox-with-amount-and-dates.unchecked {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 15px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.date-inline-input {
+  width: 120px !important;
+  height: 24px !important;
+}
+
+.date-inline-input .ant-picker-input input {
+  padding: 0 6px !important;
+  font-size: 11px !important;
+}
+
+.date-separator {
+  font-size: 11px;
+  color: #666;
+  margin: 0 4px;
+}
+
 /* 金额输入框组 */
 .amount-input-group {
   display: inline-flex;
@@ -1329,4 +1382,11 @@
   margin-left: 4px;
   font-weight: normal;
   color: #000;
+}
+
+.service-item-dates {
+  margin-left: 4px;
+  font-weight: normal;
+  color: #666;
+  font-size: 11px;
 }

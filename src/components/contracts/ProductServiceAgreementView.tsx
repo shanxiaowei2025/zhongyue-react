@@ -214,6 +214,43 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
     return item && item.amount ? `${item.amount}` : null
   }
 
+  // 获取项目的日期信息
+  const getItemDates = (
+    items: Array<Record<string, any>> = [],
+    itemKey: string
+  ): { startDate?: string; endDate?: string } | null => {
+    const item = items.find(item => item.itemKey === itemKey)
+    if (item && (item.startDate || item.endDate)) {
+      return {
+        startDate: item.startDate,
+        endDate: item.endDate,
+      }
+    }
+    return null
+  }
+
+  // 需要显示日期的服务项目
+  const serviceItemsWithDates = [
+    'tax_filing', // 报税
+    'tax_software', // 记账软件
+    'tax_invoice_software', // 开票软件
+    'social_security_hosting', // 社保托管
+    'fund_hosting', // 公积金托管
+  ]
+
+  // 格式化日期范围显示
+  const formatDateRange = (dates: { startDate?: string; endDate?: string }): string => {
+    const { startDate, endDate } = dates
+    if (startDate && endDate) {
+      return `（${startDate}至${endDate}）`
+    } else if (startDate) {
+      return `（${startDate}起）`
+    } else if (endDate) {
+      return `（至${endDate}）`
+    }
+    return ''
+  }
+
   // 渲染服务项目标签
   const renderServiceItems = (items: Array<Record<string, any>> = [], category: string) => {
     // 获取所有可能的选项
@@ -228,6 +265,8 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
         {allPossibleItems.map((possibleItem, index) => {
           const isSelected = isItemSelected(items, possibleItem.itemKey)
           const amount = getItemAmount(items, possibleItem.itemKey)
+          const dates = getItemDates(items, possibleItem.itemKey)
+          const showDates = serviceItemsWithDates.includes(possibleItem.itemKey)
 
           return (
             <span
@@ -241,6 +280,9 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
               </span>
               {possibleItem.itemName}
               {amount && <span className="service-item-amount">（{amount}元）</span>}
+              {isSelected && showDates && dates && (
+                <span className="service-item-dates">{formatDateRange(dates)}</span>
+              )}
             </span>
           )
         })}

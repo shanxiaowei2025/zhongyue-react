@@ -614,6 +614,28 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     contractData.signatory === '保定脉信会计服务有限公司' &&
     contractData.contractType === '产品服务协议'
 
+  // 需要显示日期的服务项目
+  const serviceItemsWithDates = [
+    'tax_filing', // 报税
+    'tax_software', // 记账软件
+    'tax_invoice_software', // 开票软件
+    'social_security_hosting', // 社保托管
+    'fund_hosting', // 公积金托管
+  ]
+
+  // 格式化日期范围显示
+  const formatDateRange = (dates: { startDate?: string; endDate?: string }): string => {
+    const { startDate, endDate } = dates
+    if (startDate && endDate) {
+      return `（${startDate}至${endDate}）`
+    } else if (startDate) {
+      return `（${startDate}起）`
+    } else if (endDate) {
+      return `（至${endDate}）`
+    }
+    return ''
+  }
+
   // 渲染PDF服务项目（用于产品服务协议和单项服务合同）
   const renderPDFServiceItems = (items: Array<Record<string, any>> = [], category: string) => {
     // 根据合同类型定义不同的选项映射
@@ -806,6 +828,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
                   >
                     {option.label}
                     {isSelected && item && item.amount ? `（${item.amount}元）` : ''}
+                    {isSelected &&
+                    serviceItemsWithDates.includes(option.key) &&
+                    item &&
+                    (item.startDate || item.endDate)
+                      ? formatDateRange({ startDate: item.startDate, endDate: item.endDate })
+                      : ''}
                   </Text>
                 </View>
               )
@@ -830,8 +858,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
               // 处理不同的数据结构
               if (typeof service === 'string') {
                 acc[service] = true
-              } else if (service && typeof service === 'object' && service.value) {
-                acc[service.value] = true
+              } else if (service && typeof service === 'object' && service.itemKey) {
+                acc[service.itemKey] = true
               }
               return acc
             },

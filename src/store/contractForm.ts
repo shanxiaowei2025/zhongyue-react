@@ -40,6 +40,7 @@ interface ContractFormData {
   // 服务项目勾选状态
   checkedItems?: Record<string, boolean>
   itemAmounts?: Record<string, string>
+  itemDates?: Record<string, { startDate?: string; endDate?: string }>
 
   // 金额显示值（用于输入框显示）
   amountDisplayValues?: Record<string, string>

@@ -5,6 +5,15 @@ export enum ContractStatus {
   Terminated = '2', // 已终止
 }
 
+// 服务项目接口
+export interface ServiceItem {
+  itemKey: string
+  itemName: string
+  amount: number
+  startDate?: string // 开始日期 (YYYY-MM格式)
+  endDate?: string // 结束日期 (YYYY-MM格式)
+}
+
 // 合同接口
 export interface Contract {
   id: number
@@ -26,24 +35,24 @@ export interface Contract {
   partyBContact?: string
   partyBPhone?: string
   consultPhone?: string
-  businessEstablishment?: Array<Record<string, any>>
+  businessEstablishment?: ServiceItem[]
   businessEstablishmentAddress?: string
-  businessChange?: Array<Record<string, any>>
-  businessCancellation?: Array<Record<string, any>>
-  businessOther?: Array<Record<string, any>>
-  businessMaterials?: Array<Record<string, any>>
+  businessChange?: ServiceItem[]
+  businessCancellation?: ServiceItem[]
+  businessOther?: ServiceItem[]
+  businessMaterials?: ServiceItem[]
   businessRemark?: string
   businessServiceFee?: number
-  taxMatters?: Array<Record<string, any>>
+  taxMatters?: ServiceItem[]
   taxRemark?: string
   taxServiceFee?: number
-  bankMatters?: Array<Record<string, any>>
+  bankMatters?: ServiceItem[]
   bankRemark?: string
   bankServiceFee?: number
-  socialSecurity?: Array<Record<string, any>>
+  socialSecurity?: ServiceItem[]
   socialSecurityRemark?: string
   socialSecurityServiceFee?: number
-  licenseBusiness?: Array<Record<string, any>>
+  licenseBusiness?: ServiceItem[]
   licenseRemark?: string
   licenseServiceFee?: number
   otherRemark?: string
@@ -54,7 +63,7 @@ export interface Contract {
   partyBSignDate?: string
   entrustmentStartDate?: string
   entrustmentEndDate?: string
-  declarationService?: Array<Record<string, any>>
+  declarationService?: ServiceItem[]
   otherBusiness?: string
   totalAgencyAccountingFee?: number
   agencyAccountingFee?: number
@@ -108,24 +117,24 @@ export interface CreateContractDto {
   partyBContact?: string
   partyBPhone?: string
   consultPhone?: string
-  businessEstablishment?: Array<Record<string, any>>
+  businessEstablishment?: ServiceItem[]
   businessEstablishmentAddress?: string
-  businessChange?: Array<Record<string, any>>
-  businessCancellation?: Array<Record<string, any>>
-  businessOther?: Array<Record<string, any>>
-  businessMaterials?: Array<Record<string, any>>
+  businessChange?: ServiceItem[]
+  businessCancellation?: ServiceItem[]
+  businessOther?: ServiceItem[]
+  businessMaterials?: ServiceItem[]
   businessRemark?: string
   businessServiceFee?: number
-  taxMatters?: Array<Record<string, any>>
+  taxMatters?: ServiceItem[]
   taxRemark?: string
   taxServiceFee?: number
-  bankMatters?: Array<Record<string, any>>
+  bankMatters?: ServiceItem[]
   bankRemark?: string
   bankServiceFee?: number
-  socialSecurity?: Array<Record<string, any>>
+  socialSecurity?: ServiceItem[]
   socialSecurityRemark?: string
   socialSecurityServiceFee?: number
-  licenseBusiness?: Array<Record<string, any>>
+  licenseBusiness?: ServiceItem[]
   licenseRemark?: string
   licenseServiceFee?: number
   otherRemark?: string
@@ -136,7 +145,7 @@ export interface CreateContractDto {
   partyBSignDate?: string
   entrustmentStartDate?: string
   entrustmentEndDate?: string
-  declarationService?: Array<Record<string, any>>
+  declarationService?: ServiceItem[]
   otherBusiness?: string
   totalAgencyAccountingFee?: number
   agencyAccountingFee?: number

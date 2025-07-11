@@ -100,15 +100,16 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
   // 获取申报服务选项
   const getSelectedServices = () => {
     // 创建一个映射，用于快速查找选中的服务
-    const selectedServiceMap = declarationService && Array.isArray(declarationService) 
-      ? declarationService.reduce(
-          (acc, service) => {
-            acc[service.value] = true
-            return acc
-          },
-          {} as Record<string, boolean>
-        )
-      : {}
+    const selectedServiceMap =
+      declarationService && Array.isArray(declarationService)
+        ? declarationService.reduce(
+            (acc, service) => {
+              acc[service.itemKey] = true
+              return acc
+            },
+            {} as Record<string, boolean>
+          )
+        : {}
 
     return (
       <div className={`${styles.serviceCheckboxes} ${styles.viewMode}`}>
