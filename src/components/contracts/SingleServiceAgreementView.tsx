@@ -4,18 +4,12 @@ import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
 import { formatText, formatCurrency, formatAnyDate, formatFeeAmount } from '../../utils/formatUtils'
+import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import styles from './SingleServiceAgreementView.module.css'
-import { SIGNATORY_CONFIG } from './SingleServiceAgreement'
-
-// 章图片映射配置
-const STAMP_IMAGE_MAP = {
-  保定如你心意企业管理咨询有限公司: '/images/contract-seals/runixinyi-seal.jpg',
-  定兴县金盾企业管理咨询有限公司: '/images/contract-seals/jindun-seal.jpg',
-}
 
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
-  return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
+  return getSignatoryStampImage(signatory)
 }
 
 interface SingleServiceAgreementViewProps {
@@ -25,7 +19,7 @@ interface SingleServiceAgreementViewProps {
 const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
   contractData,
 }) => {
-  const config = SIGNATORY_CONFIG[contractData.signatory as keyof typeof SIGNATORY_CONFIG]
+  const config = contractData.signatory ? getProductSignatoryConfig(contractData.signatory) : null
 
   if (!config) {
     return <div className={styles.errorMessage}>不支持的签署方: {contractData.signatory}</div>
@@ -261,6 +255,10 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
           </div>
 
           <div className={styles.partyDetails}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>统一社会信用代码：</span>
+              <span className={styles.detailValue}>{config?.creditCode || ''}</span>
+            </div>
             <div className={styles.detailRow}>
               <span className={styles.detailLabel}>通讯地址：</span>
               <span className={styles.detailValue}>{config.address}</span>

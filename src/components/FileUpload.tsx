@@ -117,12 +117,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   const beforeUpload = (file: File) => {
     console.log('beforeUpload called:', file.name)
-    
+
     // 检查文件类型
     if (accept && accept !== '*') {
       const acceptTypes = accept.split(',').map(type => type.trim())
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
-      
+
       const isAccepted = acceptTypes.some(type => {
         if (type.startsWith('.')) {
           return file.name.toLowerCase().endsWith(type.toLowerCase())
@@ -151,7 +151,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const handleCustomUpload = async (options: any) => {
     const { file, onSuccess: onUploadSuccess, onError } = options
     console.log('handleCustomUpload called:', file.name)
-    
+
     setLoading(true)
 
     try {
@@ -301,9 +301,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
               <InboxOutlined />
             </p>
             <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
-            <p className="ant-upload-hint">
-              支持图片、PDF、Word、Excel、CSV等格式
-            </p>
+            <p className="ant-upload-hint">支持图片、PDF、Word、Excel、CSV等格式</p>
           </Dragger>
         ) : (
           // 标准上传组件

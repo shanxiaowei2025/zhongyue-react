@@ -3,9 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
 import { formatFeeAmount as formatFeeAmountUtil } from '../../utils/formatUtils'
-import { SIGNATORY_CONFIG as AGENCY_SIGNATORY_CONFIG } from './AgencyAccountingAgreement'
-import { SIGNATORY_CONFIG as PRODUCT_SIGNATORY_CONFIG } from './ProductServiceAgreement'
-import { SIGNATORY_CONFIG as SINGLE_SIGNATORY_CONFIG } from './SingleServiceAgreement'
+import { getAgencySignatoryConfig, getProductSignatoryConfig } from '../../config/signatoryConfig'
 
 // 注册中文字体
 Font.register({
@@ -53,13 +51,11 @@ Font.registerHyphenationCallback((word: string) => {
 })
 
 // 根据合同类型获取对应的签署方配置
-const getSignatoryConfig = (contractType: string, signatory: string) => {
+const getContractSignatoryConfig = (contractType: string, signatory: string) => {
   if (contractType === '代理记账合同') {
-    return AGENCY_SIGNATORY_CONFIG[signatory as keyof typeof AGENCY_SIGNATORY_CONFIG]
-  } else if (contractType === '产品服务协议') {
-    return PRODUCT_SIGNATORY_CONFIG[signatory as keyof typeof PRODUCT_SIGNATORY_CONFIG]
-  } else if (contractType === '单项服务合同') {
-    return SINGLE_SIGNATORY_CONFIG[signatory as keyof typeof SINGLE_SIGNATORY_CONFIG]
+    return getAgencySignatoryConfig(signatory)
+  } else if (contractType === '产品服务协议' || contractType === '单项服务合同') {
+    return getProductSignatoryConfig(signatory)
   }
   return null
 }
@@ -559,7 +555,10 @@ interface ContractPDFDocumentProps {
 }
 
 const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData }) => {
-  const config = getSignatoryConfig(contractData.contractType || '', contractData.signatory || '')
+  const config = getContractSignatoryConfig(
+    contractData.contractType || '',
+    contractData.signatory || ''
+  )
 
   if (!config) {
     return (
@@ -1521,6 +1520,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
 
           <View style={styles.partyDetails}>
             <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>统一社会信用代码：</Text>
+              <Text style={styles.detailValue}>
+                {'creditCode' in config ? config.creditCode : ''}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>通讯地址：</Text>
               <Text style={styles.detailValue}>{config.address}</Text>
             </View>
@@ -1914,6 +1919,12 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           </View>
 
           <View style={styles.partyDetails}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>统一社会信用代码：</Text>
+              <Text style={styles.detailValue}>
+                {'creditCode' in config ? config.creditCode : ''}
+              </Text>
+            </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>通讯地址：</Text>
               <Text style={styles.detailValue}>{config.address}</Text>

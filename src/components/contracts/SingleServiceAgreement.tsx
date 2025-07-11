@@ -8,37 +8,12 @@ import { searchCustomers } from '../../api/enterpriseService'
 import type { CreateContractDto } from '../../types/contract'
 import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
 import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
+import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import styles from './SingleServiceAgreement.module.css'
-
-// 签署方配置
-export const SIGNATORY_CONFIG = {
-  保定如你心意企业管理咨询有限公司: {
-    title: '保定如你心意企业管理咨询有限公司',
-    englishTitle: 'Baoding Ru Ni Xin Yi Enterprise Management Consulting Co., Ltd.',
-    address: '河北省保定市定兴县东落堡镇东落堡村264号',
-    phone: '13831247565',
-    footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
-    creditCode: '',
-  },
-  定兴县金盾企业管理咨询有限公司: {
-    title: '定兴县金盾企业管理咨询有限公司',
-    englishTitle: 'Dingxing County Golden Shield Enterprise Management Consulting Co., Ltd.',
-    address: '河北省保定市定兴县定兴镇北肖庄村',
-    phone: '13582229111',
-    footer: '定兴县金盾企业管理咨询有限公司Tel: 13582229111',
-    creditCode: '',
-  },
-}
-
-// 章图片映射配置
-const STAMP_IMAGE_MAP = {
-  保定如你心意企业管理咨询有限公司: '/images/contract-seals/runixinyi-seal.jpg',
-  定兴县金盾企业管理咨询有限公司: '/images/contract-seals/jindun-seal.jpg',
-}
 
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
-  return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
+  return getSignatoryStampImage(signatory)
 }
 
 // 组件属性类型
@@ -491,7 +466,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       setHasMoreCodes(false)
     }
 
-    const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
+    const config = getProductSignatoryConfig(signatory)
 
     if (!config) {
       return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
@@ -788,6 +763,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           partyAPhone: formData.partyAPhone,
           partyBContact: formData.partyBContact,
           partyBPhone: formData.partyBPhone,
+          partyBCreditCode: config?.creditCode || '',
           businessEstablishmentAddress: formData.businessEstablishmentAddress,
           businessRemark: formData.businessRemark,
           businessServiceFee: formData.businessServiceFee,
@@ -1216,6 +1192,10 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
             </div>
 
             <div className={styles.partyDetails}>
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>统一社会信用代码：</span>
+                <span className={styles.detailValue}>{config?.creditCode || ''}</span>
+              </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>通讯地址：</span>
                 <span className={styles.detailValue}>{config.address}</span>

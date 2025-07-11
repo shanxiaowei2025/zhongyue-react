@@ -9,51 +9,8 @@ import { searchCustomers } from '../../api/enterpriseService'
 import type { CreateContractDto } from '../../types/contract'
 import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
 import { formatAmount, parseAmount } from '../../utils/numberToChinese'
+import { getAgencySignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import styles from './AgencyAccountingAgreement.module.css'
-
-// 签署方配置
-export const SIGNATORY_CONFIG = {
-  定兴县中岳会计服务有限公司: {
-    title: '定兴县中岳会计服务有限公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '定兴县佶地国际D区120号',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司Tel: 15030201110',
-    creditCode: '91130626598283956U',
-  },
-  定兴县中岳会计服务有限公司河北雄安分公司: {
-    title: '定兴县中岳会计服务有限公司河北雄安分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省雄安新区容城县容城镇容善路39号（自主申报）',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司河北雄安分公司Tel: 15030201110',
-    creditCode: '91130629MACECTTD7P',
-  },
-  定兴县中岳会计服务有限公司高碑店分公司: {
-    title: '定兴县中岳会计服务有限公司高碑店分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省保定市高碑店市北城街道京广北大街188号A07',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司高碑店分公司Tel: 15030201110',
-    creditCode: '91130684MA7AE69768',
-  },
-  保定脉信会计服务有限公司: {
-    title: '保定脉信会计服务有限公司',
-    englishTitle: '',
-    address: '河北省保定市容城县容城镇容美路',
-    phone: '15030201110',
-    footer: '保定脉信会计服务有限公司Tel: 15030201110',
-    creditCode: '91130629MA07XG2A1Q',
-  },
-}
-
-// 章图片映射配置
-const STAMP_IMAGE_MAP = {
-  定兴县中岳会计服务有限公司: '/images/contract-seals/dingxing-seal.jpg',
-  定兴县中岳会计服务有限公司河北雄安分公司: '/images/contract-seals/xiongan-seal.jpg',
-  定兴县中岳会计服务有限公司高碑店分公司: '/images/contract-seals/gaobeidian-seal.jpg',
-  保定脉信会计服务有限公司: '/images/contract-seals/maixin-seal.jpg',
-}
 
 // 邮政编码映射配置
 const POSTAL_CODE_MAP: Record<string, string> = {
@@ -65,7 +22,7 @@ const POSTAL_CODE_MAP: Record<string, string> = {
 
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
-  return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
+  return getSignatoryStampImage(signatory)
 }
 
 // 根据地址识别邮政编码
@@ -115,7 +72,7 @@ const AgencyAccountingAgreement = forwardRef<
   AgencyAccountingAgreementProps
 >(({ signatory, contractData = {}, onSubmit, onUpdate, mode = 'create' }, ref) => {
   // 获取当前签约方配置
-  const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
+  const config = getAgencySignatoryConfig(signatory)
 
   // 调试信息：检查配置获取是否正确
   useEffect(() => {
@@ -124,7 +81,6 @@ const AgencyAccountingAgreement = forwardRef<
       configExists: !!config,
       configAddress: config?.address,
       configTitle: config?.title,
-      allConfigKeys: Object.keys(SIGNATORY_CONFIG),
     })
   }, [signatory, config])
 

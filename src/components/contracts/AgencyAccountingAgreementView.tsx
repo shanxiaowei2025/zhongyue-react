@@ -3,21 +3,13 @@ import { Tag, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { numberToChinese } from '../../utils/numberToChinese'
 import { formatText, formatAgencyFee, formatDate } from '../../utils/formatUtils'
+import { getAgencySignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import type { Contract, ContractStatus } from '../../types/contract'
 import styles from './AgencyAccountingAgreementView.module.css'
-import { SIGNATORY_CONFIG } from './AgencyAccountingAgreement'
-
-// 章图片映射配置
-const STAMP_IMAGE_MAP = {
-  定兴县中岳会计服务有限公司: '/images/contract-seals/dingxing-seal.jpg',
-  定兴县中岳会计服务有限公司河北雄安分公司: '/images/contract-seals/xiongan-seal.jpg',
-  定兴县中岳会计服务有限公司高碑店分公司: '/images/contract-seals/gaobeidian-seal.jpg',
-  保定脉信会计服务有限公司: '/images/contract-seals/maixin-seal.jpg',
-}
 
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
-  return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
+  return getSignatoryStampImage(signatory)
 }
 
 // 申报服务项目
@@ -99,7 +91,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
   }, [totalAgencyAccountingFee])
 
   // 获取签署方配置
-  const config = signatory ? SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG] : null
+  const config = signatory ? getAgencySignatoryConfig(signatory) : null
 
   if (!config) {
     return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
@@ -107,18 +99,16 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
 
   // 获取申报服务选项
   const getSelectedServices = () => {
-    if (!declarationService || !Array.isArray(declarationService)) {
-      return <div className={styles.serviceItemEmpty}>未选择</div>
-    }
-
     // 创建一个映射，用于快速查找选中的服务
-    const selectedServiceMap = declarationService.reduce(
-      (acc, service) => {
-        acc[service.value] = true
-        return acc
-      },
-      {} as Record<string, boolean>
-    )
+    const selectedServiceMap = declarationService && Array.isArray(declarationService) 
+      ? declarationService.reduce(
+          (acc, service) => {
+            acc[service.value] = true
+            return acc
+          },
+          {} as Record<string, boolean>
+        )
+      : {}
 
     return (
       <div className={`${styles.serviceCheckboxes} ${styles.viewMode}`}>

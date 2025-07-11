@@ -1,11 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { Upload, Button, message, Modal, Avatar, Spin } from 'antd'
-import {
-  UploadOutlined,
-  UserOutlined,
-  LoadingOutlined,
-  InboxOutlined,
-} from '@ant-design/icons'
+import { UploadOutlined, UserOutlined, LoadingOutlined, InboxOutlined } from '@ant-design/icons'
 import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
 
 const { Dragger } = Upload
@@ -54,26 +49,26 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   // 在canvas上绘制图片和裁剪框
   const drawImageAndCrop = useCallback((cropper: CropperState) => {
     const { image, canvas, ctx, cropX, cropY, cropSize, scale } = cropper
-    
+
     // 清空画布
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    
+
     // 绘制缩放后的图片
     const scaledWidth = image.width * scale
     const scaledHeight = image.height * scale
     const offsetX = (canvas.width - scaledWidth) / 2
     const offsetY = (canvas.height - scaledHeight) / 2
-    
+
     ctx.drawImage(image, offsetX, offsetY, scaledWidth, scaledHeight)
-    
+
     // 绘制遮罩层
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     // 清除裁剪区域的遮罩
     ctx.globalCompositeOperation = 'destination-out'
     ctx.fillRect(cropX, cropY, cropSize, cropSize)
-    
+
     // 重新绘制裁剪区域的图片
     ctx.globalCompositeOperation = 'source-over'
     ctx.save()
@@ -82,7 +77,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     ctx.clip()
     ctx.drawImage(image, offsetX, offsetY, scaledWidth, scaledHeight)
     ctx.restore()
-    
+
     // 绘制裁剪框边框
     ctx.strokeStyle = '#1890ff'
     ctx.lineWidth = 2
@@ -90,78 +85,81 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   }, [])
 
   // 初始化裁剪器
-  const initializeCropper = useCallback((file: File) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+  const initializeCropper = useCallback(
+    (file: File) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
 
-    const image = new Image()
-    image.onload = () => {
-      // 设置canvas大小
-      canvas.width = 400
-      canvas.height = 400
+      const image = new Image()
+      image.onload = () => {
+        // 设置canvas大小
+        canvas.width = 400
+        canvas.height = 400
 
-      // 计算初始缩放比例，使图片适应canvas
-      const scaleX = canvas.width / image.width
-      const scaleY = canvas.height / image.height
-      const scale = Math.min(scaleX, scaleY, 1) // 不放大，只缩小
+        // 计算初始缩放比例，使图片适应canvas
+        const scaleX = canvas.width / image.width
+        const scaleY = canvas.height / image.height
+        const scale = Math.min(scaleX, scaleY, 1) // 不放大，只缩小
 
-      // 计算裁剪框大小和位置
-      const cropSize = Math.min(canvas.width, canvas.height) * 0.6
-      const cropX = (canvas.width - cropSize) / 2
-      const cropY = (canvas.height - cropSize) / 2
+        // 计算裁剪框大小和位置
+        const cropSize = Math.min(canvas.width, canvas.height) * 0.6
+        const cropX = (canvas.width - cropSize) / 2
+        const cropY = (canvas.height - cropSize) / 2
 
-      const cropper: CropperState = {
-        image,
-        canvas,
-        ctx,
-        isDragging: false,
-        startX: 0,
-        startY: 0,
-        cropX,
-        cropY,
-        cropSize,
-        scale,
+        const cropper: CropperState = {
+          image,
+          canvas,
+          ctx,
+          isDragging: false,
+          startX: 0,
+          startY: 0,
+          cropX,
+          cropY,
+          cropSize,
+          scale,
+        }
+
+        cropperRef.current = cropper
+        drawImageAndCrop(cropper)
       }
 
-      cropperRef.current = cropper
-      drawImageAndCrop(cropper)
-    }
+      // 创建图片URL
+      const imageUrl = URL.createObjectURL(file)
+      image.src = imageUrl
 
-    // 创建图片URL
-    const imageUrl = URL.createObjectURL(file)
-    image.src = imageUrl
+      // 清理URL对象
+      image.onload = () => {
+        URL.revokeObjectURL(imageUrl)
+        const scaleX = canvas.width / image.width
+        const scaleY = canvas.height / image.height
+        const scale = Math.min(scaleX, scaleY, 1)
 
-    // 清理URL对象
-    image.onload = () => {
-      URL.revokeObjectURL(imageUrl)
-      const scaleX = canvas.width / image.width
-      const scaleY = canvas.height / image.height
-      const scale = Math.min(scaleX, scaleY, 1)
+        const cropSize = Math.min(canvas.width, canvas.height) * 0.6
+        const cropX = (canvas.width - cropSize) / 2
+        const cropY = (canvas.height - cropSize) / 2
 
-      const cropSize = Math.min(canvas.width, canvas.height) * 0.6
-      const cropX = (canvas.width - cropSize) / 2
-      const cropY = (canvas.height - cropSize) / 2
+        const cropper: CropperState = {
+          image,
+          canvas,
+          ctx,
+          isDragging: false,
+          startX: 0,
+          startY: 0,
+          cropX,
+          cropY,
+          cropSize,
+          scale,
+        }
 
-      const cropper: CropperState = {
-        image,
-        canvas,
-        ctx,
-        isDragging: false,
-        startX: 0,
-        startY: 0,
-        cropX,
-        cropY,
-        cropSize,
-        scale,
+        cropperRef.current = cropper
+        drawImageAndCrop(cropper)
       }
-
-      cropperRef.current = cropper
-      drawImageAndCrop(cropper)
-    }
-  }, [drawImageAndCrop])
+    },
+    [drawImageAndCrop]
+  )
 
   // 处理鼠标事件
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -216,7 +214,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
   // 裁剪图片
   const cropImage = (): Promise<Blob | null> => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const cropper = cropperRef.current
       if (!cropper) {
         resolve(null)
@@ -262,9 +260,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       )
 
       // 转换为Blob
-      outputCanvas.toBlob((blob) => {
-        resolve(blob)
-      }, 'image/jpeg', 0.9)
+      outputCanvas.toBlob(
+        blob => {
+          resolve(blob)
+        },
+        'image/jpeg',
+        0.9
+      )
     })
   }
 
@@ -358,7 +360,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           {/* 头像显示 */}
           <Avatar
             size={size}
-            src={value?.url ? (value.fileName ? buildImageUrl(value.fileName) : value.url) : undefined}
+            src={
+              value?.url ? (value.fileName ? buildImageUrl(value.fileName) : value.url) : undefined
+            }
             icon={!value?.url ? <UserOutlined /> : undefined}
             className="border-2 border-gray-200"
           />
@@ -379,9 +383,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
                     <InboxOutlined />
                   </p>
                   <p className="ant-upload-text">点击或拖拽图片到此区域</p>
-                  <p className="ant-upload-hint">
-                    支持JPG、PNG、GIF等图片格式
-                  </p>
+                  <p className="ant-upload-hint">支持JPG、PNG、GIF等图片格式</p>
                 </Dragger>
               ) : (
                 // 标准上传按钮
@@ -391,9 +393,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
                   beforeUpload={beforeUpload}
                   accept="image/*"
                 >
-                  <Button icon={<UploadOutlined />}>
-                    {value ? '更换头像' : '上传头像'}
-                  </Button>
+                  <Button icon={<UploadOutlined />}>{value ? '更换头像' : '上传头像'}</Button>
                 </Upload>
               )}
 
@@ -431,9 +431,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           />
-          <p className="text-sm text-gray-500">
-            头像将被裁剪为200x200像素的正方形
-          </p>
+          <p className="text-sm text-gray-500">头像将被裁剪为200x200像素的正方形</p>
         </div>
       </Modal>
     </div>

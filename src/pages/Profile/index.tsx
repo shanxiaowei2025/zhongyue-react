@@ -137,7 +137,7 @@ const Profile = () => {
         avatar: avatarData.url,
       })
     }
-    
+
     // 更新本地用户资料
     if (userProfile) {
       setUserProfile({
@@ -156,7 +156,7 @@ const Profile = () => {
         avatar: '',
       })
     }
-    
+
     // 更新本地用户资料
     if (userProfile) {
       setUserProfile({
@@ -184,7 +184,7 @@ const Profile = () => {
                           }
                         : undefined
                     }
-                    onChange={(value) => {
+                    onChange={value => {
                       if (value) {
                         handleAvatarUploadSuccess(value)
                       } else {

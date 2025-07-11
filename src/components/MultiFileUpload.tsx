@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import {
-  Upload,
-  Button,
-  message,
-  Modal,
-  Spin,
-  Space,
-  Card,
-  Image,
-  Popconfirm,
-} from 'antd'
+import { Upload, Button, message, Modal, Spin, Space, Card, Image, Popconfirm } from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -92,7 +82,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const [retryCount, setRetryCount] = useState<Record<string, number>>({})
   const maxRetries = 3
   const retryTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({})
-  
+
   // 内部文件状态，用于处理并发上传
   const [internalFiles, setInternalFiles] = useState<Record<string, ImageType>>({})
 
@@ -175,7 +165,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     if (accept && accept !== '*') {
       const acceptTypes = accept.split(',').map(type => type.trim())
       const fileExtension = file.name.split('.').pop()?.toLowerCase() || ''
-      
+
       const isAccepted = acceptTypes.some(type => {
         if (type.startsWith('.')) {
           return file.name.toLowerCase().endsWith(type.toLowerCase())
@@ -204,7 +194,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const handleCustomUpload = async (options: any) => {
     const { file, onSuccess: onUploadSuccess, onError, onProgress } = options
     console.log('handleCustomUpload called:', file.name)
-    
+
     setUploadingCount(prev => prev + 1)
 
     try {
@@ -215,7 +205,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         // 生成新的键名
         const newKey = getNextKey()
         console.log('上传成功，生成键名:', newKey, '文件名:', result.fileName)
-        
+
         // 使用内部状态来管理并发上传
         setInternalFiles(prev => {
           const newValue = {
@@ -230,7 +220,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           setTimeout(() => onChange?.(newValue), 0)
           return newValue
         })
-        
+
         onUploadSuccess('上传成功')
         message.success(`${file.name} 上传成功`)
 
@@ -464,9 +454,8 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                   : item.url
 
               // 显示标题：总是显示文件名
-              const displayTitle = item.fileName.length > 20 ? 
-                item.fileName.substring(0, 17) + '...' : 
-                item.fileName
+              const displayTitle =
+                item.fileName.length > 20 ? item.fileName.substring(0, 17) + '...' : item.fileName
 
               return (
                 <Card

@@ -9,51 +9,12 @@ import { searchCustomers } from '../../api/enterpriseService'
 import type { CreateContractDto } from '../../types/contract'
 import type { CustomerSearchOption, CustomerQueryParams } from '../../types/enterpriseService'
 import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
+import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import './ProductServiceAgreement.css'
-
-// 签署方配置
-export const SIGNATORY_CONFIG = {
-  定兴县中岳会计服务有限公司: {
-    title: '定兴县中岳会计服务有限公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省保定市定兴县繁兴街佶地国际D-1-120',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司Tel: 15030201110',
-  },
-  定兴县中岳会计服务有限公司河北雄安分公司: {
-    title: '定兴县中岳会计服务有限公司河北雄安分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '河北省雄安新区容城县容城镇容善路39号',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司河北雄安分公司Tel: 15030201110',
-  },
-  定兴县中岳会计服务有限公司高碑店分公司: {
-    title: '定兴县中岳会计服务有限公司高碑店分公司',
-    englishTitle: 'Dingxing County Zhongyue Accounting Service Co., Ltd.',
-    address: '高碑店市北城街道京广北大街188号A07',
-    phone: '15030201110',
-    footer: '定兴县中岳会计服务有限公司高碑店分公司Tel: 15030201110',
-  },
-  保定脉信会计服务有限公司: {
-    title: '保定脉信会计服务有限公司',
-    englishTitle: '',
-    address: '河北省保定市容城县容城镇容美路',
-    phone: '15030201110',
-    footer: '保定脉信会计服务有限公司Tel: 15030201110',
-  },
-}
-
-// 章图片映射配置
-const STAMP_IMAGE_MAP = {
-  定兴县中岳会计服务有限公司: '/images/contract-seals/dingxing-seal.jpg',
-  定兴县中岳会计服务有限公司河北雄安分公司: '/images/contract-seals/xiongan-seal.jpg',
-  定兴县中岳会计服务有限公司高碑店分公司: '/images/contract-seals/gaobeidian-seal.jpg',
-  保定脉信会计服务有限公司: '/images/contract-seals/maixin-seal.jpg',
-}
 
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
-  return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
+  return getSignatoryStampImage(signatory)
 }
 
 interface ProductServiceAgreementProps {
@@ -579,7 +540,7 @@ const ProductServiceAgreement = forwardRef<
       setHasMoreCodes(false)
     }, [])
 
-    const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
+    const config = getProductSignatoryConfig(signatory)
 
     // 检查是否是脉信公司的产品服务协议
     const isMaixinProductService =
@@ -979,6 +940,7 @@ const ProductServiceAgreement = forwardRef<
           partyAPhone: formData.partyAPhone,
           partyBContact: formData.partyBContact,
           partyBPhone: formData.partyBPhone,
+          partyBCreditCode: config?.creditCode || '',
           businessEstablishmentAddress: formData.businessEstablishmentAddress,
           businessRemark: formData.businessRemark,
           businessServiceFee: formData.businessServiceFee,
@@ -1388,6 +1350,10 @@ const ProductServiceAgreement = forwardRef<
             </div>
 
             <div className="party-details">
+              <div className="detail-row">
+                <span className="detail-label">统一社会信用代码：</span>
+                <span className="detail-value">{config?.creditCode || ''}</span>
+              </div>
               <div className="detail-row">
                 <span className="detail-label">通讯地址：</span>
                 <span className="detail-value">{config.address}</span>

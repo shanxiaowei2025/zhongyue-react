@@ -116,7 +116,9 @@ const TaxReview: React.FC = () => {
   )
 
   // 将数组格式转换为对象格式
-  const arrayToObjectFormat = (files: Array<{ fileName: string; url: string }>): Record<string, ImageType> => {
+  const arrayToObjectFormat = (
+    files: Array<{ fileName: string; url: string }>
+  ): Record<string, ImageType> => {
     const result: Record<string, ImageType> = {}
     files.forEach((file, index) => {
       result[index.toString()] = {
@@ -128,7 +130,9 @@ const TaxReview: React.FC = () => {
   }
 
   // 将对象格式转换为数组格式
-  const objectToArrayFormat = (value: Record<string, ImageType>): Array<{ fileName: string; url: string }> => {
+  const objectToArrayFormat = (
+    value: Record<string, ImageType>
+  ): Array<{ fileName: string; url: string }> => {
     return Object.values(value).map(item => ({
       fileName: item.fileName || '',
       url: item.url || '',
