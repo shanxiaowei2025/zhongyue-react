@@ -18,7 +18,7 @@ export const SIGNATORY_CONFIG = {
     address: '河北省保定市定兴县东落堡镇东落堡村264号',
     phone: '13831247565',
     footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
-    creditCode: '91130626MADR9GRR0G',
+    creditCode: '',
   },
   定兴县金盾企业管理咨询有限公司: {
     title: '定兴县金盾企业管理咨询有限公司',
@@ -26,7 +26,7 @@ export const SIGNATORY_CONFIG = {
     address: '河北省保定市定兴县定兴镇北肖庄村',
     phone: '13582229111',
     footer: '定兴县金盾企业管理咨询有限公司Tel: 13582229111',
-    creditCode: '91130626308409806A',
+    creditCode: '',
   },
 }
 
@@ -570,64 +570,48 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
 
     // 收集服务项目数据
     const collectServiceData = () => {
-      // 获取签署方配置
-      const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
+      const businessEstablishment: Array<Record<string, any>> = []
+      const businessChange: Array<Record<string, any>> = []
+      const businessCancellation: Array<Record<string, any>> = []
+      const businessOther: Array<Record<string, any>> = []
+      const businessMaterials: Array<Record<string, any>> = []
+      const bankMatters: Array<Record<string, any>> = []
+      const licenseBusiness: Array<Record<string, any>> = []
 
-      // 收集服务项目数据
-      const serviceData: Record<string, any> = {}
+      // 遍历勾选项目并归类
+      Object.entries(checkedItems).forEach(([itemKey, checked]) => {
+        if (!checked) return
 
-      // 工商服务数据
-      const businessItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('business_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
+        const amount = parseAmount(itemAmounts[itemKey] || '0')
+        const itemName = getItemName(itemKey)
 
-      if (businessItems.length > 0) {
-        serviceData.businessEstablishment = businessItems.filter(item =>
-          item.itemKey.includes('establish')
-        )
-        serviceData.businessChange = businessItems.filter(item => item.itemKey.includes('change'))
-        serviceData.businessCancellation = businessItems.filter(item => item.itemKey.includes('cancel'))
-        serviceData.businessOther = businessItems.filter(
-          item => item.itemKey.includes('other') || item.itemKey.includes('address')
-        )
-        serviceData.businessMaterials = businessItems.filter(item => item.itemKey.includes('material'))
+        // 根据键名前缀分类
+        if (itemKey.startsWith('business_establish_')) {
+          businessEstablishment.push({ itemKey, itemName, amount })
+        } else if (itemKey.startsWith('business_change_')) {
+          businessChange.push({ itemKey, itemName, amount })
+        } else if (itemKey.startsWith('business_cancel_')) {
+          businessCancellation.push({ itemKey, itemName, amount })
+        } else if (itemKey.startsWith('business_other_')) {
+          businessOther.push({ itemKey, itemName, amount })
+        } else if (itemKey.startsWith('business_material_')) {
+          businessMaterials.push({ itemKey, itemName, amount })
+        } else if (itemKey.startsWith('bank_')) {
+          bankMatters.push({ itemKey, itemName, amount })
+        } else if (itemKey.startsWith('license_')) {
+          licenseBusiness.push({ itemKey, itemName, amount })
+        }
+      })
+
+      return {
+        businessEstablishment,
+        businessChange,
+        businessCancellation,
+        businessOther,
+        businessMaterials,
+        bankMatters,
+        licenseBusiness,
       }
-
-      // 银行服务数据
-      const bankItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('bank_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
-
-      if (bankItems.length > 0) {
-        serviceData.bankMatters = bankItems
-      }
-
-      // 许可业务数据
-      const licenseItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('license_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
-
-      if (licenseItems.length > 0) {
-        serviceData.licenseBusiness = licenseItems
-      }
-
-      // 添加乙方信息
-      serviceData.partyBCompany = signatory
-      serviceData.partyBCreditCode = config?.creditCode || ''
-
-      return serviceData
     }
 
     // 获取项目名称
