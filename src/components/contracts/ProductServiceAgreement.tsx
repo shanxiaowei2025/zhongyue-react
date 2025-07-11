@@ -19,6 +19,7 @@ export const SIGNATORY_CONFIG = {
     address: '河北省保定市定兴县繁兴街佶地国际D-1-120',
     phone: '15030201110',
     footer: '定兴县中岳会计服务有限公司Tel: 15030201110',
+    creditCode: '91130626MA07RHGE9T',
   },
   定兴县中岳会计服务有限公司河北雄安分公司: {
     title: '定兴县中岳会计服务有限公司河北雄安分公司',
@@ -26,6 +27,7 @@ export const SIGNATORY_CONFIG = {
     address: '河北省雄安新区容城县容城镇容善路39号',
     phone: '15030201110',
     footer: '定兴县中岳会计服务有限公司河北雄安分公司Tel: 15030201110',
+    creditCode: '91130629MA0FKMFA1F',
   },
   定兴县中岳会计服务有限公司高碑店分公司: {
     title: '定兴县中岳会计服务有限公司高碑店分公司',
@@ -33,6 +35,7 @@ export const SIGNATORY_CONFIG = {
     address: '高碑店市北城街道京广北大街188号A07',
     phone: '15030201110',
     footer: '定兴县中岳会计服务有限公司高碑店分公司Tel: 15030201110',
+    creditCode: '91130684MA0FQMPB6X',
   },
   保定脉信会计服务有限公司: {
     title: '保定脉信会计服务有限公司',
@@ -40,6 +43,7 @@ export const SIGNATORY_CONFIG = {
     address: '河北省保定市容城县容城镇容美路',
     phone: '15030201110',
     footer: '保定脉信会计服务有限公司Tel: 15030201110',
+    creditCode: '91130600MA0EJPT1X6',
   },
 }
 
@@ -703,166 +707,67 @@ const ProductServiceAgreement = forwardRef<
 
     // 收集服务项目数据
     const collectServiceData = () => {
-      const serviceData: Record<string, any> = {}
+      // 获取签署方配置
+      const config = SIGNATORY_CONFIG[signatory as keyof typeof SIGNATORY_CONFIG]
 
-      // 工商服务数据
-      const businessItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('business_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
+      // 收集服务项目数据
+      const businessEstablishmentItems: Array<{ itemKey: string; amount: string }> = []
+      const businessChangeItems: Array<{ itemKey: string; amount: string }> = []
+      const businessCancelItems: Array<{ itemKey: string; amount: string }> = []
+      const businessOtherItems: Array<{ itemKey: string; amount: string }> = []
+      const businessMaterialItems: Array<{ itemKey: string; amount: string }> = []
+      const taxItems: Array<{ itemKey: string; amount: string }> = []
+      const bankItems: Array<{ itemKey: string; amount: string }> = []
+      const socialItems: Array<{ itemKey: string; amount: string }> = []
+      const licenseItems: Array<{ itemKey: string; amount: string }> = []
 
-      if (businessItems.length > 0) {
-        serviceData.businessEstablishment = businessItems.filter(item =>
-          item.itemKey.includes('establish')
-        )
-        serviceData.businessChange = businessItems.filter(item => item.itemKey.includes('change'))
-        serviceData.businessCancellation = businessItems.filter(item =>
-          item.itemKey.includes('cancel')
-        )
-        serviceData.businessOther = businessItems.filter(
-          item => item.itemKey.includes('other') || item.itemKey.includes('address')
-        )
-        serviceData.businessMaterials = businessItems.filter(item =>
-          item.itemKey.includes('material')
-        )
+      // 处理工商注册服务项目
+      Object.keys(checkedItems).forEach(itemKey => {
+        if (!checkedItems[itemKey]) return
+
+        const amount = itemAmounts[itemKey] || ''
+        const item = { itemKey, amount }
+
+        if (itemKey.startsWith('business_establish_')) {
+          businessEstablishmentItems.push(item)
+        } else if (itemKey.startsWith('business_change_')) {
+          businessChangeItems.push(item)
+        } else if (itemKey.startsWith('business_cancel_')) {
+          businessCancelItems.push(item)
+        } else if (
+          itemKey.startsWith('business_other_') ||
+          itemKey.startsWith('business_address_')
+        ) {
+          businessOtherItems.push(item)
+        } else if (itemKey.startsWith('business_material_')) {
+          businessMaterialItems.push(item)
+        } else if (itemKey.startsWith('tax_')) {
+          taxItems.push(item)
+        } else if (itemKey.startsWith('bank_')) {
+          bankItems.push(item)
+        } else if (itemKey.startsWith('social_') || itemKey.startsWith('fund_')) {
+          socialItems.push(item)
+        } else if (itemKey.startsWith('license_')) {
+          licenseItems.push(item)
+        }
+      })
+
+      // 设置乙方相关数据
+      return {
+        // 乙方信息
+        partyBCompany: signatory,
+        partyBCreditCode: config?.creditCode || '',
+        // 服务项目数据
+        businessEstablishment: businessEstablishmentItems,
+        businessChange: businessChangeItems,
+        businessCancellation: businessCancelItems,
+        businessOther: businessOtherItems,
+        businessMaterials: businessMaterialItems,
+        taxMatters: taxItems,
+        bankMatters: bankItems,
+        socialSecurity: socialItems,
+        licenseBusiness: licenseItems,
       }
-
-      // 税务服务数据
-      const taxItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('tax_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
-
-      if (taxItems.length > 0) {
-        serviceData.taxMatters = taxItems
-      }
-
-      // 银行服务数据
-      const bankItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('bank_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
-
-      if (bankItems.length > 0) {
-        serviceData.bankMatters = bankItems
-      }
-
-      // 社保服务数据
-      const socialItems = Object.keys(checkedItems)
-        .filter(
-          key =>
-            (key.startsWith('social_security_') || key.startsWith('fund_')) && checkedItems[key]
-        )
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
-
-      if (socialItems.length > 0) {
-        serviceData.socialSecurity = socialItems
-      }
-
-      // 许可业务数据
-      const licenseItems = Object.keys(checkedItems)
-        .filter(key => key.startsWith('license_') && checkedItems[key])
-        .map(key => ({
-          itemKey: key,
-          itemName: getItemName(key),
-          amount: parseAmount(itemAmounts[key] || '0'),
-        }))
-
-      if (licenseItems.length > 0) {
-        serviceData.licenseBusiness = licenseItems
-      }
-
-      return serviceData
-    }
-
-    // 获取项目名称
-    const getItemName = (itemKey: string): string => {
-      const itemNameMap: Record<string, string> = {
-        // 工商项目
-        business_establish_limited: '有限责任公司',
-        business_establish_branch: '有限责任公司分支机构',
-        business_establish_individual: '个人独资企业',
-        business_establish_partnership: '合伙企业',
-        business_establish_nonprofit: '民办非企业',
-        business_establish_joint_stock: '股份有限公司',
-        business_establish_self_employed: '个体工商户',
-        business_change_legal_person: '法定代表人',
-        business_change_shareholder: '股东股权',
-        business_change_capital: '注册资金',
-        business_change_name: '公司名称',
-        business_change_scope: '经营范围',
-        business_change_address: '注册地址',
-        business_change_manager: '分公司负责人',
-        business_change_directors: '董事/监事人员',
-        business_cancel_limited: '有限责任公司',
-        business_cancel_branch: '有限责任公司分支机构',
-        business_cancel_individual: '个人独资企业',
-        business_cancel_partnership: '合伙企业',
-        business_cancel_foreign: '外商投资企业',
-        business_cancel_joint_stock: '股份有限公司',
-        business_cancel_self_employed: '个体工商户',
-        business_other_annual_report: '年报公示',
-        business_other_remove_exception: '解除异常',
-        business_other_info_repair: '信息修复',
-        business_other_file_retrieval: '档案调取',
-        business_other_license_annual: '许可证年检',
-        business_address_small_scale: '地址托管-小规模',
-        business_address_general: '地址托管-一般纳税人',
-        business_material_seal: '备案章',
-        business_material_rubber: '胶皮章',
-        business_material_crystal: '水晶章',
-        business_material_kt_board: 'KT板牌子',
-        business_material_copper: '铜牌',
-        // 税务项目
-        tax_assessment: '核定税种',
-        tax_filing: '报税',
-        tax_cancellation: '注销',
-        tax_invoice_apply: '申请发票',
-        tax_invoice_issue: '代开发票',
-        tax_change: '税务变更',
-        tax_remove_exception: '解除异常',
-        tax_supplement: '补充申报',
-        tax_software: '记账软件',
-        tax_invoice_software: '开票软件',
-        // 银行项目
-        bank_general_account: '一般账户设立',
-        bank_basic_account: '基本账户设立',
-        bank_foreign_account: '外币账户设立',
-        bank_info_change: '信息变更',
-        bank_cancel: '银行账户注销',
-        bank_financing: '融资业务（开通平台手续）',
-        bank_loan: '贷款服务',
-        // 社保项目
-        social_security_open: '社保开户',
-        social_security_hosting: '社保托管',
-        social_security_cancel: '社保账户注销',
-        fund_open: '公积金开户',
-        fund_hosting: '公积金托管',
-        fund_change: '公积金变更',
-        // 许可业务项目
-        license_food: '食品经营许可证',
-        license_health: '卫生许可证',
-        license_catering: '餐饮许可证',
-        license_transport: '道路运输许可证',
-        license_medical: '二类医疗器械备案',
-        license_other: '其他许可证',
-        license_prepackaged: '预包装食品备案',
-      }
-
-      return itemNameMap[itemKey] || itemKey
     }
 
     // 验证表单数据
@@ -1116,6 +1021,83 @@ const ProductServiceAgreement = forwardRef<
       getFormData,
     }))
 
+    // 获取项目名称
+    const getItemName = (itemKey: string): string => {
+      const itemNameMap: Record<string, string> = {
+        // 工商项目
+        business_establish_limited: '有限责任公司',
+        business_establish_branch: '有限责任公司分支机构',
+        business_establish_individual: '个人独资企业',
+        business_establish_partnership: '合伙企业',
+        business_establish_nonprofit: '民办非企业',
+        business_establish_joint_stock: '股份有限公司',
+        business_establish_self_employed: '个体工商户',
+        business_change_legal_person: '法定代表人',
+        business_change_shareholder: '股东股权',
+        business_change_capital: '注册资金',
+        business_change_name: '公司名称',
+        business_change_scope: '经营范围',
+        business_change_address: '注册地址',
+        business_change_manager: '分公司负责人',
+        business_change_directors: '董事/监事人员',
+        business_cancel_limited: '有限责任公司',
+        business_cancel_branch: '有限责任公司分支机构',
+        business_cancel_individual: '个人独资企业',
+        business_cancel_partnership: '合伙企业',
+        business_cancel_foreign: '外商投资企业',
+        business_cancel_joint_stock: '股份有限公司',
+        business_cancel_self_employed: '个体工商户',
+        business_other_annual_report: '年报公示',
+        business_other_remove_exception: '解除异常',
+        business_other_info_repair: '信息修复',
+        business_other_file_retrieval: '档案调取',
+        business_other_license_annual: '许可证年检',
+        business_address_small_scale: '地址托管-小规模',
+        business_address_general: '地址托管-一般纳税人',
+        business_material_seal: '备案章',
+        business_material_rubber: '胶皮章',
+        business_material_crystal: '水晶章',
+        business_material_kt_board: 'KT板牌子',
+        business_material_copper: '铜牌',
+        // 税务项目
+        tax_assessment: '核定税种',
+        tax_filing: '报税',
+        tax_cancellation: '注销',
+        tax_invoice_apply: '申请发票',
+        tax_invoice_issue: '代开发票',
+        tax_change: '税务变更',
+        tax_remove_exception: '解除异常',
+        tax_supplement: '补充申报',
+        tax_software: '记账软件',
+        tax_invoice_software: '开票软件',
+        // 银行项目
+        bank_general_account: '一般账户设立',
+        bank_basic_account: '基本账户设立',
+        bank_foreign_account: '外币账户设立',
+        bank_info_change: '信息变更',
+        bank_cancel: '银行账户注销',
+        bank_financing: '融资业务（开通平台手续）',
+        bank_loan: '贷款服务',
+        // 社保项目
+        social_security_open: '社保开户',
+        social_security_hosting: '社保托管',
+        social_security_cancel: '社保账户注销',
+        fund_open: '公积金开户',
+        fund_hosting: '公积金托管',
+        fund_change: '公积金变更',
+        // 许可业务项目
+        license_food: '食品经营许可证',
+        license_health: '卫生许可证',
+        license_catering: '餐饮许可证',
+        license_transport: '道路运输许可证',
+        license_medical: '二类医疗器械备案',
+        license_other: '其他许可证',
+        license_prepackaged: '预包装食品备案',
+      }
+
+      return itemNameMap[itemKey] || itemKey
+    }
+
     return (
       <div className="product-service-agreement">
         {/* 合同头部 */}
@@ -1255,9 +1237,14 @@ const ProductServiceAgreement = forwardRef<
                 className="credit-code-input"
                 placeholder="*请输入甲方统一社会信用代码进行搜索"
                 options={codeOptions}
-                value={codeSearchValue || formData.partyACreditCode || ''}
+                value={formData.partyACreditCode || ''}
                 onSearch={value => {
                   setCodeSearchValue(value)
+                  if (mode === 'edit') {
+                    setEditModeFormData(prev => ({ ...prev, partyACreditCode: value }))
+                  } else {
+                    updateFormField('partyACreditCode', value)
+                  }
                   if (value && value.trim()) {
                     handleCodeSearch(value.trim(), true)
                   } else {

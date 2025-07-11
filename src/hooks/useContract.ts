@@ -194,7 +194,13 @@ export const useContractDetail = (id?: number | null) => {
     try {
       const response = await createContractApi(createData)
       if (response.code === 0) {
-        message.success('创建合同成功')
+        // 检查是否有自动创建客户的消息
+        const dataMessage = (response as any).data?.data?.message || response.message
+        if (dataMessage && dataMessage.includes('自动创建客户')) {
+          message.success(dataMessage)
+        } else {
+          message.success('创建合同成功')
+        }
         // 刷新所有合同列表缓存
         await mutate(key => Array.isArray(key) && key[0] === '/contract', undefined, {
           revalidate: true,
