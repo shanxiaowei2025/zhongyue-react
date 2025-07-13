@@ -313,7 +313,6 @@ export const useExpenseDetail = (id?: number | null) => {
       return res
     } catch (error) {
       console.error('创建费用失败:', error)
-      message.error('创建失败')
       throw error
     }
   }

@@ -974,8 +974,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       console.log('收据凭证转换后:', formattedValues.proofOfCharge)
 
       if (mode === 'add') {
-        await createExpense(formattedValues)
-        message.success('费用创建成功')
+        const response = await createExpense(formattedValues)
+        message.success((response as any)?.message || '费用创建成功')
       } else if (mode === 'edit' && expense) {
         // 如果是编辑被退回的费用，重新提交后设置状态为待审核并清空退回原因
         if (expense.status === ExpenseStatus.Rejected) {
