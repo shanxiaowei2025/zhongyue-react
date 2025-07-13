@@ -139,21 +139,7 @@ const TaxReview: React.FC = () => {
     }))
   }
 
-  // 企业名称搜索相关状态
-  const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false)
-  const [customerOptions, setCustomerOptions] = useState<CustomerSearchOption[]>([])
-  const [customerSearchValue, setCustomerSearchValue] = useState<string>('')
-  const [customerPage, setCustomerPage] = useState<number>(1)
-  const [customerTotal, setCustomerTotal] = useState<number>(0)
-  const [hasMoreCustomers, setHasMoreCustomers] = useState<boolean>(false)
-
-  // 统一社会信用代码搜索相关状态
-  const [codeSearchLoading, setCodeSearchLoading] = useState<boolean>(false)
-  const [codeOptions, setCodeOptions] = useState<CustomerSearchOption[]>([])
-  const [codeSearchValue, setCodeSearchValue] = useState<string>('')
-  const [codePage, setCodePage] = useState<number>(1)
-  const [codeTotal, setCodeTotal] = useState<number>(0)
-  const [hasMoreCodes, setHasMoreCodes] = useState<boolean>(false)
+  // 企业搜索使用 CustomerAutoComplete 组件
 
   // 加载数据
   const loadData = async () => {
@@ -212,220 +198,14 @@ const TaxReview: React.FC = () => {
     if (pagination.pageSize) setPageSize(pagination.pageSize)
   }
 
-  // 搜索企业名称（模糊搜索）
-  const handleCustomerSearch = async (searchValue: string, resetPage: boolean = false) => {
-    if (!searchValue || !searchValue.trim()) {
-      setCustomerOptions([])
-      setCustomerTotal(0)
-      setHasMoreCustomers(false)
-      return
-    }
-
-    try {
-      setCustomerSearchLoading(true)
-
-      const currentPage = resetPage ? 1 : customerPage
-
-      const params: CustomerQueryParams = {
-        page: currentPage,
-        pageSize: 20, // 每次加载20条数据
-        companyName: searchValue.trim(),
-      }
-
-      const response = await searchCustomers(params)
-
-      if (response.code === 0 && response.data) {
-        const { data: enterprises, total } = response.data
-
-        // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
-          value: enterprise.companyName,
-          label: (
-            <div style={{ padding: '4px 0' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                {enterprise.companyName}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                {enterprise.unifiedSocialCreditCode}
-              </div>
-              {enterprise.taxBureau && (
-                <div style={{ fontSize: '12px', color: '#999' }}>
-                  所属分局: {enterprise.taxBureau}
-                </div>
-              )}
-            </div>
-          ),
-          enterprise,
-        }))
-
-        if (resetPage) {
-          setCustomerOptions(newOptions)
-          setCustomerPage(1)
-        } else {
-          setCustomerOptions(prev => [...prev, ...newOptions])
-        }
-
-        setCustomerTotal(total)
-        setHasMoreCustomers(currentPage * 20 < total)
-
-        if (resetPage) {
-          setCustomerPage(2) // 下次请求第二页
-        } else {
-          setCustomerPage(currentPage + 1)
-        }
-      } else {
-        if (resetPage) {
-          setCustomerOptions([])
-          setCustomerTotal(0)
-          setHasMoreCustomers(false)
-        }
-      }
-    } catch (error) {
-      console.error('搜索企业信息失败:', error)
-      if (resetPage) {
-        setCustomerOptions([])
-        setCustomerTotal(0)
-        setHasMoreCustomers(false)
-      }
-    } finally {
-      setCustomerSearchLoading(false)
-    }
-  }
-
-  // 加载更多企业数据
-  const handleLoadMoreCustomers = () => {
-    if (!customerSearchLoading && hasMoreCustomers && customerSearchValue) {
-      handleCustomerSearch(customerSearchValue, false)
-    }
-  }
-
-  // 选择企业时自动填入信息
-  const handleCustomerSelect = (value: string, option: any) => {
-    const enterprise = option.enterprise
-    if (enterprise) {
-      createForm.setFieldsValue({
-        companyName: enterprise.companyName,
-        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-        taxBureau: enterprise.taxBureau || '',
-      })
-      message.success('企业信息已自动填入')
-    }
-  }
-
-  // 重置企业搜索状态
-  const resetCustomerSearch = () => {
-    setCustomerOptions([])
-    setCustomerSearchValue('')
-    setCustomerPage(1)
-    setCustomerTotal(0)
-    setHasMoreCustomers(false)
-  }
-
-  // 搜索统一社会信用代码（模糊搜索）
-  const handleCodeSearch = async (searchValue: string, resetPage: boolean = false) => {
-    if (!searchValue || !searchValue.trim()) {
-      setCodeOptions([])
-      setCodeTotal(0)
-      setHasMoreCodes(false)
-      return
-    }
-
-    try {
-      setCodeSearchLoading(true)
-
-      const currentPage = resetPage ? 1 : codePage
-
-      const params: CustomerQueryParams = {
-        page: currentPage,
-        pageSize: 20, // 每次加载20条数据
-        unifiedSocialCreditCode: searchValue.trim(),
-      }
-
-      const response = await searchCustomers(params)
-
-      if (response.code === 0 && response.data) {
-        const { data: enterprises, total } = response.data
-
-        // 转换为选项格式
-        const newOptions: CustomerSearchOption[] = enterprises.map(enterprise => ({
-          value: enterprise.unifiedSocialCreditCode,
-          label: (
-            <div style={{ padding: '4px 0' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                {enterprise.unifiedSocialCreditCode}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>{enterprise.companyName}</div>
-              {enterprise.taxBureau && (
-                <div style={{ fontSize: '12px', color: '#999' }}>
-                  所属分局: {enterprise.taxBureau}
-                </div>
-              )}
-            </div>
-          ),
-          enterprise,
-        }))
-
-        if (resetPage) {
-          setCodeOptions(newOptions)
-          setCodePage(1)
-        } else {
-          setCodeOptions(prev => [...prev, ...newOptions])
-        }
-
-        setCodeTotal(total)
-        setHasMoreCodes(currentPage * 20 < total)
-
-        if (resetPage) {
-          setCodePage(2) // 下次请求第二页
-        } else {
-          setCodePage(currentPage + 1)
-        }
-      } else {
-        if (resetPage) {
-          setCodeOptions([])
-          setCodeTotal(0)
-          setHasMoreCodes(false)
-        }
-      }
-    } catch (error) {
-      console.error('搜索统一社会信用代码失败:', error)
-      if (resetPage) {
-        setCodeOptions([])
-        setCodeTotal(0)
-        setHasMoreCodes(false)
-      }
-    } finally {
-      setCodeSearchLoading(false)
-    }
-  }
-
-  // 加载更多统一社会信用代码数据
-  const handleLoadMoreCodes = () => {
-    if (!codeSearchLoading && hasMoreCodes && codeSearchValue) {
-      handleCodeSearch(codeSearchValue, false)
-    }
-  }
-
-  // 选择统一社会信用代码时自动填入信息
-  const handleCodeSelect = (value: string, option: any) => {
-    const enterprise = option.enterprise
-    if (enterprise) {
-      createForm.setFieldsValue({
-        companyName: enterprise.companyName,
-        unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-        taxBureau: enterprise.taxBureau || '',
-      })
-      message.success('企业信息已自动填入')
-    }
-  }
-
-  // 重置统一社会信用代码搜索状态
-  const resetCodeSearch = () => {
-    setCodeOptions([])
-    setCodeSearchValue('')
-    setCodePage(1)
-    setCodeTotal(0)
-    setHasMoreCodes(false)
+  // 客户选择处理函数
+  const handleCustomerSelect = (enterprise: Enterprise) => {
+    createForm.setFieldsValue({
+      companyName: enterprise.companyName,
+      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+      taxBureau: enterprise.taxBureau || '',
+    })
+    message.success('企业信息已自动填入')
   }
 
   // 打开新建弹窗
@@ -440,8 +220,6 @@ const TaxReview: React.FC = () => {
     setCreateModalVisible(false)
     createForm.resetFields()
     setAttachmentFiles([])
-    resetCustomerSearch() // 重置企业搜索状态
-    resetCodeSearch() // 重置统一社会信用代码搜索状态
   }
 
   // 提交新建
