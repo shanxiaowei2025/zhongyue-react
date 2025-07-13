@@ -18,6 +18,23 @@ interface TableDataType {
 }
 
 const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) => {
+  // 检查是否为自定义分级
+  const isCustomLevel = level && !CUSTOMER_LEVEL_TIPS[level]
+
+  // 如果是自定义分级，显示简单提示
+  if (isCustomLevel) {
+    return (
+      <div style={{ maxWidth: '300px', padding: '12px' }}>
+        <Title level={5} style={{ margin: '0 0 8px 0', color: '#722ed1' }}>
+          {level} - 自定义分级
+        </Title>
+        <Text style={{ fontSize: '12px', color: '#666' }}>
+          这是一个自定义的客户分级，不在标准分级体系中。您可以根据企业实际情况自由定义分级标准。
+        </Text>
+      </div>
+    )
+  }
+
   // 准备表格数据
   const tableData: TableDataType[] = level
     ? [CUSTOMER_LEVEL_TIPS[level]].filter(Boolean).map(tip => ({

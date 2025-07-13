@@ -12,6 +12,7 @@ import {
   Tabs,
   Descriptions,
   Select,
+  AutoComplete,
   DatePicker,
   Image,
   Upload,
@@ -1005,38 +1006,41 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="客户分级" className="mb-2">
-                <Select
-                  placeholder="请选择客户分级"
+                <AutoComplete
+                  placeholder="请选择或输入客户分级"
                   value={searchParams.customerLevel || undefined}
-                  onChange={value => setSearchParams({ ...searchParams, customerLevel: value })}
+                  onChange={value =>
+                    setSearchParams({ ...searchParams, customerLevel: value || undefined })
+                  }
                   allowClear
                   className="w-40"
-                >
-                  {(
-                    [
-                      'AA',
-                      'AB',
-                      'AC',
-                      'AD',
-                      'BA',
-                      'BB',
-                      'BC',
-                      'BD',
-                      'CA',
-                      'CB',
-                      'CC',
-                      'CD',
-                      'DA',
-                      'DB',
-                      'DC',
-                      'DD',
-                    ] as const
-                  ).map(level => (
-                    <Select.Option key={level} value={level}>
+                  filterOption={(inputValue, option) =>
+                    option?.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                  }
+                  options={[
+                    'AA',
+                    'AB',
+                    'AC',
+                    'AD',
+                    'BA',
+                    'BB',
+                    'BC',
+                    'BD',
+                    'CA',
+                    'CB',
+                    'CC',
+                    'CD',
+                    'DA',
+                    'DB',
+                    'DC',
+                    'DD',
+                  ].map(level => ({
+                    value: level,
+                    label: (
                       <CustomerLevelDisplay level={level} showPopover={false} maxWidth={100} />
-                    </Select.Option>
-                  ))}
-                </Select>
+                    ),
+                  }))}
+                />
               </Form.Item>
 
               <Form.Item label="顾问会计" className="mb-2">

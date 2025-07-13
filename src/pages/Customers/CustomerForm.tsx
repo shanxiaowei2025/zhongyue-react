@@ -4,6 +4,7 @@ import {
   Input,
   Button,
   Select,
+  AutoComplete,
   DatePicker,
   InputNumber,
   Tabs,
@@ -1045,28 +1046,32 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               </div>
             }
           >
-            <Select placeholder="请选择客户分级" allowClear>
-              {(
-                [
-                  'AA',
-                  'AB',
-                  'AC',
-                  'AD',
-                  'BA',
-                  'BB',
-                  'BC',
-                  'BD',
-                  'CA',
-                  'CB',
-                  'CC',
-                  'CD',
-                  'DA',
-                  'DB',
-                  'DC',
-                  'DD',
-                ] as const
-              ).map(level => (
-                <Select.Option key={level} value={level}>
+            <AutoComplete
+              placeholder="请选择或输入客户分级"
+              allowClear
+              filterOption={(inputValue, option) =>
+                option?.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+              options={[
+                'AA',
+                'AB',
+                'AC',
+                'AD',
+                'BA',
+                'BB',
+                'BC',
+                'BD',
+                'CA',
+                'CB',
+                'CC',
+                'CD',
+                'DA',
+                'DB',
+                'DC',
+                'DD',
+              ].map(level => ({
+                value: level,
+                label: (
                   <div className="flex items-center justify-between w-full">
                     <CustomerLevelDisplay level={level} showPopover={false} />
                     <Popover
@@ -1081,9 +1086,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       />
                     </Popover>
                   </div>
-                </Select.Option>
-              ))}
-            </Select>
+                ),
+              }))}
+            />
           </Form.Item>
 
           <Form.Item name="taxNumber" label="税号">

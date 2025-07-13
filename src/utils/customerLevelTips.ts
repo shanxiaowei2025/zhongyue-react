@@ -9,6 +9,9 @@ export interface CustomerLevelTip {
 
 // 根据客户分级获取对应的颜色
 export const getCustomerLevelColor = (level: string): string => {
+  // 如果为空或未定义，返回默认颜色
+  if (!level) return '#999'
+
   const levelGroup = level.charAt(0).toUpperCase()
   const colorMap: Record<string, string> = {
     A: '#1890ff', // 蓝色
@@ -16,7 +19,10 @@ export const getCustomerLevelColor = (level: string): string => {
     C: '#fa8c16', // 橙色
     D: '#f5222d', // 红色
   }
-  return colorMap[levelGroup] || '#1890ff'
+
+  // 如果是标准分级（A-D开头），使用对应颜色
+  // 否则使用紫色表示自定义分级
+  return colorMap[levelGroup] || '#722ed1'
 }
 
 // 客户分级释义映射表
