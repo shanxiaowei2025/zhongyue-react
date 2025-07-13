@@ -30,6 +30,7 @@ import {
   FileDoneOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
+import { buildImageUrl } from '../utils/upload'
 import type { MenuProps } from 'antd'
 
 const { Header, Sider, Content } = Layout
@@ -998,7 +999,7 @@ const MainLayout = () => {
             >
               <div className="flex items-center cursor-pointer px-4 py-2 hover:bg-gray-50 rounded-md">
                 <Avatar
-                  src={user?.avatar}
+                  src={user?.avatar ? buildImageUrl(user.avatar) : undefined}
                   icon={<UserOutlined />}
                   style={{ backgroundColor: user?.avatar ? 'transparent' : '#1890ff' }}
                 />

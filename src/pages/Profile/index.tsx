@@ -55,7 +55,8 @@ const Profile = () => {
     try {
       const response = await updateUserProfile(0, {
         idCardNumber: values.idCardNumber,
-        phone: values.phone,
+        phone: values.phone || undefined,
+        avatar: userProfile?.avatar || user?.avatar || '',
       })
 
       if (response && response.code === 0) {
@@ -129,40 +130,70 @@ const Profile = () => {
   }
 
   // 处理头像上传成功
-  const handleAvatarUploadSuccess = (avatarData: { fileName: string; url: string }) => {
-    // 更新用户状态
-    if (user) {
-      setUser({
-        ...user,
-        avatar: avatarData.url,
+  const handleAvatarUploadSuccess = async (avatarData: { fileName: string; url: string }) => {
+    try {
+      // 先调用API保存头像
+      const response = await updateUserProfile(0, {
+        avatar: avatarData.fileName, // 保存文件名到后端
       })
-    }
 
-    // 更新本地用户资料
-    if (userProfile) {
-      setUserProfile({
-        ...userProfile,
-        avatar: avatarData.url,
-      })
+      if (response && response.code === 0) {
+        // API保存成功后，更新本地状态
+        if (user) {
+          setUser({
+            ...user,
+            avatar: avatarData.fileName,
+          })
+        }
+
+        if (userProfile) {
+          setUserProfile({
+            ...userProfile,
+            avatar: avatarData.fileName,
+          })
+        }
+
+        message.success('头像更新成功')
+      } else {
+        message.error('头像保存失败')
+      }
+    } catch (error) {
+      console.error('保存头像失败:', error)
+      message.error('头像保存失败')
     }
   }
 
   // 处理头像删除
-  const handleAvatarRemove = () => {
-    // 更新用户状态
-    if (user) {
-      setUser({
-        ...user,
+  const handleAvatarRemove = async () => {
+    try {
+      // 先调用API删除头像
+      const response = await updateUserProfile(0, {
         avatar: '',
       })
-    }
 
-    // 更新本地用户资料
-    if (userProfile) {
-      setUserProfile({
-        ...userProfile,
-        avatar: '',
-      })
+      if (response && response.code === 0) {
+        // API删除成功后，更新本地状态
+        if (user) {
+          setUser({
+            ...user,
+            avatar: null,
+          })
+        }
+
+        if (userProfile) {
+          setUserProfile({
+            ...userProfile,
+            avatar: null,
+          })
+        }
+
+        message.success('头像删除成功')
+      } else {
+        message.error('头像删除失败')
+      }
+    } catch (error) {
+      console.error('删除头像失败:', error)
+      message.error('头像删除失败')
     }
   }
 
@@ -191,9 +222,11 @@ const Profile = () => {
                         handleAvatarRemove()
                       }
                     }}
-                    onSuccess={() => {
-                      // 可以在这里做一些额外的处理，比如重新获取用户信息
-                      fetchUserInfo()
+                    onSuccess={isAutoSave => {
+                      if (!isAutoSave) {
+                        // 只有在不是自动保存时才重新获取用户信息
+                        fetchUserInfo()
+                      }
                     }}
                     size={96}
                     showDragArea={false}

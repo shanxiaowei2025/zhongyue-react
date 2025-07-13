@@ -1357,7 +1357,7 @@ const FinancialSelfInspection: React.FC = () => {
                       unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
                       bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
                       consultantAccountant: enterprise.consultantAccountant || '',
-                      taxBureau: enterprise.taxBureau || ''
+                      taxBureau: enterprise.taxBureau || '',
                     })
                   }}
                 />
@@ -1388,7 +1388,7 @@ const FinancialSelfInspection: React.FC = () => {
                       unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
                       bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
                       consultantAccountant: enterprise.consultantAccountant || '',
-                      taxBureau: enterprise.taxBureau || ''
+                      taxBureau: enterprise.taxBureau || '',
                     })
                   }}
                 />

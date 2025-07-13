@@ -4,8 +4,8 @@ export interface User {
   username: string
   password: string
   nickname: string
-  avatar: string
-  phone: string
+  avatar: string | null
+  phone: string | null
   idCardNumber?: string
   sex: 0 | 1
   status: 0 | 1

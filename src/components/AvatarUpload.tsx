@@ -19,12 +19,15 @@ interface CropperState {
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   isDragging: boolean
+  isResizing: boolean
   startX: number
   startY: number
   cropX: number
   cropY: number
   cropSize: number
   scale: number
+  minCropSize: number
+  maxCropSize: number
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
@@ -82,19 +85,63 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     ctx.strokeStyle = '#1890ff'
     ctx.lineWidth = 2
     ctx.strokeRect(cropX, cropY, cropSize, cropSize)
+
+    // 绘制右下角缩放手柄
+    const handleSize = 12
+    const handleX = cropX + cropSize - handleSize
+    const handleY = cropY + cropSize - handleSize
+
+    // 绘制手柄背景
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(handleX, handleY, handleSize, handleSize)
+
+    // 绘制手柄边框
+    ctx.strokeStyle = '#1890ff'
+    ctx.lineWidth = 2
+    ctx.strokeRect(handleX, handleY, handleSize, handleSize)
+
+    // 绘制手柄内部的缩放图标（两条小线）
+    ctx.strokeStyle = '#1890ff'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    // 对角线1
+    ctx.moveTo(handleX + 3, handleY + handleSize - 3)
+    ctx.lineTo(handleX + handleSize - 3, handleY + 3)
+    // 对角线2
+    ctx.moveTo(handleX + 5, handleY + handleSize - 1)
+    ctx.lineTo(handleX + handleSize - 1, handleY + 5)
+    // 对角线3
+    ctx.moveTo(handleX + 1, handleY + handleSize - 5)
+    ctx.lineTo(handleX + handleSize - 5, handleY + 1)
+    ctx.stroke()
   }, [])
 
   // 初始化裁剪器
   const initializeCropper = useCallback(
     (file: File) => {
+      console.log('开始初始化裁剪器，文件:', file.name)
+
       const canvas = canvasRef.current
-      if (!canvas) return
+      if (!canvas) {
+        console.error('Canvas元素未找到')
+        return
+      }
 
       const ctx = canvas.getContext('2d')
-      if (!ctx) return
+      if (!ctx) {
+        console.error('无法获取Canvas上下文')
+        return
+      }
+
+      console.log('Canvas和上下文已准备就绪')
+
+      // 创建图片URL
+      const imageUrl = URL.createObjectURL(file)
 
       const image = new Image()
       image.onload = () => {
+        console.log('图片加载成功，尺寸:', image.width, 'x', image.height)
+
         // 设置canvas大小
         canvas.width = 400
         canvas.height = 400
@@ -105,7 +152,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         const scale = Math.min(scaleX, scaleY, 1) // 不放大，只缩小
 
         // 计算裁剪框大小和位置
-        const cropSize = Math.min(canvas.width, canvas.height) * 0.6
+        const minCropSize = 100 // 最小裁剪框尺寸
+        const maxCropSize = Math.min(canvas.width, canvas.height) * 1 // 最大裁剪框尺寸
+        const cropSize = Math.min(canvas.width, canvas.height) * 0.6 // 初始裁剪框尺寸
         const cropX = (canvas.width - cropSize) / 2
         const cropY = (canvas.height - cropSize) / 2
 
@@ -114,52 +163,45 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           canvas,
           ctx,
           isDragging: false,
+          isResizing: false,
           startX: 0,
           startY: 0,
           cropX,
           cropY,
           cropSize,
           scale,
+          minCropSize,
+          maxCropSize,
         }
 
         cropperRef.current = cropper
+        console.log('开始绘制裁剪器')
         drawImageAndCrop(cropper)
-      }
+        console.log('裁剪器初始化完成')
 
-      // 创建图片URL
-      const imageUrl = URL.createObjectURL(file)
-      image.src = imageUrl
-
-      // 清理URL对象
-      image.onload = () => {
+        // 在图片加载完成并绘制到canvas后再释放URL资源
         URL.revokeObjectURL(imageUrl)
-        const scaleX = canvas.width / image.width
-        const scaleY = canvas.height / image.height
-        const scale = Math.min(scaleX, scaleY, 1)
-
-        const cropSize = Math.min(canvas.width, canvas.height) * 0.6
-        const cropX = (canvas.width - cropSize) / 2
-        const cropY = (canvas.height - cropSize) / 2
-
-        const cropper: CropperState = {
-          image,
-          canvas,
-          ctx,
-          isDragging: false,
-          startX: 0,
-          startY: 0,
-          cropX,
-          cropY,
-          cropSize,
-          scale,
-        }
-
-        cropperRef.current = cropper
-        drawImageAndCrop(cropper)
       }
+
+      image.onerror = () => {
+        console.error('图片加载失败')
+        URL.revokeObjectURL(imageUrl)
+      }
+
+      // 设置图片源，触发onload事件
+      image.src = imageUrl
     },
     [drawImageAndCrop]
   )
+
+  // 检查鼠标是否在缩放手柄上
+  const isMouseOnResizeHandle = (x: number, y: number, cropper: CropperState): boolean => {
+    const handleSize = 12
+    const handleX = cropper.cropX + cropper.cropSize - handleSize
+    const handleY = cropper.cropY + cropper.cropSize - handleSize
+
+    return x >= handleX && x <= handleX + handleSize && y >= handleY && y <= handleY + handleSize
+  }
 
   // 处理鼠标事件
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -170,7 +212,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    // 检查是否点击在裁剪框内
+    // 优先检查是否点击在缩放手柄上
+    if (isMouseOnResizeHandle(x, y, cropper)) {
+      cropper.isResizing = true
+      cropper.startX = x
+      cropper.startY = y
+      return
+    }
+
+    // 检查是否点击在裁剪框内（用于拖拽移动）
     if (
       x >= cropper.cropX &&
       x <= cropper.cropX + cropper.cropSize &&
@@ -185,30 +235,74 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const cropper = cropperRef.current
-    if (!cropper || !cropper.isDragging) return
+    if (!cropper) return
 
     const rect = cropper.canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    // 计算新的裁剪框位置
-    let newCropX = x - cropper.startX
-    let newCropY = y - cropper.startY
+    // 更新光标样式
+    if (!cropper.isDragging && !cropper.isResizing) {
+      if (isMouseOnResizeHandle(x, y, cropper)) {
+        e.currentTarget.style.cursor = 'nw-resize'
+      } else if (
+        x >= cropper.cropX &&
+        x <= cropper.cropX + cropper.cropSize &&
+        y >= cropper.cropY &&
+        y <= cropper.cropY + cropper.cropSize
+      ) {
+        e.currentTarget.style.cursor = 'move'
+      } else {
+        e.currentTarget.style.cursor = 'default'
+      }
+    }
 
-    // 限制裁剪框在canvas范围内
-    newCropX = Math.max(0, Math.min(newCropX, cropper.canvas.width - cropper.cropSize))
-    newCropY = Math.max(0, Math.min(newCropY, cropper.canvas.height - cropper.cropSize))
+    // 处理缩放
+    if (cropper.isResizing) {
+      // 计算新的裁剪框大小（基于鼠标距离裁剪框左上角的距离）
+      const newWidth = x - cropper.cropX
+      const newHeight = y - cropper.cropY
 
-    cropper.cropX = newCropX
-    cropper.cropY = newCropY
+      // 保持正方形，取较大的一边作为新尺寸
+      let newCropSize = Math.max(newWidth, newHeight)
 
-    drawImageAndCrop(cropper)
+      // 限制缩放范围
+      newCropSize = Math.max(cropper.minCropSize, Math.min(cropper.maxCropSize, newCropSize))
+
+      // 确保裁剪框不超出canvas边界
+      const maxPossibleSize = Math.min(
+        cropper.canvas.width - cropper.cropX,
+        cropper.canvas.height - cropper.cropY
+      )
+      newCropSize = Math.min(newCropSize, maxPossibleSize)
+
+      cropper.cropSize = newCropSize
+      drawImageAndCrop(cropper)
+      return
+    }
+
+    // 处理拖拽移动
+    if (cropper.isDragging) {
+      // 计算新的裁剪框位置
+      let newCropX = x - cropper.startX
+      let newCropY = y - cropper.startY
+
+      // 限制裁剪框在canvas范围内
+      newCropX = Math.max(0, Math.min(newCropX, cropper.canvas.width - cropper.cropSize))
+      newCropY = Math.max(0, Math.min(newCropY, cropper.canvas.height - cropper.cropSize))
+
+      cropper.cropX = newCropX
+      cropper.cropY = newCropY
+
+      drawImageAndCrop(cropper)
+    }
   }
 
   const handleMouseUp = () => {
     const cropper = cropperRef.current
     if (cropper) {
       cropper.isDragging = false
+      cropper.isResizing = false
     }
   }
 
@@ -308,6 +402,16 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     }
   }
 
+  // 处理模态框打开后的回调
+  const handleModalAfterOpen = () => {
+    if (originalFile) {
+      // 模态框完全打开后初始化裁剪器
+      setTimeout(() => {
+        initializeCropper(originalFile)
+      }, 50)
+    }
+  }
+
   // 文件上传前验证
   const beforeUpload = (file: File) => {
     console.log('beforeUpload called:', file.name)
@@ -328,7 +432,6 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     // 存储原始文件并打开裁剪模态框
     setOriginalFile(file)
     setCropModalVisible(true)
-    initializeCropper(file)
 
     return false // 阻止自动上传
   }
@@ -416,22 +519,30 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           setCropModalVisible(false)
           setOriginalFile(null)
         }}
+        afterOpenChange={open => {
+          if (open) {
+            handleModalAfterOpen()
+          }
+        }}
         okText="确认"
         cancelText="取消"
         width={500}
         confirmLoading={loading}
       >
         <div className="flex flex-col items-center space-y-4">
-          <p className="text-gray-600">拖动裁剪框选择头像区域</p>
+          <p className="text-gray-600">拖动裁剪框移动位置，拖拽右下角调整大小</p>
           <canvas
             ref={canvasRef}
-            className="border border-gray-300 cursor-move"
+            className="border border-gray-300"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           />
-          <p className="text-sm text-gray-500">头像将被裁剪为200x200像素的正方形</p>
+          <p className="text-sm text-gray-500">
+            头像将被裁剪为200x200像素的正方形 •<span className="text-green-500">拖拽移动</span> •
+            <span className="text-blue-500">拖拽右下角缩放</span>
+          </p>
         </div>
       </Modal>
     </div>

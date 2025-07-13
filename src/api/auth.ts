@@ -12,11 +12,10 @@ export const login = (data: LoginForm) => {
       user_info: {
         id: number
         username: string
-        nickname: string
         roles: string[]
         phone: string | null
-        email: string
-        avatar: string
+        idCardNumber: string | null
+        avatar: string | null
         passwordUpdatedAt?: string
       }
     }>
@@ -34,14 +33,13 @@ export const getUserProfile = () => {
     ApiResponse<{
       id: number
       username: string
-      nickname: string
       roles: string[]
-      permissions: string[]
       phone: string | null
-      email: string
-      idCardNumber?: string
-      avatar: string
+      idCardNumber: string | null
+      avatar: string | null
       passwordUpdatedAt?: string
+      createdAt?: string
+      updatedAt?: string
     }>
   >('/auth/profile')
 }
@@ -54,17 +52,18 @@ export interface UpdateUserParams {
   phone?: string
   email?: string
   idCardNumber?: string
+  avatar?: string
 }
 
 /**
  * 更新当前登录用户的个人资料
  */
-export const updateUserProfile = (id: number, data: UpdateUserParams) => {
+export const updateUserProfile = (_id: number, data: UpdateUserParams) => {
   // 普通用户使用新接口更新自己的资料
   return request.put<ApiResponse<any>>('/auth/profile', {
-    email: data.email,
     phone: data.phone,
     idCardNumber: data.idCardNumber,
+    avatar: data.avatar,
   })
 }
 

@@ -5,7 +5,7 @@ import { useNavigate, Navigate } from 'react-router-dom'
 import * as Yup from 'yup'
 import { useAuthStore } from '../../store/auth'
 import { login } from '../../api/auth'
-import type { LoginForm, ApiResponse } from '../../types'
+import type { LoginForm, ApiResponse, User } from '../../types'
 
 const loginSchema = Yup.object().shape({
   username: Yup.string().required('请输入用户名'),
@@ -38,7 +38,8 @@ const Login = () => {
           username: string
           roles: string[]
           phone: string | null
-          email: string
+          idCardNumber: string | null
+          avatar: string | null
           passwordUpdatedAt?: string
         }
       }>
@@ -59,13 +60,14 @@ const Login = () => {
         const user = {
           id: user_info.id,
           username: user_info.username,
-          email: user_info.email,
-          phone: user_info.phone || '',
+          phone: user_info.phone,
+          idCardNumber: user_info.idCardNumber,
+          avatar: user_info.avatar,
           roles: user_info.roles,
           // 以下是必要的字段，但API没有返回，设置默认值
           password: '',
           nickname: user_info.username,
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg',
+          email: '',
           sex: 0 as 0 | 1,
           status: 1 as 0 | 1,
           remark: '',
@@ -82,7 +84,7 @@ const Login = () => {
           update_time: new Date().toISOString(),
         }
 
-        setUser(user)
+        setUser(user as User)
 
         // 保存密码最后更新时间
         if (user_info.passwordUpdatedAt) {
