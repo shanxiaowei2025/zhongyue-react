@@ -585,6 +585,13 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`
   }
 
+  // 格式化年月（用于代理记账合同的委托日期）
+  const formatYearMonth = (dateString?: string | Date) => {
+    if (!dateString) return '___'
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString
+    return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
+  }
+
   // 金额格式化
   const formatCurrency = (amount?: number | string | null) => {
     if (amount === undefined || amount === null || amount === '' || amount === 0) return '/'
@@ -1100,16 +1107,16 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
               乙方接受甲方委托，对甲方
               <Text style={styles.dateValue}>
                 {contractData.entrustmentStartDate
-                  ? formatDate(contractData.entrustmentStartDate)
+                  ? formatYearMonth(contractData.entrustmentStartDate)
                   : '___'}
               </Text>
-              日至
+              至
               <Text style={styles.dateValue}>
                 {contractData.entrustmentEndDate
-                  ? formatDate(contractData.entrustmentEndDate)
+                  ? formatYearMonth(contractData.entrustmentEndDate)
                   : '___'}
               </Text>
-              日期间内的经济业务进行代理记账。
+              期间内的经济业务进行代理记账。
             </Text>
           </View>
 
