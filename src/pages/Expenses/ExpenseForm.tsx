@@ -570,28 +570,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 克隆对象以避免修改原始数据
         const formData: any = { ...expense }
 
-          // 将日期字符串转换为 Dayjs 实例
-          ;[
-            'chargeDate',
-            'accountingSoftwareStartDate',
-            'accountingSoftwareEndDate',
-            'addressStartDate',
-            'addressEndDate',
-            'agencyStartDate',
-            'agencyEndDate',
-            'invoiceSoftwareStartDate',
-            'invoiceSoftwareEndDate',
-            'socialInsuranceStartDate',
-            'socialInsuranceEndDate',
-            'housingFundStartDate',
-            'housingFundEndDate',
-            'statisticalStartDate',
-            'statisticalEndDate',
-          ].forEach(dateField => {
-            if (formData[dateField]) {
-              formData[dateField] = dayjs(formData[dateField])
-            }
-          })
+        // 将日期字符串转换为 Dayjs 实例
+        ;[
+          'chargeDate',
+          'accountingSoftwareStartDate',
+          'accountingSoftwareEndDate',
+          'addressStartDate',
+          'addressEndDate',
+          'agencyStartDate',
+          'agencyEndDate',
+          'invoiceSoftwareStartDate',
+          'invoiceSoftwareEndDate',
+          'socialInsuranceStartDate',
+          'socialInsuranceEndDate',
+          'housingFundStartDate',
+          'housingFundEndDate',
+          'statisticalStartDate',
+          'statisticalEndDate',
+        ].forEach(dateField => {
+          if (formData[dateField]) {
+            formData[dateField] = dayjs(formData[dateField])
+          }
+        })
 
         // 确保赠送代理时长字段正确设置
         if (formData.giftAgencyDuration === null || formData.giftAgencyDuration === undefined) {
@@ -712,14 +712,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       } else {
         // 添加模式，设置默认值
         const today = dayjs()
+        // 设置业务员默认值为当前登录用户
+        const defaultSalesperson = user?.username || ''
         form.setFieldsValue({
           chargeDate: today,
           totalFee: 0,
           chargeMethod: [], // 确保chargeMethod是数组格式
+          salesperson: defaultSalesperson, // 设置业务员默认值
         })
         setPrevFormValues({
           chargeDate: today,
           totalFee: 0,
+          salesperson: defaultSalesperson,
         })
 
         // 初始化费用字段缓存为0
@@ -825,30 +829,30 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 深拷贝，避免修改原始值
       const formattedValues = { ...values } as any
 
-        // 格式化所有日期字段为ISO字符串
-        ;[
-          'chargeDate',
-          'accountingSoftwareStartDate',
-          'accountingSoftwareEndDate',
-          'addressStartDate',
-          'addressEndDate',
-          'agencyStartDate',
-          'agencyEndDate',
-          'invoiceSoftwareStartDate',
-          'invoiceSoftwareEndDate',
-          'socialInsuranceStartDate',
-          'socialInsuranceEndDate',
-          'housingFundStartDate',
-          'housingFundEndDate',
-          'statisticalStartDate',
-          'statisticalEndDate',
-        ].forEach(field => {
-          if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
-            // 将年月格式转换为年月日格式，日期默认为每月1号
-            const yearMonth = formattedValues[field].format('YYYY-MM')
-            formattedValues[field] = `${yearMonth}-01`
-          }
-        })
+      // 格式化所有日期字段为ISO字符串
+      ;[
+        'chargeDate',
+        'accountingSoftwareStartDate',
+        'accountingSoftwareEndDate',
+        'addressStartDate',
+        'addressEndDate',
+        'agencyStartDate',
+        'agencyEndDate',
+        'invoiceSoftwareStartDate',
+        'invoiceSoftwareEndDate',
+        'socialInsuranceStartDate',
+        'socialInsuranceEndDate',
+        'housingFundStartDate',
+        'housingFundEndDate',
+        'statisticalStartDate',
+        'statisticalEndDate',
+      ].forEach(field => {
+        if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
+          // 将年月格式转换为年月日格式，日期默认为每月1号
+          const yearMonth = formattedValues[field].format('YYYY-MM')
+          formattedValues[field] = `${yearMonth}-01`
+        }
+      })
 
       // 确保 giftAgencyDuration 字段在未显示时为空字符串
       if (agencyDurationYears < 2) {

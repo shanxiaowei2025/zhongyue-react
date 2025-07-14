@@ -41,6 +41,7 @@ import { useCustomerDetail } from '../../hooks/useCustomer'
 import { mutate } from 'swr'
 import { useBranchOffices } from '../../hooks/useDepartments'
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
+import { useAuthStore } from '../../store/auth'
 
 // 字段名到标签页的映射
 const FIELD_TO_TAB_MAP: Record<string, string> = {
@@ -344,6 +345,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
   const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
 
+  // 获取当前用户信息
+  const { user } = useAuthStore()
+
   // 使用Form.useWatch监听licenseNoFixedTerm字段的值变化
   const licenseNoFixedTerm = Form.useWatch('licenseNoFixedTerm', form)
   // 使用Form.useWatch监听licenseExpiryDate字段的值变化
@@ -487,6 +491,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       setFixState(true)
     }
   }, [customer, form, mode])
+
+  // 为新增模式设置提交人默认值
+  useEffect(() => {
+    if (mode === 'add' && user?.username) {
+      form.setFieldValue('submitter', user.username)
+    }
+  }, [mode, user?.username, form])
 
   // 监听licenseNoFixedTerm变化，当用户选择无固定期限时自动清空日期
   useEffect(() => {
@@ -1406,23 +1417,23 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               },
               ...(mode !== 'view'
                 ? [
-                    {
-                      title: '操作',
-                      key: 'action',
-                      render: (_: any, record: any, index: number) => (
-                        <Popconfirm
-                          title="确定删除此条记录吗?"
-                          onConfirm={() => handleDeletePaidInCapitalItem(index)}
-                          okText="是"
-                          cancelText="否"
-                        >
-                          <Button type="link" danger icon={<DeleteOutlined />}>
-                            删除
-                          </Button>
-                        </Popconfirm>
-                      ),
-                    },
-                  ]
+                  {
+                    title: '操作',
+                    key: 'action',
+                    render: (_: any, record: any, index: number) => (
+                      <Popconfirm
+                        title="确定删除此条记录吗?"
+                        onConfirm={() => handleDeletePaidInCapitalItem(index)}
+                        okText="是"
+                        cancelText="否"
+                      >
+                        <Button type="link" danger icon={<DeleteOutlined />}>
+                          删除
+                        </Button>
+                      </Popconfirm>
+                    ),
+                  },
+                ]
                 : []),
             ]}
           />
@@ -2077,17 +2088,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         initialValues={
           customer
             ? ({
-                ...customer,
-                licenseExpiryDate: customer.licenseExpiryDate
-                  ? dayjs(customer.licenseExpiryDate)
-                  : null,
-                capitalContributionDeadline: customer.capitalContributionDeadline
-                  ? dayjs(customer.capitalContributionDeadline)
-                  : null,
-                publicBankOpeningDate: customer.publicBankOpeningDate
-                  ? dayjs(customer.publicBankOpeningDate)
-                  : null,
-              } as any)
+              ...customer,
+              licenseExpiryDate: customer.licenseExpiryDate
+                ? dayjs(customer.licenseExpiryDate)
+                : null,
+              capitalContributionDeadline: customer.capitalContributionDeadline
+                ? dayjs(customer.capitalContributionDeadline)
+                : null,
+              publicBankOpeningDate: customer.publicBankOpeningDate
+                ? dayjs(customer.publicBankOpeningDate)
+                : null,
+            } as any)
             : undefined
         }
         onFinish={values => {
