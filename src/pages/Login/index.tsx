@@ -66,7 +66,6 @@ const Login = () => {
           roles: user_info.roles,
           // 以下是必要的字段，但API没有返回，设置默认值
           password: '',
-          nickname: user_info.username,
           email: '',
           sex: 0 as 0 | 1,
           status: 1 as 0 | 1,

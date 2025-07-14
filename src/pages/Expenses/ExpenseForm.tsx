@@ -570,28 +570,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 克隆对象以避免修改原始数据
         const formData: any = { ...expense }
 
-        // 将日期字符串转换为 Dayjs 实例
-        ;[
-          'chargeDate',
-          'accountingSoftwareStartDate',
-          'accountingSoftwareEndDate',
-          'addressStartDate',
-          'addressEndDate',
-          'agencyStartDate',
-          'agencyEndDate',
-          'invoiceSoftwareStartDate',
-          'invoiceSoftwareEndDate',
-          'socialInsuranceStartDate',
-          'socialInsuranceEndDate',
-          'housingFundStartDate',
-          'housingFundEndDate',
-          'statisticalStartDate',
-          'statisticalEndDate',
-        ].forEach(dateField => {
-          if (formData[dateField]) {
-            formData[dateField] = dayjs(formData[dateField])
-          }
-        })
+          // 将日期字符串转换为 Dayjs 实例
+          ;[
+            'chargeDate',
+            'accountingSoftwareStartDate',
+            'accountingSoftwareEndDate',
+            'addressStartDate',
+            'addressEndDate',
+            'agencyStartDate',
+            'agencyEndDate',
+            'invoiceSoftwareStartDate',
+            'invoiceSoftwareEndDate',
+            'socialInsuranceStartDate',
+            'socialInsuranceEndDate',
+            'housingFundStartDate',
+            'housingFundEndDate',
+            'statisticalStartDate',
+            'statisticalEndDate',
+          ].forEach(dateField => {
+            if (formData[dateField]) {
+              formData[dateField] = dayjs(formData[dateField])
+            }
+          })
 
         // 确保赠送代理时长字段正确设置
         if (formData.giftAgencyDuration === null || formData.giftAgencyDuration === undefined) {
@@ -825,30 +825,30 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 深拷贝，避免修改原始值
       const formattedValues = { ...values } as any
 
-      // 格式化所有日期字段为ISO字符串
-      ;[
-        'chargeDate',
-        'accountingSoftwareStartDate',
-        'accountingSoftwareEndDate',
-        'addressStartDate',
-        'addressEndDate',
-        'agencyStartDate',
-        'agencyEndDate',
-        'invoiceSoftwareStartDate',
-        'invoiceSoftwareEndDate',
-        'socialInsuranceStartDate',
-        'socialInsuranceEndDate',
-        'housingFundStartDate',
-        'housingFundEndDate',
-        'statisticalStartDate',
-        'statisticalEndDate',
-      ].forEach(field => {
-        if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
-          // 将年月格式转换为年月日格式，日期默认为每月1号
-          const yearMonth = formattedValues[field].format('YYYY-MM')
-          formattedValues[field] = `${yearMonth}-01`
-        }
-      })
+        // 格式化所有日期字段为ISO字符串
+        ;[
+          'chargeDate',
+          'accountingSoftwareStartDate',
+          'accountingSoftwareEndDate',
+          'addressStartDate',
+          'addressEndDate',
+          'agencyStartDate',
+          'agencyEndDate',
+          'invoiceSoftwareStartDate',
+          'invoiceSoftwareEndDate',
+          'socialInsuranceStartDate',
+          'socialInsuranceEndDate',
+          'housingFundStartDate',
+          'housingFundEndDate',
+          'statisticalStartDate',
+          'statisticalEndDate',
+        ].forEach(field => {
+          if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
+            // 将年月格式转换为年月日格式，日期默认为每月1号
+            const yearMonth = formattedValues[field].format('YYYY-MM')
+            formattedValues[field] = `${yearMonth}-01`
+          }
+        })
 
       // 确保 giftAgencyDuration 字段在未显示时为空字符串
       if (agencyDurationYears < 2) {
@@ -1320,6 +1320,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                       }
                     }}
                   >
+                    <Select.Option value="定兴收款码">定兴收款码</Select.Option>
+                    <Select.Option value="高碑店收款码">高碑店收款码</Select.Option>
+                    <Select.Option value="雄安收款码">雄安收款码</Select.Option>
                     <Select.Option value="定兴中岳对公户">定兴中岳对公户</Select.Option>
                     <Select.Option value="高碑店中岳对公户">高碑店中岳对公户</Select.Option>
                     <Select.Option value="雄安中岳对公户">雄安中岳对公户</Select.Option>
@@ -1328,9 +1331,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                     <Select.Option value="如你心意对公户">如你心意对公户</Select.Option>
                     <Select.Option value="维融对公户">维融对公户</Select.Option>
                     <Select.Option value="现金">现金</Select.Option>
-                    <Select.Option value="定兴收款码">定兴收款码</Select.Option>
-                    <Select.Option value="高碑店收款码">高碑店收款码</Select.Option>
-                    <Select.Option value="雄安收款码">雄安收款码</Select.Option>
                   </Select>
                 </Form.Item>
 
@@ -2114,8 +2114,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '劳务派遣年检', label: '劳务派遣年检' },
                               { value: '工商年检', label: '工商年检' },
                               { value: '补充申报', label: '补充申报' },
-                              { value: '代理企业注销', label: '代理企业注销' },
-                              { value: '非代理企业注销', label: '非代理企业注销' },
+                              { value: '代理企业工商注销', label: '代理企业工商注销' },
+                              { value: '代理企业税务注销', label: '代理企业税务注销' },
+                              { value: '代理企业银行注销', label: '代理企业银行注销' },
                               { value: '银行开户费', label: '银行开户费' },
                               { value: '公司转让', label: '公司转让' },
                             ]}
@@ -2153,8 +2154,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '劳务派遣年检', label: '劳务派遣年检' },
                               { value: '工商年检', label: '工商年检' },
                               { value: '补充申报', label: '补充申报' },
-                              { value: '代理企业注销', label: '代理企业注销' },
-                              { value: '非代理企业注销', label: '非代理企业注销' },
+                              { value: '非代理企业工商注销', label: '非代理企业工商注销' },
+                              { value: '非代理企业税务注销', label: '非代理企业税务注销' },
+                              { value: '非代理企业银行注销', label: '非代理企业银行注销' },
                               { value: '银行开户费', label: '银行开户费' },
                               { value: '公司转让', label: '公司转让' },
                             ]}

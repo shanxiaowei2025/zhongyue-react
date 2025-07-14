@@ -165,7 +165,7 @@ const Expenses: React.FC = () => {
     unifiedSocialCreditCode: string
     status?: ExpenseStatus
     salesperson: string
-    businessType: string
+    businessType?: string
     dateRange?: any // 使用any类型避免typescript错误
     page: number
     pageSize: number
@@ -174,7 +174,7 @@ const Expenses: React.FC = () => {
     unifiedSocialCreditCode: '',
     status: undefined,
     salesperson: '',
-    businessType: '',
+    businessType: undefined,
     dateRange: undefined,
     page: 1,
     pageSize: 10,
@@ -202,7 +202,7 @@ const Expenses: React.FC = () => {
     unifiedSocialCreditCode: savedState.unifiedSocialCreditCode || '',
     status: savedState.status !== undefined ? savedState.status : undefined,
     salesperson: savedState.salesperson || '',
-    businessType: savedState.businessType || '',
+    businessType: savedState.businessType || undefined,
     dateRange: initialDateRange,
     page: Number(savedState.page) || 1,
     pageSize: Number(savedState.pageSize) || 10,
@@ -379,7 +379,7 @@ const Expenses: React.FC = () => {
       unifiedSocialCreditCode: '',
       status: undefined,
       salesperson: '',
-      businessType: '',
+      businessType: undefined,
       dateRange: undefined,
       page: 1,
       pageSize: 10,
