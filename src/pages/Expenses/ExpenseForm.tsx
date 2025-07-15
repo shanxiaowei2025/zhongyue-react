@@ -570,28 +570,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 克隆对象以避免修改原始数据
         const formData: any = { ...expense }
 
-          // 将日期字符串转换为 Dayjs 实例
-          ;[
-            'chargeDate',
-            'accountingSoftwareStartDate',
-            'accountingSoftwareEndDate',
-            'addressStartDate',
-            'addressEndDate',
-            'agencyStartDate',
-            'agencyEndDate',
-            'invoiceSoftwareStartDate',
-            'invoiceSoftwareEndDate',
-            'socialInsuranceStartDate',
-            'socialInsuranceEndDate',
-            'housingFundStartDate',
-            'housingFundEndDate',
-            'statisticalStartDate',
-            'statisticalEndDate',
-          ].forEach(dateField => {
-            if (formData[dateField]) {
-              formData[dateField] = dayjs(formData[dateField])
-            }
-          })
+        // 将日期字符串转换为 Dayjs 实例
+        ;[
+          'chargeDate',
+          'accountingSoftwareStartDate',
+          'accountingSoftwareEndDate',
+          'addressStartDate',
+          'addressEndDate',
+          'agencyStartDate',
+          'agencyEndDate',
+          'invoiceSoftwareStartDate',
+          'invoiceSoftwareEndDate',
+          'socialInsuranceStartDate',
+          'socialInsuranceEndDate',
+          'housingFundStartDate',
+          'housingFundEndDate',
+          'statisticalStartDate',
+          'statisticalEndDate',
+        ].forEach(dateField => {
+          if (formData[dateField]) {
+            formData[dateField] = dayjs(formData[dateField])
+          }
+        })
 
         // 确保赠送代理时长字段正确设置
         if (formData.giftAgencyDuration === null || formData.giftAgencyDuration === undefined) {

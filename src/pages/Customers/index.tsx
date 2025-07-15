@@ -1068,15 +1068,23 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="企业类型" className="mb-2">
-                <Input
-                  placeholder="请输入企业类型"
-                  value={searchParams.enterpriseType}
-                  onChange={e =>
-                    setSearchParams({ ...searchParams, enterpriseType: e.target.value })
+                <Select
+                  placeholder="请选择企业类型"
+                  value={searchParams.enterpriseType || undefined}
+                  onChange={value =>
+                    setSearchParams({ ...searchParams, enterpriseType: value || '' })
                   }
                   className="w-40"
                   allowClear
-                />
+                >
+                  <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
+                  <Select.Option value="小规模（个体）">小规模（个体）</Select.Option>
+                  <Select.Option value="一般纳税人">一般纳税人</Select.Option>
+                  <Select.Option value="小规模（个人独资）">小规模（个人独资）</Select.Option>
+                  <Select.Option value="合作社">合作社</Select.Option>
+                  <Select.Option value="民办非企业单位">民办非企业单位</Select.Option>
+                  <Select.Option value="其他">其他</Select.Option>
+                </Select>
               </Form.Item>
 
               <Form.Item label="所属分局" className="mb-2">
