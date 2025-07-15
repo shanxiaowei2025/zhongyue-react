@@ -20,6 +20,12 @@ const instance = axios.create({
 
     // 遍历参数对象的所有key
     Object.entries(params).forEach(([key, value]) => {
+      // 处理空值查询：如果值为'-'，转换为空字符串并发送
+      if (value === '-') {
+        searchParams.append(key, '')
+        return
+      }
+
       // 过滤掉空值
       if (value !== undefined && value !== null && value !== '') {
         // 对象类型处理 - 数组我们需要特殊处理

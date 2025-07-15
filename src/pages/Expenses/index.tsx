@@ -851,6 +851,7 @@ const Expenses: React.FC = () => {
                 <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
                 <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
                 <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
+                <Select.Option value="-">-</Select.Option>
               </Select>
             </Form.Item>
 
@@ -865,6 +866,7 @@ const Expenses: React.FC = () => {
                     {option.label}
                   </Select.Option>
                 ))}
+                <Select.Option value="-">-</Select.Option>
               </Select>
             </Form.Item>
 

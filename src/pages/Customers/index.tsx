@@ -922,7 +922,7 @@ export default function Customers() {
         // 模拟点击取消按钮
         const cancelButton = formElement.querySelector('.customer-form-footer button')
         if (cancelButton) {
-          ; (cancelButton as HTMLButtonElement).click()
+          ;(cancelButton as HTMLButtonElement).click()
           return // 点击取消按钮会触发handleCancel，会自动关闭抽屉
         }
       }
@@ -943,7 +943,7 @@ export default function Customers() {
         // 模拟点击取消按钮
         const cancelButton = formElement.querySelector('.customer-form-footer button')
         if (cancelButton) {
-          ; (cancelButton as HTMLButtonElement).click()
+          ;(cancelButton as HTMLButtonElement).click()
           return // 点击取消按钮会触发handleCancel，会自动关闭模态框
         }
       }
@@ -1608,11 +1608,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               alt={label}
               className="w-full h-24 object-cover rounded-md border border-gray-200"
               onError={e => {
-                ; (e.target as HTMLImageElement).onerror = null
-                  ; (e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-                  ; (e.target as HTMLImageElement).className =
-                    'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
-                  ; (e.target as HTMLImageElement).style.cursor = 'not-allowed'
+                ;(e.target as HTMLImageElement).onerror = null
+                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                ;(e.target as HTMLImageElement).className =
+                  'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
+                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
               }}
             />
           </div>
