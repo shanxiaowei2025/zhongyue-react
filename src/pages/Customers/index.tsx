@@ -141,22 +141,35 @@ export default function Customers() {
 
   const [current, setCurrent] = useState(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
-  const [searchParams, setSearchParams] = useState({
-    keyword: '',
-    unifiedSocialCreditCode: '',
-    customerLevel: '',
-    consultantAccountant: '',
-    bookkeepingAccountant: '',
-    taxBureau: '',
-    enterpriseType: '',
-    industryCategory: '',
-    enterpriseStatus: '',
-    businessStatus: '',
-    location: '',
-    remarks: '',
-    startDate: '',
-    endDate: '',
-    ...(savedSearchParams || {}), // 恢复之前保存的搜索条件
+  const [searchParams, setSearchParams] = useState(() => {
+    const baseParams = {
+      keyword: '',
+      unifiedSocialCreditCode: '',
+      customerLevel: '',
+      consultantAccountant: '',
+      bookkeepingAccountant: '',
+      taxBureau: '',
+      enterpriseType: '',
+      industryCategory: '',
+      enterpriseStatus: '',
+      businessStatus: '',
+      location: '',
+      remarks: '',
+      startDate: '',
+      endDate: '',
+      dateRange: null as [dayjs.Dayjs, dayjs.Dayjs] | null,
+      ...(savedSearchParams || {}), // 恢复之前保存的搜索条件
+    }
+
+    // 如果有保存的startDate和endDate，则构建dateRange
+    if (baseParams.startDate && baseParams.endDate) {
+      baseParams.dateRange = [
+        dayjs.utc(baseParams.startDate).local(),
+        dayjs.utc(baseParams.endDate).local(),
+      ]
+    }
+
+    return baseParams
   })
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -183,7 +196,17 @@ export default function Customers() {
   const requestParams = {
     page: current,
     pageSize,
-    ...debouncedSearchParams,
+    // 排除dateRange字段，只发送后端需要的参数
+    ...Object.fromEntries(
+      Object.entries(debouncedSearchParams).filter(([key]) => key !== 'dateRange')
+    ),
+    // 如果有dateRange，将其转换为startDate和endDate
+    ...(debouncedSearchParams.dateRange
+      ? {
+          startDate: debouncedSearchParams.dateRange[0].format('YYYY-MM-DD'),
+          endDate: debouncedSearchParams.dateRange[1].format('YYYY-MM-DD'),
+        }
+      : {}),
   }
 
   // 使用SWR获取客户列表数据
@@ -254,8 +277,7 @@ export default function Customers() {
     searchParams.enterpriseStatus,
     searchParams.businessStatus,
     searchParams.location,
-    searchParams.startDate,
-    searchParams.endDate,
+    searchParams.dateRange,
   ])
 
   const resetSearch = () => {
@@ -274,6 +296,7 @@ export default function Customers() {
       remarks: '',
       startDate: '',
       endDate: '',
+      dateRange: null,
     })
     setCurrent(1)
   }
@@ -1154,31 +1177,20 @@ export default function Customers() {
                 />
               </Form.Item>
 
-              <Form.Item label="开始日期" className="mb-2">
-                <DatePicker
-                  placeholder="请选择开始日期"
-                  value={searchParams.startDate ? dayjs.utc(searchParams.startDate).local() : null}
-                  onChange={date =>
+              <Form.Item label="创建日期" className="mb-2">
+                <DatePicker.RangePicker
+                  placeholder={['开始日期', '结束日期']}
+                  value={searchParams.dateRange}
+                  onChange={dates => {
                     setSearchParams({
                       ...searchParams,
-                      startDate: date ? date.format('YYYY-MM-DD') : '',
+                      dateRange: dates,
+                      // 同时更新startDate和endDate以保持兼容性
+                      startDate: dates && dates[0] ? dates[0].format('YYYY-MM-DD') : '',
+                      endDate: dates && dates[1] ? dates[1].format('YYYY-MM-DD') : '',
                     })
-                  }
-                  className="w-40"
-                />
-              </Form.Item>
-
-              <Form.Item label="结束日期" className="mb-2">
-                <DatePicker
-                  placeholder="请选择结束日期"
-                  value={searchParams.endDate ? dayjs.utc(searchParams.endDate).local() : null}
-                  onChange={date =>
-                    setSearchParams({
-                      ...searchParams,
-                      endDate: date ? date.format('YYYY-MM-DD') : '',
-                    })
-                  }
-                  className="w-40"
+                  }}
+                  className="w-60"
                 />
               </Form.Item>
             </div>

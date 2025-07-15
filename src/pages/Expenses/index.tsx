@@ -280,15 +280,15 @@ const Expenses: React.FC = () => {
       pageSize: searchParams.pageSize,
       dateRange: searchParams.dateRange
         ? [
-            searchParams.dateRange[0].format('YYYY-MM-DD'),
-            searchParams.dateRange[1].format('YYYY-MM-DD'),
-          ]
+          searchParams.dateRange[0].format('YYYY-MM-DD'),
+          searchParams.dateRange[1].format('YYYY-MM-DD'),
+        ]
         : undefined,
       createDateRange: searchParams.createDateRange
         ? [
-            searchParams.createDateRange[0].format('YYYY-MM-DD'),
-            searchParams.createDateRange[1].format('YYYY-MM-DD'),
-          ]
+          searchParams.createDateRange[0].format('YYYY-MM-DD'),
+          searchParams.createDateRange[1].format('YYYY-MM-DD'),
+        ]
         : undefined,
     }
 
@@ -851,7 +851,6 @@ const Expenses: React.FC = () => {
                 <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
                 <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
                 <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
-                <Select.Option value="-">-</Select.Option>
               </Select>
             </Form.Item>
 
