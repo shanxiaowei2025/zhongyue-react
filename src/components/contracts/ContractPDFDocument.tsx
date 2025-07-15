@@ -836,9 +836,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
                     {option.label}
                     {isSelected && item && item.amount ? `（${item.amount}元）` : ''}
                     {isSelected &&
-                    serviceItemsWithDates.includes(option.key) &&
-                    item &&
-                    (item.startDate || item.endDate)
+                      serviceItemsWithDates.includes(option.key) &&
+                      item &&
+                      (item.startDate || item.endDate)
                       ? formatDateRange({ startDate: item.startDate, endDate: item.endDate })
                       : ''}
                   </Text>
@@ -861,23 +861,31 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     const selectedServiceMap =
       contractData.declarationService && Array.isArray(contractData.declarationService)
         ? contractData.declarationService.reduce(
-            (acc, service) => {
-              // 处理不同的数据结构
-              if (typeof service === 'string') {
-                acc[service] = true
-              } else if (service && typeof service === 'object' && service.itemKey) {
+          (acc, service) => {
+            // 处理不同的数据结构
+            if (typeof service === 'string') {
+              acc[service] = true
+            } else if (service && typeof service === 'object') {
+              // 优先检查 value 属性（实际API返回的数据结构）
+              if ((service as any).value) {
+                acc[(service as any).value] = true
+              } else if (service.itemKey) {
                 acc[service.itemKey] = true
               }
-              return acc
-            },
-            {} as Record<string, boolean>
-          )
+            }
+            return acc
+          },
+          {} as Record<string, boolean>
+        )
         : ({} as Record<string, boolean>)
 
-    // 计算每列的项目数量（向上取整，确保第一列不会比第二列少太多）
-    const itemsPerColumn = Math.ceil(DECLARATION_SERVICE_OPTIONS.length / 2)
-    const leftColumnItems = DECLARATION_SERVICE_OPTIONS.slice(0, itemsPerColumn)
-    const rightColumnItems = DECLARATION_SERVICE_OPTIONS.slice(itemsPerColumn)
+    // 使用横向换行布局，与合同详情页面保持一致
+    // 计算每行的项目数量（2列）
+    const itemsPerRow = 2
+    const rows = []
+    for (let i = 0; i < DECLARATION_SERVICE_OPTIONS.length; i += itemsPerRow) {
+      rows.push(DECLARATION_SERVICE_OPTIONS.slice(i, i + itemsPerRow))
+    }
 
     return (
       <View
@@ -887,33 +895,29 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           flexDirection: 'column',
         }}
       >
-        {/* 使用表格化布局替代两列flex布局 */}
-        <View
-          style={{
-            width: '100%',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-          }}
-        >
-          {/* 左列 */}
+        {/* 使用行布局，每行显示2个项目 */}
+        {rows.map((row, rowIndex) => (
           <View
+            key={rowIndex}
             style={{
-              width: '48%',
-              flexDirection: 'column',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'flex-start',
+              alignItems: 'flex-start',
+              marginBottom: 2,
             }}
           >
-            {leftColumnItems.map((option, index) => {
+            {row.map((option, colIndex) => {
               const isSelected = selectedServiceMap.hasOwnProperty(option.value)
               return (
                 <View
-                  key={index}
+                  key={colIndex}
                   style={{
+                    width: '50%',
                     flexDirection: 'row',
                     alignItems: 'flex-start',
-                    marginBottom: 2,
                     minHeight: 18,
-                    width: '100%',
+                    paddingRight: 5,
                   }}
                   wrap={false}
                 >
@@ -941,55 +945,16 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
                 </View>
               )
             })}
+            {/* 如果该行只有一个项目，添加空白占位符 */}
+            {row.length === 1 && (
+              <View
+                style={{
+                  width: '50%',
+                }}
+              />
+            )}
           </View>
-
-          {/* 右列 */}
-          <View
-            style={{
-              width: '48%',
-              flexDirection: 'column',
-            }}
-          >
-            {rightColumnItems.map((option, index) => {
-              const isSelected = selectedServiceMap.hasOwnProperty(option.value)
-              return (
-                <View
-                  key={index}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'flex-start',
-                    marginBottom: 2,
-                    minHeight: 18,
-                    width: '100%',
-                  }}
-                  wrap={false}
-                >
-                  <View
-                    style={{
-                      ...styles.checkboxChecked,
-                      ...(isSelected ? {} : styles.checkboxUnchecked),
-                      marginTop: 1,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {isSelected && <Text style={styles.checkboxCheckmark}>✓</Text>}
-                  </View>
-                  <Text
-                    style={{
-                      fontSize: 8,
-                      marginLeft: 4,
-                      flex: 1,
-                      lineHeight: 1.2,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    {option.label}
-                  </Text>
-                </View>
-              )
-            })}
-          </View>
-        </View>
+        ))}
       </View>
     )
   }
@@ -1499,7 +1464,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <View style={isMaixinProductService ? styles.companyInfoNoLogo : styles.companyInfo}>
             <Text style={styles.companyName}>
               {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ||
-              contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司'
+                contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司'
                 ? `定兴县中岳会计服务有限公司\n${contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? '河北雄安分公司' : '高碑店分公司'}`
                 : config.title}
             </Text>

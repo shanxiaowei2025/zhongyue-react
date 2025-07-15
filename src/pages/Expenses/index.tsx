@@ -280,15 +280,15 @@ const Expenses: React.FC = () => {
       pageSize: searchParams.pageSize,
       dateRange: searchParams.dateRange
         ? [
-          searchParams.dateRange[0].format('YYYY-MM-DD'),
-          searchParams.dateRange[1].format('YYYY-MM-DD'),
-        ]
+            searchParams.dateRange[0].format('YYYY-MM-DD'),
+            searchParams.dateRange[1].format('YYYY-MM-DD'),
+          ]
         : undefined,
       createDateRange: searchParams.createDateRange
         ? [
-          searchParams.createDateRange[0].format('YYYY-MM-DD'),
-          searchParams.createDateRange[1].format('YYYY-MM-DD'),
-        ]
+            searchParams.createDateRange[0].format('YYYY-MM-DD'),
+            searchParams.createDateRange[1].format('YYYY-MM-DD'),
+          ]
         : undefined,
     }
 

@@ -104,7 +104,8 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
       declarationService && Array.isArray(declarationService)
         ? declarationService.reduce(
             (acc, service) => {
-              acc[service.itemKey] = true
+              // 实际API返回的数据结构是 {value, label} 而不是 ServiceItem
+              acc[(service as any).value] = true
               return acc
             },
             {} as Record<string, boolean>
