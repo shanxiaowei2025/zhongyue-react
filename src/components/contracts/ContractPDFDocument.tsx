@@ -198,6 +198,8 @@ const styles = StyleSheet.create({
   detailValue: {
     flex: 1,
     fontSize: 9,
+    lineHeight: 1.4,
+    wordWrap: 'break-word',
   },
   // 代理记账合同专用样式
   agreementHeader: {
@@ -229,9 +231,12 @@ const styles = StyleSheet.create({
   partyContent: {
     flex: 1,
     flexWrap: 'wrap',
+    maxWidth: 'calc(100% - 100px)',
   },
   partyValue: {
     fontSize: 9,
+    lineHeight: 1.4,
+    wordWrap: 'break-word',
   },
   partyBName: {
     fontSize: 9,
@@ -513,6 +518,15 @@ const styles = StyleSheet.create({
     fontFamily: 'SourceHanSerifCN-Bold',
     fontSize: 9,
     minWidth: 70,
+    flexShrink: 0,
+  },
+  signatureText: {
+    fontSize: 9,
+    flex: 1,
+    maxWidth: 'calc(100% - 70px)',
+    lineHeight: 1.4,
+    wordWrap: 'break-word',
+    flexShrink: 1,
   },
   // 段落样式
   paragraph: {
@@ -836,9 +850,9 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
                     {option.label}
                     {isSelected && item && item.amount ? `（${item.amount}元）` : ''}
                     {isSelected &&
-                      serviceItemsWithDates.includes(option.key) &&
-                      item &&
-                      (item.startDate || item.endDate)
+                    serviceItemsWithDates.includes(option.key) &&
+                    item &&
+                    (item.startDate || item.endDate)
                       ? formatDateRange({ startDate: item.startDate, endDate: item.endDate })
                       : ''}
                   </Text>
@@ -861,22 +875,22 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     const selectedServiceMap =
       contractData.declarationService && Array.isArray(contractData.declarationService)
         ? contractData.declarationService.reduce(
-          (acc, service) => {
-            // 处理不同的数据结构
-            if (typeof service === 'string') {
-              acc[service] = true
-            } else if (service && typeof service === 'object') {
-              // 优先检查 value 属性（实际API返回的数据结构）
-              if ((service as any).value) {
-                acc[(service as any).value] = true
-              } else if (service.itemKey) {
-                acc[service.itemKey] = true
+            (acc, service) => {
+              // 处理不同的数据结构
+              if (typeof service === 'string') {
+                acc[service] = true
+              } else if (service && typeof service === 'object') {
+                // 优先检查 value 属性（实际API返回的数据结构）
+                if ((service as any).value) {
+                  acc[(service as any).value] = true
+                } else if (service.itemKey) {
+                  acc[service.itemKey] = true
+                }
               }
-            }
-            return acc
-          },
-          {} as Record<string, boolean>
-        )
+              return acc
+            },
+            {} as Record<string, boolean>
+          )
         : ({} as Record<string, boolean>)
 
     // 使用横向换行布局，与合同详情页面保持一致
@@ -1378,13 +1392,13 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>地址：</Text>
-                <Text>{formatText(contractData.partyAAddress)}</Text>
+                <Text style={styles.signatureText}>{formatText(contractData.partyAAddress)}</Text>
               </View>
             </View>
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>地址：</Text>
-                <Text>
+                <Text style={styles.signatureText}>
                   {contractData.partyBAddress
                     ? formatText(contractData.partyBAddress)
                     : config.address}
@@ -1464,7 +1478,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
           <View style={isMaixinProductService ? styles.companyInfoNoLogo : styles.companyInfo}>
             <Text style={styles.companyName}>
               {contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ||
-                contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司'
+              contractData.signatory === '定兴县中岳会计服务有限公司高碑店分公司'
                 ? `定兴县中岳会计服务有限公司\n${contractData.signatory === '定兴县中岳会计服务有限公司河北雄安分公司' ? '河北雄安分公司' : '高碑店分公司'}`
                 : config.title}
             </Text>
