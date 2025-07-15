@@ -167,6 +167,7 @@ const Expenses: React.FC = () => {
     salesperson: string
     businessType?: string
     dateRange?: any // 使用any类型避免typescript错误
+    createDateRange?: any // 开据时间范围
     page: number
     pageSize: number
   }>(PAGE_STATE_KEY, {
@@ -176,6 +177,7 @@ const Expenses: React.FC = () => {
     salesperson: '',
     businessType: undefined,
     dateRange: undefined,
+    createDateRange: undefined,
     page: 1,
     pageSize: 10,
   })
@@ -197,6 +199,20 @@ const Expenses: React.FC = () => {
     return undefined
   }, [savedState.dateRange])
 
+  // 正确处理savedState中的开据时间范围
+  const initialCreateDateRange = useMemo(() => {
+    if (!savedState.createDateRange) return undefined
+    try {
+      // 确保日期是有效的数组
+      if (Array.isArray(savedState.createDateRange) && savedState.createDateRange.length === 2) {
+        return [dayjs(savedState.createDateRange[0]), dayjs(savedState.createDateRange[1])]
+      }
+    } catch (error) {
+      console.error('解析开据时间范围失败:', error)
+    }
+    return undefined
+  }, [savedState.createDateRange])
+
   const [searchParams, setSearchParams] = useState({
     companyName: savedState.companyName || '',
     unifiedSocialCreditCode: savedState.unifiedSocialCreditCode || '',
@@ -204,6 +220,7 @@ const Expenses: React.FC = () => {
     salesperson: savedState.salesperson || '',
     businessType: savedState.businessType || undefined,
     dateRange: initialDateRange,
+    createDateRange: initialCreateDateRange,
     page: Number(savedState.page) || 1,
     pageSize: Number(savedState.pageSize) || 10,
   })
@@ -246,6 +263,7 @@ const Expenses: React.FC = () => {
       salesperson: searchParams.salesperson,
       businessType: searchParams.businessType,
       dateRange: searchParams.dateRange,
+      createDateRange: searchParams.createDateRange,
     })
   }, [form, searchParams])
 
@@ -266,6 +284,12 @@ const Expenses: React.FC = () => {
             searchParams.dateRange[1].format('YYYY-MM-DD'),
           ]
         : undefined,
+      createDateRange: searchParams.createDateRange
+        ? [
+            searchParams.createDateRange[0].format('YYYY-MM-DD'),
+            searchParams.createDateRange[1].format('YYYY-MM-DD'),
+          ]
+        : undefined,
     }
 
     // 使用ref或变量来跟踪初始渲染
@@ -283,6 +307,7 @@ const Expenses: React.FC = () => {
     searchParams.page,
     searchParams.pageSize,
     searchParams.dateRange,
+    searchParams.createDateRange,
     setSavedState,
   ])
 
@@ -301,11 +326,18 @@ const Expenses: React.FC = () => {
       page: 1,
     }
 
-    // 如果有日期范围，格式化后加入查询参数
+    // 如果有收费日期范围，格式化后加入查询参数
     if (values.dateRange && values.dateRange.length === 2) {
       params.dateRange = values.dateRange
     } else {
       params.dateRange = undefined
+    }
+
+    // 如果有开据时间范围，格式化后加入查询参数
+    if (values.createDateRange && values.createDateRange.length === 2) {
+      params.createDateRange = values.createDateRange
+    } else {
+      params.createDateRange = undefined
     }
 
     setSearchParams(params)
@@ -327,6 +359,16 @@ const Expenses: React.FC = () => {
           currentValues.dateRange.some((date: any) => !date)))
     ) {
       form.setFieldValue('dateRange', undefined)
+    }
+
+    // 特殊处理createDateRange字段，确保当它被清空时能正确设置为undefined
+    if (
+      currentValues.createDateRange === null ||
+      (Array.isArray(currentValues.createDateRange) &&
+        (currentValues.createDateRange.length === 0 ||
+          currentValues.createDateRange.some((date: any) => !date)))
+    ) {
+      form.setFieldValue('createDateRange', undefined)
     }
 
     setIsSearching(true)
@@ -381,6 +423,7 @@ const Expenses: React.FC = () => {
       salesperson: '',
       businessType: undefined,
       dateRange: undefined,
+      createDateRange: undefined,
       page: 1,
       pageSize: 10,
     })
@@ -552,12 +595,21 @@ const Expenses: React.FC = () => {
       // 准备查询参数，使用当前搜索条件
       const exportParams: Partial<ExpenseQueryParams> = { ...searchParams }
 
-      // 处理日期范围
+      // 处理收费日期范围
       if (form.getFieldValue('dateRange')) {
         const dateRange = form.getFieldValue('dateRange')
         if (dateRange && dateRange[0] && dateRange[1]) {
           exportParams.chargeDateStart = dayjs(dateRange[0]).format('YYYY-MM-DD')
           exportParams.chargeDateEnd = dayjs(dateRange[1]).format('YYYY-MM-DD')
+        }
+      }
+
+      // 处理开据时间范围
+      if (form.getFieldValue('createDateRange')) {
+        const createDateRange = form.getFieldValue('createDateRange')
+        if (createDateRange && createDateRange[0] && createDateRange[1]) {
+          exportParams.startDate = dayjs(createDateRange[0]).format('YYYY-MM-DD')
+          exportParams.endDate = dayjs(createDateRange[1]).format('YYYY-MM-DD')
         }
       }
 
@@ -817,6 +869,17 @@ const Expenses: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="dateRange" label="收费日期" className="m-0 w-full lg:col-span-2">
+              <RangePicker
+                allowClear
+                style={{ width: '100%' }}
+                onChange={() => {
+                  // 日期变化时特殊处理，确保能正确触发搜索
+                  setTimeout(handleFormFieldChange, 0)
+                }}
+              />
+            </Form.Item>
+
+            <Form.Item name="createDateRange" label="开据时间" className="m-0 w-full lg:col-span-2">
               <RangePicker
                 allowClear
                 style={{ width: '100%' }}

@@ -169,6 +169,7 @@ export interface ExpenseQueryParams {
   startDate?: string
   endDate?: string
   dateRange?: any
+  createDateRange?: any
   chargeDateStart?: string
   chargeDateEnd?: string
 }

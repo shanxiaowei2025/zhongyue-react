@@ -51,7 +51,7 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
     // 处理请求参数，确保日期范围正确传递
     const queryParams = { ...params }
 
-    // 处理日期范围
+    // 处理收费日期范围
     if (params.dateRange && Array.isArray(params.dateRange)) {
       queryParams.chargeDateStart = Array.isArray(params.dateRange[0])
         ? params.dateRange[0][0]
@@ -68,6 +68,25 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
       delete queryParams.dateRange
       delete queryParams.chargeDateStart
       delete queryParams.chargeDateEnd
+    }
+
+    // 处理开据时间范围
+    if (params.createDateRange && Array.isArray(params.createDateRange)) {
+      queryParams.startDate = Array.isArray(params.createDateRange[0])
+        ? params.createDateRange[0][0]
+        : params.createDateRange[0]?.format?.('YYYY-MM-DD') || params.createDateRange[0]
+
+      queryParams.endDate = Array.isArray(params.createDateRange[1])
+        ? params.createDateRange[1][0]
+        : params.createDateRange[1]?.format?.('YYYY-MM-DD') || params.createDateRange[1]
+
+      // 删除原始createDateRange参数，避免发送不必要的数据
+      delete queryParams.createDateRange
+    } else {
+      // 确保当createDateRange为undefined或null时，删除可能存在的日期参数
+      delete queryParams.createDateRange
+      delete queryParams.startDate
+      delete queryParams.endDate
     }
 
     // 确保page和pageSize参数是有效的数字

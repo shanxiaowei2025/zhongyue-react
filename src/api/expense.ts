@@ -18,18 +18,13 @@ export const getExpenseList = (params: ExpenseQueryParams) => {
     pageSize: params.pageSize || 10,
   }
 
-  // 删除dateRange参数，使用chargeDateStart和chargeDateEnd代替
+  // 删除dateRange和createDateRange参数，使用具体的日期字段代替
   if (queryParams.dateRange) {
     delete queryParams.dateRange
   }
 
-  // 删除startDate和endDate字段，这些是旧字段
-  if (queryParams.startDate) {
-    delete queryParams.startDate
-  }
-
-  if (queryParams.endDate) {
-    delete queryParams.endDate
+  if (queryParams.createDateRange) {
+    delete queryParams.createDateRange
   }
 
   return request.get<{
