@@ -1417,23 +1417,23 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               },
               ...(mode !== 'view'
                 ? [
-                  {
-                    title: '操作',
-                    key: 'action',
-                    render: (_: any, record: any, index: number) => (
-                      <Popconfirm
-                        title="确定删除此条记录吗?"
-                        onConfirm={() => handleDeletePaidInCapitalItem(index)}
-                        okText="是"
-                        cancelText="否"
-                      >
-                        <Button type="link" danger icon={<DeleteOutlined />}>
-                          删除
-                        </Button>
-                      </Popconfirm>
-                    ),
-                  },
-                ]
+                    {
+                      title: '操作',
+                      key: 'action',
+                      render: (_: any, record: any, index: number) => (
+                        <Popconfirm
+                          title="确定删除此条记录吗?"
+                          onConfirm={() => handleDeletePaidInCapitalItem(index)}
+                          okText="是"
+                          cancelText="否"
+                        >
+                          <Button type="link" danger icon={<DeleteOutlined />}>
+                            删除
+                          </Button>
+                        </Popconfirm>
+                      ),
+                    },
+                  ]
                 : []),
             ]}
           />
@@ -2088,17 +2088,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         initialValues={
           customer
             ? ({
-              ...customer,
-              licenseExpiryDate: customer.licenseExpiryDate
-                ? dayjs(customer.licenseExpiryDate)
-                : null,
-              capitalContributionDeadline: customer.capitalContributionDeadline
-                ? dayjs(customer.capitalContributionDeadline)
-                : null,
-              publicBankOpeningDate: customer.publicBankOpeningDate
-                ? dayjs(customer.publicBankOpeningDate)
-                : null,
-            } as any)
+                ...customer,
+                licenseExpiryDate: customer.licenseExpiryDate
+                  ? dayjs(customer.licenseExpiryDate)
+                  : null,
+                capitalContributionDeadline: customer.capitalContributionDeadline
+                  ? dayjs(customer.capitalContributionDeadline)
+                  : null,
+                publicBankOpeningDate: customer.publicBankOpeningDate
+                  ? dayjs(customer.publicBankOpeningDate)
+                  : null,
+              } as any)
             : undefined
         }
         onFinish={values => {

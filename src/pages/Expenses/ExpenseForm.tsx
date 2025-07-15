@@ -570,28 +570,28 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 克隆对象以避免修改原始数据
         const formData: any = { ...expense }
 
-        // 将日期字符串转换为 Dayjs 实例
-        ;[
-          'chargeDate',
-          'accountingSoftwareStartDate',
-          'accountingSoftwareEndDate',
-          'addressStartDate',
-          'addressEndDate',
-          'agencyStartDate',
-          'agencyEndDate',
-          'invoiceSoftwareStartDate',
-          'invoiceSoftwareEndDate',
-          'socialInsuranceStartDate',
-          'socialInsuranceEndDate',
-          'housingFundStartDate',
-          'housingFundEndDate',
-          'statisticalStartDate',
-          'statisticalEndDate',
-        ].forEach(dateField => {
-          if (formData[dateField]) {
-            formData[dateField] = dayjs(formData[dateField])
-          }
-        })
+          // 将日期字符串转换为 Dayjs 实例
+          ;[
+            'chargeDate',
+            'accountingSoftwareStartDate',
+            'accountingSoftwareEndDate',
+            'addressStartDate',
+            'addressEndDate',
+            'agencyStartDate',
+            'agencyEndDate',
+            'invoiceSoftwareStartDate',
+            'invoiceSoftwareEndDate',
+            'socialInsuranceStartDate',
+            'socialInsuranceEndDate',
+            'housingFundStartDate',
+            'housingFundEndDate',
+            'statisticalStartDate',
+            'statisticalEndDate',
+          ].forEach(dateField => {
+            if (formData[dateField]) {
+              formData[dateField] = dayjs(formData[dateField])
+            }
+          })
 
         // 确保赠送代理时长字段正确设置
         if (formData.giftAgencyDuration === null || formData.giftAgencyDuration === undefined) {
@@ -829,9 +829,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 深拷贝，避免修改原始值
       const formattedValues = { ...values } as any
 
-      // 格式化所有日期字段为ISO字符串
-      ;[
-        'chargeDate',
+      // 格式化日期字段为ISO字符串
+      // 精确日期字段（保持用户选择的完整日期）
+      const exactDateFields = ['chargeDate']
+      exactDateFields.forEach(field => {
+        if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
+          formattedValues[field] = formattedValues[field].format('YYYY-MM-DD')
+        }
+      })
+
+      // 月份日期字段（设置为该月1号）
+      const monthDateFields = [
         'accountingSoftwareStartDate',
         'accountingSoftwareEndDate',
         'addressStartDate',
@@ -846,7 +854,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         'housingFundEndDate',
         'statisticalStartDate',
         'statisticalEndDate',
-      ].forEach(field => {
+      ]
+      monthDateFields.forEach(field => {
         if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
           // 将年月格式转换为年月日格式，日期默认为每月1号
           const yearMonth = formattedValues[field].format('YYYY-MM')
