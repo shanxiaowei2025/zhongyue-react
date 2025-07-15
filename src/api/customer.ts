@@ -9,8 +9,13 @@ export const getCustomerList = (params: PaginationParams) => {
   // 手动构建查询字符串以确保正确格式
   const queryParams = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      queryParams.append(key, String(value))
+    if (value !== undefined && value !== null) {
+      // 当值为 "-" 时，设置为空字符串以实现空值查询
+      if (value === '-') {
+        queryParams.append(key, '')
+      } else if (value !== '') {
+        queryParams.append(key, String(value))
+      }
     }
   })
 
@@ -137,8 +142,13 @@ export const exportCustomerCSV = (params?: Record<string, any>) => {
   if (params) {
     const queryParams = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, String(value))
+      if (value !== undefined && value !== null) {
+        // 当值为 "-" 时，设置为空字符串以实现空值查询
+        if (value === '-') {
+          queryParams.append(key, '')
+        } else if (value !== '') {
+          queryParams.append(key, String(value))
+        }
       }
     })
     queryString = queryParams.toString()

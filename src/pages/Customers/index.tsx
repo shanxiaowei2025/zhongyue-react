@@ -922,7 +922,7 @@ export default function Customers() {
         // 模拟点击取消按钮
         const cancelButton = formElement.querySelector('.customer-form-footer button')
         if (cancelButton) {
-          ;(cancelButton as HTMLButtonElement).click()
+          ; (cancelButton as HTMLButtonElement).click()
           return // 点击取消按钮会触发handleCancel，会自动关闭抽屉
         }
       }
@@ -943,7 +943,7 @@ export default function Customers() {
         // 模拟点击取消按钮
         const cancelButton = formElement.querySelector('.customer-form-footer button')
         if (cancelButton) {
-          ;(cancelButton as HTMLButtonElement).click()
+          ; (cancelButton as HTMLButtonElement).click()
           return // 点击取消按钮会触发handleCancel，会自动关闭模态框
         }
       }
@@ -1084,6 +1084,7 @@ export default function Customers() {
                   <Select.Option value="合作社">合作社</Select.Option>
                   <Select.Option value="民办非企业单位">民办非企业单位</Select.Option>
                   <Select.Option value="其他">其他</Select.Option>
+                  <Select.Option value="-">-</Select.Option>
                 </Select>
               </Form.Item>
 
@@ -1126,10 +1127,13 @@ export default function Customers() {
                   onChange={value => setSearchParams({ ...searchParams, enterpriseStatus: value })}
                   allowClear
                   className="w-40"
-                  options={Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
-                    value,
-                    label,
-                  }))}
+                  options={[
+                    ...Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
+                      value,
+                      label,
+                    })),
+                    { value: '-', label: '-' },
+                  ]}
                 />
               </Form.Item>
 
@@ -1140,10 +1144,13 @@ export default function Customers() {
                   onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
                   allowClear
                   className="w-40"
-                  options={Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
-                    value,
-                    label,
-                  }))}
+                  options={[
+                    ...Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
+                      value,
+                      label,
+                    })),
+                    { value: '-', label: '-' },
+                  ]}
                 />
               </Form.Item>
 
@@ -1601,11 +1608,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               alt={label}
               className="w-full h-24 object-cover rounded-md border border-gray-200"
               onError={e => {
-                ;(e.target as HTMLImageElement).onerror = null
-                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-                ;(e.target as HTMLImageElement).className =
-                  'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
-                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
+                ; (e.target as HTMLImageElement).onerror = null
+                  ; (e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                  ; (e.target as HTMLImageElement).className =
+                    'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
+                  ; (e.target as HTMLImageElement).style.cursor = 'not-allowed'
               }}
             />
           </div>
