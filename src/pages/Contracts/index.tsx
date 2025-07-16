@@ -651,8 +651,11 @@ const Contracts: React.FC = () => {
       key: 'totalCost',
       width: 100,
       align: 'right',
-      render: value => {
-        const content = value ? `¥${value.toLocaleString()}` : '-'
+      render: (value, record) => {
+        // 代理记账合同显示currentChargeFee，其他合同显示totalCost
+        const displayValue =
+          record.contractType === '代理记账合同' ? record.currentChargeFee : value
+        const content = displayValue ? `¥${displayValue.toLocaleString()}` : '-'
         return <EllipsisText text={content} maxWidth={80} />
       },
     },
