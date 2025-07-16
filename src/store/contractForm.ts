@@ -178,10 +178,19 @@ export const useContractFormStore = create<ContractFormState>()(
             return
           }
 
-          // 深度合并数据，确保不覆盖用户输入
+          // 深度合并数据，确保不覆盖用户输入并避免不可变性问题
           Object.keys(data).forEach(key => {
             if (data[key] !== undefined) {
-              state.formData[key] = data[key]
+              // 对象类型进行深度克隆，避免 Immer 不可变性冲突
+              if (
+                typeof data[key] === 'object' &&
+                data[key] !== null &&
+                !Array.isArray(data[key])
+              ) {
+                state.formData[key] = JSON.parse(JSON.stringify(data[key]))
+              } else {
+                state.formData[key] = data[key]
+              }
             }
           })
 

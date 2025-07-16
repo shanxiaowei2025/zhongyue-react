@@ -3,6 +3,7 @@ import { Checkbox, Input, DatePicker, message } from 'antd'
 import type { CheckboxProps } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { produce } from 'immer'
 import { useContractDetail } from '../../hooks/useContract'
 import { useContractFormStore } from '../../store/contractForm'
 import type { CreateContractDto } from '../../types/contract'
@@ -436,21 +437,22 @@ const ProductServiceAgreement = forwardRef<
     // 处理日期变化
     const handleDateChange = useCallback(
       (itemKey: string, dateType: 'startDate' | 'endDate', value: string) => {
-        const newItemDates = { ...itemDates }
-
-        if (!newItemDates[itemKey]) {
-          newItemDates[itemKey] = {}
-        }
-
-        if (value) {
-          newItemDates[itemKey][dateType] = value
-        } else {
-          delete newItemDates[itemKey][dateType]
-          // 如果两个日期都为空，删除整个条目
-          if (!newItemDates[itemKey].startDate && !newItemDates[itemKey].endDate) {
-            delete newItemDates[itemKey]
+        // 使用 Immer 的 produce 函数安全地更新嵌套对象
+        const newItemDates = produce(itemDates, draft => {
+          if (!draft[itemKey]) {
+            draft[itemKey] = {}
           }
-        }
+
+          if (value) {
+            draft[itemKey][dateType] = value
+          } else {
+            delete draft[itemKey][dateType]
+            // 如果两个日期都为空，删除整个条目
+            if (!draft[itemKey].startDate && !draft[itemKey].endDate) {
+              delete draft[itemKey]
+            }
+          }
+        })
 
         if (mode === 'edit') {
           // 编辑模式：使用本地状态
