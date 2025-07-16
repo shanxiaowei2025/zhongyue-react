@@ -1766,11 +1766,12 @@ const ContractDetail: React.FC = () => {
                   </Button>
                 </>
               )}
-              {contractData && contractData.contractStatus === '1' && (
-                <Button icon={<LinkOutlined />} onClick={handleGetViewLink}>
-                  获取查看链接
-                </Button>
-              )}
+              {contractData &&
+                (contractData.contractStatus === '1' || contractData.contractStatus === '2') && (
+                  <Button icon={<LinkOutlined />} onClick={handleGetViewLink}>
+                    获取查看链接
+                  </Button>
+                )}
               {contractData && (
                 <>
                   <Button
