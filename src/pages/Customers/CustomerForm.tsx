@@ -1119,7 +1119,16 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           </Form.Item>
 
           <Form.Item name="taxBureau" label="所属分局">
-            <Input />
+            <AutoComplete
+              allowClear
+              placeholder="请选择或输入所属分局"
+              options={[
+                { label: '城区分局', value: '城区分局' },
+                { label: '固城分局', value: '固城分局' },
+                { label: '贤寓分局', value: '贤寓分局' },
+                { label: '天宫寺分局', value: '天宫寺分局' },
+              ]}
+            />
           </Form.Item>
 
           <Form.Item
