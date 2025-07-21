@@ -178,7 +178,14 @@ const FinancialSelfInspection: React.FC = () => {
     }
 
     // 允许的角色：记账会计、管理员、超级管理员
-    const allowedRoles = ['记账会计', 'admin', 'super_admin', '管理员', '超级管理员']
+    const allowedRoles = [
+      '记账会计',
+      'admin',
+      'super_admin',
+      '管理员',
+      '超级管理员',
+      'bookkeepingAccountant',
+    ]
 
     const hasPermission = user.roles.some(role => allowedRoles.includes(role))
     console.log('用户角色:', user.roles, '是否有整改权限:', hasPermission)
