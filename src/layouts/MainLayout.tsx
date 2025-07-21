@@ -380,6 +380,57 @@ const MainLayout = () => {
     return user.roles.some(role => allowedRoles.includes(role))
   }
 
+  // 检查用户是否有企业服务详情权限（仅管理员）
+  const hasEnterpriseServiceDetailPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+
+    const allowedRoles = ['super_admin', 'admin', '超级管理员', '管理员']
+
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
+  // 检查用户是否有账务自查权限（管理员+会计）
+  const hasFinancialInspectionPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+
+    const allowedRoles = [
+      'super_admin',
+      'admin',
+      'consultantAccountant',
+      'bookkeepingAccountant',
+      '超级管理员',
+      '管理员',
+      '顾问会计',
+      '记账会计',
+    ]
+
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
+  // 检查用户是否有税务核查权限（管理员+会计）
+  const hasTaxReviewPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+
+    const allowedRoles = [
+      'super_admin',
+      'admin',
+      'consultantAccountant',
+      'bookkeepingAccountant',
+      '超级管理员',
+      '管理员',
+      '顾问会计',
+      '记账会计',
+    ]
+
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
   // 基础菜单项
   const baseMenuItems: MenuProps['items'] = [
     {
@@ -410,21 +461,33 @@ const MainLayout = () => {
             icon: <AppstoreOutlined />,
             label: '企业服务',
             children: [
-              {
-                key: '/enterprise-service',
-                icon: <AppstoreOutlined />,
-                label: '企业服务详情',
-              },
-              {
-                key: '/financial-self-inspection',
-                icon: <AuditOutlined />,
-                label: '账务自查',
-              },
-              {
-                key: '/tax-review',
-                icon: <FileDoneOutlined />,
-                label: '税务核查',
-              },
+              ...(hasEnterpriseServiceDetailPermission()
+                ? [
+                    {
+                      key: '/enterprise-service',
+                      icon: <AppstoreOutlined />,
+                      label: '企业服务详情',
+                    },
+                  ]
+                : []),
+              ...(hasFinancialInspectionPermission()
+                ? [
+                    {
+                      key: '/financial-self-inspection',
+                      icon: <AuditOutlined />,
+                      label: '账务自查',
+                    },
+                  ]
+                : []),
+              ...(hasTaxReviewPermission()
+                ? [
+                    {
+                      key: '/tax-review',
+                      icon: <FileDoneOutlined />,
+                      label: '税务核查',
+                    },
+                  ]
+                : []),
             ],
           },
         ]

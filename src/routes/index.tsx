@@ -117,18 +117,7 @@ const routes: RouteObject[] = [
       {
         path: 'enterprise-service',
         element: (
-          <AuthorizedRoute
-            requiredRoles={[
-              'super_admin',
-              'admin',
-              'consultantAccountant',
-              'bookkeepingAccountant',
-              '超级管理员',
-              '管理员',
-              '顾问会计',
-              '记账会计',
-            ]}
-          >
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
             <EnterpriseService />
           </AuthorizedRoute>
         ),
@@ -136,18 +125,7 @@ const routes: RouteObject[] = [
       {
         path: 'enterprise-service/detail/:id',
         element: (
-          <AuthorizedRoute
-            requiredRoles={[
-              'super_admin',
-              'admin',
-              'consultantAccountant',
-              'bookkeepingAccountant',
-              '超级管理员',
-              '管理员',
-              '顾问会计',
-              '记账会计',
-            ]}
-          >
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
             <EnterpriseDetail />
           </AuthorizedRoute>
         ),
