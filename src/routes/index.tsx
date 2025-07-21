@@ -32,6 +32,9 @@ const FinancialSelfInspectionResponsibleDetail = lazy(
 )
 const TaxReview = lazy(() => import('../pages/TaxReview'))
 const TaxReviewDetail = lazy(() => import('../pages/TaxReview/Detail'))
+const Employees = lazy(() => import('../pages/Employees'))
+const EmployeeForm = lazy(() => import('../pages/Employees/EmployeeForm'))
+const EmployeeDetail = lazy(() => import('../pages/Employees/EmployeeDetail'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -113,6 +116,38 @@ const routes: RouteObject[] = [
       {
         path: 'contracts/edit/:id',
         element: <EditContract />,
+      },
+      {
+        path: 'employees',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+            <Employees />
+          </AuthorizedRoute>
+        ),
+      },
+      {
+        path: 'employees/create',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+            <EmployeeForm />
+          </AuthorizedRoute>
+        ),
+      },
+      {
+        path: 'employees/edit/:id',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+            <EmployeeForm />
+          </AuthorizedRoute>
+        ),
+      },
+      {
+        path: 'employees/detail/:id',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+            <EmployeeDetail />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'enterprise-service',

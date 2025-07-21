@@ -28,6 +28,7 @@ import {
   AppstoreOutlined,
   AuditOutlined,
   FileDoneOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import { buildImageUrl } from '../utils/upload'
@@ -453,6 +454,16 @@ const MainLayout = () => {
       icon: <FileTextOutlined />,
       label: '合同管理',
     },
+    // 根据用户角色决定是否显示员工管理菜单
+    ...(user?.roles.some(role => ['super_admin', 'admin', '超级管理员', '管理员'].includes(role))
+      ? [
+          {
+            key: '/employees',
+            icon: <IdcardOutlined />,
+            label: '员工管理',
+          },
+        ]
+      : []),
     // 根据用户角色决定是否显示企业服务菜单
     ...(hasEnterpriseServicePermission()
       ? [
