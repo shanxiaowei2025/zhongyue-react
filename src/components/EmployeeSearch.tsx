@@ -95,11 +95,6 @@ export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({
             <Form.Item label="所属部门" name="departmentIds">
               <Cascader
                 options={departments}
-                fieldNames={{
-                  label: 'name',
-                  value: 'id',
-                  children: 'children',
-                }}
                 placeholder="请选择部门"
                 allowClear
                 showSearch

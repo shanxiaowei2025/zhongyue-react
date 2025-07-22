@@ -19,7 +19,7 @@ import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 // import MultiFileUpload from '../../components/MultiFileUpload'
-import { useDepartments } from '../../hooks/useDepartments'
+import { useDepartments, getDepartmentPath } from '../../hooks/useDepartments'
 import { useEmployeeDetail, useCreateEmployee, useUpdateEmployee } from '../../hooks/useEmployee'
 import type { CreateEmployeeDto, UpdateEmployeeDto, ResumeFile } from '../../types/employee'
 
@@ -85,7 +85,7 @@ const EmployeeForm: React.FC = () => {
   const [resumeFiles, setResumeFiles] = useState<ResumeFile[]>([])
 
   // 获取部门数据
-  const { departments } = useDepartments()
+  const { departments, rawDepartments } = useDepartments()
 
   // 员工详情数据
   const { employee, isLoading: employeeLoading } = useEmployeeDetail(isEdit ? parseInt(id!) : null)
@@ -96,20 +96,21 @@ const EmployeeForm: React.FC = () => {
 
   // 初始化表单数据
   useEffect(() => {
-    if (isEdit && employee) {
+    if (isEdit && employee && rawDepartments.length > 0) {
+      // 获取部门路径
+      const deptPath = getDepartmentPath(employee.departmentId, rawDepartments)
+
       const formData = {
         ...employee,
         birthday: employee.birthday ? dayjs(employee.birthday) : undefined,
         hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
-        departmentIds: employee.departmentId
-          ? [employee.departmentId] // 简化处理，实际可能需要完整路径
-          : undefined,
+        departmentIds: deptPath.length > 0 ? deptPath : undefined,
       }
 
       form.setFieldsValue(formData)
       setResumeFiles(employee.resume || [])
     }
-  }, [employee, form, isEdit])
+  }, [employee, form, isEdit, rawDepartments])
 
   // 处理表单提交
   const handleSubmit = async (values: any) => {
@@ -134,7 +135,8 @@ const EmployeeForm: React.FC = () => {
       delete (submitData as any).departmentIds
 
       if (isEdit) {
-        // 更新员工
+        // 更新员工时移除身份证号（不允许修改）
+        delete (submitData as any).idCardNumber
         const updateData: UpdateEmployeeDto = submitData
         await updateEmployee(parseInt(id!), updateData)
         message.success('员工信息更新成功')
@@ -228,15 +230,11 @@ const EmployeeForm: React.FC = () => {
               <Form.Item label="所属部门" name="departmentIds">
                 <Cascader
                   options={departments}
-                  fieldNames={{
-                    label: 'name',
-                    value: 'id',
-                    children: 'children',
-                  }}
                   placeholder="请选择部门"
                   allowClear
                   showSearch
                   changeOnSelect={false}
+                  style={{ width: '100%' }}
                 />
               </Form.Item>
             </Col>
@@ -408,16 +406,18 @@ const EmployeeForm: React.FC = () => {
                   placeholder="暂不支持文件上传，请填写简历文件说明"
                   rows={3}
                   value={resumeFiles.length > 0 ? resumeFiles.map(f => f.fileName).join(', ') : ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     // 简化处理，暂时不支持文件上传
                     if (e.target.value) {
-                      setResumeFiles([{
-                        fileName: e.target.value,
-                        fileUrl: '',
-                        fileSize: 0,
-                        fileType: 'text/plain',
-                        uploadTime: new Date().toISOString()
-                      }])
+                      setResumeFiles([
+                        {
+                          fileName: e.target.value,
+                          fileUrl: '',
+                          fileSize: 0,
+                          fileType: 'text/plain',
+                          uploadTime: new Date().toISOString(),
+                        },
+                      ])
                     } else {
                       setResumeFiles([])
                     }
