@@ -29,6 +29,7 @@ import {
   AuditOutlined,
   FileDoneOutlined,
   IdcardOutlined,
+  CreditCardOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import { buildImageUrl } from '../utils/upload'
@@ -120,6 +121,12 @@ const MODULE_CONFIG: Record<
     label: '部门管理',
     icon: <ApartmentOutlined />,
     pathPatterns: ['/departments'],
+  },
+  '/salary-management': {
+    defaultPath: '/salary-management',
+    label: '薪资管理',
+    icon: <CreditCardOutlined />,
+    pathPatterns: ['/salary-management'],
   },
 }
 
@@ -461,6 +468,11 @@ const MainLayout = () => {
             key: '/employees',
             icon: <IdcardOutlined />,
             label: '员工管理',
+          },
+          {
+            key: '/salary-management',
+            icon: <CreditCardOutlined />,
+            label: '薪资管理',
           },
         ]
       : []),

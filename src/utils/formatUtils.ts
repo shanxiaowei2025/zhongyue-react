@@ -22,15 +22,28 @@ export const formatText = (text: string | null | undefined): string => {
 }
 
 /**
- * 格式化货币金额，空值或0值显示为 "/"
+ * 格式化货币金额，添加千位分隔符和保留两位小数
  * @param amount 金额数值
  * @returns 格式化后的金额字符串
  */
 export const formatCurrency = (amount: number | string | null | undefined): string => {
-  if (amount === null || amount === undefined || amount === '' || amount === 0) {
-    return '/'
+  if (amount === null || amount === undefined || amount === '') {
+    return '0.00'
   }
-  return String(amount)
+
+  // 转换为数字类型
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+
+  // 检查是否为有效数字
+  if (isNaN(numAmount) || !isFinite(numAmount)) {
+    return '0.00'
+  }
+
+  // 格式化为千位分隔符的金额
+  return numAmount.toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 }
 
 /**
@@ -71,7 +84,7 @@ export const formatCurrencyWithUnit = (
   unit: string = '元'
 ): string => {
   const formatted = formatCurrency(amount)
-  return formatted === '/' ? '/' : `${amount}${unit}`
+  return `${formatted}${unit}`
 }
 
 /**

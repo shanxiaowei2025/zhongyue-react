@@ -35,6 +35,7 @@ const TaxReviewDetail = lazy(() => import('../pages/TaxReview/Detail'))
 const Employees = lazy(() => import('../pages/Employees'))
 const EmployeeForm = lazy(() => import('../pages/Employees/EmployeeForm'))
 const EmployeeDetail = lazy(() => import('../pages/Employees/EmployeeDetail'))
+const SalaryManagement = lazy(() => import('../pages/SalaryManagement'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -146,6 +147,14 @@ const routes: RouteObject[] = [
         element: (
           <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
             <EmployeeDetail />
+          </AuthorizedRoute>
+        ),
+      },
+      {
+        path: 'salary-management',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+            <SalaryManagement />
           </AuthorizedRoute>
         ),
       },
