@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Card,
   Descriptions,
@@ -11,25 +11,59 @@ import {
   List,
   Empty,
   message,
+  Modal,
+  Image,
 } from 'antd'
 import {
   ArrowLeftOutlined,
   EditOutlined,
   DownloadOutlined,
   FileTextOutlined,
+  EyeOutlined,
+  FileImageOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FileWordOutlined,
+  FileExcelOutlined,
+  FilePptOutlined,
+  FileJpgOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { useEmployeeDetail } from '../../hooks/useEmployee'
+import { buildImageUrl } from '../../utils/upload'
 import type { Employee, ResumeFile } from '../../types/employee'
 
 const { Title, Text } = Typography
+
+// 定义文件类型图标映射
+const FILE_ICONS: Record<string, React.ReactNode> = {
+  pdf: <FilePdfOutlined />,
+  doc: <FileWordOutlined />,
+  docx: <FileWordOutlined />,
+  xls: <FileExcelOutlined />,
+  xlsx: <FileExcelOutlined />,
+  ppt: <FilePptOutlined />,
+  pptx: <FilePptOutlined />,
+  jpg: <FileJpgOutlined />,
+  jpeg: <FileJpgOutlined />,
+  png: <FileImageOutlined />,
+  gif: <FileImageOutlined />,
+  bmp: <FileImageOutlined />,
+  webp: <FileImageOutlined />,
+  default: <FileOutlined />,
+}
 
 const EmployeeDetail: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
 
   const { employee, isLoading, error } = useEmployeeDetail(id ? parseInt(id) : null)
+
+  // 预览状态
+  const [previewVisible, setPreviewVisible] = useState(false)
+  const [previewImage, setPreviewImage] = useState('')
+  const [previewTitle, setPreviewTitle] = useState('')
 
   const handleBack = () => {
     navigate('/employees')
@@ -41,17 +75,93 @@ const EmployeeDetail: React.FC = () => {
     }
   }
 
-  const handleDownloadResume = (file: ResumeFile) => {
+  // 判断文件类型
+  const getFileType = (fileName: string): string => {
+    if (!fileName) return 'default'
+    const extension = fileName.split('.').pop()?.toLowerCase() || 'default'
+    return FILE_ICONS[extension] ? extension : 'default'
+  }
+
+  // 判断是否为图片
+  const checkIsImage = (fileName: string): boolean => {
+    if (!fileName) return false
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+    const extension = fileName.split('.').pop()?.toLowerCase() || ''
+    return imageExtensions.includes(extension)
+  }
+
+  // 获取文件图标
+  const getFileIcon = (fileName: string) => {
+    const fileType = getFileType(fileName)
+    return FILE_ICONS[fileType] || FILE_ICONS.default
+  }
+
+  // 获取文件扩展名
+  const getFileExtension = (fileName: string) => {
+    if (!fileName) return ''
+    return fileName.split('.').pop()?.toUpperCase() || ''
+  }
+
+  // 构建文件完整URL
+  const getFileUrl = (file: ResumeFile): string => {
+    if (
+      file.fileUrl &&
+      (file.fileUrl.startsWith('http://') || file.fileUrl.startsWith('https://'))
+    ) {
+      return file.fileUrl
+    }
+    return buildImageUrl(file.fileName)
+  }
+
+  const handleDownloadResume = async (file: ResumeFile) => {
     try {
-      // 创建一个临时链接进行下载
+      const fileUrl = getFileUrl(file)
+
+      // 使用fetch获取文件内容，创建Blob进行真正的下载
+      const response = await fetch(fileUrl, {
+        method: 'GET',
+        headers: {
+          Accept: '*/*',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status}`)
+      }
+
+      const blob = await response.blob()
+
+      // 创建下载链接
+      const downloadUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = file.fileUrl
+      link.href = downloadUrl
       link.download = file.fileName
       document.body.appendChild(link)
       link.click()
+
+      // 清理
       document.body.removeChild(link)
-    } catch (error) {
-      message.error('文件下载失败')
+      window.URL.revokeObjectURL(downloadUrl)
+
+      message.success(`${file.fileName} 下载成功`)
+    } catch (error: any) {
+      console.error('文件下载错误:', error)
+      message.error(`文件下载失败: ${error.message || '未知错误'}`)
+    }
+  }
+
+  // 处理文件预览
+  const handlePreviewFile = (file: ResumeFile) => {
+    const fileUrl = getFileUrl(file)
+
+    if (checkIsImage(file.fileName)) {
+      // 图片预览
+      setPreviewImage(fileUrl)
+      setPreviewTitle(file.fileName)
+      setPreviewVisible(true)
+    } else {
+      // 非图片文件，在新窗口打开
+      window.open(fileUrl, '_blank')
     }
   }
 
@@ -69,20 +179,6 @@ const EmployeeDetail: React.FC = () => {
   const renderStatus = (isResigned: boolean) => (
     <Tag color={!isResigned ? 'success' : 'error'}>{!isResigned ? '在职' : '已离职'}</Tag>
   )
-
-  const renderRoles = (roles?: string[]) => {
-    if (!roles || roles.length === 0) return <Text type="secondary">无</Text>
-
-    return (
-      <Space wrap>
-        {roles.map((role, index) => (
-          <Tag key={index} color="blue">
-            {role}
-          </Tag>
-        ))}
-      </Space>
-    )
-  }
 
   const renderSalary = (salary?: number) => {
     if (salary === undefined || salary === null) return <Text type="secondary">未设置</Text>
@@ -105,33 +201,74 @@ const EmployeeDetail: React.FC = () => {
     return (
       <List
         dataSource={files}
-        renderItem={file => (
-          <List.Item
-            actions={[
-              <Button
-                key="download"
-                type="text"
-                icon={<DownloadOutlined />}
-                onClick={() => handleDownloadResume(file)}
-              >
-                下载
-              </Button>,
-            ]}
-          >
-            <List.Item.Meta
-              avatar={<FileTextOutlined style={{ fontSize: '20px', color: '#1890ff' }} />}
-              title={file.fileName}
-              description={
-                <Space>
-                  <Text type="secondary">{formatFileSize(file.fileSize)}</Text>
-                  <Text type="secondary">
-                    上传时间：{dayjs(file.uploadTime).format('YYYY-MM-DD HH:mm:ss')}
-                  </Text>
-                </Space>
-              }
-            />
-          </List.Item>
-        )}
+        renderItem={file => {
+          const isImage = checkIsImage(file.fileName)
+          const fileUrl = getFileUrl(file)
+
+          return (
+            <List.Item
+              actions={[
+                <Button
+                  key="preview"
+                  type="text"
+                  icon={<EyeOutlined />}
+                  onClick={() => handlePreviewFile(file)}
+                >
+                  {isImage ? '预览' : '查看'}
+                </Button>,
+                <Button
+                  key="download"
+                  type="text"
+                  icon={<DownloadOutlined />}
+                  onClick={() => handleDownloadResume(file)}
+                >
+                  下载
+                </Button>,
+              ]}
+            >
+              <List.Item.Meta
+                avatar={
+                  isImage ? (
+                    <div className="w-12 h-12 rounded border overflow-hidden flex items-center justify-center bg-gray-50">
+                      <img
+                        src={fileUrl}
+                        alt={file.fileName}
+                        className="max-w-full max-h-full object-cover"
+                        onError={e => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          target.nextElementSibling?.classList.remove('hidden')
+                        }}
+                      />
+                      <div className="hidden flex items-center justify-center text-gray-400">
+                        {getFileIcon(file.fileName)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded border flex items-center justify-center bg-gray-50 text-gray-600">
+                      <div style={{ fontSize: '24px' }}>{getFileIcon(file.fileName)}</div>
+                    </div>
+                  )
+                }
+                title={
+                  <Space>
+                    <Text strong>{file.fileName}</Text>
+                    {isImage && <Tag color="blue">图片</Tag>}
+                    <Tag color="default">{getFileExtension(file.fileName)}</Tag>
+                  </Space>
+                }
+                description={
+                  <Space>
+                    <Text type="secondary">{formatFileSize(file.fileSize)}</Text>
+                    <Text type="secondary">
+                      上传时间：{dayjs(file.uploadTime).format('YYYY-MM-DD HH:mm:ss')}
+                    </Text>
+                  </Space>
+                }
+              />
+            </List.Item>
+          )
+        }}
       />
     )
   }
@@ -199,9 +336,6 @@ const EmployeeDetail: React.FC = () => {
                 ? `${employee.workYears}年`
                 : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="角色" span={2}>
-              {renderRoles(employee.roles)}
-            </Descriptions.Item>
           </Descriptions>
         </Card>
 
@@ -222,6 +356,7 @@ const EmployeeDetail: React.FC = () => {
           <Descriptions column={2} bordered>
             <Descriptions.Item label="身份证号">{employee.idCardNumber || '-'}</Descriptions.Item>
             <Descriptions.Item label="银行卡号">{employee.bankCardNumber || '-'}</Descriptions.Item>
+            <Descriptions.Item label="开户银行">{employee.bankName || '-'}</Descriptions.Item>
             <Descriptions.Item label="生日">
               {employee.birthday ? dayjs(employee.birthday).format('YYYY-MM-DD') : '-'}
             </Descriptions.Item>
@@ -244,6 +379,30 @@ const EmployeeDetail: React.FC = () => {
           </Descriptions>
         </Card>
       </Space>
+
+      {/* 图片预览模态框 */}
+      <Modal
+        open={previewVisible}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+        centered
+        width={800}
+        className="image-preview-modal"
+      >
+        <div className="flex justify-center">
+          <Image
+            alt={previewTitle}
+            src={previewImage}
+            style={{ maxWidth: '100%', maxHeight: '70vh' }}
+            preview={false}
+            fallback="/images/image-placeholder.svg"
+            onError={() => {
+              message.error('图片加载失败')
+            }}
+          />
+        </div>
+      </Modal>
     </div>
   )
 }

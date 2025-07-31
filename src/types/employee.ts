@@ -2,7 +2,6 @@ export interface Employee {
   id: number
   name: string
   departmentId?: number
-  roles?: string[]
   employeeType?: string
   commissionRatePosition?: string
   position?: string
@@ -14,6 +13,7 @@ export interface Employee {
   actualBirthday?: string
   idCardNumber?: string
   bankCardNumber?: string
+  bankName?: string
   hireDate?: string
   workYears?: number
   createdAt: string
@@ -31,7 +31,6 @@ export interface ResumeFile {
 export interface CreateEmployeeDto {
   name: string
   departmentId?: number
-  roles?: string[]
   employeeType?: string
   commissionRatePosition?: string
   position?: string
@@ -43,6 +42,7 @@ export interface CreateEmployeeDto {
   actualBirthday?: string
   idCardNumber?: string
   bankCardNumber?: string
+  bankName?: string
   hireDate?: string
   workYears?: number
 }
@@ -50,7 +50,6 @@ export interface CreateEmployeeDto {
 export interface UpdateEmployeeDto {
   name?: string
   departmentId?: number
-  roles?: string[]
   employeeType?: string
   commissionRatePosition?: string
   position?: string
@@ -61,6 +60,7 @@ export interface UpdateEmployeeDto {
   birthday?: string
   actualBirthday?: string
   bankCardNumber?: string
+  bankName?: string
   hireDate?: string
   workYears?: number
 }

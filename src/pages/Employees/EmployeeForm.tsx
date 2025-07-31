@@ -18,10 +18,11 @@ import {
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
-// import MultiFileUpload from '../../components/MultiFileUpload'
+import MultiFileUpload from '../../components/MultiFileUpload'
 import { useDepartments, getDepartmentPath } from '../../hooks/useDepartments'
 import { useEmployeeDetail, useCreateEmployee, useUpdateEmployee } from '../../hooks/useEmployee'
 import type { CreateEmployeeDto, UpdateEmployeeDto, ResumeFile } from '../../types/employee'
+import type { ImageType } from '../../types'
 
 const { Title } = Typography
 const { Option } = Select
@@ -64,17 +65,6 @@ const commissionRatePositionOptions = [
   { label: '首席顾问', value: '首席顾问' },
 ]
 
-const roleOptions = [
-  { label: '销售专员', value: '销售专员' },
-  { label: '顾问会计', value: '顾问会计' },
-  { label: '记账会计', value: '记账会计' },
-  { label: '税务专员', value: '税务专员' },
-  { label: '客户经理', value: '客户经理' },
-  { label: '项目经理', value: '项目经理' },
-  { label: '主管', value: '主管' },
-  { label: '经理', value: '经理' },
-]
-
 const EmployeeForm: React.FC = () => {
   const [form] = Form.useForm()
   const navigate = useNavigate()
@@ -82,7 +72,7 @@ const EmployeeForm: React.FC = () => {
   const isEdit = Boolean(id)
 
   const [loading, setLoading] = useState(false)
-  const [resumeFiles, setResumeFiles] = useState<ResumeFile[]>([])
+  const [resumeFiles, setResumeFiles] = useState<Record<string, ImageType>>({})
 
   // 获取部门数据
   const { departments, rawDepartments } = useDepartments()
@@ -108,7 +98,18 @@ const EmployeeForm: React.FC = () => {
       }
 
       form.setFieldsValue(formData)
-      setResumeFiles(employee.resume || [])
+
+      // 转换简历文件格式为MultiFileUpload需要的格式
+      if (employee.resume && employee.resume.length > 0) {
+        const resumeFileMap: Record<string, ImageType> = {}
+        employee.resume.forEach((file, index) => {
+          resumeFileMap[`resume_${index}`] = {
+            fileName: file.fileName,
+            url: file.fileUrl || '',
+          }
+        })
+        setResumeFiles(resumeFileMap)
+      }
     }
   }, [employee, form, isEdit, rawDepartments])
 
@@ -122,13 +123,24 @@ const EmployeeForm: React.FC = () => {
         ? values.departmentIds[values.departmentIds.length - 1]
         : undefined
 
+      // 转换简历文件格式
+      const resumeFileArray: ResumeFile[] = Object.values(resumeFiles)
+        .filter(file => file.fileName) // 过滤掉没有文件名的项
+        .map(file => ({
+          fileName: file.fileName!,
+          fileUrl: file.url || '',
+          fileSize: 0,
+          fileType: file.fileName!.split('.').pop() || 'unknown',
+          uploadTime: new Date().toISOString(),
+        }))
+
       // 构建提交数据
       const submitData = {
         ...values,
         departmentId,
         birthday: values.birthday?.format('YYYY-MM-DD'),
         hireDate: values.hireDate?.format('YYYY-MM-DD'),
-        resume: resumeFiles,
+        resume: resumeFileArray,
       }
 
       // 移除不需要的字段
@@ -288,18 +300,6 @@ const EmployeeForm: React.FC = () => {
             </Col>
 
             <Col xs={24} sm={12} md={8}>
-              <Form.Item label="角色" name="roles">
-                <Select mode="multiple" placeholder="请选择角色" allowClear>
-                  {roleOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
               <Form.Item
                 label="在职状态"
                 name="isResigned"
@@ -370,6 +370,12 @@ const EmployeeForm: React.FC = () => {
             </Col>
 
             <Col xs={24} sm={12} md={8}>
+              <Form.Item label="开户银行" name="bankName">
+                <Input placeholder="请输入开户银行" maxLength={50} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12} md={8}>
               <Form.Item label="生日" name="birthday">
                 <DatePicker
                   placeholder="请选择生日"
@@ -402,26 +408,14 @@ const EmployeeForm: React.FC = () => {
 
             <Col span={24}>
               <Form.Item label="简历附件">
-                <TextArea
-                  placeholder="暂不支持文件上传，请填写简历文件说明"
-                  rows={3}
-                  value={resumeFiles.length > 0 ? resumeFiles.map(f => f.fileName).join(', ') : ''}
-                  onChange={e => {
-                    // 简化处理，暂时不支持文件上传
-                    if (e.target.value) {
-                      setResumeFiles([
-                        {
-                          fileName: e.target.value,
-                          fileUrl: '',
-                          fileSize: 0,
-                          fileType: 'text/plain',
-                          uploadTime: new Date().toISOString(),
-                        },
-                      ])
-                    } else {
-                      setResumeFiles([])
-                    }
-                  }}
+                <MultiFileUpload
+                  title="简历文件"
+                  value={resumeFiles}
+                  onChange={setResumeFiles}
+                  maxCount={5}
+                  disabled={loading}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  showUploadArea={true}
                 />
               </Form.Item>
             </Col>

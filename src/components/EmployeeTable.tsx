@@ -95,23 +95,6 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
       render: (salary: number) => (salary ? `¥${salary.toLocaleString()}` : '-'),
     },
     {
-      title: '角色',
-      dataIndex: 'roles',
-      key: 'roles',
-      width: 160,
-      render: (roles: string[]) => (
-        <Space wrap>
-          {roles && roles.length > 0
-            ? roles.map((role, index) => (
-                <Tag key={index} color="blue">
-                  {role}
-                </Tag>
-              ))
-            : '-'}
-        </Space>
-      ),
-    },
-    {
       title: '工龄',
       dataIndex: 'workYears',
       key: 'workYears',
@@ -131,6 +114,27 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
           </Tooltip>
         )
       },
+    },
+    {
+      title: '银行卡号',
+      dataIndex: 'bankCardNumber',
+      key: 'bankCardNumber',
+      width: 180,
+      render: (bankCard: string) => {
+        if (!bankCard) return '-'
+        return (
+          <Tooltip title={bankCard}>
+            <span>{bankCard.replace(/(\d{4})\d{8,11}(\d{4})/, '$1****$2')}</span>
+          </Tooltip>
+        )
+      },
+    },
+    {
+      title: '开户银行',
+      dataIndex: 'bankName',
+      key: 'bankName',
+      width: 150,
+      render: (bankName: string) => bankName || '-',
     },
     {
       title: '入职时间',
@@ -203,7 +207,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
       dataSource={employees}
       loading={loading}
       rowKey="id"
-      scroll={{ x: 2200 }}
+      scroll={{ x: 2530 }}
       size="middle"
       {...tableProps}
     />
