@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Button, Card, message, Typography } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { EmployeeSearch } from '../../components/EmployeeSearch'
 import { EmployeeTable } from '../../components/EmployeeTable'
@@ -21,64 +21,86 @@ const Employees: React.FC = () => {
 
   // 搜索参数状态
   const [searchParams, setSearchParams] = useState<QueryEmployeeDto>({
-    page: 1,
-    pageSize: 10,
+    name: '',
+    departmentId: undefined,
+    employeeType: '',
+    position: '',
+    rank: '',
+    commissionRatePosition: '',
+    isResigned: undefined,
+    idCardNumber: '',
+    actualBirthday: '',
   })
 
   // 分页状态
-  const [pagination, setPagination] = useState<PaginationState>({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  })
+  const [current, setCurrent] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
-  // 防抖处理搜索参数
+  // 添加防抖搜索参数
   const debouncedSearchParams = useDebouncedValue(searchParams, 500)
+
+  // 构建请求参数
+  const requestParams = {
+    page: current,
+    pageSize,
+    ...Object.fromEntries(
+      Object.entries(debouncedSearchParams).filter(
+        ([key, value]) => value !== undefined && value !== null && value !== ''
+      )
+    ),
+  }
 
   // 数据获取
   const { employees, total, isLoading, refreshEmployeeList, removeEmployee } =
-    useEmployeeList(debouncedSearchParams)
+    useEmployeeList(requestParams)
 
   // 删除员工
   const { deleteEmployee } = useDeleteEmployee()
 
-  // 更新分页状态
+  // 当搜索参数变化时，自动重置到第一页
   useEffect(() => {
-    setPagination(prev => ({
-      ...prev,
-      total,
-      current: searchParams.page || 1,
-      pageSize: searchParams.pageSize || 10,
-    }))
-  }, [total, searchParams.page, searchParams.pageSize])
-
-  // 处理搜索
-  const handleSearch = (values: QueryEmployeeDto) => {
-    const newSearchParams = {
-      ...values,
-      page: 1,
-      pageSize: pagination.pageSize,
+    if (current !== 1) {
+      setCurrent(1)
     }
+  }, [
+    searchParams.name,
+    searchParams.departmentId,
+    searchParams.employeeType,
+    searchParams.position,
+    searchParams.rank,
+    searchParams.commissionRatePosition,
+    searchParams.isResigned,
+    searchParams.idCardNumber,
+    searchParams.actualBirthday,
+  ])
+
+  // 处理搜索参数变化
+  const handleSearchChange = (newSearchParams: QueryEmployeeDto) => {
     setSearchParams(newSearchParams)
   }
 
   // 处理重置
   const handleReset = () => {
-    const resetParams = {
-      page: 1,
-      pageSize: pagination.pageSize,
-    }
-    setSearchParams(resetParams)
+    setSearchParams({
+      name: '',
+      departmentId: undefined,
+      employeeType: '',
+      position: '',
+      rank: '',
+      commissionRatePosition: '',
+      isResigned: undefined,
+      idCardNumber: '',
+      actualBirthday: '',
+    })
+    setCurrent(1)
   }
 
   // 处理分页变化
-  const handlePaginationChange = (page: number, pageSize?: number) => {
-    const newSearchParams = {
-      ...searchParams,
-      page,
-      pageSize: pageSize || searchParams.pageSize || 10,
+  const handlePaginationChange = (page: number, size?: number) => {
+    setCurrent(page)
+    if (size && size !== pageSize) {
+      setPageSize(size)
     }
-    setSearchParams(newSearchParams)
   }
 
   // 处理创建员工
@@ -105,8 +127,8 @@ const Employees: React.FC = () => {
       removeEmployee(employee.id)
 
       // 如果当前页没有数据且不是第一页，跳转到上一页
-      if (employees.length === 1 && pagination.current > 1) {
-        handlePaginationChange(pagination.current - 1, pagination.pageSize)
+      if (employees.length === 1 && current > 1) {
+        setCurrent(current - 1)
       } else {
         // 刷新当前页数据
         refreshEmployeeList()
@@ -119,23 +141,23 @@ const Employees: React.FC = () => {
   return (
     <div>
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <Title level={2} className="m-0">
-            员工管理
-          </Title>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            新增员工
-          </Button>
-        </div>
+        <Title level={2} className="m-0">
+          员工管理
+        </Title>
       </div>
 
       {/* 搜索表单 */}
-      <EmployeeSearch
-        onSearch={handleSearch}
-        onReset={handleReset}
-        loading={isLoading}
-        initialValues={searchParams}
-      />
+      <EmployeeSearch searchParams={searchParams} onSearchChange={handleSearchChange} />
+
+      {/* 操作按钮行 */}
+      <div className="flex justify-between items-center mb-4">
+        <Button icon={<ReloadOutlined />} onClick={handleReset}>
+          重置
+        </Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+          新增员工
+        </Button>
+      </div>
 
       {/* 数据表格 */}
       <Card>
@@ -146,9 +168,9 @@ const Employees: React.FC = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
+            current,
+            pageSize,
+            total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,

@@ -1,17 +1,13 @@
 import React from 'react'
-import { Form, Input, Select, DatePicker, Button, Row, Col, Cascader } from 'antd'
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Form, Input, Select, Cascader, Row, Col } from 'antd'
 import { useDepartments } from '../hooks/useDepartments'
 import type { QueryEmployeeDto } from '../types/employee'
 
 const { Option } = Select
-const { RangePicker } = DatePicker
 
 interface EmployeeSearchProps {
-  onSearch: (values: QueryEmployeeDto) => void
-  onReset: () => void
-  loading?: boolean
-  initialValues?: QueryEmployeeDto
+  searchParams: QueryEmployeeDto
+  onSearchChange: (params: QueryEmployeeDto) => void
 }
 
 const employeeTypeOptions = [
@@ -50,147 +46,155 @@ const commissionRatePositionOptions = [
   { label: '首席顾问', value: '首席顾问' },
 ]
 
-export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({
-  onSearch,
-  onReset,
-  loading,
-  initialValues,
-}) => {
-  const [form] = Form.useForm()
+export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({ searchParams, onSearchChange }) => {
   const { departments } = useDepartments()
 
-  const handleFinish = (values: any) => {
-    const searchParams: QueryEmployeeDto = {
-      ...values,
-      departmentId: values.departmentIds?.length
-        ? values.departmentIds[values.departmentIds.length - 1]
-        : undefined,
-    }
-    delete (searchParams as any).departmentIds
-    onSearch(searchParams)
-  }
-
-  const handleReset = () => {
-    form.resetFields()
-    onReset()
+  // 构建部门层级数据（如果需要从数字转换为数组）
+  const getDepartmentIds = (departmentId?: number): number[] | undefined => {
+    if (!departmentId) return undefined
+    // 这里可能需要根据实际的部门数据结构来转换
+    // 暂时返回单个部门ID的数组
+    return [departmentId]
   }
 
   return (
     <div className="bg-white rounded-lg shadow-sm mb-4">
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        initialValues={initialValues}
-        className="employee-search-form"
-      >
-        <Row gutter={[16, 8]}>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="员工姓名" name="name">
-              <Input placeholder="请输入员工姓名" allowClear />
-            </Form.Item>
-          </Col>
+      <div className="p-4">
+        <Form layout="inline" className="employee-search-form">
+          <div className="w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-2">
+              <Form.Item label="员工姓名" className="mb-2">
+                <Input
+                  placeholder="请输入员工姓名"
+                  value={searchParams.name}
+                  onChange={e => onSearchChange({ ...searchParams, name: e.target.value })}
+                  allowClear
+                  className="w-40"
+                />
+              </Form.Item>
 
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="所属部门" name="departmentIds">
-              <Cascader
-                options={departments}
-                placeholder="请选择部门"
-                allowClear
-                showSearch
-                changeOnSelect={false}
-              />
-            </Form.Item>
-          </Col>
+              <Form.Item label="所属部门" className="mb-2">
+                <Cascader
+                  options={departments}
+                  placeholder="请选择部门"
+                  value={getDepartmentIds(searchParams.departmentId)}
+                  onChange={value => {
+                    const departmentId =
+                      value && value.length > 0 ? (value[value.length - 1] as number) : undefined
+                    onSearchChange({ ...searchParams, departmentId })
+                  }}
+                  allowClear
+                  showSearch
+                  changeOnSelect={false}
+                  className="w-40"
+                />
+              </Form.Item>
 
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="员工类型" name="employeeType">
-              <Select placeholder="请选择员工类型" allowClear>
-                {employeeTypeOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="职位" name="position">
-              <Select placeholder="请选择职位" allowClear showSearch>
-                {positionOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="职级" name="rank">
-              <Select placeholder="请选择职级" allowClear>
-                {rankOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="提成比率职位" name="commissionRatePosition">
-              <Select placeholder="请选择提成比率职位" allowClear>
-                {commissionRatePositionOptions.map(option => (
-                  <Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="在职状态" name="isResigned">
-              <Select placeholder="请选择在职状态" allowClear>
-                <Option value={false}>在职</Option>
-                <Option value={true}>已离职</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="身份证号" name="idCardNumber">
-              <Input placeholder="请输入身份证号" allowClear />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item label="实际生日" name="actualBirthday">
-              <Input placeholder="请输入实际生日描述" allowClear />
-            </Form.Item>
-          </Col>
-
-          <Col xs={24} sm={24} md={24} lg={6}>
-            <Form.Item label=" " className="mb-0">
-              <div className="flex gap-2">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<SearchOutlined />}
-                  loading={loading}
+              <Form.Item label="员工类型" className="mb-2">
+                <Select
+                  placeholder="请选择员工类型"
+                  value={searchParams.employeeType || undefined}
+                  onChange={value => onSearchChange({ ...searchParams, employeeType: value })}
+                  allowClear
+                  className="w-40"
                 >
-                  搜索
-                </Button>
-                <Button icon={<ReloadOutlined />} onClick={handleReset}>
-                  重置
-                </Button>
-              </div>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
+                  {employeeTypeOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="职位" className="mb-2">
+                <Select
+                  placeholder="请选择职位"
+                  value={searchParams.position || undefined}
+                  onChange={value => onSearchChange({ ...searchParams, position: value })}
+                  allowClear
+                  showSearch
+                  className="w-40"
+                >
+                  {positionOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="职级" className="mb-2">
+                <Select
+                  placeholder="请选择职级"
+                  value={searchParams.rank || undefined}
+                  onChange={value => onSearchChange({ ...searchParams, rank: value })}
+                  allowClear
+                  className="w-40"
+                >
+                  {rankOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="提成比率职位" className="mb-2">
+                <Select
+                  placeholder="请选择提成比率职位"
+                  value={searchParams.commissionRatePosition || undefined}
+                  onChange={value =>
+                    onSearchChange({ ...searchParams, commissionRatePosition: value })
+                  }
+                  allowClear
+                  className="w-40"
+                >
+                  {commissionRatePositionOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="在职状态" className="mb-2">
+                <Select
+                  placeholder="请选择在职状态"
+                  value={searchParams.isResigned}
+                  onChange={value => onSearchChange({ ...searchParams, isResigned: value })}
+                  allowClear
+                  className="w-40"
+                >
+                  <Option value={false}>在职</Option>
+                  <Option value={true}>已离职</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="身份证号" className="mb-2">
+                <Input
+                  placeholder="请输入身份证号"
+                  value={searchParams.idCardNumber}
+                  onChange={e => onSearchChange({ ...searchParams, idCardNumber: e.target.value })}
+                  allowClear
+                  className="w-40"
+                />
+              </Form.Item>
+
+              <Form.Item label="实际生日" className="mb-2">
+                <Input
+                  placeholder="请输入实际生日描述"
+                  value={searchParams.actualBirthday}
+                  onChange={e =>
+                    onSearchChange({ ...searchParams, actualBirthday: e.target.value })
+                  }
+                  allowClear
+                  className="w-40"
+                />
+              </Form.Item>
+            </div>
+          </div>
+        </Form>
+      </div>
     </div>
   )
 }

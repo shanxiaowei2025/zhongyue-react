@@ -412,9 +412,7 @@ const EmployeeForm: React.FC = () => {
                   title="简历文件"
                   value={resumeFiles}
                   onChange={setResumeFiles}
-                  maxCount={5}
                   disabled={loading}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                   showUploadArea={true}
                 />
               </Form.Item>
