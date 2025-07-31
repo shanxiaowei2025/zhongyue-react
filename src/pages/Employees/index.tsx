@@ -140,12 +140,6 @@ const Employees: React.FC = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <Title level={2} className="m-0">
-          员工管理
-        </Title>
-      </div>
-
       {/* 搜索表单 */}
       <EmployeeSearch searchParams={searchParams} onSearchChange={handleSearchChange} />
 

@@ -12,6 +12,7 @@ import {
   InputNumber,
   Switch,
   Cascader,
+  AutoComplete,
   message,
   Spin,
 } from 'antd'
@@ -37,32 +38,39 @@ const employeeTypeOptions = [
 ]
 
 const positionOptions = [
-  { label: '项目经理', value: '项目经理' },
-  { label: '会计师', value: '会计师' },
-  { label: '记账会计', value: '记账会计' },
+  { label: '账务部主管', value: '账务部主管' },
+  { label: '内账部主管', value: '内账部主管' },
   { label: '顾问会计', value: '顾问会计' },
-  { label: '税务专员', value: '税务专员' },
-  { label: '客户经理', value: '客户经理' },
+  { label: '记账会计', value: '记账会计' },
+  { label: '开票员', value: '开票员' },
+  { label: '行政部主管', value: '行政部主管' },
+  { label: '行政文员', value: '行政文员' },
+  { label: '行政专员', value: '行政专员' },
+  { label: '社保专员', value: '社保专员' },
+  { label: '注册外勤', value: '注册外勤' },
   { label: '销售专员', value: '销售专员' },
+  { label: '业务专员', value: '业务专员' },
+  { label: '雄安分公司负责人', value: '雄安分公司负责人' },
+  { label: '高碑店分公司负责人', value: '高碑店分公司负责人' },
 ]
 
-const rankOptions = [
-  { label: 'P1', value: 'P1' },
-  { label: 'P2', value: 'P2' },
-  { label: 'P3', value: 'P3' },
-  { label: 'P4', value: 'P4' },
-  { label: 'P5', value: 'P5' },
-  { label: 'M1', value: 'M1' },
-  { label: 'M2', value: 'M2' },
-  { label: 'M3', value: 'M3' },
-]
+// 生成职级选项 P0-1 到 P7-4，每个级别都有4个子级别
+const generateRankOptions = () => {
+  const options = []
+  for (let i = 0; i <= 7; i++) {
+    for (let j = 1; j <= 4; j++) {
+      options.push({ label: `P${i}-${j}`, value: `P${i}-${j}` })
+    }
+  }
+  return options
+}
+
+const rankOptions = generateRankOptions()
 
 const commissionRatePositionOptions = [
-  { label: '初级顾问', value: '初级顾问' },
-  { label: '中级顾问', value: '中级顾问' },
-  { label: '高级顾问', value: '高级顾问' },
-  { label: '资深顾问', value: '资深顾问' },
-  { label: '首席顾问', value: '首席顾问' },
+  { label: '顾问', value: '顾问' },
+  { label: '销售', value: '销售' },
+  { label: '其他', value: '其他' },
 ]
 
 const EmployeeForm: React.FC = () => {
@@ -73,6 +81,7 @@ const EmployeeForm: React.FC = () => {
 
   const [loading, setLoading] = useState(false)
   const [resumeFiles, setResumeFiles] = useState<Record<string, ImageType>>({})
+  const [isResigned, setIsResigned] = useState(false)
 
   // 获取部门数据
   const { departments, rawDepartments } = useDepartments()
@@ -98,6 +107,7 @@ const EmployeeForm: React.FC = () => {
       }
 
       form.setFieldsValue(formData)
+      setIsResigned(employee.isResigned || false)
 
       // 转换简历文件格式为MultiFileUpload需要的格式
       if (employee.resume && employee.resume.length > 0) {
@@ -265,19 +275,23 @@ const EmployeeForm: React.FC = () => {
 
             <Col xs={24} sm={12} md={8}>
               <Form.Item label="职位" name="position">
-                <Select placeholder="请选择职位" allowClear showSearch>
-                  {positionOptions.map(option => (
-                    <Option key={option.value} value={option.value}>
-                      {option.label}
-                    </Option>
-                  ))}
-                </Select>
+                <AutoComplete
+                  placeholder="请选择或输入职位"
+                  options={positionOptions}
+                  allowClear
+                  filterOption={(inputValue, option) =>
+                    (option?.label?.toString().toLowerCase().includes(inputValue.toLowerCase()) ||
+                      option?.value?.toString().toLowerCase().includes(inputValue.toLowerCase())) ??
+                    false
+                  }
+                  style={{ width: '100%' }}
+                />
               </Form.Item>
             </Col>
 
             <Col xs={24} sm={12} md={8}>
               <Form.Item label="职级" name="rank">
-                <Select placeholder="请选择职级" allowClear>
+                <Select placeholder="请选择职级" allowClear style={{ width: '100%' }}>
                   {rankOptions.map(option => (
                     <Option key={option.value} value={option.value}>
                       {option.label}
@@ -306,7 +320,17 @@ const EmployeeForm: React.FC = () => {
                 valuePropName="checked"
                 initialValue={false}
               >
-                <Switch checkedChildren="已离职" unCheckedChildren="在职" />
+                <Switch
+                  checkedChildren="已离职"
+                  unCheckedChildren="在职"
+                  onChange={checked => {
+                    setIsResigned(checked)
+                    form.setFieldValue('isResigned', checked)
+                  }}
+                  style={{
+                    backgroundColor: isResigned ? '#ff4d4f' : '#52c41a',
+                  }}
+                />
               </Form.Item>
             </Col>
 

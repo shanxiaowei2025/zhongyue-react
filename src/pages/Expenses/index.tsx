@@ -835,7 +835,7 @@ const Expenses: React.FC = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full mb-4">
             <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
-              <Input placeholder="输入企业名称" allowClear />
+              <Input placeholder="输入企业名称" allowClear className="w-full" />
             </Form.Item>
 
             <Form.Item
@@ -843,11 +843,11 @@ const Expenses: React.FC = () => {
               label="统一社会信用代码"
               className="m-0 w-full"
             >
-              <Input placeholder="输入统一社会信用代码" allowClear />
+              <Input placeholder="输入统一社会信用代码" allowClear className="w-full" />
             </Form.Item>
 
             <Form.Item name="status" label="状态" className="m-0 w-full">
-              <Select placeholder="选择状态" allowClear>
+              <Select placeholder="选择状态" allowClear className="w-full">
                 <Select.Option value={ExpenseStatus.Pending}>未审核</Select.Option>
                 <Select.Option value={ExpenseStatus.Approved}>已审核</Select.Option>
                 <Select.Option value={ExpenseStatus.Rejected}>已退回</Select.Option>
@@ -855,11 +855,11 @@ const Expenses: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="salesperson" label="业务员" className="m-0 w-full">
-              <Input placeholder="输入业务员" allowClear />
+              <Input placeholder="输入业务员" allowClear className="w-full" />
             </Form.Item>
 
             <Form.Item name="businessType" label="业务类型" className="m-0 w-full">
-              <Select placeholder="选择业务类型" allowClear>
+              <Select placeholder="选择业务类型" allowClear className="w-full">
                 {BUSINESS_TYPE_OPTIONS.map(option => (
                   <Select.Option key={option.value} value={option.value}>
                     {option.label}

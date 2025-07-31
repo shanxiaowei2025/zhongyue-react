@@ -1011,7 +1011,7 @@ export default function Customers() {
                   placeholder="请输入企业名称关键词"
                   value={searchParams.keyword}
                   onChange={e => setSearchParams({ ...searchParams, keyword: e.target.value })}
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1023,7 +1023,7 @@ export default function Customers() {
                   onChange={e =>
                     setSearchParams({ ...searchParams, unifiedSocialCreditCode: e.target.value })
                   }
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1036,7 +1036,7 @@ export default function Customers() {
                     setSearchParams({ ...searchParams, customerLevel: value || undefined })
                   }
                   allowClear
-                  className="w-40"
+                  className="w-full"
                   filterOption={(inputValue, option) =>
                     option?.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
@@ -1073,7 +1073,7 @@ export default function Customers() {
                   onChange={e =>
                     setSearchParams({ ...searchParams, consultantAccountant: e.target.value })
                   }
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1085,7 +1085,7 @@ export default function Customers() {
                   onChange={e =>
                     setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })
                   }
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1097,7 +1097,7 @@ export default function Customers() {
                   onChange={value =>
                     setSearchParams({ ...searchParams, enterpriseType: value || '' })
                   }
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 >
                   <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
@@ -1116,7 +1116,7 @@ export default function Customers() {
                   placeholder="请输入所属分局"
                   value={searchParams.taxBureau}
                   onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1126,7 +1126,7 @@ export default function Customers() {
                   placeholder="请输入归属地"
                   value={searchParams.location}
                   onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1138,7 +1138,7 @@ export default function Customers() {
                   onChange={e =>
                     setSearchParams({ ...searchParams, industryCategory: e.target.value })
                   }
-                  className="w-40"
+                  className="w-full"
                   allowClear
                 />
               </Form.Item>
@@ -1149,7 +1149,7 @@ export default function Customers() {
                   value={searchParams.enterpriseStatus || undefined}
                   onChange={value => setSearchParams({ ...searchParams, enterpriseStatus: value })}
                   allowClear
-                  className="w-40"
+                  className="w-full"
                   options={[
                     ...Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
                       value,
@@ -1166,7 +1166,7 @@ export default function Customers() {
                   value={searchParams.businessStatus || undefined}
                   onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
                   allowClear
-                  className="w-40"
+                  className="w-full"
                   options={[
                     ...Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
                       value,
