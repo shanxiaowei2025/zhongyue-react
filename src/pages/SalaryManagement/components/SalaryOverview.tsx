@@ -69,7 +69,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
         const amount = toNumber(value)
         return (
           <span className="font-mono text-orange-500">
-            -¥
+            ¥
             {amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         )
@@ -84,7 +84,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
         const amount = toNumber(value)
         return (
           <span className="font-mono text-red-500">
-            -¥
+            ¥
             {amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         )

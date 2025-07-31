@@ -117,7 +117,7 @@ const Employees: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <Title level={2} className="m-0">

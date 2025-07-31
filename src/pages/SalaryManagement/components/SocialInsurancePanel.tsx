@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, Descriptions, Button, Form, message, Space } from 'antd'
+import { Card, Descriptions, Button, Form, message, Space, Collapse } from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import type { SocialInsuranceRecord } from '../../../types/salaryIntegrated'
 import AmountInput from './AmountInput'
@@ -96,121 +96,140 @@ const SocialInsurancePanel: React.FC<SocialInsurancePanelProps> = ({
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-medium">社保缴费信息</h4>
-        <Space>
-          {editing ? (
-            <>
-              <Button
-                icon={<SaveOutlined />}
-                type="primary"
-                size="small"
-                onClick={handleSave}
-                loading={loading}
-              >
-                保存
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b bg-gray-50">
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium">社保缴费信息</h4>
+          <Space>
+            {editing ? (
+              <>
+                <Button
+                  icon={<SaveOutlined />}
+                  type="primary"
+                  size="small"
+                  onClick={handleSave}
+                  loading={loading}
+                >
+                  保存
+                </Button>
+                <Button icon={<CloseOutlined />} size="small" onClick={handleCancel}>
+                  取消
+                </Button>
+              </>
+            ) : (
+              <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>
+                编辑
               </Button>
-              <Button icon={<CloseOutlined />} size="small" onClick={handleCancel}>
-                取消
-              </Button>
-            </>
-          ) : (
-            <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>
-              编辑
-            </Button>
-          )}
-        </Space>
+            )}
+          </Space>
+        </div>
       </div>
 
-      {editing ? (
-        <Form form={form} layout="vertical">
-          <div className="grid grid-cols-2 gap-6">
-            <Card title="个人承担部分" size="small">
-              <Form.Item label="医疗保险" name="personalMedical">
-                <AmountInput />
-              </Form.Item>
-              <Form.Item label="养老保险" name="personalPension">
-                <AmountInput />
-              </Form.Item>
-              <Form.Item label="失业保险" name="personalUnemployment">
-                <AmountInput />
-              </Form.Item>
-            </Card>
+      <div className="flex-1 overflow-auto p-4">
+        {editing ? (
+          <Form form={form} layout="vertical">
+            <Collapse defaultActiveKey={['personal', 'company']} ghost>
+              <Collapse.Panel header="个人承担部分" key="personal">
+                <div className="grid grid-cols-2 gap-4">
+                  <Form.Item label="医疗保险" name="personalMedical">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="养老保险" name="personalPension">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="失业保险" name="personalUnemployment">
+                    <AmountInput />
+                  </Form.Item>
+                </div>
+              </Collapse.Panel>
 
-            <Card title="公司承担部分" size="small">
-              <Form.Item label="医疗保险" name="companyMedical">
-                <AmountInput />
-              </Form.Item>
-              <Form.Item label="养老保险" name="companyPension">
-                <AmountInput />
-              </Form.Item>
-              <Form.Item label="失业保险" name="companyUnemployment">
-                <AmountInput />
-              </Form.Item>
-              <Form.Item label="工伤保险" name="companyInjury">
-                <AmountInput />
-              </Form.Item>
-            </Card>
-          </div>
+              <Collapse.Panel header="公司承担部分" key="company">
+                <div className="grid grid-cols-2 gap-4">
+                  <Form.Item label="医疗保险" name="companyMedical">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="养老保险" name="companyPension">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="失业保险" name="companyUnemployment">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="工伤保险" name="companyInjury">
+                    <AmountInput />
+                  </Form.Item>
+                </div>
+              </Collapse.Panel>
+            </Collapse>
 
-          <Form.Item label="备注" name="remark" className="mt-4">
-            <input className="ant-input" placeholder="请输入备注信息" />
-          </Form.Item>
-        </Form>
-      ) : (
-        <div className="grid grid-cols-2 gap-6">
-          <Card title="个人承担部分" size="small">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="医疗保险">
-                ¥{data!.personalMedical.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="养老保险">
-                ¥{data!.personalPension.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="失业保险">
-                ¥{data!.personalUnemployment.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="个人合计">
-                <strong className="text-red-500">¥{data!.personalTotal.toLocaleString()}</strong>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
+            <Form.Item label="备注" name="remark" className="mt-4">
+              <input className="ant-input" placeholder="请输入备注信息" />
+            </Form.Item>
+          </Form>
+        ) : (
+          <Collapse defaultActiveKey={['personal', 'company', 'summary']} ghost>
+            <Collapse.Panel
+              header={
+                <div className="flex justify-between items-center">
+                  <span>个人承担部分</span>
+                  <strong className="text-red-500">¥{data!.personalTotal.toLocaleString()}</strong>
+                </div>
+              }
+              key="personal"
+            >
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="医疗保险">
+                  ¥{data!.personalMedical.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="养老保险">
+                  ¥{data!.personalPension.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="失业保险">
+                  ¥{data!.personalUnemployment.toLocaleString()}
+                </Descriptions.Item>
+              </Descriptions>
+            </Collapse.Panel>
 
-          <Card title="公司承担部分" size="small">
-            <Descriptions column={1} size="small">
-              <Descriptions.Item label="医疗保险">
-                ¥{data!.companyMedical.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="养老保险">
-                ¥{data!.companyPension.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="失业保险">
-                ¥{data!.companyUnemployment.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="工伤保险">
-                ¥{data!.companyInjury.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="公司合计">
-                <strong className="text-blue-500">¥{data!.companyTotal.toLocaleString()}</strong>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </div>
-      )}
+            <Collapse.Panel
+              header={
+                <div className="flex justify-between items-center">
+                  <span>公司承担部分</span>
+                  <strong className="text-blue-500">¥{data!.companyTotal.toLocaleString()}</strong>
+                </div>
+              }
+              key="company"
+            >
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="医疗保险">
+                  ¥{data!.companyMedical.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="养老保险">
+                  ¥{data!.companyPension.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="失业保险">
+                  ¥{data!.companyUnemployment.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="工伤保险">
+                  ¥{data!.companyInjury.toLocaleString()}
+                </Descriptions.Item>
+              </Descriptions>
+            </Collapse.Panel>
 
-      {data && !editing && (
-        <Card title="汇总信息" size="small" className="mt-4">
-          <Descriptions column={2} size="small">
-            <Descriptions.Item label="总合计">
-              <span className="text-lg font-bold text-green-600">
-                ¥{data.grandTotal.toLocaleString()}
-              </span>
-            </Descriptions.Item>
-            <Descriptions.Item label="备注">{data.remark || '-'}</Descriptions.Item>
-          </Descriptions>
-        </Card>
-      )}
+            <Collapse.Panel
+              header={
+                <div className="flex justify-between items-center">
+                  <span>汇总信息</span>
+                  <strong className="text-green-600">¥{data!.grandTotal.toLocaleString()}</strong>
+                </div>
+              }
+              key="summary"
+            >
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="备注">{data!.remark || '-'}</Descriptions.Item>
+              </Descriptions>
+            </Collapse.Panel>
+          </Collapse>
+        )}
+      </div>
     </div>
   )
 }

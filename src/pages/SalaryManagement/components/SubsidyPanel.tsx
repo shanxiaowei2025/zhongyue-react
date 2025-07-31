@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, Descriptions, Button, Form, message, Space } from 'antd'
+import { Card, Descriptions, Button, Form, message, Space, Collapse } from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import type { SubsidySummaryRecord } from '../../../types/salaryIntegrated'
 import AmountInput from './AmountInput'
@@ -80,88 +80,104 @@ const SubsidyPanel: React.FC<SubsidyPanelProps> = ({ employeeName, yearMonth, da
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-medium">补贴明细</h4>
-        <Space>
-          {editing ? (
-            <>
-              <Button
-                icon={<SaveOutlined />}
-                type="primary"
-                size="small"
-                onClick={handleSave}
-                loading={loading}
-              >
-                保存
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b bg-gray-50">
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium">补贴明细</h4>
+          <Space>
+            {editing ? (
+              <>
+                <Button
+                  icon={<SaveOutlined />}
+                  type="primary"
+                  size="small"
+                  onClick={handleSave}
+                  loading={loading}
+                >
+                  保存
+                </Button>
+                <Button icon={<CloseOutlined />} size="small" onClick={handleCancel}>
+                  取消
+                </Button>
+              </>
+            ) : (
+              <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>
+                编辑
               </Button>
-              <Button icon={<CloseOutlined />} size="small" onClick={handleCancel}>
-                取消
-              </Button>
-            </>
-          ) : (
-            <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>
-              编辑
-            </Button>
-          )}
-        </Space>
+            )}
+          </Space>
+        </div>
       </div>
 
-      {editing ? (
-        <Form form={form} layout="vertical">
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item label="部门" name="department">
-              <input className="ant-input" placeholder="请输入部门" />
-            </Form.Item>
-            <Form.Item label="职位" name="position">
-              <input className="ant-input" placeholder="请输入职位" />
-            </Form.Item>
-            <Form.Item label="部门负责人补贴" name="departmentHeadSubsidy">
-              <AmountInput />
-            </Form.Item>
-            <Form.Item label="岗位津贴" name="positionAllowance">
-              <AmountInput />
-            </Form.Item>
-            <Form.Item label="油补" name="oilSubsidy">
-              <AmountInput />
-            </Form.Item>
-            <Form.Item label="餐补(8元/天)" name="mealSubsidy">
-              <AmountInput />
-            </Form.Item>
-          </div>
-        </Form>
-      ) : (
-        <>
-          <Card title="基础信息" size="small" className="mb-4">
-            <Descriptions column={2} size="small">
-              <Descriptions.Item label="部门">{data!.department}</Descriptions.Item>
-              <Descriptions.Item label="职位">{data!.position}</Descriptions.Item>
-            </Descriptions>
-          </Card>
+      <div className="flex-1 overflow-auto p-4">
+        {editing ? (
+          <Form form={form} layout="vertical">
+            <Collapse defaultActiveKey={['basic', 'subsidy']} ghost>
+              <Collapse.Panel header="基础信息" key="basic">
+                <div className="grid grid-cols-2 gap-4">
+                  <Form.Item label="部门" name="department">
+                    <input className="ant-input" placeholder="请输入部门" />
+                  </Form.Item>
+                  <Form.Item label="职位" name="position">
+                    <input className="ant-input" placeholder="请输入职位" />
+                  </Form.Item>
+                </div>
+              </Collapse.Panel>
 
-          <Card title="补贴明细" size="small">
-            <Descriptions column={2} size="small">
-              <Descriptions.Item label="部门负责人补贴">
-                ¥{data!.departmentHeadSubsidy.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="岗位津贴">
-                ¥{data!.positionAllowance.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="油补">
-                ¥{data!.oilSubsidy.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="餐补(8元/天)">
-                ¥{data!.mealSubsidy.toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="补贴合计" span={2}>
-                <span className="text-lg font-bold text-green-600">
-                  ¥{data!.totalSubsidy.toLocaleString()}
-                </span>
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        </>
-      )}
+              <Collapse.Panel header="补贴项目" key="subsidy">
+                <div className="grid grid-cols-2 gap-4">
+                  <Form.Item label="部门负责人补贴" name="departmentHeadSubsidy">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="岗位津贴" name="positionAllowance">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="油补" name="oilSubsidy">
+                    <AmountInput />
+                  </Form.Item>
+                  <Form.Item label="餐补(8元/天)" name="mealSubsidy">
+                    <AmountInput />
+                  </Form.Item>
+                </div>
+              </Collapse.Panel>
+            </Collapse>
+          </Form>
+        ) : (
+          <Collapse defaultActiveKey={['basic', 'subsidy', 'total']} ghost>
+            <Collapse.Panel header="基础信息" key="basic">
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="部门">{data!.department}</Descriptions.Item>
+                <Descriptions.Item label="职位">{data!.position}</Descriptions.Item>
+              </Descriptions>
+            </Collapse.Panel>
+
+            <Collapse.Panel
+              header={
+                <div className="flex justify-between items-center">
+                  <span>补贴明细</span>
+                  <strong className="text-green-600">¥{data!.totalSubsidy.toLocaleString()}</strong>
+                </div>
+              }
+              key="subsidy"
+            >
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="部门负责人补贴">
+                  ¥{data!.departmentHeadSubsidy.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="岗位津贴">
+                  ¥{data!.positionAllowance.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="油补">
+                  ¥{data!.oilSubsidy.toLocaleString()}
+                </Descriptions.Item>
+                <Descriptions.Item label="餐补(8元/天)">
+                  ¥{data!.mealSubsidy.toLocaleString()}
+                </Descriptions.Item>
+              </Descriptions>
+            </Collapse.Panel>
+          </Collapse>
+        )}
+      </div>
     </div>
   )
 }

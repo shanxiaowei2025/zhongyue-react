@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, Tabs, Descriptions, Button, Space, Modal, Form, message } from 'antd'
+import { Card, Tabs, Descriptions, Button, Space, Modal, Form, message, Empty } from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { SalaryRecord, UpdateSalaryDto } from '../../../types/salaryIntegrated'
@@ -33,11 +33,8 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
 
   if (!employee) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
-        <div className="text-center">
-          <div className="text-lg mb-2">请选择员工</div>
-          <div className="text-sm">选择左侧员工查看详细薪资信息</div>
-        </div>
+      <div className="h-full flex items-center justify-center">
+        <Empty description="请选择员工查看关联数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </div>
     )
   }

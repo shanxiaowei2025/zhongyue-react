@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Button, Spin } from 'antd'
+import { Button, Spin, Tabs } from 'antd'
+import type { TabsProps } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
@@ -8,6 +9,7 @@ import SalaryOverview from './components/SalaryOverview'
 import SalaryDetails from './components/SalaryDetails'
 import RelatedDataTabs from './components/RelatedDataTabs'
 import ImportExportPanel from './components/ImportExportPanel'
+import CommissionPanel from './components/CommissionPanel'
 
 const SalaryManagement: React.FC = () => {
   const {
@@ -43,7 +45,7 @@ const SalaryManagement: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-gray-50">
       {/* 页头 */}
-      <div className="bg-white p-6 border-b shadow-sm">
+      <div className="bg-white border-b shadow-sm">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">薪资管理中心</h1>
@@ -70,7 +72,7 @@ const SalaryManagement: React.FC = () => {
       {/* 主内容区域 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧：薪资总览 */}
-        <div className="w-2/5 border-r bg-white">
+        <div className="w-1/2 border-r bg-white">
           <SalaryOverview
             salaryData={salaryData}
             loading={loading}
@@ -81,35 +83,76 @@ const SalaryManagement: React.FC = () => {
           />
         </div>
 
-        {/* 右侧：详情和操作面板 */}
-        <div className="w-3/5 flex flex-col bg-white">
-          {/* 薪资详情 */}
-          <div className="h-3/5 border-b">
-            <SalaryDetails
-              employee={selectedEmployee}
-              yearMonth={selectedYearMonth}
-              onUpdate={operations.updateSalary}
-            />
-          </div>
-
-          {/* 关联数据和操作 */}
-          <div className="h-2/5 flex">
-            <div className="w-3/5 border-r">
-              <RelatedDataTabs
-                employee={selectedEmployee}
-                yearMonth={selectedYearMonth}
-                relatedData={relatedData}
-                onUpdate={operations.updateRelatedData}
-              />
-            </div>
-            <div className="w-2/5 p-4">
-              <ImportExportPanel
-                yearMonth={selectedYearMonth}
-                onImport={operations.importData}
-                onExport={operations.exportData}
-              />
-            </div>
-          </div>
+        {/* 右侧：功能模块标签页 */}
+        <div className="w-1/2 bg-white">
+          <Tabs
+            defaultActiveKey="details"
+            size="large"
+            style={{ height: '100%' }}
+            tabBarStyle={{
+              margin: 0,
+              paddingLeft: 24,
+              paddingRight: 24,
+              borderBottom: '1px solid #f0f0f0',
+              backgroundColor: '#fafafa',
+            }}
+            items={[
+              {
+                key: 'details',
+                label: '薪资详情',
+                children: (
+                  <div>
+                    <SalaryDetails
+                      employee={selectedEmployee}
+                      yearMonth={selectedYearMonth}
+                      onUpdate={operations.updateSalary}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: 'related',
+                label: '关联数据',
+                children: (
+                  <div className="h-full">
+                    <RelatedDataTabs
+                      employee={selectedEmployee}
+                      yearMonth={selectedYearMonth}
+                      relatedData={relatedData}
+                      onUpdate={operations.updateRelatedData}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: 'commission',
+                label: '提成详情',
+                children: (
+                  <div className="h-full">
+                    <CommissionPanel
+                      employeeName={selectedEmployee?.name || ''}
+                      yearMonth={selectedYearMonth}
+                      data={relatedData.commission}
+                      onUpdate={data => operations.updateRelatedData('commission', data)}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: 'operations',
+                label: '数据操作',
+                children: (
+                  <div className="h-full p-6">
+                    <ImportExportPanel
+                      yearMonth={selectedYearMonth}
+                      onImport={operations.importData}
+                      onExport={operations.exportData}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
       </div>
 

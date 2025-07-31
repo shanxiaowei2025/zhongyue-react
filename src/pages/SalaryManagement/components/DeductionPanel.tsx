@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, Descriptions, Button, Form, message, Space, Tag } from 'antd'
+import { Card, Descriptions, Button, Form, message, Space, Tag, Collapse } from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import type {
   AttendanceDeductionRecord,
@@ -236,34 +236,38 @@ const DeductionPanel: React.FC<DeductionPanelProps> = ({
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-medium">{title}</h4>
-        <Space>
-          {editing ? (
-            <>
-              <Button
-                icon={<SaveOutlined />}
-                type="primary"
-                size="small"
-                onClick={handleSave}
-                loading={loading}
-              >
-                保存
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b bg-gray-50">
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium">{title}</h4>
+          <Space>
+            {editing ? (
+              <>
+                <Button
+                  icon={<SaveOutlined />}
+                  type="primary"
+                  size="small"
+                  onClick={handleSave}
+                  loading={loading}
+                >
+                  保存
+                </Button>
+                <Button icon={<CloseOutlined />} size="small" onClick={handleCancel}>
+                  取消
+                </Button>
+              </>
+            ) : (
+              <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>
+                编辑
               </Button>
-              <Button icon={<CloseOutlined />} size="small" onClick={handleCancel}>
-                取消
-              </Button>
-            </>
-          ) : (
-            <Button icon={<EditOutlined />} size="small" onClick={handleEdit}>
-              编辑
-            </Button>
-          )}
-        </Space>
+            )}
+          </Space>
+        </div>
       </div>
 
-      {isAttendance ? renderAttendanceContent() : renderFriendCircleContent()}
+      <div className="flex-1 overflow-auto p-4">
+        {isAttendance ? renderAttendanceContent() : renderFriendCircleContent()}
+      </div>
     </div>
   )
 }

@@ -76,7 +76,7 @@ export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+    <div className="bg-white rounded-lg shadow-sm mb-4">
       <Form
         form={form}
         layout="vertical"
