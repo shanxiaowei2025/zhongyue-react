@@ -469,11 +469,11 @@ const MainLayout = () => {
             icon: <IdcardOutlined />,
             label: '员工管理',
           },
-          {
-            key: '/salary-management',
-            icon: <CreditCardOutlined />,
-            label: '薪资管理',
-          },
+          // {
+          //   key: '/salary-management',
+          //   icon: <CreditCardOutlined />,
+          //   label: '薪资管理',
+          // },
         ]
       : []),
     // 根据用户角色决定是否显示企业服务菜单

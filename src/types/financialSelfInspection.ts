@@ -67,6 +67,7 @@ export interface FinancialSelfInspectionQueryParams {
   bookkeepingAccountant?: string // 记账会计
   consultantAccountant?: string // 顾问会计
   inspector?: string // 抽查人
+  status?: FinancialSelfInspectionStatus // 状态
   inspectionDateStart?: string // 抽查日期开始
   inspectionDateEnd?: string // 抽查日期结束
   page?: number // 页码

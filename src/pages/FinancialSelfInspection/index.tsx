@@ -16,6 +16,7 @@ import {
   Modal,
   message,
   Popconfirm,
+  Select,
 } from 'antd'
 import {
   SearchOutlined,
@@ -134,6 +135,9 @@ const FinancialSelfInspection: React.FC = () => {
       unifiedSocialCreditCode: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      status: undefined,
+      inspectionDateStart: undefined,
+      inspectionDateEnd: undefined,
       ...(savedSubmittedSearchParams || {}),
     })
 
@@ -153,6 +157,9 @@ const FinancialSelfInspection: React.FC = () => {
       inspector: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      status: undefined,
+      inspectionDateStart: undefined,
+      inspectionDateEnd: undefined,
       ...(savedResponsibleSearchParams || {}),
     })
 
@@ -172,6 +179,9 @@ const FinancialSelfInspection: React.FC = () => {
       inspector: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      status: undefined,
+      inspectionDateStart: undefined,
+      inspectionDateEnd: undefined,
       ...(savedReviewedSearchParams || {}),
     })
 
@@ -380,6 +390,9 @@ const FinancialSelfInspection: React.FC = () => {
       unifiedSocialCreditCode: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      status: undefined,
+      inspectionDateStart: undefined,
+      inspectionDateEnd: undefined,
     }
     setSubmittedSearchParams(resetParams)
     submittedForm.resetFields()
@@ -394,6 +407,9 @@ const FinancialSelfInspection: React.FC = () => {
       inspector: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      status: undefined,
+      inspectionDateStart: undefined,
+      inspectionDateEnd: undefined,
     }
     setResponsibleSearchParams(resetParams)
     responsibleForm.resetFields()
@@ -408,6 +424,9 @@ const FinancialSelfInspection: React.FC = () => {
       inspector: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      status: undefined,
+      inspectionDateStart: undefined,
+      inspectionDateEnd: undefined,
     }
     setReviewedSearchParams(resetParams)
     reviewedForm.resetFields()
@@ -1029,7 +1048,7 @@ const FinancialSelfInspection: React.FC = () => {
             initialValues={submittedSearchParams}
           >
             <Row gutter={16}>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="企业名称" name="companyName">
                   <Input
                     placeholder="请输入企业名称"
@@ -1043,7 +1062,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
                   <Input
                     placeholder="请输入统一社会信用代码"
@@ -1057,7 +1076,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="记账会计" name="bookkeepingAccountant">
                   <Input
                     placeholder="请输入记账会计"
@@ -1071,7 +1090,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="顾问会计" name="consultantAccountant">
                   <Input
                     placeholder="请输入顾问会计"
@@ -1080,6 +1099,71 @@ const FinancialSelfInspection: React.FC = () => {
                       setSubmittedSearchParams({
                         ...submittedSearchParams,
                         consultantAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="状态" name="status">
+                  <Select
+                    placeholder="请选择状态"
+                    allowClear
+                    value={submittedSearchParams.status}
+                    onChange={value =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        status: value,
+                      })
+                    }
+                  >
+                    <Select.Option value={FinancialSelfInspectionStatus.SUBMITTED}>
+                      待整改
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.RECTIFIED}>
+                      已整改
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.INSPECTOR_APPROVED}>
+                      抽查人确认
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.INSPECTOR_REJECTED}>
+                      抽查人退回
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.REVIEWER_APPROVED}>
+                      复查人确认
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.REVIEWER_REJECTED}>
+                      复查人退回
+                    </Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="抽查日期" name="inspectionDateRange">
+                  <RangePicker
+                    placeholder={['开始日期', '结束日期']}
+                    style={{ width: '100%' }}
+                    format="YYYY-MM-DD"
+                    value={
+                      submittedSearchParams.inspectionDateStart &&
+                      submittedSearchParams.inspectionDateEnd
+                        ? [
+                            dayjs(submittedSearchParams.inspectionDateStart),
+                            dayjs(submittedSearchParams.inspectionDateEnd),
+                          ]
+                        : submittedSearchParams.inspectionDateStart
+                          ? [dayjs(submittedSearchParams.inspectionDateStart), null]
+                          : submittedSearchParams.inspectionDateEnd
+                            ? [null, dayjs(submittedSearchParams.inspectionDateEnd)]
+                            : null
+                    }
+                    onChange={dates =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        inspectionDateStart: dates?.[0]?.format('YYYY-MM-DD'),
+                        inspectionDateEnd: dates?.[1]?.format('YYYY-MM-DD'),
                       })
                     }
                   />
@@ -1134,7 +1218,7 @@ const FinancialSelfInspection: React.FC = () => {
             initialValues={responsibleSearchParams}
           >
             <Row gutter={16}>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="企业名称" name="companyName">
                   <Input
                     placeholder="请输入企业名称"
@@ -1148,7 +1232,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
                   <Input
                     placeholder="请输入统一社会信用代码"
@@ -1162,7 +1246,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="抽查人" name="inspector">
                   <Input
                     placeholder="请输入抽查人"
@@ -1176,7 +1260,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="记账会计" name="bookkeepingAccountant">
                   <Input
                     placeholder="请输入记账会计"
@@ -1185,6 +1269,71 @@ const FinancialSelfInspection: React.FC = () => {
                       setResponsibleSearchParams({
                         ...responsibleSearchParams,
                         bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="状态" name="status">
+                  <Select
+                    placeholder="请选择状态"
+                    allowClear
+                    value={responsibleSearchParams.status}
+                    onChange={value =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        status: value,
+                      })
+                    }
+                  >
+                    <Select.Option value={FinancialSelfInspectionStatus.SUBMITTED}>
+                      待整改
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.RECTIFIED}>
+                      已整改
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.INSPECTOR_APPROVED}>
+                      抽查人确认
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.INSPECTOR_REJECTED}>
+                      抽查人退回
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.REVIEWER_APPROVED}>
+                      复查人确认
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.REVIEWER_REJECTED}>
+                      复查人退回
+                    </Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="抽查日期" name="inspectionDateRange">
+                  <RangePicker
+                    placeholder={['开始日期', '结束日期']}
+                    style={{ width: '100%' }}
+                    format="YYYY-MM-DD"
+                    value={
+                      responsibleSearchParams.inspectionDateStart &&
+                      responsibleSearchParams.inspectionDateEnd
+                        ? [
+                            dayjs(responsibleSearchParams.inspectionDateStart),
+                            dayjs(responsibleSearchParams.inspectionDateEnd),
+                          ]
+                        : responsibleSearchParams.inspectionDateStart
+                          ? [dayjs(responsibleSearchParams.inspectionDateStart), null]
+                          : responsibleSearchParams.inspectionDateEnd
+                            ? [null, dayjs(responsibleSearchParams.inspectionDateEnd)]
+                            : null
+                    }
+                    onChange={dates =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        inspectionDateStart: dates?.[0]?.format('YYYY-MM-DD'),
+                        inspectionDateEnd: dates?.[1]?.format('YYYY-MM-DD'),
                       })
                     }
                   />
@@ -1244,7 +1393,7 @@ const FinancialSelfInspection: React.FC = () => {
             initialValues={reviewedSearchParams}
           >
             <Row gutter={16}>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="企业名称" name="companyName">
                   <Input
                     placeholder="请输入企业名称"
@@ -1258,7 +1407,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
                   <Input
                     placeholder="请输入统一社会信用代码"
@@ -1272,7 +1421,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="抽查人" name="inspector">
                   <Input
                     placeholder="请输入抽查人"
@@ -1286,7 +1435,7 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={6}>
+              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="记账会计" name="bookkeepingAccountant">
                   <Input
                     placeholder="请输入记账会计"
@@ -1295,6 +1444,71 @@ const FinancialSelfInspection: React.FC = () => {
                       setReviewedSearchParams({
                         ...reviewedSearchParams,
                         bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="状态" name="status">
+                  <Select
+                    placeholder="请选择状态"
+                    allowClear
+                    value={reviewedSearchParams.status}
+                    onChange={value =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        status: value,
+                      })
+                    }
+                  >
+                    <Select.Option value={FinancialSelfInspectionStatus.SUBMITTED}>
+                      待整改
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.RECTIFIED}>
+                      已整改
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.INSPECTOR_APPROVED}>
+                      抽查人确认
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.INSPECTOR_REJECTED}>
+                      抽查人退回
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.REVIEWER_APPROVED}>
+                      复查人确认
+                    </Select.Option>
+                    <Select.Option value={FinancialSelfInspectionStatus.REVIEWER_REJECTED}>
+                      复查人退回
+                    </Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="抽查日期" name="inspectionDateRange">
+                  <RangePicker
+                    placeholder={['开始日期', '结束日期']}
+                    style={{ width: '100%' }}
+                    format="YYYY-MM-DD"
+                    value={
+                      reviewedSearchParams.inspectionDateStart &&
+                      reviewedSearchParams.inspectionDateEnd
+                        ? [
+                            dayjs(reviewedSearchParams.inspectionDateStart),
+                            dayjs(reviewedSearchParams.inspectionDateEnd),
+                          ]
+                        : reviewedSearchParams.inspectionDateStart
+                          ? [dayjs(reviewedSearchParams.inspectionDateStart), null]
+                          : reviewedSearchParams.inspectionDateEnd
+                            ? [null, dayjs(reviewedSearchParams.inspectionDateEnd)]
+                            : null
+                    }
+                    onChange={dates =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        inspectionDateStart: dates?.[0]?.format('YYYY-MM-DD'),
+                        inspectionDateEnd: dates?.[1]?.format('YYYY-MM-DD'),
                       })
                     }
                   />

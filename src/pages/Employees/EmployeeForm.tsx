@@ -255,7 +255,7 @@ const EmployeeForm: React.FC = () => {
                   placeholder="请选择部门"
                   allowClear
                   showSearch
-                  changeOnSelect={false}
+                  changeOnSelect={true}
                   style={{ width: '100%' }}
                 />
               </Form.Item>
@@ -358,11 +358,12 @@ const EmployeeForm: React.FC = () => {
             <Col xs={24} sm={12} md={8}>
               <Form.Item label="工龄（年）" name="workYears">
                 <InputNumber
-                  placeholder="工龄"
+                  placeholder="工龄根据入职时间自动计算"
                   style={{ width: '100%' }}
                   min={0}
                   max={50}
                   precision={1}
+                  disabled
                 />
               </Form.Item>
             </Col>
