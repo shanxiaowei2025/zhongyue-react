@@ -15,6 +15,7 @@ import {
   Tooltip,
   Modal,
   message,
+  Popconfirm,
 } from 'antd'
 import {
   SearchOutlined,
@@ -23,7 +24,8 @@ import {
   EyeOutlined,
   CheckCircleOutlined,
   EditOutlined,
-  LoadingOutlined,
+  CloseCircleOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
@@ -33,16 +35,30 @@ import { useDebouncedValue } from '../../hooks/useDebounce'
 import {
   getMySubmittedInspections,
   getMyResponsibleInspections,
+  getMyReviewedInspections,
   updateRectificationCompletion,
-  updateInspectorConfirmation,
+  approvalInspection,
+  rejectInspection,
+  reviewerApprovalInspection,
+  reviewerRejectInspection,
   createFinancialSelfInspection,
+  deleteFinancialSelfInspection,
 } from '../../api/financialSelfInspection'
+import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
   FinancialSelfInspection,
   FinancialSelfInspectionQueryParams,
   RectificationCompletionDto,
-  InspectorConfirmationDto,
+  ApprovalDto,
+  RejectDto,
+  ReviewerApprovalDto,
+  ReviewerRejectDto,
   CreateFinancialSelfInspectionDto,
+  RectificationRecordItem,
+  ApprovalRecordItem,
+  RejectRecordItem,
+  ReviewerApprovalRecordItem,
+  ReviewerRejectRecordItem,
 } from '../../types/financialSelfInspection'
 import { getEnterpriseByNameOrCode } from '../../api/enterpriseService'
 import type { Enterprise } from '../../types/enterpriseService'
@@ -52,7 +68,7 @@ import { useAuthStore } from '../../store/auth'
 const { Title } = Typography
 const { RangePicker } = DatePicker
 
-// 智能文本渲染组件 - 只在文本被截断时显示tooltip
+// 智能文本渲染组件
 const EllipsisText: React.FC<{
   text: string | null
   maxWidth?: number
@@ -94,8 +110,10 @@ const FinancialSelfInspection: React.FC = () => {
   const savedActiveTab = getState('financialInspectionActiveTab') || 'submitted'
   const savedSubmittedSearchParams = getState('financialInspectionSubmittedSearchParams')
   const savedResponsibleSearchParams = getState('financialInspectionResponsibleSearchParams')
+  const savedReviewedSearchParams = getState('financialInspectionReviewedSearchParams')
   const savedSubmittedPagination = getState('financialInspectionSubmittedPagination')
   const savedResponsiblePagination = getState('financialInspectionResponsiblePagination')
+  const savedReviewedPagination = getState('financialInspectionReviewedPagination')
 
   // 状态管理
   const [activeTab, setActiveTab] = useState<string>(savedActiveTab)
@@ -138,46 +156,65 @@ const FinancialSelfInspection: React.FC = () => {
       ...(savedResponsibleSearchParams || {}),
     })
 
+  // 我复查的数据
+  const [reviewedData, setReviewedData] = useState<FinancialSelfInspection[]>([])
+  const [reviewedTotal, setReviewedTotal] = useState<number>(0)
+  const [reviewedCurrent, setReviewedCurrent] = useState<number>(
+    savedReviewedPagination?.current || 1
+  )
+  const [reviewedPageSize, setReviewedPageSize] = useState<number>(
+    savedReviewedPagination?.pageSize || 10
+  )
+  const [reviewedSearchParams, setReviewedSearchParams] =
+    useState<FinancialSelfInspectionQueryParams>({
+      companyName: '',
+      unifiedSocialCreditCode: '',
+      inspector: '',
+      bookkeepingAccountant: '',
+      consultantAccountant: '',
+      ...(savedReviewedSearchParams || {}),
+    })
+
   // 防抖搜索参数
   const debouncedSubmittedSearchParams = useDebouncedValue(submittedSearchParams, 500)
   const debouncedResponsibleSearchParams = useDebouncedValue(responsibleSearchParams, 500)
+  const debouncedReviewedSearchParams = useDebouncedValue(reviewedSearchParams, 500)
 
   // 表单实例
   const [submittedForm] = Form.useForm()
   const [responsibleForm] = Form.useForm()
+  const [reviewedForm] = Form.useForm()
   const [rectificationForm] = Form.useForm()
-
-  // 整改弹窗状态
-  const [rectificationModalVisible, setRectificationModalVisible] = useState<boolean>(false)
-  const [rectificationLoading, setRectificationLoading] = useState<boolean>(false)
-  const [currentRectificationRecord, setCurrentRectificationRecord] =
-    useState<FinancialSelfInspection | null>(null)
-
-  // 抽查人确认弹窗状态
-  const [confirmationModalVisible, setConfirmationModalVisible] = useState<boolean>(false)
-  const [confirmationLoading, setConfirmationLoading] = useState<boolean>(false)
-  const [currentConfirmationRecord, setCurrentConfirmationRecord] =
-    useState<FinancialSelfInspection | null>(null)
-  const [confirmationForm] = Form.useForm()
-
-  // 新建自查记录弹窗状态
-  const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
-  const [createLoading, setCreateLoading] = useState<boolean>(false)
+  const [approvalForm] = Form.useForm()
+  const [rejectForm] = Form.useForm()
+  const [reviewerApprovalForm] = Form.useForm()
+  const [reviewerRejectForm] = Form.useForm()
   const [createForm] = Form.useForm()
 
-  // 企业信息查询状态
-  const [enterpriseSearchLoading, setEnterpriseSearchLoading] = useState<boolean>(false)
+  // 弹窗状态
+  const [rectificationModalVisible, setRectificationModalVisible] = useState<boolean>(false)
+  const [approvalModalVisible, setApprovalModalVisible] = useState<boolean>(false)
+  const [rejectModalVisible, setRejectModalVisible] = useState<boolean>(false)
+  const [reviewerApprovalModalVisible, setReviewerApprovalModalVisible] = useState<boolean>(false)
+  const [reviewerRejectModalVisible, setReviewerRejectModalVisible] = useState<boolean>(false)
+  const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
 
-  // 企业搜索使用 CustomerAutoComplete 组件
+  // 加载状态
+  const [rectificationLoading, setRectificationLoading] = useState<boolean>(false)
+  const [approvalLoading, setApprovalLoading] = useState<boolean>(false)
+  const [rejectLoading, setRejectLoading] = useState<boolean>(false)
+  const [reviewerApprovalLoading, setReviewerApprovalLoading] = useState<boolean>(false)
+  const [reviewerRejectLoading, setReviewerRejectLoading] = useState<boolean>(false)
+  const [createLoading, setCreateLoading] = useState<boolean>(false)
 
-  // 检查用户是否有整改权限（记账会计、管理员、超级管理员）
+  // 当前操作的记录
+  const [currentRecord, setCurrentRecord] = useState<FinancialSelfInspection | null>(null)
+
+  // 权限检查函数
   const hasRectificationPermission = () => {
     if (!user?.roles || !Array.isArray(user.roles)) {
-      console.log('用户角色信息不存在或格式错误:', user?.roles)
       return false
     }
-
-    // 允许的角色：记账会计、管理员、超级管理员
     const allowedRoles = [
       '记账会计',
       'admin',
@@ -186,14 +223,38 @@ const FinancialSelfInspection: React.FC = () => {
       '超级管理员',
       'bookkeepingAccountant',
     ]
-
-    const hasPermission = user.roles.some(role => allowedRoles.includes(role))
-    console.log('用户角色:', user.roles, '是否有整改权限:', hasPermission)
-
-    return hasPermission
+    return user.roles.some(role => allowedRoles.includes(role))
   }
 
-  // 加载我提交的数据
+  const hasReviewPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+    const allowedRoles = ['admin', 'super_admin', '管理员', '超级管理员']
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
+  // 渲染状态标签
+  const renderStatusTag = (record: FinancialSelfInspection) => {
+    switch (record.status) {
+      case FinancialSelfInspectionStatus.SUBMITTED:
+        return <Tag color="orange">待整改</Tag>
+      case FinancialSelfInspectionStatus.RECTIFIED:
+        return <Tag color="blue">已整改</Tag>
+      case FinancialSelfInspectionStatus.INSPECTOR_APPROVED:
+        return <Tag color="green">抽查人确认</Tag>
+      case FinancialSelfInspectionStatus.INSPECTOR_REJECTED:
+        return <Tag color="red">抽查人退回</Tag>
+      case FinancialSelfInspectionStatus.REVIEWER_APPROVED:
+        return <Tag color="cyan">复查人确认</Tag>
+      case FinancialSelfInspectionStatus.REVIEWER_REJECTED:
+        return <Tag color="magenta">复查人退回</Tag>
+      default:
+        return <Tag color="default">未知状态</Tag>
+    }
+  }
+
+  // 数据加载函数
   const loadSubmittedData = async () => {
     try {
       setLoading(true)
@@ -203,7 +264,6 @@ const FinancialSelfInspection: React.FC = () => {
         ...debouncedSubmittedSearchParams,
       }
 
-      // 保存状态
       setState('financialInspectionSubmittedSearchParams', submittedSearchParams)
       setState('financialInspectionSubmittedPagination', {
         current: submittedCurrent,
@@ -223,7 +283,6 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
-  // 加载我负责的数据
   const loadResponsibleData = async () => {
     try {
       setLoading(true)
@@ -233,7 +292,6 @@ const FinancialSelfInspection: React.FC = () => {
         ...debouncedResponsibleSearchParams,
       }
 
-      // 保存状态
       setState('financialInspectionResponsibleSearchParams', responsibleSearchParams)
       setState('financialInspectionResponsiblePagination', {
         current: responsibleCurrent,
@@ -253,7 +311,35 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
-  // 当搜索参数或分页变化时，重新加载数据
+  const loadReviewedData = async () => {
+    try {
+      setLoading(true)
+      const params: FinancialSelfInspectionQueryParams = {
+        page: reviewedCurrent,
+        pageSize: reviewedPageSize,
+        ...debouncedReviewedSearchParams,
+      }
+
+      setState('financialInspectionReviewedSearchParams', reviewedSearchParams)
+      setState('financialInspectionReviewedPagination', {
+        current: reviewedCurrent,
+        pageSize: reviewedPageSize,
+      })
+
+      const response = await getMyReviewedInspections(params)
+
+      if (response.code === 0 && response.data) {
+        setReviewedData(response.data.items)
+        setReviewedTotal(response.data.total)
+      }
+    } catch (error) {
+      console.error('加载我复查的账务自查记录失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 数据加载副作用
   useEffect(() => {
     if (activeTab === 'submitted') {
       loadSubmittedData()
@@ -266,25 +352,28 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }, [responsibleCurrent, responsiblePageSize, debouncedResponsibleSearchParams])
 
+  useEffect(() => {
+    if (activeTab === 'reviewed') {
+      loadReviewedData()
+    }
+  }, [reviewedCurrent, reviewedPageSize, debouncedReviewedSearchParams])
+
   // 标签页切换
   const handleTabChange = (key: string) => {
     setActiveTab(key)
     setState('financialInspectionActiveTab', key)
 
-    // 切换时加载对应数据
     if (key === 'submitted') {
       loadSubmittedData()
     } else if (key === 'responsible') {
       loadResponsibleData()
+    } else if (key === 'reviewed') {
+      loadReviewedData()
     }
   }
 
-  // 处理我提交的搜索
-  const handleSubmittedSearch = () => {
-    setSubmittedCurrent(1)
-  }
-
-  // 重置我提交的搜索
+  // 搜索和重置处理函数
+  const handleSubmittedSearch = () => setSubmittedCurrent(1)
   const handleSubmittedReset = () => {
     const resetParams = {
       companyName: '',
@@ -297,12 +386,7 @@ const FinancialSelfInspection: React.FC = () => {
     setSubmittedCurrent(1)
   }
 
-  // 处理我负责的搜索
-  const handleResponsibleSearch = () => {
-    setResponsibleCurrent(1)
-  }
-
-  // 重置我负责的搜索
+  const handleResponsibleSearch = () => setResponsibleCurrent(1)
   const handleResponsibleReset = () => {
     const resetParams = {
       companyName: '',
@@ -316,24 +400,34 @@ const FinancialSelfInspection: React.FC = () => {
     setResponsibleCurrent(1)
   }
 
-  // 处理我提交的表格分页变化
-  const handleSubmittedTableChange = (pagination: TablePaginationConfig) => {
-    if (pagination.current) {
-      setSubmittedCurrent(pagination.current)
+  const handleReviewedSearch = () => setReviewedCurrent(1)
+  const handleReviewedReset = () => {
+    const resetParams = {
+      companyName: '',
+      unifiedSocialCreditCode: '',
+      inspector: '',
+      bookkeepingAccountant: '',
+      consultantAccountant: '',
     }
-    if (pagination.pageSize) {
-      setSubmittedPageSize(pagination.pageSize)
-    }
+    setReviewedSearchParams(resetParams)
+    reviewedForm.resetFields()
+    setReviewedCurrent(1)
   }
 
-  // 处理我负责的表格分页变化
+  // 分页处理函数
+  const handleSubmittedTableChange = (pagination: TablePaginationConfig) => {
+    if (pagination.current) setSubmittedCurrent(pagination.current)
+    if (pagination.pageSize) setSubmittedPageSize(pagination.pageSize)
+  }
+
   const handleResponsibleTableChange = (pagination: TablePaginationConfig) => {
-    if (pagination.current) {
-      setResponsibleCurrent(pagination.current)
-    }
-    if (pagination.pageSize) {
-      setResponsiblePageSize(pagination.pageSize)
-    }
+    if (pagination.current) setResponsibleCurrent(pagination.current)
+    if (pagination.pageSize) setResponsiblePageSize(pagination.pageSize)
+  }
+
+  const handleReviewedTableChange = (pagination: TablePaginationConfig) => {
+    if (pagination.current) setReviewedCurrent(pagination.current)
+    if (pagination.pageSize) setReviewedPageSize(pagination.pageSize)
   }
 
   // 查看详情
@@ -341,47 +435,74 @@ const FinancialSelfInspection: React.FC = () => {
     navigate(`/financial-self-inspection/detail/${record.id}`)
   }
 
-  // 查看我负责的详情
   const handleViewResponsibleDetail = (record: FinancialSelfInspection) => {
     navigate(`/financial-self-inspection/responsible-detail/${record.id}`)
   }
 
-  // 打开整改弹窗
-  const handleOpenRectificationModal = (record: FinancialSelfInspection) => {
-    setCurrentRectificationRecord(record)
+  const handleViewReviewedDetail = (record: FinancialSelfInspection) => {
+    navigate(`/financial-self-inspection/reviewed-detail/${record.id}`)
+  }
+
+  // 弹窗处理函数
+  const openRectificationModal = (record: FinancialSelfInspection) => {
+    setCurrentRecord(record)
     setRectificationModalVisible(true)
     rectificationForm.resetFields()
   }
 
-  // 关闭整改弹窗
-  const handleCloseRectificationModal = () => {
-    setRectificationModalVisible(false)
-    setCurrentRectificationRecord(null)
-    rectificationForm.resetFields()
+  const openApprovalModal = (record: FinancialSelfInspection) => {
+    setCurrentRecord(record)
+    setApprovalModalVisible(true)
+    approvalForm.resetFields()
   }
 
-  // 提交整改
+  const openRejectModal = (record: FinancialSelfInspection) => {
+    setCurrentRecord(record)
+    setRejectModalVisible(true)
+    rejectForm.resetFields()
+  }
+
+  const openReviewerApprovalModal = (record: FinancialSelfInspection) => {
+    setCurrentRecord(record)
+    setReviewerApprovalModalVisible(true)
+    reviewerApprovalForm.resetFields()
+  }
+
+  const openReviewerRejectModal = (record: FinancialSelfInspection) => {
+    setCurrentRecord(record)
+    setReviewerRejectModalVisible(true)
+    reviewerRejectForm.resetFields()
+  }
+
+  const openCreateModal = () => {
+    const inspectorValue = user?.username || ''
+    createForm.resetFields()
+    createForm.setFieldsValue({ inspector: inspectorValue })
+    setCreateModalVisible(true)
+  }
+
+  // 提交处理函数
   const handleSubmitRectification = async () => {
-    if (!currentRectificationRecord) return
+    if (!currentRecord) return
 
     try {
       const values = await rectificationForm.validateFields()
       setRectificationLoading(true)
 
-      const rectificationData: RectificationCompletionDto = {
-        rectificationCompletionDate: values.rectificationCompletionDate.format('YYYY-MM-DD'),
-        rectificationResult: values.rectificationResult,
+      const newRecord: RectificationRecordItem = {
+        date: values.date.format('YYYY-MM-DD'),
+        result: values.result,
       }
 
-      const response = await updateRectificationCompletion(
-        currentRectificationRecord.id,
-        rectificationData
-      )
+      const rectificationData: RectificationCompletionDto = {
+        rectificationRecords: [newRecord],
+      }
+
+      const response = await updateRectificationCompletion(currentRecord.id, rectificationData)
 
       if (response.code === 0) {
         message.success('整改提交成功')
-        handleCloseRectificationModal()
-        // 重新加载数据
+        setRectificationModalVisible(false)
         loadResponsibleData()
       } else {
         message.error(response.message || '整改提交失败')
@@ -402,146 +523,138 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
-  // 打开抽查人确认弹窗
-  const handleOpenConfirmationModal = (record: FinancialSelfInspection) => {
-    setCurrentConfirmationRecord(record)
-    setConfirmationModalVisible(true)
-    confirmationForm.resetFields()
-  }
-
-  // 关闭抽查人确认弹窗
-  const handleCloseConfirmationModal = () => {
-    setConfirmationModalVisible(false)
-    setCurrentConfirmationRecord(null)
-    confirmationForm.resetFields()
-  }
-
-  // 提交抽查人确认
-  const handleSubmitConfirmation = async () => {
-    if (!currentConfirmationRecord) return
+  const handleSubmitApproval = async () => {
+    if (!currentRecord) return
 
     try {
-      const values = await confirmationForm.validateFields()
-      setConfirmationLoading(true)
+      const values = await approvalForm.validateFields()
+      setApprovalLoading(true)
 
-      const confirmationData: InspectorConfirmationDto = {
-        inspectorConfirmation: values.inspectorConfirmation.format('YYYY-MM-DD'),
-        remarks: values.remarks,
+      const newRecord: ApprovalRecordItem = {
+        date: values.date.format('YYYY-MM-DD'),
+        remark: values.remark,
       }
 
-      const response = await updateInspectorConfirmation(
-        currentConfirmationRecord.id,
-        confirmationData
-      )
+      const approvalData: ApprovalDto = {
+        approvalRecords: [newRecord],
+      }
+
+      const response = await approvalInspection(currentRecord.id, approvalData)
 
       if (response.code === 0) {
-        message.success('抽查人确认提交成功')
-        handleCloseConfirmationModal()
-        // 重新加载数据
+        message.success('审核通过成功')
+        setApprovalModalVisible(false)
         loadSubmittedData()
       } else {
-        message.error(response.message || '抽查人确认提交失败')
+        message.error(response.message || '审核通过失败')
       }
     } catch (error: any) {
-      console.error('抽查人确认提交失败:', error)
-      if (error.response?.data?.message) {
-        if (Array.isArray(error.response.data.message)) {
-          message.error(error.response.data.message.join(', '))
-        } else {
-          message.error(error.response.data.message)
-        }
-      } else {
-        message.error('抽查人确认提交失败，请重试')
-      }
+      console.error('审核通过失败:', error)
+      message.error('审核通过失败，请重试')
     } finally {
-      setConfirmationLoading(false)
+      setApprovalLoading(false)
     }
   }
 
-  // 查询企业信息（根据名称或代码）
-  const handleEnterpriseSearch = async (
-    value: string,
-    field: 'companyName' | 'unifiedSocialCreditCode'
-  ) => {
-    if (!value || !value.trim()) {
-      return
-    }
+  const handleSubmitReject = async () => {
+    if (!currentRecord) return
 
     try {
-      setEnterpriseSearchLoading(true)
+      const values = await rejectForm.validateFields()
+      setRejectLoading(true)
 
-      const params = {
-        [field]: value.trim(),
+      const newRecord: RejectRecordItem = {
+        date: values.date.format('YYYY-MM-DD'),
+        reason: values.reason,
       }
 
-      const response = await getEnterpriseByNameOrCode(params)
+      const rejectData: RejectDto = {
+        rejectRecords: [newRecord],
+      }
 
-      if (
-        response.code === 0 &&
-        response.data &&
-        response.data.data &&
-        response.data.data.length > 0
-      ) {
-        const enterprise = response.data.data[0]
+      const response = await rejectInspection(currentRecord.id, rejectData)
 
-        // 自动填入相关信息
-        createForm.setFieldsValue({
-          companyName: enterprise.companyName,
-          unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-          bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
-          consultantAccountant: enterprise.consultantAccountant || '',
-        })
-
-        message.success('企业信息已自动填入')
+      if (response.code === 0) {
+        message.success('审核退回成功')
+        setRejectModalVisible(false)
+        loadSubmittedData()
       } else {
-        // 如果没有找到完全匹配的结果，显示提示
-        message.warning('未找到匹配的企业信息')
+        message.error(response.message || '审核退回失败')
       }
-    } catch (error) {
-      console.error('查询企业信息失败:', error)
-      message.error('查询企业信息失败')
-
-      // 查询失败时的提示已在 catch 块中处理
+    } catch (error: any) {
+      console.error('审核退回失败:', error)
+      message.error('审核退回失败，请重试')
     } finally {
-      setEnterpriseSearchLoading(false)
+      setRejectLoading(false)
     }
   }
 
-  // 客户选择处理函数
-  const handleCustomerSelect = (enterprise: Enterprise) => {
-    createForm.setFieldsValue({
-      companyName: enterprise.companyName,
-      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-      bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
-      consultantAccountant: enterprise.consultantAccountant || '',
-    })
-    message.success('企业信息已自动填入')
+  const handleSubmitReviewerApproval = async () => {
+    if (!currentRecord) return
+
+    try {
+      const values = await reviewerApprovalForm.validateFields()
+      setReviewerApprovalLoading(true)
+
+      const newRecord: ReviewerApprovalRecordItem = {
+        date: values.date.format('YYYY-MM-DD'),
+        remark: values.remark,
+      }
+
+      const reviewerApprovalData: ReviewerApprovalDto = {
+        reviewerApprovalRecords: [newRecord],
+      }
+
+      const response = await reviewerApprovalInspection(currentRecord.id, reviewerApprovalData)
+
+      if (response.code === 0) {
+        message.success('复查审核通过成功')
+        setReviewerApprovalModalVisible(false)
+        loadReviewedData()
+      } else {
+        message.error(response.message || '复查审核通过失败')
+      }
+    } catch (error: any) {
+      console.error('复查审核通过失败:', error)
+      message.error('复查审核通过失败，请重试')
+    } finally {
+      setReviewerApprovalLoading(false)
+    }
   }
 
-  // 打开新建自查记录弹窗
-  const handleOpenCreateModal = () => {
-    // 先设置抽查人，再重置其他字段
-    const inspectorValue = user?.username || ''
-    console.log('当前用户信息:', user)
-    console.log('设置抽查人为:', inspectorValue)
+  const handleSubmitReviewerReject = async () => {
+    if (!currentRecord) return
 
-    // 重置表单并设置初始值
-    createForm.resetFields()
-    createForm.setFieldsValue({
-      inspector: inspectorValue,
-    })
+    try {
+      const values = await reviewerRejectForm.validateFields()
+      setReviewerRejectLoading(true)
 
-    // 打开弹窗
-    setCreateModalVisible(true)
+      const newRecord: ReviewerRejectRecordItem = {
+        date: values.date.format('YYYY-MM-DD'),
+        reason: values.reason,
+      }
+
+      const reviewerRejectData: ReviewerRejectDto = {
+        reviewerRejectRecords: [newRecord],
+      }
+
+      const response = await reviewerRejectInspection(currentRecord.id, reviewerRejectData)
+
+      if (response.code === 0) {
+        message.success('复查审核退回成功')
+        setReviewerRejectModalVisible(false)
+        loadReviewedData()
+      } else {
+        message.error(response.message || '复查审核退回失败')
+      }
+    } catch (error: any) {
+      console.error('复查审核退回失败:', error)
+      message.error('复查审核退回失败，请重试')
+    } finally {
+      setReviewerRejectLoading(false)
+    }
   }
 
-  // 关闭新建自查记录弹窗
-  const handleCloseCreateModal = () => {
-    setCreateModalVisible(false)
-    createForm.resetFields()
-  }
-
-  // 提交新建自查记录
   const handleSubmitCreate = async () => {
     try {
       const values = await createForm.validateFields()
@@ -562,8 +675,7 @@ const FinancialSelfInspection: React.FC = () => {
 
       if (response.code === 0) {
         message.success('自查记录创建成功')
-        handleCloseCreateModal()
-        // 重新加载数据
+        setCreateModalVisible(false)
         loadSubmittedData()
       } else {
         message.error(response.message || '自查记录创建失败')
@@ -584,21 +696,35 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
-  // 渲染状态标签
-  const renderStatusTag = (record: FinancialSelfInspection) => {
-    if (record.inspectorConfirmation) {
-      return <Tag color="green">已确认</Tag>
+  // 删除处理函数
+  const handleDelete = async (record: FinancialSelfInspection) => {
+    try {
+      const response = await deleteFinancialSelfInspection(record.id)
+
+      if (response.code === 0) {
+        message.success('删除成功')
+        loadReviewedData()
+      } else {
+        message.error(response.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      message.error('删除失败，请重试')
     }
-    if (record.rectificationCompletionDate) {
-      return <Tag color="blue">整改完成</Tag>
-    }
-    if (record.problem) {
-      return <Tag color="orange">待整改</Tag>
-    }
-    return <Tag color="default">已提交</Tag>
   }
 
-  // 定义我提交的表格列
+  // 客户选择处理函数
+  const handleCustomerSelect = (enterprise: Enterprise) => {
+    createForm.setFieldsValue({
+      companyName: enterprise.companyName,
+      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+      bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
+      consultantAccountant: enterprise.consultantAccountant || '',
+    })
+    message.success('企业信息已自动填入')
+  }
+
+  // 我提交的表格列
   const submittedColumns: ColumnsType<FinancialSelfInspection> = [
     {
       title: '企业名称',
@@ -617,7 +743,7 @@ const FinancialSelfInspection: React.FC = () => {
     {
       title: '状态',
       key: 'status',
-      width: 100,
+      width: 120,
       render: (_, record) => renderStatusTag(record),
     },
     {
@@ -658,7 +784,7 @@ const FinancialSelfInspection: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 100,
+      width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
@@ -670,23 +796,34 @@ const FinancialSelfInspection: React.FC = () => {
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
-          {record.rectificationCompletionDate && !record.inspectorConfirmation && (
-            <Tooltip title="抽查人确认">
-              <Button
-                type="link"
-                size="small"
-                icon={<CheckCircleOutlined />}
-                style={{ color: '#52c41a' }}
-                onClick={() => handleOpenConfirmationModal(record)}
-              />
-            </Tooltip>
+          {record.status === FinancialSelfInspectionStatus.RECTIFIED && (
+            <>
+              <Tooltip title="审核通过">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                  style={{ color: '#52c41a' }}
+                  onClick={() => openApprovalModal(record)}
+                />
+              </Tooltip>
+              <Tooltip title="审核退回">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<CloseCircleOutlined />}
+                  style={{ color: '#f5222d' }}
+                  onClick={() => openRejectModal(record)}
+                />
+              </Tooltip>
+            </>
           )}
         </Space>
       ),
     },
   ]
 
-  // 定义我负责的表格列
+  // 我负责的表格列
   const responsibleColumns: ColumnsType<FinancialSelfInspection> = [
     {
       title: '企业名称',
@@ -705,7 +842,7 @@ const FinancialSelfInspection: React.FC = () => {
     {
       title: '状态',
       key: 'status',
-      width: 100,
+      width: 120,
       render: (_, record) => renderStatusTag(record),
     },
     {
@@ -730,13 +867,6 @@ const FinancialSelfInspection: React.FC = () => {
       render: (text: string | null) => <EllipsisText text={text} maxWidth={180} />,
     },
     {
-      title: '整改完成日期',
-      dataIndex: 'rectificationCompletionDate',
-      key: 'rectificationCompletionDate',
-      width: 130,
-      render: (date: string | null) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
-    },
-    {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -758,17 +888,128 @@ const FinancialSelfInspection: React.FC = () => {
               onClick={() => handleViewResponsibleDetail(record)}
             />
           </Tooltip>
-          {!record.rectificationCompletionDate && hasRectificationPermission() && (
-            <Tooltip title="整改">
+          {(record.status === FinancialSelfInspectionStatus.SUBMITTED ||
+            record.status === FinancialSelfInspectionStatus.INSPECTOR_REJECTED ||
+            record.status === FinancialSelfInspectionStatus.REVIEWER_REJECTED) &&
+            hasRectificationPermission() && (
+              <Tooltip title="整改">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined />}
+                  style={{ color: '#faad14' }}
+                  onClick={() => openRectificationModal(record)}
+                />
+              </Tooltip>
+            )}
+        </Space>
+      ),
+    },
+  ]
+
+  // 我复查的表格列
+  const reviewedColumns: ColumnsType<FinancialSelfInspection> = [
+    {
+      title: '企业名称',
+      dataIndex: 'companyName',
+      key: 'companyName',
+      width: 200,
+      render: (text: string | null) => <EllipsisText text={text} maxWidth={180} />,
+    },
+    {
+      title: '统一社会信用代码',
+      dataIndex: 'unifiedSocialCreditCode',
+      key: 'unifiedSocialCreditCode',
+      width: 180,
+      render: (text: string | null) => <EllipsisText text={text} maxWidth={160} />,
+    },
+    {
+      title: '状态',
+      key: 'status',
+      width: 120,
+      render: (_, record) => renderStatusTag(record),
+    },
+    {
+      title: '抽查人',
+      dataIndex: 'inspector',
+      key: 'inspector',
+      width: 120,
+      render: (text: string | null) => <EllipsisText text={text} maxWidth={100} />,
+    },
+    {
+      title: '抽查日期',
+      dataIndex: 'inspectionDate',
+      key: 'inspectionDate',
+      width: 120,
+      render: (date: string | null) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
+    },
+    {
+      title: '问题',
+      dataIndex: 'problem',
+      key: 'problem',
+      width: 200,
+      render: (text: string | null) => <EllipsisText text={text} maxWidth={180} />,
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 150,
+      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 180,
+      fixed: 'right',
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="查看">
+            <Button
+              type="link"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewReviewedDetail(record)}
+            />
+          </Tooltip>
+          {(record.status === FinancialSelfInspectionStatus.RECTIFIED ||
+            record.status === FinancialSelfInspectionStatus.INSPECTOR_APPROVED) && (
+            <>
+              <Tooltip title="复查通过">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                  style={{ color: '#52c41a' }}
+                  onClick={() => openReviewerApprovalModal(record)}
+                />
+              </Tooltip>
+              <Tooltip title="复查退回">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<CloseCircleOutlined />}
+                  style={{ color: '#f5222d' }}
+                  onClick={() => openReviewerRejectModal(record)}
+                />
+              </Tooltip>
+            </>
+          )}
+          <Popconfirm
+            title="确定要删除这条记录吗？"
+            onConfirm={() => handleDelete(record)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Tooltip title="删除">
               <Button
                 type="link"
                 size="small"
-                icon={<EditOutlined />}
-                style={{ color: '#faad14' }}
-                onClick={() => handleOpenRectificationModal(record)}
+                icon={<DeleteOutlined />}
+                style={{ color: '#f5222d' }}
               />
             </Tooltip>
-          )}
+          </Popconfirm>
         </Space>
       ),
     },
@@ -781,7 +1022,6 @@ const FinancialSelfInspection: React.FC = () => {
       label: '我提交的',
       children: (
         <>
-          {/* 搜索表单 */}
           <Form
             form={submittedForm}
             layout="vertical"
@@ -855,7 +1095,7 @@ const FinancialSelfInspection: React.FC = () => {
                   <Button icon={<ReloadOutlined />} onClick={handleSubmittedReset}>
                     重置
                   </Button>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreateModal}>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
                     新建自查记录
                   </Button>
                 </Space>
@@ -863,13 +1103,12 @@ const FinancialSelfInspection: React.FC = () => {
             </Row>
           </Form>
 
-          {/* 数据表格 */}
           <Table
             columns={submittedColumns}
             dataSource={submittedData}
             rowKey="id"
             loading={loading}
-            scroll={{ x: 1300 }}
+            scroll={{ x: 1400 }}
             pagination={{
               current: submittedCurrent,
               pageSize: submittedPageSize,
@@ -888,7 +1127,6 @@ const FinancialSelfInspection: React.FC = () => {
       label: '我负责的',
       children: (
         <>
-          {/* 搜索表单 */}
           <Form
             form={responsibleForm}
             layout="vertical"
@@ -971,7 +1209,6 @@ const FinancialSelfInspection: React.FC = () => {
             </Row>
           </Form>
 
-          {/* 数据表格 */}
           <Table
             columns={responsibleColumns}
             dataSource={responsibleData}
@@ -993,6 +1230,112 @@ const FinancialSelfInspection: React.FC = () => {
     },
   ]
 
+  // 如果有复查权限，添加我复查的标签页
+  if (hasReviewPermission()) {
+    tabItems.push({
+      key: 'reviewed',
+      label: '我复查的',
+      children: (
+        <>
+          <Form
+            form={reviewedForm}
+            layout="vertical"
+            className="mb-4"
+            initialValues={reviewedSearchParams}
+          >
+            <Row gutter={16}>
+              <Col span={6}>
+                <Form.Item label="企业名称" name="companyName">
+                  <Input
+                    placeholder="请输入企业名称"
+                    value={reviewedSearchParams.companyName}
+                    onChange={e =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        companyName: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="统一社会信用代码" name="unifiedSocialCreditCode">
+                  <Input
+                    placeholder="请输入统一社会信用代码"
+                    value={reviewedSearchParams.unifiedSocialCreditCode}
+                    onChange={e =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        unifiedSocialCreditCode: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="抽查人" name="inspector">
+                  <Input
+                    placeholder="请输入抽查人"
+                    value={reviewedSearchParams.inspector}
+                    onChange={e =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        inspector: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="记账会计" name="bookkeepingAccountant">
+                  <Input
+                    placeholder="请输入记账会计"
+                    value={reviewedSearchParams.bookkeepingAccountant}
+                    onChange={e =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row>
+              <Col span={24}>
+                <Space>
+                  <Button type="primary" icon={<SearchOutlined />} onClick={handleReviewedSearch}>
+                    搜索
+                  </Button>
+                  <Button icon={<ReloadOutlined />} onClick={handleReviewedReset}>
+                    重置
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Form>
+
+          <Table
+            columns={reviewedColumns}
+            dataSource={reviewedData}
+            rowKey="id"
+            loading={loading}
+            scroll={{ x: 1450 }}
+            pagination={{
+              current: reviewedCurrent,
+              pageSize: reviewedPageSize,
+              total: reviewedTotal,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+            }}
+            onChange={handleReviewedTableChange}
+          />
+        </>
+      ),
+    })
+  }
+
   return (
     <div className="financial-self-inspection-page">
       <Card>
@@ -1004,7 +1347,7 @@ const FinancialSelfInspection: React.FC = () => {
         title="整改完成"
         open={rectificationModalVisible}
         onOk={handleSubmitRectification}
-        onCancel={handleCloseRectificationModal}
+        onCancel={() => setRectificationModalVisible(false)}
         confirmLoading={rectificationLoading}
         width={600}
         destroyOnClose
@@ -1012,7 +1355,7 @@ const FinancialSelfInspection: React.FC = () => {
         <Form form={rectificationForm} layout="vertical" preserve={false}>
           <Form.Item
             label="整改完成日期"
-            name="rectificationCompletionDate"
+            name="date"
             rules={[{ required: true, message: '请选择整改完成日期' }]}
           >
             <DatePicker
@@ -1021,10 +1364,9 @@ const FinancialSelfInspection: React.FC = () => {
               format="YYYY-MM-DD"
             />
           </Form.Item>
-
           <Form.Item
             label="整改结果"
-            name="rectificationResult"
+            name="result"
             rules={[
               { required: true, message: '请输入整改结果' },
               { max: 500, message: '整改结果不能超过500个字符' },
@@ -1040,20 +1382,20 @@ const FinancialSelfInspection: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 抽查人确认弹窗 */}
+      {/* 审核通过弹窗 */}
       <Modal
-        title="抽查人确认"
-        open={confirmationModalVisible}
-        onOk={handleSubmitConfirmation}
-        onCancel={handleCloseConfirmationModal}
-        confirmLoading={confirmationLoading}
+        title="审核通过"
+        open={approvalModalVisible}
+        onOk={handleSubmitApproval}
+        onCancel={() => setApprovalModalVisible(false)}
+        confirmLoading={approvalLoading}
         width={600}
         destroyOnClose
       >
-        <Form form={confirmationForm} layout="vertical" preserve={false}>
+        <Form form={approvalForm} layout="vertical" preserve={false}>
           <Form.Item
             label="确认日期"
-            name="inspectorConfirmation"
+            name="date"
             rules={[{ required: true, message: '请选择确认日期' }]}
           >
             <DatePicker
@@ -1062,10 +1404,9 @@ const FinancialSelfInspection: React.FC = () => {
               format="YYYY-MM-DD"
             />
           </Form.Item>
-
           <Form.Item
             label="备注"
-            name="remarks"
+            name="remark"
             rules={[{ max: 500, message: '备注不能超过500个字符' }]}
           >
             <Input.TextArea
@@ -1078,14 +1419,132 @@ const FinancialSelfInspection: React.FC = () => {
         </Form>
       </Modal>
 
+      {/* 审核退回弹窗 */}
+      <Modal
+        title="审核退回"
+        open={rejectModalVisible}
+        onOk={handleSubmitReject}
+        onCancel={() => setRejectModalVisible(false)}
+        confirmLoading={rejectLoading}
+        width={600}
+        destroyOnClose
+      >
+        <Form form={rejectForm} layout="vertical" preserve={false}>
+          <Form.Item
+            label="退回日期"
+            name="date"
+            rules={[{ required: true, message: '请选择退回日期' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              placeholder="请选择退回日期"
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+          <Form.Item
+            label="退回原因"
+            name="reason"
+            rules={[
+              { required: true, message: '请输入退回原因' },
+              { max: 500, message: '退回原因不能超过500个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请详细说明退回原因..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 复查审核通过弹窗 */}
+      <Modal
+        title="复查审核通过"
+        open={reviewerApprovalModalVisible}
+        onOk={handleSubmitReviewerApproval}
+        onCancel={() => setReviewerApprovalModalVisible(false)}
+        confirmLoading={reviewerApprovalLoading}
+        width={600}
+        destroyOnClose
+      >
+        <Form form={reviewerApprovalForm} layout="vertical" preserve={false}>
+          <Form.Item
+            label="确认日期"
+            name="date"
+            rules={[{ required: true, message: '请选择确认日期' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              placeholder="请选择确认日期"
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+          <Form.Item
+            label="备注"
+            name="remark"
+            rules={[{ max: 500, message: '备注不能超过500个字符' }]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请输入备注信息（可选）..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 复查审核退回弹窗 */}
+      <Modal
+        title="复查审核退回"
+        open={reviewerRejectModalVisible}
+        onOk={handleSubmitReviewerReject}
+        onCancel={() => setReviewerRejectModalVisible(false)}
+        confirmLoading={reviewerRejectLoading}
+        width={600}
+        destroyOnClose
+      >
+        <Form form={reviewerRejectForm} layout="vertical" preserve={false}>
+          <Form.Item
+            label="退回日期"
+            name="date"
+            rules={[{ required: true, message: '请选择退回日期' }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              placeholder="请选择退回日期"
+              format="YYYY-MM-DD"
+            />
+          </Form.Item>
+          <Form.Item
+            label="退回原因"
+            name="reason"
+            rules={[
+              { required: true, message: '请输入退回原因' },
+              { max: 500, message: '退回原因不能超过500个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请详细说明退回原因..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
       {/* 新建自查记录弹窗 */}
       <Modal
         title="新建自查记录"
         open={createModalVisible}
         onOk={handleSubmitCreate}
-        onCancel={handleCloseCreateModal}
+        onCancel={() => setCreateModalVisible(false)}
         confirmLoading={createLoading}
         width={800}
+        destroyOnClose
       >
         <Form
           form={createForm}
@@ -1122,15 +1581,7 @@ const FinancialSelfInspection: React.FC = () => {
                 <CustomerAutoComplete
                   placeholder="请输入企业名称进行搜索"
                   searchType="companyName"
-                  onSelect={(enterprise: Enterprise) => {
-                    createForm.setFieldsValue({
-                      companyName: enterprise.companyName,
-                      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-                      bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
-                      consultantAccountant: enterprise.consultantAccountant || '',
-                      taxBureau: enterprise.taxBureau || '',
-                    })
-                  }}
+                  onSelect={handleCustomerSelect}
                 />
               </Form.Item>
             </Col>
@@ -1153,20 +1604,8 @@ const FinancialSelfInspection: React.FC = () => {
                 <CustomerAutoComplete
                   placeholder="请输入统一社会信用代码进行搜索"
                   searchType="unifiedSocialCreditCode"
-                  onSelect={(enterprise: Enterprise) => {
-                    createForm.setFieldsValue({
-                      companyName: enterprise.companyName,
-                      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-                      bookkeepingAccountant: enterprise.bookkeepingAccountant || '',
-                      consultantAccountant: enterprise.consultantAccountant || '',
-                      taxBureau: enterprise.taxBureau || '',
-                    })
-                  }}
+                  onSelect={handleCustomerSelect}
                 />
-              </Form.Item>
-
-              <Form.Item label="所属分局" name="taxBureau" extra="自动从企业信息中获取（可选）">
-                <Input placeholder="自动填入，可手动修改" />
               </Form.Item>
             </Col>
             <Col span={12}>

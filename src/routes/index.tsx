@@ -30,6 +30,9 @@ const FinancialSelfInspectionDetail = lazy(() => import('../pages/FinancialSelfI
 const FinancialSelfInspectionResponsibleDetail = lazy(
   () => import('../pages/FinancialSelfInspection/ResponsibleDetail')
 )
+const FinancialSelfInspectionReviewedDetail = lazy(
+  () => import('../pages/FinancialSelfInspection/ReviewedDetail')
+)
 const TaxReview = lazy(() => import('../pages/TaxReview'))
 const TaxReviewDetail = lazy(() => import('../pages/TaxReview/Detail'))
 const Employees = lazy(() => import('../pages/Employees'))
@@ -228,6 +231,14 @@ const routes: RouteObject[] = [
             ]}
           >
             <FinancialSelfInspectionResponsibleDetail />
+          </AuthorizedRoute>
+        ),
+      },
+      {
+        path: 'financial-self-inspection/reviewed-detail/:id',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+            <FinancialSelfInspectionReviewedDetail />
           </AuthorizedRoute>
         ),
       },

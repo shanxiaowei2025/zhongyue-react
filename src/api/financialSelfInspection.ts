@@ -6,7 +6,10 @@ import type {
   FinancialSelfInspection,
   CreateFinancialSelfInspectionDto,
   RectificationCompletionDto,
-  InspectorConfirmationDto,
+  ApprovalDto,
+  RejectDto,
+  ReviewerApprovalDto,
+  ReviewerRejectDto,
 } from '../types/financialSelfInspection'
 
 // 获取我提交的账务自查记录列表
@@ -23,6 +26,13 @@ export const getMyResponsibleInspections = async (
   return request.get('/enterprise-service/financial-self-inspection/my-responsible', params)
 }
 
+// 获取我复查的账务自查记录列表
+export const getMyReviewedInspections = async (
+  params?: FinancialSelfInspectionQueryParams
+): Promise<ApiResponse<FinancialSelfInspectionListResponse>> => {
+  return request.get('/enterprise-service/financial-self-inspection/my-reviewed', params)
+}
+
 // 获取我提交的记录详情
 export const getMySubmittedInspectionDetail = async (
   id: number
@@ -37,6 +47,13 @@ export const getMyResponsibleInspectionDetail = async (
   return request.get(`/enterprise-service/financial-self-inspection/my-responsible/${id}`)
 }
 
+// 获取我复查的记录详情
+export const getMyReviewedInspectionDetail = async (
+  id: number
+): Promise<ApiResponse<FinancialSelfInspection>> => {
+  return request.get(`/enterprise-service/financial-self-inspection/my-reviewed/${id}`)
+}
+
 // 创建账务自查记录
 export const createFinancialSelfInspection = async (
   data: CreateFinancialSelfInspectionDto
@@ -44,7 +61,7 @@ export const createFinancialSelfInspection = async (
   return request.post('/enterprise-service/financial-self-inspection', data)
 }
 
-// 更新整改完成日期和结果
+// 更新整改记录
 export const updateRectificationCompletion = async (
   id: number,
   data: RectificationCompletionDto
@@ -55,13 +72,42 @@ export const updateRectificationCompletion = async (
   )
 }
 
-// 更新抽查人确认
-export const updateInspectorConfirmation = async (
+// 审核通过
+export const approvalInspection = async (
   id: number,
-  data: InspectorConfirmationDto
+  data: ApprovalDto
+): Promise<ApiResponse<FinancialSelfInspection>> => {
+  return request.patch(`/enterprise-service/financial-self-inspection/${id}/approval`, data)
+}
+
+// 审核退回
+export const rejectInspection = async (
+  id: number,
+  data: RejectDto
+): Promise<ApiResponse<FinancialSelfInspection>> => {
+  return request.patch(`/enterprise-service/financial-self-inspection/${id}/reject`, data)
+}
+
+// 复查审核通过
+export const reviewerApprovalInspection = async (
+  id: number,
+  data: ReviewerApprovalDto
 ): Promise<ApiResponse<FinancialSelfInspection>> => {
   return request.patch(
-    `/enterprise-service/financial-self-inspection/${id}/inspector-confirmation`,
+    `/enterprise-service/financial-self-inspection/${id}/reviewer-approval`,
     data
   )
+}
+
+// 复查审核退回
+export const reviewerRejectInspection = async (
+  id: number,
+  data: ReviewerRejectDto
+): Promise<ApiResponse<FinancialSelfInspection>> => {
+  return request.patch(`/enterprise-service/financial-self-inspection/${id}/reviewer-reject`, data)
+}
+
+// 删除账务自查记录
+export const deleteFinancialSelfInspection = async (id: number): Promise<ApiResponse<void>> => {
+  return request.delete(`/enterprise-service/financial-self-inspection/${id}`)
 }

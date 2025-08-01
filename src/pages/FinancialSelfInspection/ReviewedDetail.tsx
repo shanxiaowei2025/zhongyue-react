@@ -12,7 +12,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { getMySubmittedInspectionDetail } from '../../api/financialSelfInspection'
+import { getMyReviewedInspectionDetail } from '../../api/financialSelfInspection'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
   FinancialSelfInspection,
@@ -33,7 +33,7 @@ interface TimelineRecord {
   title: string
 }
 
-const FinancialSelfInspectionDetail: React.FC = () => {
+const FinancialSelfInspectionReviewedDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -49,7 +49,7 @@ const FinancialSelfInspectionDetail: React.FC = () => {
 
     try {
       setLoading(true)
-      const response = await getMySubmittedInspectionDetail(Number(id))
+      const response = await getMyReviewedInspectionDetail(Number(id))
 
       if (response.code === 0 && response.data) {
         setData(response.data)
@@ -235,7 +235,7 @@ const FinancialSelfInspectionDetail: React.FC = () => {
   const timelineRecords = getTimelineRecords()
 
   return (
-    <div className="financial-self-inspection-detail">
+    <div className="financial-self-inspection-reviewed-detail">
       {/* 顶部操作栏 */}
       <div className="mb-6 flex items-center justify-between">
         <Space>
@@ -386,4 +386,4 @@ const FinancialSelfInspectionDetail: React.FC = () => {
   )
 }
 
-export default FinancialSelfInspectionDetail
+export default FinancialSelfInspectionReviewedDetail

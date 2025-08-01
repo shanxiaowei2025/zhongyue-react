@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Button, Typography, Descriptions, Spin, Tag, message, Space } from 'antd'
+import { Card, Button, Typography, Descriptions, Spin, Tag, message, Space, Timeline } from 'antd'
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
@@ -8,12 +8,30 @@ import {
   UserOutlined,
   ExclamationCircleOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
+  EyeOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { getMyResponsibleInspectionDetail } from '../../api/financialSelfInspection'
-import type { FinancialSelfInspection } from '../../types/financialSelfInspection'
+import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
+import type {
+  FinancialSelfInspection,
+  RectificationRecordItem,
+  ApprovalRecordItem,
+  RejectRecordItem,
+  ReviewerApprovalRecordItem,
+  ReviewerRejectRecordItem,
+} from '../../types/financialSelfInspection'
 
 const { Title, Text } = Typography
+
+// 时间线记录项类型
+interface TimelineRecord {
+  date: string
+  type: 'rectification' | 'approval' | 'reject' | 'reviewer_approval' | 'reviewer_reject'
+  content: string
+  title: string
+}
 
 const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -59,28 +77,46 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const renderStatusTag = () => {
     if (!data) return null
 
-    if (data.inspectorConfirmation) {
-      return (
-        <Tag color="green" icon={<CheckCircleOutlined />}>
-          已确认
-        </Tag>
-      )
+    switch (data.status) {
+      case FinancialSelfInspectionStatus.SUBMITTED:
+        return (
+          <Tag color="orange" icon={<ExclamationCircleOutlined />}>
+            待整改
+          </Tag>
+        )
+      case FinancialSelfInspectionStatus.RECTIFIED:
+        return (
+          <Tag color="blue" icon={<CalendarOutlined />}>
+            已整改
+          </Tag>
+        )
+      case FinancialSelfInspectionStatus.INSPECTOR_APPROVED:
+        return (
+          <Tag color="green" icon={<CheckCircleOutlined />}>
+            抽查人确认
+          </Tag>
+        )
+      case FinancialSelfInspectionStatus.INSPECTOR_REJECTED:
+        return (
+          <Tag color="red" icon={<CloseCircleOutlined />}>
+            抽查人退回
+          </Tag>
+        )
+      case FinancialSelfInspectionStatus.REVIEWER_APPROVED:
+        return (
+          <Tag color="cyan" icon={<CheckCircleOutlined />}>
+            复查人确认
+          </Tag>
+        )
+      case FinancialSelfInspectionStatus.REVIEWER_REJECTED:
+        return (
+          <Tag color="magenta" icon={<CloseCircleOutlined />}>
+            复查人退回
+          </Tag>
+        )
+      default:
+        return <Tag color="default">未知状态</Tag>
     }
-    if (data.rectificationCompletionDate) {
-      return (
-        <Tag color="blue" icon={<CalendarOutlined />}>
-          整改完成
-        </Tag>
-      )
-    }
-    if (data.problem) {
-      return (
-        <Tag color="orange" icon={<ExclamationCircleOutlined />}>
-          待整改
-        </Tag>
-      )
-    }
-    return <Tag color="default">已提交</Tag>
   }
 
   // 格式化日期
@@ -93,6 +129,84 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-'
     return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss')
+  }
+
+  // 合并所有记录为时间线
+  const getTimelineRecords = (): TimelineRecord[] => {
+    if (!data) return []
+
+    const records: TimelineRecord[] = []
+
+    // 整改记录
+    data.rectificationRecords?.forEach((record: RectificationRecordItem) => {
+      records.push({
+        date: record.date,
+        type: 'rectification',
+        title: '整改完成',
+        content: record.result,
+      })
+    })
+
+    // 审核通过记录
+    data.approvalRecords?.forEach((record: ApprovalRecordItem) => {
+      records.push({
+        date: record.date,
+        type: 'approval',
+        title: '抽查人确认',
+        content: record.remark || '无备注',
+      })
+    })
+
+    // 审核退回记录
+    data.rejectRecords?.forEach((record: RejectRecordItem) => {
+      records.push({
+        date: record.date,
+        type: 'reject',
+        title: '抽查人退回',
+        content: record.reason,
+      })
+    })
+
+    // 复查审核通过记录
+    data.reviewerApprovalRecords?.forEach((record: ReviewerApprovalRecordItem) => {
+      records.push({
+        date: record.date,
+        type: 'reviewer_approval',
+        title: '复查人确认',
+        content: record.remark || '无备注',
+      })
+    })
+
+    // 复查审核退回记录
+    data.reviewerRejectRecords?.forEach((record: ReviewerRejectRecordItem) => {
+      records.push({
+        date: record.date,
+        type: 'reviewer_reject',
+        title: '复查人退回',
+        content: record.reason,
+      })
+    })
+
+    // 按日期降序排序
+    return records.sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf())
+  }
+
+  // 获取时间线图标和颜色
+  const getTimelineProps = (type: TimelineRecord['type']) => {
+    switch (type) {
+      case 'rectification':
+        return { color: 'blue', dot: <CalendarOutlined /> }
+      case 'approval':
+        return { color: 'green', dot: <CheckCircleOutlined /> }
+      case 'reject':
+        return { color: 'red', dot: <CloseCircleOutlined /> }
+      case 'reviewer_approval':
+        return { color: 'cyan', dot: <CheckCircleOutlined /> }
+      case 'reviewer_reject':
+        return { color: 'magenta', dot: <CloseCircleOutlined /> }
+      default:
+        return { color: 'gray', dot: <EyeOutlined /> }
+    }
   }
 
   if (loading) {
@@ -117,6 +231,8 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
       </div>
     )
   }
+
+  const timelineRecords = getTimelineRecords()
 
   return (
     <div className="financial-self-inspection-responsible-detail">
@@ -165,6 +281,14 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
           <Descriptions.Item label="顾问会计">
             <Text>{data.consultantAccountant || '-'}</Text>
           </Descriptions.Item>
+          {data.reviewer && (
+            <Descriptions.Item label="复查人">
+              <Space>
+                <UserOutlined />
+                <Text>{data.reviewer}</Text>
+              </Space>
+            </Descriptions.Item>
+          )}
         </Descriptions>
       </Card>
 
@@ -200,7 +324,7 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
         </Descriptions>
       </Card>
 
-      {/* 整改情况 */}
+      {/* 整改情况时间线 */}
       <Card
         title={
           <Space>
@@ -210,48 +334,30 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
         }
         className="mb-6"
       >
-        <Descriptions column={2} bordered>
-          <Descriptions.Item label="整改完成日期">
-            {data.rectificationCompletionDate ? (
-              <Space>
-                <CalendarOutlined />
-                <Text>{formatDate(data.rectificationCompletionDate)}</Text>
-                <Tag color="blue">已完成</Tag>
-              </Space>
-            ) : (
-              <Text type="secondary">-</Text>
-            )}
-          </Descriptions.Item>
-          <Descriptions.Item label="整改结果">
-            <div className="whitespace-pre-wrap">
-              {data.rectificationResult || (
-                <Text type="secondary" italic>
-                  暂无整改结果
-                </Text>
-              )}
-            </div>
-          </Descriptions.Item>
-          <Descriptions.Item label="抽查人确认完成日期">
-            {data.inspectorConfirmation ? (
-              <Space>
-                <CalendarOutlined />
-                <Text>{formatDate(data.inspectorConfirmation)}</Text>
-                <Tag color="green">已确认</Tag>
-              </Space>
-            ) : (
-              <Text type="secondary">-</Text>
-            )}
-          </Descriptions.Item>
-          <Descriptions.Item label="备注">
-            <div className="whitespace-pre-wrap">
-              {data.remarks || (
-                <Text type="secondary" italic>
-                  暂无备注
-                </Text>
-              )}
-            </div>
-          </Descriptions.Item>
-        </Descriptions>
+        {timelineRecords.length > 0 ? (
+          <Timeline>
+            {timelineRecords.map((record, index) => {
+              const props = getTimelineProps(record.type)
+              return (
+                <Timeline.Item key={index} {...props}>
+                  <div className="mb-2">
+                    <Text strong>{record.title}</Text>
+                    <Text type="secondary" className="ml-2">
+                      {formatDate(record.date)}
+                    </Text>
+                  </div>
+                  <div className="whitespace-pre-wrap text-gray-600">{record.content}</div>
+                </Timeline.Item>
+              )
+            })}
+          </Timeline>
+        ) : (
+          <div className="text-center py-8">
+            <Text type="secondary" italic>
+              暂无整改记录
+            </Text>
+          </div>
+        )}
       </Card>
 
       {/* 状态信息 */}
