@@ -54,15 +54,7 @@ const commissionRatePositionOptions = [
 ]
 
 export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({ searchParams, onSearchChange }) => {
-  const { departments } = useDepartments()
-
-  // 构建部门层级数据（如果需要从数字转换为数组）
-  const getDepartmentIds = (departmentId?: number): number[] | undefined => {
-    if (!departmentId) return undefined
-    // 这里可能需要根据实际的部门数据结构来转换
-    // 暂时返回单个部门ID的数组
-    return [departmentId]
-  }
+  const { departments, rawDepartments } = useDepartments()
 
   return (
     <div className="bg-white">
@@ -84,15 +76,20 @@ export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({ searchParams, on
                 <Cascader
                   options={departments}
                   placeholder="请选择部门"
-                  value={getDepartmentIds(searchParams.departmentId)}
+                  value={searchParams.departmentIds}
                   onChange={value => {
+                    const departmentIds =
+                      value && value.length > 0 ? (value as number[]) : undefined
+                    // 为了向后兼容，同时设置departmentId（取最后一个）
                     const departmentId =
-                      value && value.length > 0 ? (value[value.length - 1] as number) : undefined
-                    onSearchChange({ ...searchParams, departmentId })
+                      departmentIds && departmentIds.length > 0
+                        ? departmentIds[departmentIds.length - 1]
+                        : undefined
+                    onSearchChange({ ...searchParams, departmentIds, departmentId })
                   }}
                   allowClear
                   showSearch
-                  changeOnSelect={false}
+                  changeOnSelect={true}
                   className="w-full"
                 />
               </Form.Item>

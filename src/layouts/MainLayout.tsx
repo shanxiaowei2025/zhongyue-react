@@ -30,6 +30,7 @@ import {
   FileDoneOutlined,
   IdcardOutlined,
   CreditCardOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import { buildImageUrl } from '../utils/upload'
@@ -127,6 +128,12 @@ const MODULE_CONFIG: Record<
     label: '薪资管理',
     icon: <CreditCardOutlined />,
     pathPatterns: ['/salary-management'],
+  },
+  '/data-query': {
+    defaultPath: '/data-query',
+    label: '数据查询',
+    icon: <DatabaseOutlined />,
+    pathPatterns: ['/data-query'],
   },
 }
 
@@ -305,13 +312,41 @@ const useTabsStore = () => {
     }
   }
 
+  // 清理员工表单缓存数据
+  const clearEmployeeFormCache = (tabKey: string) => {
+    try {
+      // 检查是否是员工创建或编辑页面
+      if (tabKey === '/employees/create' || tabKey.startsWith('/employees/edit/')) {
+        // 清理员工表单Zustand缓存数据
+        sessionStorage.removeItem('employee-form-storage')
+
+        // 如果窗口对象存在，也触发store的清理方法
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          const clearCacheEvent = new CustomEvent('clearEmployeeFormCache', {
+            detail: { tabKey, reason: 'tab-close' },
+          })
+          window.dispatchEvent(clearCacheEvent)
+        }
+
+        console.log('🧹 清理员工表单缓存数据:', {
+          tabKey,
+          cleared: ['employee-form-storage'],
+          reason: 'tab-close',
+        })
+      }
+    } catch (error) {
+      console.error('清理员工表单缓存失败:', error)
+    }
+  }
+
   // 移除标签
   const removeTab = (targetKey: string) => {
     // 找出要删除的标签索引
     const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
 
-    // 在关闭标签前清理合同表单缓存数据
+    // 在关闭标签前清理表单缓存数据
     clearContractFormCache(targetKey)
+    clearEmployeeFormCache(targetKey)
 
     // 删除标签
     const newTabs = tabs.filter(tab => tab.key !== targetKey)
@@ -450,6 +485,11 @@ const MainLayout = () => {
       key: '/customers',
       icon: <ShopOutlined />,
       label: '客户管理',
+    },
+    {
+      key: '/data-query',
+      icon: <DatabaseOutlined />,
+      label: '数据查询',
     },
     {
       key: '/expenses',
@@ -660,6 +700,41 @@ const MainLayout = () => {
         key: pathname,
         label: '创建合同',
         icon: <FileTextOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理员工编辑页
+    if (pathname.startsWith('/employees/edit/')) {
+      const employeeId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `编辑员工 - #${employeeId}`,
+        icon: <TeamOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理员工详情页
+    if (pathname.startsWith('/employees/detail/')) {
+      const employeeId = pathname.split('/').pop()
+      tabsStore.addTab({
+        key: pathname,
+        label: `员工详情 - #${employeeId}`,
+        icon: <TeamOutlined />,
+        closable: true,
+      })
+      return
+    }
+
+    // 特殊处理员工创建页
+    if (pathname === '/employees/create') {
+      tabsStore.addTab({
+        key: pathname,
+        label: '新增员工',
+        icon: <TeamOutlined />,
         closable: true,
       })
       return

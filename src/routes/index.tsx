@@ -39,6 +39,7 @@ const Employees = lazy(() => import('../pages/Employees'))
 const EmployeeForm = lazy(() => import('../pages/Employees/EmployeeForm'))
 const EmployeeDetail = lazy(() => import('../pages/Employees/EmployeeDetail'))
 const SalaryManagement = lazy(() => import('../pages/SalaryManagement'))
+const DataQuery = lazy(() => import('../pages/DataQuery'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -100,6 +101,10 @@ const routes: RouteObject[] = [
       {
         path: 'customers',
         element: <Customers />,
+      },
+      {
+        path: 'data-query',
+        element: <DataQuery />,
       },
       {
         path: 'expenses',

@@ -8,6 +8,7 @@ export interface Employee {
   rank?: string
   isResigned: boolean
   baseSalary?: number
+  payrollCompany?: string
   resume?: ResumeFile[]
   birthday?: string
   actualBirthday?: string
@@ -37,6 +38,7 @@ export interface CreateEmployeeDto {
   rank?: string
   isResigned?: boolean
   baseSalary?: number
+  payrollCompany?: string
   resume?: ResumeFile[]
   birthday?: string
   actualBirthday?: string
@@ -56,6 +58,7 @@ export interface UpdateEmployeeDto {
   rank?: string
   isResigned?: boolean
   baseSalary?: number
+  payrollCompany?: string
   resume?: ResumeFile[]
   birthday?: string
   actualBirthday?: string
@@ -70,6 +73,7 @@ export interface QueryEmployeeDto {
   pageSize?: number
   name?: string
   departmentId?: number
+  departmentIds?: number[]
   employeeType?: string
   commissionRatePosition?: string
   position?: string

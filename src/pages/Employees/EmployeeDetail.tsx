@@ -345,6 +345,9 @@ const EmployeeDetail: React.FC = () => {
             <Descriptions.Item label="基础工资">
               {renderSalary(employee.baseSalary)}
             </Descriptions.Item>
+            <Descriptions.Item label="薪资发放公司">
+              {employee.payrollCompany || '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="入职时间">
               {employee.hireDate ? dayjs(employee.hireDate).format('YYYY-MM-DD') : '-'}
             </Descriptions.Item>

@@ -22,8 +22,16 @@ import dayjs from 'dayjs'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { useDepartments, getDepartmentPath } from '../../hooks/useDepartments'
 import { useEmployeeDetail, useCreateEmployee, useUpdateEmployee } from '../../hooks/useEmployee'
+import { useEmployeeFormStore } from '../../store/employeeForm'
 import type { CreateEmployeeDto, UpdateEmployeeDto, ResumeFile } from '../../types/employee'
 import type { ImageType } from '../../types'
+
+// 声明全局的标签页管理函数
+declare global {
+  interface Window {
+    closeTab?: (tabKey: string) => boolean
+  }
+}
 
 const { Title } = Typography
 const { Option } = Select
@@ -73,6 +81,18 @@ const commissionRatePositionOptions = [
   { label: '其他', value: '其他' },
 ]
 
+const payrollCompanyOptions = [
+  { label: '中岳会计', value: '中岳会计' },
+  { label: '雄安分公司', value: '雄安分公司' },
+  { label: '高碑店分公司', value: '高碑店分公司' },
+  { label: '金盾', value: '金盾' },
+  { label: '如你心意', value: '如你心意' },
+  { label: '脉信', value: '脉信' },
+  { label: '锦朝', value: '锦朝' },
+  { label: '乾韵', value: '乾韵' },
+  { label: '卓艺', value: '卓艺' },
+]
+
 const EmployeeForm: React.FC = () => {
   const [form] = Form.useForm()
   const navigate = useNavigate()
@@ -82,6 +102,18 @@ const EmployeeForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [resumeFiles, setResumeFiles] = useState<Record<string, ImageType>>({})
   const [isResigned, setIsResigned] = useState(false)
+
+  // 表单状态管理
+  const currentPath = isEdit ? `/employees/edit/${id}` : '/employees/create'
+  const {
+    updateFormField,
+    batchUpdateFormData,
+    clearFormData,
+    clearAllCache,
+    getFormData,
+    hasFormData,
+    setRestoring,
+  } = useEmployeeFormStore()
 
   // 获取部门数据
   const { departments, rawDepartments } = useDepartments()
@@ -93,35 +125,103 @@ const EmployeeForm: React.FC = () => {
   const { createEmployee } = useCreateEmployee()
   const { updateEmployee } = useUpdateEmployee()
 
-  // 初始化表单数据
+  // 恢复或初始化表单数据
   useEffect(() => {
-    if (isEdit && employee && rawDepartments.length > 0) {
-      // 获取部门路径
-      const deptPath = getDepartmentPath(employee.departmentId, rawDepartments)
+    const initializeForm = () => {
+      setRestoring(true)
 
-      const formData = {
-        ...employee,
-        birthday: employee.birthday ? dayjs(employee.birthday) : undefined,
-        hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
-        departmentIds: deptPath.length > 0 ? deptPath : undefined,
+      // 检查是否有缓存的表单数据
+      const cachedData = getFormData(currentPath)
+      const hasCachedData = hasFormData(currentPath)
+
+      if (hasCachedData && !isEdit) {
+        // 创建页面：优先使用缓存数据
+        console.log('🔄 恢复创建员工表单缓存数据')
+        form.setFieldsValue(cachedData)
+
+        if (cachedData.isResigned !== undefined) {
+          setIsResigned(cachedData.isResigned)
+        }
+
+        if (cachedData.resumeFiles) {
+          setResumeFiles(cachedData.resumeFiles)
+        }
+      } else if (isEdit && employee && rawDepartments.length > 0) {
+        // 编辑页面：使用服务器数据，但如果有缓存则合并
+        const deptPath = getDepartmentPath(employee.departmentId, rawDepartments)
+
+        const serverData = {
+          ...employee,
+          birthday: employee.birthday ? dayjs(employee.birthday) : undefined,
+          hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
+          departmentIds: deptPath.length > 0 ? deptPath : undefined,
+        }
+
+        // 如果有缓存数据，合并缓存的用户输入
+        const finalData = hasCachedData ? { ...serverData, ...cachedData } : serverData
+
+        console.log('🔄 初始化编辑员工表单数据', hasCachedData ? '（含缓存）' : '（仅服务器）')
+        form.setFieldsValue(finalData)
+        setIsResigned(finalData.isResigned || false)
+
+        // 处理简历文件
+        if (hasCachedData && cachedData.resumeFiles) {
+          setResumeFiles(cachedData.resumeFiles)
+        } else if (employee.resume && employee.resume.length > 0) {
+          const resumeFileMap: Record<string, ImageType> = {}
+          employee.resume.forEach((file, index) => {
+            resumeFileMap[`resume_${index}`] = {
+              fileName: file.fileName,
+              url: file.fileUrl || '',
+            }
+          })
+          setResumeFiles(resumeFileMap)
+        }
       }
 
-      form.setFieldsValue(formData)
-      setIsResigned(employee.isResigned || false)
+      setRestoring(false)
+    }
 
-      // 转换简历文件格式为MultiFileUpload需要的格式
-      if (employee.resume && employee.resume.length > 0) {
-        const resumeFileMap: Record<string, ImageType> = {}
-        employee.resume.forEach((file, index) => {
-          resumeFileMap[`resume_${index}`] = {
-            fileName: file.fileName,
-            url: file.fileUrl || '',
-          }
-        })
-        setResumeFiles(resumeFileMap)
+    initializeForm()
+  }, [employee, rawDepartments, isEdit, currentPath, form, getFormData, hasFormData, setRestoring])
+
+  // 监听表单字段变化，自动保存到缓存
+  useEffect(() => {
+    const handleFormChange = () => {
+      const currentValues = form.getFieldsValue()
+      // 保存表单数据到缓存，包括简历文件状态
+      batchUpdateFormData(currentPath, {
+        ...currentValues,
+        isResigned,
+        resumeFiles,
+      })
+    }
+
+    // 防抖保存，避免频繁更新
+    const debounceTimer = setTimeout(handleFormChange, 500)
+
+    return () => {
+      clearTimeout(debounceTimer)
+    }
+  }, [form, currentPath, batchUpdateFormData, isResigned, resumeFiles])
+
+  // 监听外部缓存清理事件（如标签页关闭）
+  useEffect(() => {
+    const handleClearCache = (event: CustomEvent) => {
+      const { tabKey, reason } = event.detail
+      if (tabKey === currentPath || reason === 'force') {
+        console.log(`🧹 [EmployeeForm] 响应外部缓存清理事件: ${tabKey} (${reason})`)
+        clearFormData(currentPath)
       }
     }
-  }, [employee, form, isEdit, rawDepartments])
+
+    // 监听来自MainLayout的缓存清理事件
+    window.addEventListener('clearEmployeeFormCache', handleClearCache as EventListener)
+
+    return () => {
+      window.removeEventListener('clearEmployeeFormCache', handleClearCache as EventListener)
+    }
+  }, [currentPath, clearFormData])
 
   // 处理表单提交
   const handleSubmit = async (values: any) => {
@@ -162,15 +262,49 @@ const EmployeeForm: React.FC = () => {
         const updateData: UpdateEmployeeDto = submitData
         await updateEmployee(parseInt(id!), updateData)
         message.success('员工信息更新成功')
+
+        // 返回员工列表页面
+        navigate('/employees')
+
+        // 清理表单缓存
+        clearFormData(currentPath)
+
+        // 延迟关闭编辑员工标签页，确保跳转完成
+        setTimeout(() => {
+          const currentPath = `/employees/edit/${id}`
+          if (window.closeTab) {
+            const success = window.closeTab(currentPath)
+            if (success) {
+              console.log('✅ 编辑员工标签页已关闭，已返回员工列表')
+            } else {
+              console.warn(`⚠️ 关闭编辑员工标签页失败: ${currentPath}`)
+            }
+          }
+        }, 300)
       } else {
         // 创建员工
         const createData: CreateEmployeeDto = submitData
         await createEmployee(createData)
         message.success('员工创建成功')
-      }
 
-      // 返回员工列表页面
-      navigate('/employees')
+        // 返回员工列表页面
+        navigate('/employees')
+
+        // 清理表单缓存
+        clearFormData(currentPath)
+
+        // 延迟关闭创建员工标签页，确保跳转完成
+        setTimeout(() => {
+          if (window.closeTab) {
+            const success = window.closeTab('/employees/create')
+            if (success) {
+              console.log('✅ 创建员工标签页已关闭，已返回员工列表')
+            } else {
+              console.warn('⚠️ 关闭创建员工标签页失败')
+            }
+          }
+        }, 300)
+      }
     } catch (error: any) {
       console.error('提交失败:', error)
       // 错误信息已在 hook 中处理
@@ -351,6 +485,22 @@ const EmployeeForm: React.FC = () => {
                     const parsed = parseFloat(value?.replace(/\¥\s?|(,*)/g, '') || '0')
                     return parsed || 0
                   }}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item label="薪资发放公司" name="payrollCompany">
+                <AutoComplete
+                  placeholder="请选择或输入薪资发放公司"
+                  options={payrollCompanyOptions}
+                  allowClear
+                  filterOption={(inputValue, option) =>
+                    (option?.label?.toString().toLowerCase().includes(inputValue.toLowerCase()) ||
+                      option?.value?.toString().toLowerCase().includes(inputValue.toLowerCase())) ??
+                    false
+                  }
+                  style={{ width: '100%' }}
                 />
               </Form.Item>
             </Col>
