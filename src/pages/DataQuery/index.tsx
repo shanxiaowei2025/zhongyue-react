@@ -19,6 +19,7 @@ export default function DataQuery() {
   // 从 pageStates 恢复搜索参数
   const savedSearchParams = getState('dataQuerySearchParams')
   const savedPagination = getState('dataQueryPagination')
+  const savedHasSearched = getState('dataQueryHasSearched')
 
   const [current, setCurrent] = useState(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
@@ -27,6 +28,7 @@ export default function DataQuery() {
     unifiedSocialCreditCode: '',
     ...(savedSearchParams || {}),
   }))
+  const [hasSearched, setHasSearched] = useState(savedHasSearched || false)
   const [isMobile, setIsMobile] = useState(false)
 
   // 添加防抖搜索参数
@@ -37,30 +39,40 @@ export default function DataQuery() {
     ...debouncedSearchParams,
   }
 
-  // 使用SWR获取档案列表数据
+  // 检查是否有搜索条件
+  const hasSearchConditions = Boolean(
+    debouncedSearchParams.companyName?.trim() ||
+      debouncedSearchParams.unifiedSocialCreditCode?.trim()
+  )
+
+  // 使用SWR获取档案列表数据 - 只在有搜索条件且已执行搜索时才发起请求
   const {
     data: response,
     error,
     isLoading,
     mutate,
-  } = useSWR(['archive-search', apiParams], () => searchArchive(apiParams), {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000,
-    onSuccess: data => {
-      console.log('📄 档案查询API成功响应:', data)
-      console.log('📄 响应数据结构:', JSON.stringify(data, null, 2))
-      if (data?.data && Array.isArray(data.data)) {
-        console.log('📄 档案列表项数:', data.data.length)
-        console.log('📄 第一项数据:', data.data[0])
-      }
-    },
-    onError: err => {
-      console.error('❌ 档案查询API错误:', err)
-      console.error('❌ 错误详情:', JSON.stringify(err, null, 2))
-      message.error(`查询失败: ${err.message || '服务器错误'}`)
-    },
-  })
+  } = useSWR(
+    hasSearched && hasSearchConditions ? ['archive-search', apiParams] : null,
+    () => searchArchive(apiParams),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
+      onSuccess: data => {
+        console.log('📄 档案查询API成功响应:', data)
+        console.log('📄 响应数据结构:', JSON.stringify(data, null, 2))
+        if (data?.data && Array.isArray(data.data)) {
+          console.log('📄 档案列表项数:', data.data.length)
+          console.log('📄 第一项数据:', data.data[0])
+        }
+      },
+      onError: err => {
+        console.error('❌ 档案查询API错误:', err)
+        console.error('❌ 错误详情:', JSON.stringify(err, null, 2))
+        message.error(`查询失败: ${err.message || '服务器错误'}`)
+      },
+    }
+  )
 
   // 适配后端响应结构：data 直接是数组
   const allArchiveList = response?.data || []
@@ -107,6 +119,11 @@ export default function DataQuery() {
     setState('dataQueryPagination', { current, pageSize })
   }, [current, pageSize, setState])
 
+  // 当搜索状态变化时，保存到 pageStates
+  useEffect(() => {
+    setState('dataQueryHasSearched', hasSearched)
+  }, [hasSearched, setState])
+
   // 处理窗口大小变化
   useEffect(() => {
     const handleResize = () => {
@@ -124,6 +141,11 @@ export default function DataQuery() {
   }, [searchParams.companyName, searchParams.unifiedSocialCreditCode])
 
   const handleSearch = () => {
+    if (!hasSearchConditions) {
+      message.warning('请输入企业名称或统一社会信用代码进行查询')
+      return
+    }
+    setHasSearched(true)
     setCurrent(1)
     mutate()
   }
@@ -133,6 +155,7 @@ export default function DataQuery() {
       companyName: '',
       unifiedSocialCreditCode: '',
     })
+    setHasSearched(false)
     setCurrent(1)
   }
 
@@ -263,8 +286,19 @@ export default function DataQuery() {
         />
       )}
 
-      {/* 空数据提示 */}
-      {!isLoading && !error && archiveList.length === 0 && (
+      {/* 未搜索状态提示 */}
+      {!hasSearched && (
+        <Alert
+          message="请输入搜索条件"
+          description="请在上方输入企业名称或统一社会信用代码，然后点击查询按钮开始搜索"
+          type="info"
+          showIcon
+          className="mb-4"
+        />
+      )}
+
+      {/* 搜索无结果提示 */}
+      {hasSearched && !isLoading && !error && archiveList.length === 0 && hasSearchConditions && (
         <Alert
           message="暂无数据"
           description="当前查询条件下没有找到相关档案信息，请尝试调整搜索条件"
@@ -274,35 +308,37 @@ export default function DataQuery() {
         />
       )}
 
-      {/* 数据表格 */}
-      <Table
-        columns={columns}
-        dataSource={archiveList}
-        rowKey={record =>
-          record.unifiedSocialCreditCode || record.companyName || Math.random().toString()
-        }
-        pagination={{
-          total,
-          current,
-          pageSize,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: total => `共 ${total} 条记录`,
-          onChange: (page, size) => {
-            setCurrent(page)
-            if (size !== pageSize) {
-              setPageSize(size)
-            }
-          },
-          size: isMobile ? 'small' : 'default',
-          simple: isMobile,
-        }}
-        loading={isLoading}
-        scroll={{ x: 'max-content' }}
-        size={isMobile ? 'small' : 'middle'}
-        sticky={{ offsetHeader: 0 }}
-        className="data-query-table"
-      />
+      {/* 数据表格 - 只在已搜索且有数据时显示 */}
+      {hasSearched && (
+        <Table
+          columns={columns}
+          dataSource={archiveList}
+          rowKey={record =>
+            record.unifiedSocialCreditCode || record.companyName || Math.random().toString()
+          }
+          pagination={{
+            total,
+            current,
+            pageSize,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: total => `共 ${total} 条记录`,
+            onChange: (page, size) => {
+              setCurrent(page)
+              if (size !== pageSize) {
+                setPageSize(size)
+              }
+            },
+            size: isMobile ? 'small' : 'default',
+            simple: isMobile,
+          }}
+          loading={isLoading}
+          scroll={{ x: 'max-content' }}
+          size={isMobile ? 'small' : 'middle'}
+          sticky={{ offsetHeader: 0 }}
+          className="data-query-table"
+        />
+      )}
     </div>
   )
 }
