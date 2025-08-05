@@ -63,6 +63,9 @@ export const useSalaryIntegrated = () => {
           totalActual: 0,
           paidCount: 0,
           unpaidCount: 0,
+          confirmedCount: 0,
+          unconfirmedCount: 0,
+          confirmationRate: 0,
         },
       },
       onSuccess: data => {
@@ -101,32 +104,29 @@ export const useSalaryIntegrated = () => {
 
   // 操作方法
   const operations = {
-    // 自动生成薪资
-    autoGenerateSalary: useCallback(
-      async (yearMonth: string) => {
-        try {
-          setLoading(true)
-          message.loading('正在自动生成薪资数据...', 0)
+    // 自动生成薪资（固定使用当前月份）
+    autoGenerateSalary: useCallback(async () => {
+      try {
+        setLoading(true)
+        message.loading('正在自动生成薪资数据...', 0)
 
-          const result = await salaryApi.autoGenerateSalary(yearMonth)
+        const result = await salaryApi.autoGenerateSalary()
 
-          message.destroy()
-          message.success(`成功生成 ${result.length} 条薪资记录`)
+        message.destroy()
+        message.success(`成功生成 ${result.length} 条薪资记录`)
 
-          // 刷新数据
-          await mutateMonthly()
+        // 刷新数据
+        await mutateMonthly()
 
-          return result
-        } catch (error: any) {
-          message.destroy()
-          message.error(`自动生成薪资失败: ${error.message}`)
-          throw error
-        } finally {
-          setLoading(false)
-        }
-      },
-      [mutateMonthly, setLoading]
-    ),
+        return result
+      } catch (error: any) {
+        message.destroy()
+        message.error(`自动生成薪资失败: ${error.message}`)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    }, [mutateMonthly, setLoading]),
 
     // 更新薪资记录
     updateSalary: useCallback(
@@ -386,20 +386,16 @@ export const useSalaryDetail = (id: number | null) => {
   }
 }
 
-// 薪资统计Hook
+// 薪资统计Hook（基于薪资列表数据计算）
 export const useSalaryStatistics = (yearMonth: string) => {
-  const { data, error, isLoading } = useSWR(
-    getSWRKeys.salaryStatistics(yearMonth),
-    () => salaryApi.getSalaryStatistics(yearMonth),
-    {
-      revalidateOnFocus: false,
-    }
-  )
+  const { salaries } = useSalaryList({ yearMonth })
+
+  const statistics = salaryApi.calculateSalaryStatistics(salaries)
 
   return {
-    statistics: data,
-    isLoading,
-    error,
+    statistics,
+    isLoading: false,
+    error: null,
   }
 }
 

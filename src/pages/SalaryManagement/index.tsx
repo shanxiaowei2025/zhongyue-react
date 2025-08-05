@@ -36,7 +36,7 @@ const SalaryManagement: React.FC = () => {
   const handleAutoGenerate = async () => {
     try {
       setAutoGenerating(true)
-      await operations.autoGenerateSalary(selectedYearMonth)
+      await operations.autoGenerateSalary()
     } finally {
       setAutoGenerating(false)
     }

@@ -46,6 +46,8 @@ export interface SalaryRecord {
   taxDeclaration: number
 
   yearMonth: string
+  isConfirmed: boolean
+  confirmedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -330,6 +332,9 @@ export interface SalaryStatistics {
   employeeCount: number
   paidCount: number
   unpaidCount: number
+  confirmedCount: number
+  unconfirmedCount: number
+  confirmationRate: number
 }
 
 // 导入导出类型

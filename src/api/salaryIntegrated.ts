@@ -30,11 +30,14 @@ import type {
 
 // 薪资主表相关接口
 export const salaryApi = {
-  // 获取薪资列表
+  // 获取薪资列表（管理员）
   async getSalaryList(params: SalaryQueryParams): Promise<PaginatedResponse<SalaryRecord>> {
-    const response = await request.get<ApiResponse<PaginatedResponse<SalaryRecord>>>('/salary', {
-      params,
-    })
+    const response = await request.get<ApiResponse<PaginatedResponse<SalaryRecord>>>(
+      '/salary/admin',
+      {
+        params,
+      }
+    )
     return response.data
   },
 
@@ -61,10 +64,17 @@ export const salaryApi = {
     await request.delete(`/salary/${id}`)
   },
 
-  // 自动生成薪资
-  async autoGenerateSalary(month: string): Promise<SalaryRecord[]> {
+  // 确认薪资记录
+  async confirmSalary(id: number): Promise<SalaryRecord> {
+    const response = await request.patch<ApiResponse<SalaryRecord>>(`/salary/${id}/confirm`)
+    return response.data
+  },
+
+  // 自动生成薪资（固定使用当前月份）
+  async autoGenerateSalary(): Promise<SalaryRecord[]> {
+    const currentMonth = new Date().toISOString().slice(0, 7)
     const response = await request.post<ApiResponse<SalaryRecord[]>>(
-      `/salary/auto-generate?month=${month}`
+      `/salary/auto-generate?month=${currentMonth}`
     )
     return response.data
   },
@@ -78,21 +88,17 @@ export const salaryApi = {
     return response.data
   },
 
-  // 获取薪资统计 - 基于薪资列表数据计算
-  async getSalaryStatistics(yearMonth: string): Promise<SalaryStatistics> {
-    const salaryResponse = await this.getSalaryList({
-      yearMonth,
-      page: 1,
-      pageSize: 9999,
-    })
-
-    const salaryData = salaryResponse.data
-
+  // 基于薪资列表数据计算统计信息（避免重复请求）
+  calculateSalaryStatistics(salaryData: SalaryRecord[]): SalaryStatistics {
     // 安全的数值转换函数
     const toNumber = (value: any): number => {
       const num = typeof value === 'string' ? parseFloat(value) : Number(value)
       return isNaN(num) ? 0 : num
     }
+
+    // 计算确认进度
+    const confirmedCount = salaryData.filter(item => item.isConfirmed).length
+    const unconfirmedCount = salaryData.length - confirmedCount
 
     return {
       employeeCount: salaryData.length,
@@ -108,8 +114,21 @@ export const salaryApi = {
         const tax = toNumber(item.personalIncomeTax)
         return sum + (totalPayable - socialInsurance - tax)
       }, 0),
-      paidCount: 0, // 待后端添加isPaid字段
-      unpaidCount: salaryData.length, // 暂时全部设为未发放
+      paidCount: salaryData.filter(
+        item =>
+          toNumber(item.bankCardOrWechat) > 0 ||
+          toNumber(item.cashPaid) > 0 ||
+          toNumber(item.corporatePayment) > 0
+      ).length,
+      unpaidCount: salaryData.filter(
+        item =>
+          toNumber(item.bankCardOrWechat) === 0 &&
+          toNumber(item.cashPaid) === 0 &&
+          toNumber(item.corporatePayment) === 0
+      ).length,
+      confirmedCount,
+      unconfirmedCount,
+      confirmationRate: salaryData.length > 0 ? (confirmedCount / salaryData.length) * 100 : 0,
     }
   },
 }
@@ -525,29 +544,26 @@ export const integratedApi = {
     }
   },
 
-  // 批量获取月度数据
+  // 批量获取月度数据（优化：只请求一次薪资列表）
   async loadMonthlyData(yearMonth: string): Promise<{
     salaryData: SalaryRecord[]
     statistics: SalaryStatistics
   }> {
     try {
-      const [salaryResponse, statistics] = await Promise.all([
-        salaryApi.getSalaryList({ yearMonth, page: 1, pageSize: 1000 }),
-        salaryApi.getSalaryStatistics(yearMonth),
-      ])
+      // 只请求一次薪资列表数据
+      const salaryResponse = await salaryApi.getSalaryList({
+        yearMonth,
+        page: 1,
+        pageSize: 1000,
+      })
 
-      // 确保返回一致的数据结构，即使是空数据
+      const salaryData = salaryResponse?.data || []
+      // 基于获取的数据计算统计信息，避免重复请求
+      const statistics = salaryApi.calculateSalaryStatistics(salaryData)
+
       return {
-        salaryData: salaryResponse?.data || [],
-        statistics: statistics || {
-          employeeCount: 0,
-          totalPayable: 0,
-          totalSocialInsurance: 0,
-          totalTax: 0,
-          totalActual: 0,
-          paidCount: 0,
-          unpaidCount: 0,
-        },
+        salaryData,
+        statistics,
       }
     } catch (error) {
       // 发生错误时返回空的默认数据结构
@@ -561,6 +577,9 @@ export const integratedApi = {
           totalActual: 0,
           paidCount: 0,
           unpaidCount: 0,
+          confirmedCount: 0,
+          unconfirmedCount: 0,
+          confirmationRate: 0,
         },
       }
     }

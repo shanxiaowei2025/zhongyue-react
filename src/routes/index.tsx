@@ -39,6 +39,7 @@ const Employees = lazy(() => import('../pages/Employees'))
 const EmployeeForm = lazy(() => import('../pages/Employees/EmployeeForm'))
 const EmployeeDetail = lazy(() => import('../pages/Employees/EmployeeDetail'))
 const SalaryManagement = lazy(() => import('../pages/SalaryManagement'))
+const MySalary = lazy(() => import('../pages/MySalary'))
 const DataQuery = lazy(() => import('../pages/DataQuery'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
@@ -161,10 +162,16 @@ const routes: RouteObject[] = [
       {
         path: 'salary-management',
         element: (
-          <AuthorizedRoute requiredRoles={['super_admin', 'admin', '超级管理员', '管理员']}>
+          <AuthorizedRoute
+            requiredRoles={['super_admin', 'salary_admin', '超级管理员', '薪资管理员']}
+          >
             <SalaryManagement />
           </AuthorizedRoute>
         ),
+      },
+      {
+        path: 'my-salary',
+        element: <MySalary />,
       },
       {
         path: 'enterprise-service',

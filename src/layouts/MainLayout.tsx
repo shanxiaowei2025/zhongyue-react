@@ -129,6 +129,12 @@ const MODULE_CONFIG: Record<
     icon: <CreditCardOutlined />,
     pathPatterns: ['/salary-management'],
   },
+  '/my-salary': {
+    defaultPath: '/my-salary',
+    label: '我的薪资',
+    icon: <CreditCardOutlined />,
+    pathPatterns: ['/my-salary'],
+  },
   '/data-query': {
     defaultPath: '/data-query',
     label: '数据查询',
@@ -509,11 +515,31 @@ const MainLayout = () => {
             icon: <IdcardOutlined />,
             label: '员工管理',
           },
-          // {
-          //   key: '/salary-management',
-          //   icon: <CreditCardOutlined />,
-          //   label: '薪资管理',
-          // },
+        ]
+      : []),
+    // 根据用户角色决定是否显示薪资管理菜单（只有超级管理员和薪资管理员可见）
+    ...(user?.roles.some(role =>
+      ['super_admin', 'salary_admin', '超级管理员', '薪资管理员'].includes(role)
+    )
+      ? [
+          {
+            key: '/salary-management',
+            icon: <CreditCardOutlined />,
+            label: '薪资管理',
+          },
+        ]
+      : []),
+    // 为普通员工显示我的薪资菜单
+    ...(user?.roles &&
+    !user?.roles.some(role =>
+      ['super_admin', 'salary_admin', 'admin', '超级管理员', '薪资管理员', '管理员'].includes(role)
+    )
+      ? [
+          {
+            key: '/my-salary',
+            icon: <CreditCardOutlined />,
+            label: '我的薪资',
+          },
         ]
       : []),
     // 根据用户角色决定是否显示企业服务菜单
