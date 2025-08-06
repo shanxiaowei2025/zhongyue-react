@@ -6,6 +6,7 @@ import type {
   SubsidySummaryRecord,
   AttendanceDeductionRecord,
   FriendCirclePaymentRecord,
+  DepositRecord,
   SalaryQueryParams,
   CreateSalaryDto,
   UpdateSalaryDto,
@@ -17,6 +18,8 @@ import type {
   UpdateAttendanceDeductionDto,
   CreateFriendCirclePaymentDto,
   UpdateFriendCirclePaymentDto,
+  CreateDepositDto,
+  UpdateDepositDto,
   PaginatedResponse,
   ApiResponse,
   ImportResult,
@@ -471,6 +474,78 @@ export const friendCircleApi = {
   },
 }
 
+// 保证金相关接口
+export const depositApi = {
+  // 获取保证金列表
+  async getDepositList(params: {
+    name?: string
+    page?: number
+    pageSize?: number
+  }): Promise<PaginatedResponse<DepositRecord>> {
+    const response = await request.get<ApiResponse<PaginatedResponse<DepositRecord>>>('/deposit', {
+      params: {
+        ...params,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+      },
+    })
+    return response.data
+  },
+
+  // 根据员工获取保证金记录
+  async getByEmployee(name: string): Promise<DepositRecord[]> {
+    try {
+      const response = await this.getDepositList({
+        name,
+        pageSize: 1000, // 获取该员工所有记录
+      })
+      return response.data || []
+    } catch (error) {
+      return []
+    }
+  },
+
+  // 获取保证金详情
+  async getDepositDetail(id: number): Promise<DepositRecord> {
+    const response = await request.get<ApiResponse<DepositRecord>>(`/deposit/${id}`)
+    return response.data
+  },
+
+  // 创建保证金记录
+  async createDeposit(data: CreateDepositDto): Promise<DepositRecord> {
+    const response = await request.post<ApiResponse<DepositRecord>>('/deposit', data)
+    return response.data
+  },
+
+  // 更新保证金记录
+  async updateDeposit(id: number, data: UpdateDepositDto): Promise<DepositRecord> {
+    const response = await request.patch<ApiResponse<DepositRecord>>(`/deposit/${id}`, data)
+    return response.data
+  },
+
+  // 删除保证金记录
+  async deleteDeposit(id: number): Promise<void> {
+    await request.delete(`/deposit/${id}`)
+  },
+
+  // 导入保证金数据
+  async importDeposit(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await request.post<ApiResponse<ImportResult>>('/deposit/upload', formData)
+    return response.data
+  },
+
+  // 导出保证金数据
+  async exportDeposit(params?: any): Promise<Blob> {
+    const response = (await request.get('/deposit/export', {
+      params,
+      responseType: 'blob',
+    })) as AxiosResponse<Blob>
+    return response.data
+  },
+}
+
 // 提成配置相关接口
 export const commissionApi = {
   // 获取代理费提成配置
@@ -519,11 +594,12 @@ export const integratedApi = {
   // 加载员工相关所有数据
   async loadEmployeeRelatedData(employeeName: string, yearMonth: string): Promise<RelatedData> {
     try {
-      const [socialInsurance, subsidy, attendance, friendCircle] = await Promise.all([
+      const [socialInsurance, subsidy, attendance, friendCircle, deposit] = await Promise.all([
         socialInsuranceApi.getByEmployee(employeeName, yearMonth),
         subsidyApi.getByEmployee(employeeName, yearMonth),
         attendanceApi.getByEmployee(employeeName, yearMonth),
         friendCircleApi.getByEmployee(employeeName, yearMonth),
+        depositApi.getByEmployee(employeeName),
       ])
 
       // 确保返回一致的数据结构
@@ -532,6 +608,7 @@ export const integratedApi = {
         subsidy: subsidy || undefined,
         attendance: attendance || undefined,
         friendCircle: friendCircle || undefined,
+        deposit: deposit || [],
       }
     } catch (error) {
       // 发生错误时返回空的默认数据结构
@@ -540,6 +617,7 @@ export const integratedApi = {
         subsidy: undefined,
         attendance: undefined,
         friendCircle: undefined,
+        deposit: [],
       }
     }
   },
@@ -599,6 +677,8 @@ export const integratedApi = {
         return await attendanceApi.importAttendance(file)
       case 'friendCircle':
         return await friendCircleApi.importFriendCircle(file)
+      case 'deposit':
+        return await depositApi.importDeposit(file)
       default:
         throw new Error(`不支持的导入类型: ${type}`)
     }
@@ -617,6 +697,8 @@ export const integratedApi = {
         return await attendanceApi.exportAttendance(params)
       case 'friendCircle':
         return await friendCircleApi.exportFriendCircle(params)
+      case 'deposit':
+        return await depositApi.exportDeposit(params)
       default:
         throw new Error(`不支持的导出类型: ${type}`)
     }

@@ -25,6 +25,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({
     subsidy: false,
     attendance: false,
     friendCircle: false,
+    deposit: false,
   })
 
   const typeNames: Record<ExportType, string> = {
@@ -33,6 +34,7 @@ const ExportButton: React.FC<ExportButtonProps> = ({
     subsidy: '补贴数据',
     attendance: '考勤数据',
     friendCircle: '朋友圈数据',
+    deposit: '保证金数据',
   }
 
   const handleExport = async (type: ExportType) => {

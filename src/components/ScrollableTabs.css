@@ -1,0 +1,42 @@
+/* 可滚动 Tabs 组件的专用样式 */
+
+.scrollable-tabs {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.scrollable-tabs > .ant-tabs-nav {
+  flex-shrink: 0 !important;
+}
+
+.scrollable-tabs > .ant-tabs-content-holder {
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+
+.scrollable-tabs > .ant-tabs-content-holder > .ant-tabs-content {
+  height: 100% !important;
+}
+
+.scrollable-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+  height: 100% !important;
+  overflow: auto !important;
+}
+
+/* 嵌套 Tabs 的样式 */
+.scrollable-tabs .scrollable-tabs {
+  height: 100% !important;
+}
+
+.scrollable-tabs .scrollable-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+  height: 100% !important;
+  overflow: auto !important;
+  padding: 0 !important;
+}
+
+/* 确保内容容器正确滚动 */
+.tab-content-container {
+  height: 100% !important;
+  overflow: auto !important;
+}

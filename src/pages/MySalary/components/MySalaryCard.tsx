@@ -37,17 +37,23 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
   }
 
   const getStatusTag = () => {
-    if (record.isConfirmed) {
-      return (
-        <Tag icon={<CheckCircleOutlined />} color="success">
-          已确认
-        </Tag>
-      )
-    }
     return (
-      <Tag icon={<ClockCircleOutlined />} color="warning">
-        待确认
-      </Tag>
+      <div className="flex space-x-2">
+        {/* 发放状态 */}
+        <Tag
+          icon={record.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+          color={record.isPaid ? 'green' : 'orange'}
+        >
+          {record.isPaid ? '已发放' : '未发放'}
+        </Tag>
+        {/* 确认状态 */}
+        <Tag
+          icon={record.isConfirmed ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+          color={record.isConfirmed ? 'success' : 'warning'}
+        >
+          {record.isConfirmed ? '已确认' : '待确认'}
+        </Tag>
+      </div>
     )
   }
 
@@ -110,7 +116,11 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
             </Text>
             <div>
               <Title level={4} className="!mb-0 text-blue-600">
-                {formatCurrency(record.totalPayable - (record.personalInsuranceTotal || 0) - (record.personalIncomeTax || 0))}
+                {formatCurrency(
+                  record.totalPayable -
+                    (record.personalInsuranceTotal || 0) -
+                    (record.personalIncomeTax || 0)
+                )}
               </Title>
             </div>
           </div>
@@ -123,6 +133,14 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
               <Text type="secondary">基本工资:</Text>
               <Text>{formatCurrency(record.baseSalary)}</Text>
             </div>
+            {record.temporaryIncrease > 0 && (
+              <div className="flex justify-between">
+                <Text type="secondary">
+                  临时增加{record.temporaryIncreaseItem ? `(${record.temporaryIncreaseItem})` : ''}:
+                </Text>
+                <Text className="text-green-600">+{formatCurrency(record.temporaryIncrease)}</Text>
+              </div>
+            )}
             <div className="flex justify-between">
               <Text type="secondary">补贴合计:</Text>
               <Text>{formatCurrency(record.totalSubsidy)}</Text>

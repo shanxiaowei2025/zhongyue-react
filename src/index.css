@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 修复Ant Design Tabs在flex布局中的滚动问题 */
+.ant-tabs.flex.flex-col {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+.ant-tabs.flex.flex-col .ant-tabs-content-holder {
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+
+.ant-tabs.flex.flex-col .ant-tabs-tabpane {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 /* 嵌入 SimSun 字体 */
 @font-face {
   font-family: 'SimSun';

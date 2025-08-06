@@ -43,6 +43,11 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImpo
       name: '朋友圈数据',
       description: '导入朋友圈扣款信息',
     },
+    {
+      type: 'deposit',
+      name: '保证金数据',
+      description: '导入保证金扣除记录',
+    },
   ]
 
   const handleImportClick = (type: ImportType) => {
@@ -101,7 +106,14 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImpo
                 yearMonth={yearMonth}
                 onExport={onExport}
                 showDropdown={true}
-                types={['salary', 'socialInsurance', 'subsidy', 'attendance', 'friendCircle']}
+                types={[
+                  'salary',
+                  'socialInsurance',
+                  'subsidy',
+                  'attendance',
+                  'friendCircle',
+                  'deposit',
+                ]}
               />
             </div>
 

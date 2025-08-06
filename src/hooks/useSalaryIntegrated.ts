@@ -280,6 +280,7 @@ export const useSalaryIntegrated = () => {
             subsidy: '补贴数据',
             attendance: '考勤数据',
             friendCircle: '朋友圈数据',
+            deposit: '保证金数据',
           }
 
           link.download = `${typeNames[type]}_${selectedYearMonth}.xlsx`

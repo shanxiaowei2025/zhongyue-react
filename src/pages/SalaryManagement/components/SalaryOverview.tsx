@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table, Tag, Badge, Button, Progress } from 'antd'
+import { Table, Tag, Badge, Button } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
@@ -117,13 +117,13 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       key: 'status',
       width: 90,
       render: (_, record) => {
-        const isPaid =
-          toNumber(record.bankCardOrWechat) > 0 ||
-          toNumber(record.cashPaid) > 0 ||
-          toNumber(record.corporatePayment) > 0
         return (
-          <Tag color={isPaid ? 'green' : 'orange'} className="text-xs">
-            {isPaid ? '已发放' : '待发放'}
+          <Tag
+            icon={record.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+            color={record.isPaid ? 'green' : 'orange'}
+            className="text-xs"
+          >
+            {record.isPaid ? '已发放' : '待发放'}
           </Tag>
         )
       },
@@ -197,8 +197,8 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       </div>
 
       {/* 底部汇总 - 固定高度 */}
-      <div className="flex-shrink-0 p-4 border-t bg-gray-50" style={{ height: '140px' }}>
-        <div className="grid grid-cols-4 gap-4 text-sm mb-4">
+      <div className="flex-shrink-0 p-4 border-t bg-gray-50" style={{ height: '100px' }}>
+        <div className="grid grid-cols-4 gap-4 text-sm">
           <div className="text-center">
             <div className="text-gray-500 mb-1">应发总额</div>
             <div className="font-bold text-green-600">
@@ -219,26 +219,6 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
             <div className="text-gray-500 mb-1">实发总额</div>
             <div className="font-bold text-blue-600">{formatCurrency(statistics.totalActual)}</div>
           </div>
-        </div>
-
-        {/* 确认进度 */}
-        <div className="border-t pt-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-600 font-medium">员工确认进度</span>
-            <span className="text-sm text-gray-500">
-              {statistics.confirmedCount}/{statistics.employeeCount} 已确认
-            </span>
-          </div>
-          <Progress
-            percent={statistics.confirmationRate}
-            status={statistics.confirmationRate === 100 ? 'success' : 'active'}
-            strokeColor={{
-              '0%': '#ff7875',
-              '50%': '#ffa940',
-              '100%': '#52c41a',
-            }}
-            format={percent => `${percent?.toFixed(0)}%`}
-          />
         </div>
       </div>
     </div>

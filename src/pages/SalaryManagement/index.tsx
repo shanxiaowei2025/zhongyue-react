@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Spin, Tabs } from 'antd'
+import { Button, Spin, Tabs, Progress } from 'antd'
 import type { TabsProps } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -10,6 +10,7 @@ import SalaryDetails from './components/SalaryDetails'
 import RelatedDataTabs from './components/RelatedDataTabs'
 import ImportExportPanel from './components/ImportExportPanel'
 import CommissionPanel from './components/CommissionPanel'
+import '../../components/ScrollableTabs.css'
 
 const SalaryManagement: React.FC = () => {
   const {
@@ -45,15 +46,32 @@ const SalaryManagement: React.FC = () => {
   return (
     <div className="h-full flex flex-col bg-gray-50">
       {/* 页头 */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-white border-b shadow-sm pb-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">薪资管理中心</h1>
-            <p className="text-gray-500">
-              集成化薪资数据管理 - {dayjs(selectedYearMonth).format('YYYY年MM月')}
-            </p>
+          <div className="w-1/2">
+            {/* 员工确认进度 */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-gray-700 font-medium text-base">员工确认进度</span>
+                <span className="text-sm text-gray-600">
+                  {statistics.confirmedCount}/{statistics.employeeCount} 已确认
+                </span>
+              </div>
+              <Progress
+                percent={statistics.confirmationRate}
+                status={statistics.confirmationRate === 100 ? 'success' : 'active'}
+                strokeColor={{
+                  '0%': '#ff7875',
+                  '50%': '#ffa940',
+                  '100%': '#52c41a',
+                }}
+                format={percent => `${percent?.toFixed(0)}%`}
+                size="default"
+              />
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
+
+          <div className="flex items-center space-x-4 ml-6">
             <MonthSelector
               value={selectedYearMonth}
               onChange={handleMonthChange}
@@ -84,11 +102,11 @@ const SalaryManagement: React.FC = () => {
         </div>
 
         {/* 右侧：功能模块标签页 */}
-        <div className="w-1/2 bg-white">
+        <div className="w-1/2 bg-white flex flex-col">
           <Tabs
             defaultActiveKey="details"
             size="large"
-            style={{ height: '100%' }}
+            className="scrollable-tabs"
             tabBarStyle={{
               margin: 0,
               paddingLeft: 24,
@@ -101,7 +119,7 @@ const SalaryManagement: React.FC = () => {
                 key: 'details',
                 label: '薪资详情',
                 children: (
-                  <div>
+                  <div className="tab-content-container">
                     <SalaryDetails
                       employee={selectedEmployee}
                       yearMonth={selectedYearMonth}
@@ -114,7 +132,7 @@ const SalaryManagement: React.FC = () => {
                 key: 'related',
                 label: '关联数据',
                 children: (
-                  <div className="h-full">
+                  <div className="tab-content-container">
                     <RelatedDataTabs
                       employee={selectedEmployee}
                       yearMonth={selectedYearMonth}
@@ -128,7 +146,7 @@ const SalaryManagement: React.FC = () => {
                 key: 'commission',
                 label: '提成详情',
                 children: (
-                  <div className="h-full">
+                  <div className="tab-content-container">
                     <CommissionPanel
                       employeeName={selectedEmployee?.name || ''}
                       yearMonth={selectedYearMonth}
@@ -142,7 +160,7 @@ const SalaryManagement: React.FC = () => {
                 key: 'operations',
                 label: '数据操作',
                 children: (
-                  <div className="h-full p-6">
+                  <div className="tab-content-container" style={{ padding: '24px' }}>
                     <ImportExportPanel
                       yearMonth={selectedYearMonth}
                       onImport={operations.importData}

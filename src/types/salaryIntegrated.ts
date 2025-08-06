@@ -11,6 +11,7 @@ export interface SalaryRecord {
   // 基础薪资
   baseSalary: number
   temporaryIncrease: number
+  temporaryIncreaseItem?: string
   attendanceDeduction: number
   basicSalaryPayable: number
 
@@ -46,6 +47,7 @@ export interface SalaryRecord {
   taxDeclaration: number
 
   yearMonth: string
+  isPaid: boolean
   isConfirmed: boolean
   confirmedAt?: string
   createdAt: string
@@ -116,6 +118,17 @@ export interface AttendanceDeductionRecord {
   updatedAt: string
 }
 
+// 保证金数据模型
+export interface DepositRecord {
+  id: number
+  name: string
+  amount: number
+  deductionDate: string
+  remark?: string
+  createdAt: string
+  updatedAt: string
+}
+
 // 薪资基数历史记录
 export interface SalaryBaseHistoryRecord {
   id: number
@@ -180,6 +193,7 @@ export interface CreateSalaryDto {
   type?: string
   baseSalary: number
   temporaryIncrease?: number
+  temporaryIncreaseItem?: string
   attendanceDeduction?: number
   basicSalaryPayable: number
   fullAttendance?: number
@@ -275,6 +289,17 @@ export interface CreateFriendCirclePaymentDto {
 // 更新朋友圈扣款DTO
 export interface UpdateFriendCirclePaymentDto extends Partial<CreateFriendCirclePaymentDto> {}
 
+// 创建保证金DTO
+export interface CreateDepositDto {
+  name: string
+  amount: number
+  deductionDate: string
+  remark?: string
+}
+
+// 更新保证金DTO
+export interface UpdateDepositDto extends Partial<CreateDepositDto> {}
+
 // 分页响应类型
 export interface PaginatedResponse<T> {
   data: T[]
@@ -314,6 +339,7 @@ export interface RelatedData {
   subsidy?: SubsidySummaryRecord
   attendance?: AttendanceDeductionRecord
   friendCircle?: FriendCirclePaymentRecord
+  deposit?: DepositRecord[]
   commission?: CommissionConfig[]
 }
 
@@ -338,7 +364,13 @@ export interface SalaryStatistics {
 }
 
 // 导入导出类型
-export type ImportType = 'salary' | 'socialInsurance' | 'subsidy' | 'attendance' | 'friendCircle'
+export type ImportType =
+  | 'salary'
+  | 'socialInsurance'
+  | 'subsidy'
+  | 'attendance'
+  | 'friendCircle'
+  | 'deposit'
 export type ExportType = ImportType
 
 // 操作类型

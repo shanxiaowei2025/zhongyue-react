@@ -5,6 +5,7 @@ import type { SalaryRecord, RelatedData } from '../../../types/salaryIntegrated'
 import SocialInsurancePanel from './SocialInsurancePanel'
 import SubsidyPanel from './SubsidyPanel'
 import DeductionPanel from './DeductionPanel'
+import DepositDataTab from './DepositDataTab'
 
 interface RelatedDataTabsProps {
   employee: SalaryRecord | null
@@ -32,60 +33,85 @@ const RelatedDataTabs: React.FC<RelatedDataTabsProps> = ({
       key: 'social-insurance',
       label: '社保信息',
       children: (
-        <SocialInsurancePanel
-          employeeName={employee.name}
-          yearMonth={yearMonth}
-          data={relatedData.socialInsurance}
-          onUpdate={data => onUpdate('socialInsurance', data)}
-        />
+        <div className="flex-1 overflow-auto">
+          <SocialInsurancePanel
+            employeeName={employee.name}
+            yearMonth={yearMonth}
+            data={relatedData.socialInsurance}
+            onUpdate={data => onUpdate('socialInsurance', data)}
+          />
+        </div>
       ),
     },
     {
       key: 'subsidy',
       label: '补贴明细',
       children: (
-        <SubsidyPanel
-          employeeName={employee.name}
-          yearMonth={yearMonth}
-          data={relatedData.subsidy}
-          onUpdate={data => onUpdate('subsidy', data)}
-        />
+        <div className="flex-1 overflow-auto">
+          <SubsidyPanel
+            employeeName={employee.name}
+            yearMonth={yearMonth}
+            data={relatedData.subsidy}
+            onUpdate={data => onUpdate('subsidy', data)}
+          />
+        </div>
       ),
     },
     {
       key: 'attendance',
       label: '考勤扣款',
       children: (
-        <DeductionPanel
-          type="attendance"
-          employeeName={employee.name}
-          yearMonth={yearMonth}
-          data={relatedData.attendance}
-          onUpdate={data => onUpdate('attendance', data)}
-        />
+        <div className="flex-1 overflow-auto">
+          <DeductionPanel
+            type="attendance"
+            employeeName={employee.name}
+            yearMonth={yearMonth}
+            data={relatedData.attendance}
+            onUpdate={data => onUpdate('attendance', data)}
+          />
+        </div>
       ),
     },
     {
       key: 'friend-circle',
       label: '朋友圈扣款',
       children: (
-        <DeductionPanel
-          type="friendCircle"
-          employeeName={employee.name}
-          yearMonth={yearMonth}
-          data={relatedData.friendCircle}
-          onUpdate={data => onUpdate('friendCircle', data)}
-        />
+        <div className="flex-1 overflow-auto">
+          <DeductionPanel
+            type="friendCircle"
+            employeeName={employee.name}
+            yearMonth={yearMonth}
+            data={relatedData.friendCircle}
+            onUpdate={data => onUpdate('friendCircle', data)}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'deposit',
+      label: '保证金记录',
+      children: (
+        <div className="flex-1 overflow-auto">
+          <DepositDataTab
+            employee={employee}
+            yearMonth={yearMonth}
+            depositData={relatedData.deposit || []}
+            onUpdate={data => onUpdate('deposit', data)}
+          />
+        </div>
       ),
     },
   ]
 
   return (
-    <div className="h-full">
+    <div style={{ height: '100%' }}>
       <Tabs
-        items={items}
+        className="scrollable-tabs"
+        items={items.map(item => ({
+          ...item,
+          children: <div className="tab-content-container">{item.children}</div>,
+        }))}
         size="small"
-        style={{ height: '100%' }}
         tabBarStyle={{
           margin: 0,
           paddingLeft: 24,
