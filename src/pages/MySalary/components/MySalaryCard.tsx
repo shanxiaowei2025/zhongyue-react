@@ -99,28 +99,14 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
     >
       <div className="space-y-3">
         {/* 薪资总览 */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div>
             <Text type="secondary" className="text-sm">
-              应发工资
+              应发合计
             </Text>
             <div>
               <Title level={4} className="!mb-0 text-green-600">
                 {formatCurrency(record.totalPayable)}
-              </Title>
-            </div>
-          </div>
-          <div>
-            <Text type="secondary" className="text-sm">
-              实发工资
-            </Text>
-            <div>
-              <Title level={4} className="!mb-0 text-blue-600">
-                {formatCurrency(
-                  record.totalPayable -
-                    (record.personalInsuranceTotal || 0) -
-                    (record.personalIncomeTax || 0)
-                )}
               </Title>
             </div>
           </div>

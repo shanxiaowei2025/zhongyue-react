@@ -76,7 +76,6 @@ export interface MySalaryDetail {
     bankCardOrWechat: number
     cashPaid: number
     corporatePayment: number
-    netSalary: number
   }
   status: {
     isConfirmed: boolean
@@ -89,13 +88,11 @@ export interface MySalaryDetail {
 export interface MySalaryStatistics {
   currentMonth: {
     totalPayable: number
-    netSalary: number
     isConfirmed: boolean
   }
   yearToDate: {
     totalPayable: number
     totalTax: number
-    netSalary: number
     confirmedCount: number
     totalCount: number
   }

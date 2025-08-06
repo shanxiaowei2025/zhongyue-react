@@ -76,23 +76,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       setLoading(true)
       const values = await form.validateFields()
 
-      // 重新计算应发合计
-      const totalPayable =
-        (values.baseSalary || 0) +
-        (values.temporaryIncrease || 0) +
-        (values.fullAttendance || 0) +
-        (values.totalSubsidy || 0) +
-        (values.seniority || 0) +
-        (values.agencyFeeCommission || 0) +
-        (values.performanceCommission || 0) +
-        (values.businessCommission || 0) -
-        (values.attendanceDeduction || 0) -
-        (values.otherDeductions || 0) -
-        (values.depositDeduction || 0)
-
+      // 计算基础薪资应发和个人社保合计，应发合计由后端计算
       await onUpdate(employee.id, {
         ...values,
-        totalPayable,
         basicSalaryPayable: (values.baseSalary || 0) - (values.attendanceDeduction || 0),
         personalInsuranceTotal:
           (values.personalMedical || 0) +
@@ -323,18 +309,8 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
             <>
               <Descriptions column={2} size="small" className="mb-4">
                 <Descriptions.Item label="应发合计">
-                  <span className="text-2xl font-bold text-green-600">
-                    ¥{formatCurrency(employee.totalPayable)}
-                  </span>
-                </Descriptions.Item>
-                <Descriptions.Item label="实发金额">
                   <span className="text-2xl font-bold text-blue-600">
-                    ¥
-                    {formatCurrency(
-                      toNumber(employee.totalPayable) -
-                        toNumber(employee.personalInsuranceTotal) -
-                        toNumber(employee.personalIncomeTax)
-                    )}
+                    ¥{formatCurrency(employee.totalPayable)}
                   </span>
                 </Descriptions.Item>
               </Descriptions>
@@ -615,18 +591,8 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                   <>
                     <Descriptions column={2} size="small" className="mb-4">
                       <Descriptions.Item label="应发合计">
-                        <span className="text-2xl font-bold text-green-600">
-                          ¥{formatCurrency(employee.totalPayable)}
-                        </span>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="实发金额">
                         <span className="text-2xl font-bold text-blue-600">
-                          ¥
-                          {formatCurrency(
-                            toNumber(employee.totalPayable) -
-                              toNumber(employee.personalInsuranceTotal) -
-                              toNumber(employee.personalIncomeTax)
-                          )}
+                          ¥{formatCurrency(employee.totalPayable)}
                         </span>
                       </Descriptions.Item>
                     </Descriptions>

@@ -93,26 +93,6 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       align: 'right',
     },
     {
-      title: '实发金额',
-      width: 120,
-      render: (_, record) => {
-        const totalPayable = toNumber(record.totalPayable)
-        const socialInsurance = toNumber(record.personalInsuranceTotal)
-        const tax = toNumber(record.personalIncomeTax)
-        const actualAmount = totalPayable - socialInsurance - tax
-        return (
-          <span className="font-mono font-bold text-blue-600">
-            ¥
-            {actualAmount.toLocaleString('zh-CN', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </span>
-        )
-      },
-      align: 'right',
-    },
-    {
       title: '发放状态',
       key: 'status',
       width: 90,
@@ -198,7 +178,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
 
       {/* 底部汇总 - 固定高度 */}
       <div className="flex-shrink-0 p-4 border-t bg-gray-50" style={{ height: '100px' }}>
-        <div className="grid grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="text-center">
             <div className="text-gray-500 mb-1">应发总额</div>
             <div className="font-bold text-green-600">
@@ -214,10 +194,6 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
           <div className="text-center">
             <div className="text-gray-500 mb-1">个税总额</div>
             <div className="font-bold text-red-600">{formatCurrency(statistics.totalTax)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-gray-500 mb-1">实发总额</div>
-            <div className="font-bold text-blue-600">{formatCurrency(statistics.totalActual)}</div>
           </div>
         </div>
       </div>

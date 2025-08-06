@@ -40,22 +40,13 @@ const MySalaryStatistics: React.FC<MySalaryStatisticsProps> = ({ statistics, loa
         loading={loading}
       >
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={24}>
             <Statistic
-              title="应发工资"
+              title="应发合计"
               value={statistics.currentMonth.totalPayable}
               formatter={value => `¥${formatCurrency(Number(value))}`}
               valueStyle={{ color: '#52c41a' }}
               prefix={<DollarOutlined />}
-            />
-          </Col>
-          <Col span={12}>
-            <Statistic
-              title="实发工资"
-              value={statistics.currentMonth.netSalary}
-              formatter={value => `¥${formatCurrency(Number(value))}`}
-              valueStyle={{ color: '#1890ff' }}
-              prefix={<BankOutlined />}
             />
           </Col>
         </Row>
@@ -64,7 +55,7 @@ const MySalaryStatistics: React.FC<MySalaryStatisticsProps> = ({ statistics, loa
       {/* 年度统计 */}
       <Card title="年度累计" loading={loading}>
         <Row gutter={16}>
-          <Col span={8}>
+          <Col span={12}>
             <Statistic
               title="累计应发"
               value={statistics.yearToDate.totalPayable}
@@ -72,20 +63,12 @@ const MySalaryStatistics: React.FC<MySalaryStatisticsProps> = ({ statistics, loa
               valueStyle={{ color: '#52c41a' }}
             />
           </Col>
-          <Col span={8}>
+          <Col span={12}>
             <Statistic
               title="累计个税"
               value={statistics.yearToDate.totalTax}
               formatter={value => `¥${formatCurrency(Number(value))}`}
               valueStyle={{ color: '#ff4d4f' }}
-            />
-          </Col>
-          <Col span={8}>
-            <Statistic
-              title="累计实发"
-              value={statistics.yearToDate.netSalary}
-              formatter={value => `¥${formatCurrency(Number(value))}`}
-              valueStyle={{ color: '#1890ff' }}
             />
           </Col>
         </Row>

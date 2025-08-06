@@ -60,7 +60,6 @@ export const useSalaryIntegrated = () => {
           totalPayable: 0,
           totalSocialInsurance: 0,
           totalTax: 0,
-          totalActual: 0,
           paidCount: 0,
           unpaidCount: 0,
           confirmedCount: 0,
@@ -113,7 +112,10 @@ export const useSalaryIntegrated = () => {
         const result = await salaryApi.autoGenerateSalary()
 
         message.destroy()
-        message.success(`成功生成 ${result.length} 条薪资记录`)
+        message.success(`${result.message}`)
+
+        // 也可以使用更详细的信息
+        // message.success(`薪资数据生成成功：新增${result.details.created}条，更新${result.details.updated}条记录`)
 
         // 刷新数据
         await mutateMonthly()

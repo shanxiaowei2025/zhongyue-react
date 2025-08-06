@@ -61,12 +61,6 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImpo
 
   return (
     <div className="h-full flex flex-col">
-      {/* 头部 */}
-      <div className="p-4 border-b bg-gray-50">
-        <h3 className="font-semibold text-lg">数据操作</h3>
-        <p className="text-sm text-gray-500 mt-1">导入导出薪资相关数据</p>
-      </div>
-
       {/* 内容区域 */}
       <div className="flex-1 p-4 overflow-auto">
         <div className="space-y-6">

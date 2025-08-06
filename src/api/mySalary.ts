@@ -69,24 +69,11 @@ export const mySalaryApi = {
     return {
       currentMonth: {
         totalPayable: currentMonthData ? toNumber(currentMonthData.totalPayable) : 0,
-        netSalary: currentMonthData
-          ? toNumber(currentMonthData.totalPayable) -
-            toNumber(currentMonthData.personalInsuranceTotal) -
-            toNumber(currentMonthData.personalIncomeTax)
-          : 0,
         isConfirmed: currentMonthData ? currentMonthData.isConfirmed : false,
       },
       yearToDate: {
         totalPayable: yearToDateData.reduce((sum, item) => sum + toNumber(item.totalPayable), 0),
         totalTax: yearToDateData.reduce((sum, item) => sum + toNumber(item.personalIncomeTax), 0),
-        netSalary: yearToDateData.reduce(
-          (sum, item) =>
-            sum +
-            (toNumber(item.totalPayable) -
-              toNumber(item.personalInsuranceTotal) -
-              toNumber(item.personalIncomeTax)),
-          0
-        ),
         confirmedCount: yearToDateData.filter(item => item.isConfirmed).length,
         totalCount: yearToDateData.length,
       },
@@ -134,10 +121,6 @@ export const mySalaryApi = {
         bankCardOrWechat: toNumber(salaryRecord.bankCardOrWechat),
         cashPaid: toNumber(salaryRecord.cashPaid),
         corporatePayment: toNumber(salaryRecord.corporatePayment),
-        netSalary:
-          toNumber(salaryRecord.totalPayable) -
-          toNumber(salaryRecord.personalInsuranceTotal) -
-          toNumber(salaryRecord.personalIncomeTax),
       },
       status: {
         isConfirmed: salaryRecord.isConfirmed,

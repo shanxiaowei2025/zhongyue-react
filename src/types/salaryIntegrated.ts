@@ -354,7 +354,6 @@ export interface SalaryStatistics {
   totalPayable: number
   totalSocialInsurance: number
   totalTax: number
-  totalActual: number
   employeeCount: number
   paidCount: number
   unpaidCount: number
@@ -372,6 +371,16 @@ export type ImportType =
   | 'friendCircle'
   | 'deposit'
 export type ExportType = ImportType
+
+// 自动生成薪资响应类型
+export interface AutoGenerateSalaryResult {
+  success: boolean
+  message: string
+  details: {
+    created: number
+    updated: number
+  }
+}
 
 // 操作类型
 export type OperationType = 'create' | 'update' | 'delete' | 'import' | 'export' | 'generate'

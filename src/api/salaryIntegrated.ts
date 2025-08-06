@@ -29,6 +29,7 @@ import type {
   AgencyCommissionConfig,
   SalesCommissionConfig,
   PerformanceCommissionConfig,
+  AutoGenerateSalaryResult,
 } from '../types/salaryIntegrated'
 
 // 薪资主表相关接口
@@ -74,12 +75,34 @@ export const salaryApi = {
   },
 
   // 自动生成薪资（固定使用当前月份）
-  async autoGenerateSalary(): Promise<SalaryRecord[]> {
+  async autoGenerateSalary(): Promise<AutoGenerateSalaryResult> {
     const currentMonth = new Date().toISOString().slice(0, 7)
-    const response = await request.post<ApiResponse<SalaryRecord[]>>(
+    const response = await request.post<ApiResponse<AutoGenerateSalaryResult>>(
       `/salary/auto-generate?month=${currentMonth}`
     )
-    return response.data
+
+    // 添加调试日志
+    console.log('autoGenerateSalary 原始响应:', response)
+    console.log('autoGenerateSalary response.data:', response.data)
+
+    // 根据实际响应结构，尝试不同的访问路径
+    const responseData = response.data as any
+
+    // 如果 response.data 直接就是我们需要的结构
+    if (responseData && responseData.success && responseData.message) {
+      console.log('使用直接访问 response.data')
+      return responseData
+    }
+
+    // 如果需要访问 response.data.data
+    if (responseData && responseData.data && responseData.data.success) {
+      console.log('使用 response.data.data 访问')
+      return responseData.data
+    }
+
+    // 兜底处理
+    console.error('无法解析响应数据结构:', responseData)
+    throw new Error('响应数据格式异常')
   },
 
   // 导出薪资数据
@@ -111,12 +134,6 @@ export const salaryApi = {
         0
       ),
       totalTax: salaryData.reduce((sum, item) => sum + toNumber(item.personalIncomeTax), 0),
-      totalActual: salaryData.reduce((sum, item) => {
-        const totalPayable = toNumber(item.totalPayable)
-        const socialInsurance = toNumber(item.personalInsuranceTotal)
-        const tax = toNumber(item.personalIncomeTax)
-        return sum + (totalPayable - socialInsurance - tax)
-      }, 0),
       paidCount: salaryData.filter(
         item =>
           toNumber(item.bankCardOrWechat) > 0 ||
@@ -652,7 +669,6 @@ export const integratedApi = {
           totalPayable: 0,
           totalSocialInsurance: 0,
           totalTax: 0,
-          totalActual: 0,
           paidCount: 0,
           unpaidCount: 0,
           confirmedCount: 0,

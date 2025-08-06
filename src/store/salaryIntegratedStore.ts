@@ -60,7 +60,6 @@ const initialState: IntegratedState = {
     totalPayable: 0,
     totalSocialInsurance: 0,
     totalTax: 0,
-    totalActual: 0,
     employeeCount: 0,
     paidCount: 0,
     unpaidCount: 0,
@@ -335,13 +334,6 @@ export const useSalaryIntegratedComputed = () => {
     return true
   })
 
-  // 选中员工的实发金额
-  const selectedEmployeeActualAmount = selectedEmployee
-    ? selectedEmployee.totalPayable -
-      selectedEmployee.personalInsuranceTotal -
-      selectedEmployee.personalIncomeTax
-    : 0
-
   // 已发放员工数量
   const paidEmployeeCount = salaryData.filter(item => item.bankCardOrWechat > 0).length
 
@@ -356,7 +348,6 @@ export const useSalaryIntegratedComputed = () => {
 
   return {
     filteredSalaryData,
-    selectedEmployeeActualAmount,
     paidEmployeeCount,
     unpaidEmployeeCount,
     averageSalary,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Card, Descriptions, Divider, Typography, Tag } from 'antd'
 import { CalculatorOutlined } from '@ant-design/icons'
 import type { SalaryRecord } from '../../../types/salaryIntegrated'
@@ -10,74 +10,27 @@ interface SalaryCalculatorProps {
   className?: string
 }
 
-interface CalculationBreakdown {
-  basicPay: number
-  allowances: number
-  commissions: number
-  deductions: number
-  socialInsurance: number
-  tax: number
-  netPay: number
-}
-
 const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }) => {
-  const [breakdown, setBreakdown] = useState<CalculationBreakdown | null>(null)
-
-  useEffect(() => {
-    if (salary) {
-      calculateBreakdown()
-    }
-  }, [salary])
-
-  const calculateBreakdown = () => {
-    // 基础工资计算
-    const basicPay = salary.basicSalaryPayable
-
-    // 补贴合计
-    const allowances = salary.fullAttendance + salary.totalSubsidy + salary.seniority
-
-    // 提成合计
-    const commissions =
-      salary.agencyFeeCommission + salary.performanceCommission + salary.businessCommission
-
-    // 其他扣除
-    const deductions =
-      salary.otherDeductions + salary.depositDeduction + salary.attendanceDeduction + salary.other
-
-    // 社保扣除
-    const socialInsurance = salary.personalInsuranceTotal
-
-    // 个税
-    const tax = salary.personalIncomeTax
-
-    // 实发工资
-    const netPay = basicPay + allowances + commissions - deductions - socialInsurance - tax
-
-    setBreakdown({
-      basicPay,
-      allowances,
-      commissions,
-      deductions,
-      socialInsurance,
-      tax,
-      netPay,
-    })
+  // 安全的数值转换函数
+  const toNumber = (value: any): number => {
+    const num = typeof value === 'string' ? parseFloat(value) : Number(value)
+    return isNaN(num) ? 0 : num
   }
 
-  if (!breakdown) return null
-
-  const formatAmount = (amount: number) => {
+  const formatAmount = (amount: number | any) => {
+    const safeAmount = toNumber(amount)
     return (
-      <Text strong className={amount >= 0 ? 'text-green-600' : 'text-red-500'}>
-        {amount >= 0 ? '+' : ''}¥{amount.toFixed(2)}
+      <Text strong className={safeAmount >= 0 ? 'text-green-600' : 'text-red-500'}>
+        {safeAmount >= 0 ? '+' : ''}¥{safeAmount.toFixed(2)}
       </Text>
     )
   }
 
-  const formatDeduction = (amount: number) => {
+  const formatDeduction = (amount: number | any) => {
+    const safeAmount = toNumber(amount)
     return (
       <Text strong className="text-red-500">
-        -¥{amount.toFixed(2)}
+        -¥{safeAmount.toFixed(2)}
       </Text>
     )
   }
@@ -88,7 +41,7 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
       title={
         <div className="flex items-center">
           <CalculatorOutlined className="mr-2" />
-          <span>薪资计算明细</span>
+          <span>薪资明细</span>
         </div>
       }
       size="small"
@@ -101,20 +54,29 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
           </Title>
           <Descriptions column={1} size="small" colon={false}>
             <Descriptions.Item label="基础工资">
-              {formatAmount(breakdown.basicPay)}
+              {formatAmount(salary.basicSalaryPayable)}
             </Descriptions.Item>
             <Descriptions.Item label="补贴津贴">
-              {formatAmount(breakdown.allowances)}
+              {formatAmount(
+                toNumber(salary.fullAttendance) +
+                  toNumber(salary.totalSubsidy) +
+                  toNumber(salary.seniority)
+              )}
               <div className="text-xs text-gray-500 ml-2">
-                (全勤:{salary.fullAttendance} + 补贴:{salary.totalSubsidy} + 工龄:{salary.seniority}
-                )
+                (全勤:{toNumber(salary.fullAttendance)} + 补贴:{toNumber(salary.totalSubsidy)} +
+                工龄:{toNumber(salary.seniority)})
               </div>
             </Descriptions.Item>
             <Descriptions.Item label="提成奖金">
-              {formatAmount(breakdown.commissions)}
+              {formatAmount(
+                toNumber(salary.agencyFeeCommission) +
+                  toNumber(salary.performanceCommission) +
+                  toNumber(salary.businessCommission)
+              )}
               <div className="text-xs text-gray-500 ml-2">
-                (代理费:{salary.agencyFeeCommission} + 绩效:{salary.performanceCommission} + 业务:
-                {salary.businessCommission})
+                (代理费:{toNumber(salary.agencyFeeCommission)} + 绩效:
+                {toNumber(salary.performanceCommission)} + 业务:
+                {toNumber(salary.businessCommission)})
               </div>
             </Descriptions.Item>
           </Descriptions>
@@ -129,20 +91,25 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
           </Title>
           <Descriptions column={1} size="small" colon={false}>
             <Descriptions.Item label="社保个人部分">
-              {formatDeduction(breakdown.socialInsurance)}
+              {formatDeduction(salary.personalInsuranceTotal)}
               <div className="text-xs text-gray-500 ml-2">
-                (医疗:{salary.personalMedical} + 养老:{salary.personalPension} + 失业:
-                {salary.personalUnemployment})
+                (医疗:{toNumber(salary.personalMedical)} + 养老:{toNumber(salary.personalPension)} +
+                失业:{toNumber(salary.personalUnemployment)})
               </div>
             </Descriptions.Item>
             <Descriptions.Item label="个人所得税">
-              {formatDeduction(breakdown.tax)}
+              {formatDeduction(salary.personalIncomeTax)}
             </Descriptions.Item>
             <Descriptions.Item label="其他扣款">
-              {formatDeduction(breakdown.deductions)}
+              {formatDeduction(
+                toNumber(salary.attendanceDeduction) +
+                  toNumber(salary.otherDeductions) +
+                  toNumber(salary.depositDeduction)
+              )}
               <div className="text-xs text-gray-500 ml-2">
-                (考勤:{salary.attendanceDeduction} + 其他:{salary.otherDeductions} + 保证金:
-                {salary.depositDeduction})
+                (考勤:{toNumber(salary.attendanceDeduction)} + 其他:
+                {toNumber(salary.otherDeductions)} + 保证金:
+                {toNumber(salary.depositDeduction)})
               </div>
             </Descriptions.Item>
           </Descriptions>
@@ -150,24 +117,19 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
 
         <Divider className="my-3" />
 
-        {/* 计算结果 */}
+        {/* 应发合计 */}
         <div className="bg-blue-50 p-3 rounded">
           <div className="flex justify-between items-center">
             <Title level={5} className="mb-0">
-              实发工资:
+              应发合计:
             </Title>
-            <Text className="text-2xl font-bold text-blue-600">¥{breakdown.netPay.toFixed(2)}</Text>
+            <Text className="text-2xl font-bold text-blue-600">
+              ¥{toNumber(salary.totalPayable).toFixed(2)}
+            </Text>
           </div>
 
-          {/* 计算公式 */}
           <div className="mt-2 text-xs text-gray-600">
-            计算公式: 基础工资 + 补贴津贴 + 提成奖金 - 社保扣除 - 个税 - 其他扣款
-          </div>
-          <div className="text-xs text-gray-600">
-            = {breakdown.basicPay.toFixed(2)} + {breakdown.allowances.toFixed(2)} +{' '}
-            {breakdown.commissions.toFixed(2)}- {breakdown.socialInsurance.toFixed(2)} -{' '}
-            {breakdown.tax.toFixed(2)} - {breakdown.deductions.toFixed(2)}={' '}
-            {breakdown.netPay.toFixed(2)}
+            注：应发合计由后端根据完整薪资公式计算得出
           </div>
         </div>
 
@@ -178,11 +140,13 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
           </Title>
           <Descriptions column={1} size="small" colon={false}>
             <Descriptions.Item label="银行卡/微信">
-              ¥{salary.bankCardOrWechat.toFixed(2)}
+              ¥{toNumber(salary.bankCardOrWechat).toFixed(2)}
             </Descriptions.Item>
-            <Descriptions.Item label="现金发放">¥{salary.cashPaid.toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="现金发放">
+              ¥{toNumber(salary.cashPaid).toFixed(2)}
+            </Descriptions.Item>
             <Descriptions.Item label="对公转账">
-              ¥{salary.corporatePayment.toFixed(2)}
+              ¥{toNumber(salary.corporatePayment).toFixed(2)}
             </Descriptions.Item>
           </Descriptions>
 
@@ -190,12 +154,16 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
           <div className="mt-2">
             <Tag
               color={
-                salary.bankCardOrWechat > 0 || salary.cashPaid > 0 || salary.corporatePayment > 0
+                toNumber(salary.bankCardOrWechat) > 0 ||
+                toNumber(salary.cashPaid) > 0 ||
+                toNumber(salary.corporatePayment) > 0
                   ? 'green'
                   : 'orange'
               }
             >
-              {salary.bankCardOrWechat > 0 || salary.cashPaid > 0 || salary.corporatePayment > 0
+              {toNumber(salary.bankCardOrWechat) > 0 ||
+              toNumber(salary.cashPaid) > 0 ||
+              toNumber(salary.corporatePayment) > 0
                 ? '已发放'
                 : '待发放'}
             </Tag>
