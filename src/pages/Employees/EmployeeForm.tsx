@@ -127,6 +127,11 @@ const EmployeeForm: React.FC = () => {
 
   // 恢复或初始化表单数据
   useEffect(() => {
+    // 避免在数据加载期间重复初始化
+    if (isEdit && (!employee || rawDepartments.length === 0)) {
+      return
+    }
+
     const initializeForm = () => {
       setRestoring(true)
 
@@ -135,9 +140,50 @@ const EmployeeForm: React.FC = () => {
       const hasCachedData = hasFormData(currentPath)
 
       if (hasCachedData && !isEdit) {
-        // 创建页面：优先使用缓存数据
+        // 创建页面：优先使用缓存数据，确保日期字段安全处理
         console.log('🔄 恢复创建员工表单缓存数据')
-        form.setFieldsValue(cachedData)
+
+        // 安全的日期处理函数
+        const safeDayjs = (dateValue: any) => {
+          if (!dateValue) return undefined
+
+          // 如果已经是有效的dayjs对象，直接返回
+          if (
+            dateValue &&
+            typeof dateValue.format === 'function' &&
+            typeof dateValue.isValid === 'function'
+          ) {
+            return dateValue.isValid() ? dateValue : undefined
+          }
+
+          // 如果是字符串，尝试解析
+          if (typeof dateValue === 'string') {
+            try {
+              const date = dayjs(dateValue)
+              return date.isValid() ? date : undefined
+            } catch (error) {
+              console.warn('Invalid date string:', dateValue)
+              return undefined
+            }
+          }
+
+          // 如果是其他类型（可能是序列化后的对象），尝试转换
+          try {
+            const date = dayjs(dateValue)
+            return date.isValid() ? date : undefined
+          } catch (error) {
+            console.warn('Invalid date value:', dateValue)
+            return undefined
+          }
+        }
+
+        const safeData = {
+          ...cachedData,
+          birthday: cachedData.birthday ? safeDayjs(cachedData.birthday) : undefined,
+          hireDate: cachedData.hireDate ? safeDayjs(cachedData.hireDate) : undefined,
+        }
+
+        form.setFieldsValue(safeData)
 
         if (cachedData.isResigned !== undefined) {
           setIsResigned(cachedData.isResigned)
@@ -150,15 +196,57 @@ const EmployeeForm: React.FC = () => {
         // 编辑页面：使用服务器数据，但如果有缓存则合并
         const deptPath = getDepartmentPath(employee.departmentId, rawDepartments)
 
+        // 安全的日期处理函数
+        const safeDayjs = (dateValue: any) => {
+          if (!dateValue) return undefined
+
+          // 如果已经是有效的dayjs对象，直接返回
+          if (
+            dateValue &&
+            typeof dateValue.format === 'function' &&
+            typeof dateValue.isValid === 'function'
+          ) {
+            return dateValue.isValid() ? dateValue : undefined
+          }
+
+          // 如果是字符串，尝试解析
+          if (typeof dateValue === 'string') {
+            try {
+              const date = dayjs(dateValue)
+              return date.isValid() ? date : undefined
+            } catch (error) {
+              console.warn('Invalid date string:', dateValue)
+              return undefined
+            }
+          }
+
+          // 如果是其他类型（可能是序列化后的对象），尝试转换
+          try {
+            const date = dayjs(dateValue)
+            return date.isValid() ? date : undefined
+          } catch (error) {
+            console.warn('Invalid date value:', dateValue)
+            return undefined
+          }
+        }
+
         const serverData = {
           ...employee,
-          birthday: employee.birthday ? dayjs(employee.birthday) : undefined,
-          hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
+          birthday: safeDayjs(employee.birthday),
+          hireDate: safeDayjs(employee.hireDate),
           departmentIds: deptPath.length > 0 ? deptPath : undefined,
         }
 
-        // 如果有缓存数据，合并缓存的用户输入
-        const finalData = hasCachedData ? { ...serverData, ...cachedData } : serverData
+        // 如果有缓存数据，合并缓存的用户输入，并确保日期字段也经过安全处理
+        const finalData = hasCachedData
+          ? {
+              ...serverData,
+              ...cachedData,
+              // 确保缓存中的日期字段也经过安全处理
+              birthday: cachedData.birthday ? safeDayjs(cachedData.birthday) : serverData.birthday,
+              hireDate: cachedData.hireDate ? safeDayjs(cachedData.hireDate) : serverData.hireDate,
+            }
+          : serverData
 
         console.log('🔄 初始化编辑员工表单数据', hasCachedData ? '（含缓存）' : '（仅服务器）')
         form.setFieldsValue(finalData)
@@ -183,7 +271,7 @@ const EmployeeForm: React.FC = () => {
     }
 
     initializeForm()
-  }, [employee, rawDepartments, isEdit, currentPath, form, getFormData, hasFormData, setRestoring])
+  }, [employee, rawDepartments, isEdit, currentPath, form])
 
   // 监听表单字段变化，自动保存到缓存
   useEffect(() => {

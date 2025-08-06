@@ -69,11 +69,17 @@ export const useEmployeeFormStore = create<EmployeeFormState>()(
             state.formDataByPath[path] = {}
           }
 
-          state.formDataByPath[path][key] = value
+          // 特别处理 dayjs 对象，转换为字符串存储
+          if (value && typeof value.format === 'function') {
+            state.formDataByPath[path][key] = value.format('YYYY-MM-DD')
+          } else {
+            state.formDataByPath[path][key] = value
+          }
+
           state.lastUpdated = Date.now()
 
           // 特别记录重要字段的更新
-          if (['name', 'baseSalary', 'payrollCompany'].includes(key)) {
+          if (['name', 'baseSalary', 'payrollCompany', 'birthday', 'hireDate'].includes(key)) {
             console.log(`💾 [EmployeeStore] 更新重要字段 ${path}/${key}:`, value)
           }
         }),
@@ -93,12 +99,15 @@ export const useEmployeeFormStore = create<EmployeeFormState>()(
           // 深度合并数据
           Object.keys(data).forEach(key => {
             if (data[key] !== undefined) {
+              // 特别处理 dayjs 对象，转换为字符串存储
+              if (data[key] && typeof data[key].format === 'function') {
+                state.formDataByPath[path][key] = data[key].format('YYYY-MM-DD')
+              }
               // 对象类型进行深度克隆，避免 Immer 不可变性冲突
-              if (
+              else if (
                 typeof data[key] === 'object' &&
                 data[key] !== null &&
-                !Array.isArray(data[key]) &&
-                !data[key]?.format // 排除dayjs对象
+                !Array.isArray(data[key])
               ) {
                 state.formDataByPath[path][key] = JSON.parse(JSON.stringify(data[key]))
               } else {

@@ -26,11 +26,11 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
     {
       title: '姓名',
       dataIndex: 'name',
-      width: 100,
+      width: 90,
       fixed: 'left',
       render: (text, record) => (
         <div
-          className={`cursor-pointer p-2 rounded transition-colors ${
+          className={`cursor-pointer p-1 rounded transition-colors text-xs ${
             selectedEmployee?.id === record.id
               ? 'bg-blue-100 text-blue-600 font-medium'
               : 'hover:bg-gray-50'
@@ -44,86 +44,211 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
     {
       title: '部门',
       dataIndex: 'department',
-      width: 120,
+      width: 100,
       ellipsis: true,
     },
     {
-      title: '应发合计',
-      dataIndex: 'totalPayable',
-      width: 120,
-      render: value => {
-        const amount = toNumber(value)
-        return (
-          <span className="font-mono text-green-600 font-medium">
-            ¥
-            {amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-        )
-      },
+      title: '员工类型',
+      dataIndex: 'type',
+      width: 90,
+      ellipsis: true,
+    },
+    {
+      title: '工资基数',
+      dataIndex: 'baseSalary',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
       align: 'right',
     },
     {
-      title: '社保扣除',
+      title: '考勤扣款',
+      dataIndex: 'attendanceDeduction',
+      width: 100,
+      render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,
+      align: 'right',
+    },
+    {
+      title: '临时增加',
+      dataIndex: 'temporaryIncrease',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '全勤奖励',
+      dataIndex: 'fullAttendance',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '补贴合计',
+      dataIndex: 'totalSubsidy',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '工龄津贴',
+      dataIndex: 'seniority',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '代理费提成',
+      dataIndex: 'agencyFeeCommission',
+      width: 110,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '绩效提成',
+      dataIndex: 'performanceCommission',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '业务提成',
+      dataIndex: 'businessCommission',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '其他扣款',
+      dataIndex: 'otherDeductions',
+      width: 100,
+      render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,
+      align: 'right',
+    },
+    {
+      title: '个人医疗',
+      dataIndex: 'personalMedical',
+      width: 100,
+      render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,
+      align: 'right',
+    },
+    {
+      title: '个人养老',
+      dataIndex: 'personalPension',
+      width: 100,
+      render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,
+      align: 'right',
+    },
+    {
+      title: '个人失业',
+      dataIndex: 'personalUnemployment',
+      width: 100,
+      render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,
+      align: 'right',
+    },
+    {
+      title: '社保合计',
       dataIndex: 'personalInsuranceTotal',
       width: 100,
-      render: value => {
-        const amount = toNumber(value)
-        return (
-          <span className="font-mono text-orange-500">
-            ¥
-            {amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-        )
-      },
+      render: value => (
+        <span className="font-medium text-red-500">-{formatCurrency(toNumber(value))}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '公司承担合计',
+      dataIndex: 'companyInsuranceTotal',
+      width: 110,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '保证金扣除',
+      dataIndex: 'depositDeduction',
+      width: 100,
+      render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,
       align: 'right',
     },
     {
       title: '个税',
       dataIndex: 'personalIncomeTax',
       width: 100,
-      render: value => {
-        const amount = toNumber(value)
-        return (
-          <span className="font-mono text-red-500">
-            ¥
-            {amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-        )
-      },
+      render: value => (
+        <span className="font-medium text-red-500">-{formatCurrency(toNumber(value))}</span>
+      ),
       align: 'right',
     },
     {
-      title: '发放状态',
-      key: 'status',
-      width: 90,
-      render: (_, record) => {
-        return (
-          <Tag
-            icon={record.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-            color={record.isPaid ? 'green' : 'orange'}
-            className="text-xs"
-          >
-            {record.isPaid ? '已发放' : '待发放'}
-          </Tag>
-        )
-      },
-      align: 'center',
+      title: '应发合计',
+      dataIndex: 'totalPayable',
+      width: 120,
+      render: value => (
+        <span className="font-mono font-bold text-green-600">
+          {formatCurrency(toNumber(value))}
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '银行卡号',
+      dataIndex: 'bankCardNumber',
+      width: 140,
+      ellipsis: true,
+    },
+    {
+      title: '银行卡/微信',
+      dataIndex: 'bankCardOrWechat',
+      width: 110,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '现金发放',
+      dataIndex: 'cashPaid',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '对公转账',
+      dataIndex: 'corporatePayment',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
+    },
+    {
+      title: '个税申报',
+      dataIndex: 'taxDeclaration',
+      width: 100,
+      render: value => formatCurrency(toNumber(value)),
+      align: 'right',
     },
     {
       title: '确认状态',
       key: 'confirmation',
       width: 90,
-      render: (_, record) => {
-        return record.isConfirmed ? (
-          <Tag icon={<CheckCircleOutlined />} color="success" className="text-xs">
-            已确认
-          </Tag>
-        ) : (
-          <Tag icon={<ClockCircleOutlined />} color="warning" className="text-xs">
-            待确认
-          </Tag>
-        )
-      },
+      render: (_, record) => (
+        <Tag
+          icon={record.isConfirmed ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+          color={record.isConfirmed ? 'success' : 'warning'}
+          className="text-xs"
+        >
+          {record.isConfirmed ? '已确认' : '待确认'}
+        </Tag>
+      ),
+      align: 'center',
+    },
+    {
+      title: '发放状态',
+      key: 'paymentStatus',
+      width: 90,
+      render: (_, record) => (
+        <Tag
+          icon={record.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+          color={record.isPaid ? 'green' : 'orange'}
+          className="text-xs"
+        >
+          {record.isPaid ? '已发放' : '待发放'}
+        </Tag>
+      ),
       align: 'center',
     },
   ]
@@ -164,7 +289,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
           dataSource={salaryData}
           loading={loading}
           pagination={false}
-          scroll={{ y: 500, x: 800 }}
+          scroll={{ y: 500, x: 2800 }}
           rowKey="id"
           size="small"
           className="h-full"
