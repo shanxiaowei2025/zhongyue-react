@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Button, Spin, Tabs, Progress } from 'antd'
+import { Button, Spin, Tabs, Progress, Modal } from 'antd'
 import type { TabsProps } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import { ReloadOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
 import MonthSelector from './components/MonthSelector'
@@ -25,6 +25,7 @@ const SalaryManagement: React.FC = () => {
   } = useSalaryIntegrated()
 
   const [autoGenerating, setAutoGenerating] = useState(false)
+  const [markingAllPaid, setMarkingAllPaid] = useState(false)
 
   const handleMonthChange = (yearMonth: string) => {
     operations.switchMonth(yearMonth)
@@ -41,6 +42,38 @@ const SalaryManagement: React.FC = () => {
     } finally {
       setAutoGenerating(false)
     }
+  }
+
+  const handleMarkAllPaid = () => {
+    const unpaidCount = salaryData.filter(emp => !emp.isPaid).length
+
+    if (unpaidCount === 0) {
+      Modal.info({
+        title: '提示',
+        content: '当前月份所有员工均已发放',
+      })
+      return
+    }
+
+    Modal.confirm({
+      title: '批量发放确认',
+      content: `确定要将当前月份所有未发放的员工（共 ${unpaidCount} 人）标记为已发放吗？`,
+      icon: <CheckCircleOutlined />,
+      okText: '确认发放',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          setMarkingAllPaid(true)
+          await operations.markAllPaid()
+        } finally {
+          setMarkingAllPaid(false)
+        }
+      },
+    })
+  }
+
+  const handleMarkEmployeePaid = async (id: number) => {
+    await operations.markEmployeePaid(id)
   }
 
   return (
@@ -80,6 +113,14 @@ const SalaryManagement: React.FC = () => {
             <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
               刷新
             </Button>
+            <Button
+              icon={<CheckCircleOutlined />}
+              onClick={handleMarkAllPaid}
+              loading={markingAllPaid}
+              disabled={salaryData.filter(emp => !emp.isPaid).length === 0}
+            >
+              全部已发放
+            </Button>
             <Button type="primary" loading={autoGenerating} onClick={handleAutoGenerate}>
               自动生成薪资
             </Button>
@@ -98,6 +139,7 @@ const SalaryManagement: React.FC = () => {
             onSelectEmployee={handleSelectEmployee}
             onRefresh={refreshData}
             statistics={statistics}
+            onMarkPaid={handleMarkEmployeePaid}
           />
         </div>
 

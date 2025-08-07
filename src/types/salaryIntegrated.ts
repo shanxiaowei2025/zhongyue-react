@@ -220,6 +220,8 @@ export interface CreateSalaryDto {
   corporatePayment?: number
   taxDeclaration?: number
   yearMonth: string
+  isPaid?: boolean
+  isConfirmed?: boolean
 }
 
 // 更新薪资DTO

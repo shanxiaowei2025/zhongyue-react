@@ -333,6 +333,75 @@ export const useSalaryIntegrated = () => {
       },
       [setSelectedEmployee]
     ),
+
+    // 标记单个员工为已发放
+    markEmployeePaid: useCallback(
+      async (id: number) => {
+        try {
+          const updatedRecord = await salaryApi.updateSalary(id, { isPaid: true })
+
+          // 乐观更新
+          updateSalaryRecord(id, updatedRecord)
+
+          // 重新计算统计信息
+          const currentSalaryData = salaryData.map(item => (item.id === id ? updatedRecord : item))
+          const newStatistics = salaryApi.calculateSalaryStatistics(currentSalaryData)
+          setStatistics(newStatistics)
+
+          message.success('已标记为发放状态')
+          return updatedRecord
+        } catch (error: any) {
+          message.error(`更新发放状态失败: ${error.message}`)
+          throw error
+        }
+      },
+      [updateSalaryRecord, salaryData, setStatistics]
+    ),
+
+    // 批量标记当月所有员工为已发放
+    markAllPaid: useCallback(async () => {
+      try {
+        setLoading(true)
+        message.loading('正在批量更新发放状态...', 0)
+
+        // 找出所有未发放的员工
+        const unpaidEmployees = salaryData.filter(emp => !emp.isPaid)
+
+        if (unpaidEmployees.length === 0) {
+          message.destroy()
+          message.info('当前月份所有员工均已发放')
+          return
+        }
+
+        // 批量更新
+        const updatePromises = unpaidEmployees.map(emp =>
+          salaryApi.updateSalary(emp.id, { isPaid: true })
+        )
+
+        const updatedRecords = await Promise.all(updatePromises)
+
+        // 批量乐观更新
+        const updatedData = salaryData.map(item => {
+          const updatedRecord = updatedRecords.find(record => record.id === item.id)
+          return updatedRecord || item
+        })
+
+        batchUpdateSalaryRecords(updatedData)
+
+        // 重新计算统计信息
+        const newStatistics = salaryApi.calculateSalaryStatistics(updatedData)
+        setStatistics(newStatistics)
+
+        message.destroy()
+        message.success(`成功标记 ${unpaidEmployees.length} 名员工为已发放`)
+      } catch (error: any) {
+        message.destroy()
+        message.error(`批量更新发放状态失败: ${error.message}`)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    }, [salaryData, batchUpdateSalaryRecords, setStatistics, setLoading]),
   }
 
   return {

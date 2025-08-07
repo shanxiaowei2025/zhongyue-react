@@ -12,6 +12,7 @@ interface SalaryOverviewProps {
   onSelectEmployee: (employee: SalaryRecord) => void
   onRefresh: () => void
   statistics: SalaryStatistics
+  onMarkPaid?: (id: number) => Promise<void>
 }
 
 const SalaryOverview: React.FC<SalaryOverviewProps> = ({
@@ -21,6 +22,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
   onSelectEmployee,
   onRefresh,
   statistics,
+  onMarkPaid,
 }) => {
   const columns: ColumnsType<SalaryRecord> = [
     {
@@ -239,15 +241,30 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
     {
       title: '发放状态',
       key: 'paymentStatus',
-      width: 90,
+      width: 120,
       render: (_, record) => (
-        <Tag
-          icon={record.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-          color={record.isPaid ? 'green' : 'orange'}
-          className="text-xs"
-        >
-          {record.isPaid ? '已发放' : '待发放'}
-        </Tag>
+        <div className="flex flex-col items-center space-y-1">
+          <Tag
+            icon={record.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+            color={record.isPaid ? 'green' : 'orange'}
+            className="text-xs"
+          >
+            {record.isPaid ? '已发放' : '待发放'}
+          </Tag>
+          {!record.isPaid && onMarkPaid && (
+            <Button
+              type="link"
+              size="small"
+              className="text-xs p-0 h-auto"
+              onClick={e => {
+                e.stopPropagation()
+                onMarkPaid(record.id)
+              }}
+            >
+              已发放
+            </Button>
+          )}
+        </div>
       ),
       align: 'center',
     },
