@@ -12,8 +12,6 @@ import { useMySalary } from '../../hooks/useMySalary'
 import MySalaryDetails from './components/MySalaryDetails'
 import type { MySalaryRecord } from '../../types/mySalary'
 
-const { MonthPicker } = DatePicker
-
 const MySalary: React.FC = () => {
   const { selectedRecord, selectedYearMonth, salaryList, loading, operations, refreshData } =
     useMySalary()
@@ -21,10 +19,10 @@ const MySalary: React.FC = () => {
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
 
-  const handleMonthChange = (date: dayjs.Dayjs | null) => {
+  const handleYearChange = (date: dayjs.Dayjs | null) => {
     if (date) {
-      const yearMonth = date.format('YYYY-MM')
-      operations.switchMonth(yearMonth)
+      const year = date.format('YYYY')
+      operations.switchMonth(`${year}-01`) // 保持接口兼容，内部会转换为年度查询
     }
   }
 
@@ -75,15 +73,15 @@ const MySalary: React.FC = () => {
       title: '月份',
       dataIndex: 'yearMonth',
       key: 'yearMonth',
-      width: 100,
-      render: (yearMonth: string) => dayjs(yearMonth).format('YYYY-MM'),
+      width: 130,
+      render: (yearMonth: string) => dayjs(yearMonth).format('YYYY年MM月'),
       fixed: 'left',
     },
     {
       title: '基本工资',
       dataIndex: 'baseSalary',
       key: 'baseSalary',
-      width: 120,
+      width: 110,
       render: (value: number) => formatCurrency(value),
       align: 'right',
     },
@@ -91,7 +89,7 @@ const MySalary: React.FC = () => {
       title: '补贴合计',
       dataIndex: 'totalSubsidy',
       key: 'totalSubsidy',
-      width: 120,
+      width: 110,
       render: (value: number) => formatCurrency(value),
       align: 'right',
     },
@@ -99,7 +97,7 @@ const MySalary: React.FC = () => {
       title: '绩效提成',
       dataIndex: 'performanceCommission',
       key: 'performanceCommission',
-      width: 120,
+      width: 110,
       render: (value: number) => formatCurrency(value),
       align: 'right',
     },
@@ -107,7 +105,7 @@ const MySalary: React.FC = () => {
       title: '应发工资',
       dataIndex: 'totalPayable',
       key: 'totalPayable',
-      width: 130,
+      width: 120,
       render: (value: number) => (
         <span className="font-semibold text-green-600">{formatCurrency(value)}</span>
       ),
@@ -117,7 +115,7 @@ const MySalary: React.FC = () => {
       title: '社保个人',
       dataIndex: 'personalInsuranceTotal',
       key: 'personalInsuranceTotal',
-      width: 120,
+      width: 110,
       render: (value: number) => <span className="text-red-600">-{formatCurrency(value)}</span>,
       align: 'right',
     },
@@ -125,7 +123,7 @@ const MySalary: React.FC = () => {
       title: '个人所得税',
       dataIndex: 'personalIncomeTax',
       key: 'personalIncomeTax',
-      width: 120,
+      width: 110,
       render: (value: number) => <span className="text-red-600">-{formatCurrency(value)}</span>,
       align: 'right',
     },
@@ -133,7 +131,7 @@ const MySalary: React.FC = () => {
       title: '实发工资',
       dataIndex: 'totalPayable',
       key: 'netSalary',
-      width: 130,
+      width: 120,
       render: (value: number, record: MySalaryRecord) => {
         // 计算实发工资：应发合计 - 个人社保 - 个人所得税
         const netSalary =
@@ -146,7 +144,7 @@ const MySalary: React.FC = () => {
       title: '银行卡/微信',
       dataIndex: 'bankCardOrWechat',
       key: 'bankCardOrWechat',
-      width: 130,
+      width: 120,
       render: (value: number) => formatCurrency(value),
       align: 'right',
     },
@@ -154,7 +152,7 @@ const MySalary: React.FC = () => {
       title: '现金发放',
       dataIndex: 'cashPaid',
       key: 'cashPaid',
-      width: 120,
+      width: 110,
       render: (value: number) => formatCurrency(value),
       align: 'right',
     },
@@ -162,7 +160,7 @@ const MySalary: React.FC = () => {
       title: '公司代付',
       dataIndex: 'corporatePayment',
       key: 'corporatePayment',
-      width: 120,
+      width: 110,
       render: (value: number) => formatCurrency(value),
       align: 'right',
     },
@@ -170,7 +168,7 @@ const MySalary: React.FC = () => {
       title: '确认状态',
       dataIndex: 'isConfirmed',
       key: 'isConfirmed',
-      width: 120,
+      width: 130,
       render: (isConfirmed: boolean, record: MySalaryRecord) => {
         if (isConfirmed) {
           return (
@@ -193,35 +191,50 @@ const MySalary: React.FC = () => {
         )
       },
       align: 'center',
+      fixed: 'right',
+    },
+    {
+      title: '发放状态',
+      dataIndex: 'isPaid',
+      key: 'isPaid',
+      width: 110,
+      render: (isPaid: boolean) => (
+        <Tag
+          icon={isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+          color={isPaid ? 'green' : 'orange'}
+        >
+          {isPaid ? '已发放' : '待发放'}
+        </Tag>
+      ),
+      align: 'center',
+      fixed: 'right',
     },
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 140,
       render: (_, record: MySalaryRecord) => {
         const canConfirm = !record.isConfirmed && record.totalPayable > 0
 
         return (
-          <div className="flex space-x-2">
+          <div className="flex flex-col gap-1">
             <Button
               type="text"
               size="small"
               icon={<EyeOutlined />}
               onClick={() => handleViewRecord(record)}
+              className="!p-1 !h-auto"
             >
               详情
             </Button>
-            {record.isConfirmed ? (
-              <Tag color="success" className="cursor-default">
-                已确认
-              </Tag>
-            ) : (
+            {!record.isConfirmed && (
               <Button
                 type="primary"
                 size="small"
                 loading={confirmingId === record.id}
                 disabled={!canConfirm}
                 onClick={() => handleConfirmSalary(record)}
+                className="!p-1 !h-auto"
               >
                 确认
               </Button>
@@ -234,7 +247,7 @@ const MySalary: React.FC = () => {
     },
   ]
 
-  const currentYearMonth = dayjs(selectedYearMonth)
+  const currentYear = dayjs(selectedYearMonth)
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -244,16 +257,17 @@ const MySalary: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">我的薪资</h1>
             <p className="text-gray-500">
-              查看和确认我的薪资记录 - {dayjs(selectedYearMonth).format('YYYY年MM月')}
+              查看和确认我的薪资记录 - {dayjs(selectedYearMonth).format('YYYY年')}
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <MonthPicker
-              value={currentYearMonth}
-              onChange={handleMonthChange}
+            <DatePicker
+              value={currentYear}
+              onChange={handleYearChange}
               allowClear={false}
-              format="YYYY-MM"
-              placeholder="选择月份"
+              picker="year"
+              format="YYYY"
+              placeholder="选择年份"
             />
             <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
               刷新
@@ -277,14 +291,14 @@ const MySalary: React.FC = () => {
           rowKey="id"
           loading={loading}
           pagination={false}
-          scroll={{ x: 1400, y: 'calc(100vh - 250px)' }}
+          scroll={{ x: 1750, y: 'calc(100vh - 250px)' }}
           size="middle"
           bordered
           locale={{
             emptyText: (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-lg mb-2">暂无薪资记录</div>
-                <div className="text-sm">该月份暂无薪资数据</div>
+                <div className="text-sm">该年度暂无薪资数据</div>
               </div>
             ),
           }}

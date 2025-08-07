@@ -20,6 +20,14 @@ export const useMySalary = () => {
     return `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`
   })
 
+  // 生成查询参数
+  const getQueryParams = (yearMonth: string) => {
+    const year = yearMonth.split('-')[0]
+    const startDate = `${year}-01-01`
+    const endDate = `${year}-12-31`
+    return { startDate, endDate, pageSize: 50 }
+  }
+
   // 获取我的薪资列表
   const {
     data: salaryListData,
@@ -27,8 +35,8 @@ export const useMySalary = () => {
     error: listError,
     mutate: mutateSalaryList,
   } = useSWR(
-    getMySalaryKeys.salaryList({ yearMonth: selectedYearMonth }),
-    () => mySalaryApi.getMySalaryList({ yearMonth: selectedYearMonth, pageSize: 50 }),
+    getMySalaryKeys.salaryList(getQueryParams(selectedYearMonth)),
+    () => mySalaryApi.getMySalaryList(getQueryParams(selectedYearMonth)),
     {
       revalidateOnFocus: false,
       fallbackData: {

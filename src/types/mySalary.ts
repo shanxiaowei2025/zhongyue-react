@@ -46,6 +46,8 @@ export interface MySalaryRecord {
 // 薪资查询参数
 export interface MySalaryQueryParams {
   yearMonth?: string
+  startDate?: string
+  endDate?: string
   page?: number
   pageSize?: number
 }
