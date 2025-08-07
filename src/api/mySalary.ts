@@ -1,4 +1,4 @@
-import request from './request'
+import axios from 'axios'
 import type { AxiosResponse } from 'axios'
 import type {
   MySalaryRecord,
@@ -10,6 +10,28 @@ import type {
   ConfirmSalaryRequest,
   ConfirmSalaryResponse,
 } from '../types/mySalary'
+import { useSalaryAuthStore } from '../store/salaryAuth'
+
+// 获取API基础URL
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+
+// 创建带薪资token的axios实例
+const createSalaryRequest = () => {
+  const token = useSalaryAuthStore.getState().getValidToken()
+  if (!token) {
+    throw new Error('SALARY_TOKEN_REQUIRED')
+  }
+
+  return axios.create({
+    baseURL: apiBaseUrl,
+    timeout: 120000,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Salary-Token': token,
+      Authorization: `Bearer ${localStorage.getItem('token')}`, // 同时需要JWT token
+    },
+  })
+}
 
 // 我的薪资API接口
 export const mySalaryApi = {
@@ -17,7 +39,8 @@ export const mySalaryApi = {
   async getMySalaryList(
     params: MySalaryQueryParams
   ): Promise<MySalaryPaginatedResponse<MySalaryRecord>> {
-    const response = await request.get<
+    const salaryRequest = createSalaryRequest()
+    const response = await salaryRequest.get<
       MySalaryApiResponse<MySalaryPaginatedResponse<MySalaryRecord>>
     >('/salary/my', {
       params: {
@@ -26,13 +49,16 @@ export const mySalaryApi = {
         ...params,
       },
     })
-    return response.data
+    return response.data.data
   },
 
   // 获取我的薪资详情
   async getMySalaryDetail(id: number): Promise<MySalaryRecord> {
-    const response = await request.get<MySalaryApiResponse<MySalaryRecord>>(`/salary/my/${id}`)
-    return response.data
+    const salaryRequest = createSalaryRequest()
+    const response = await salaryRequest.get<MySalaryApiResponse<MySalaryRecord>>(
+      `/salary/my/${id}`
+    )
+    return response.data.data
   },
 
   // 确认薪资记录
@@ -40,11 +66,12 @@ export const mySalaryApi = {
     const requestBody: ConfirmSalaryRequest = {
       isConfirmed: true,
     }
-    const response = await request.patch<MySalaryApiResponse<ConfirmSalaryResponse>>(
+    const salaryRequest = createSalaryRequest()
+    const response = await salaryRequest.patch<MySalaryApiResponse<ConfirmSalaryResponse>>(
       `/salary/${id}/confirm`,
       requestBody
     )
-    return response.data
+    return response.data.data
   },
 
   // 获取薪资统计信息（基于薪资列表计算）

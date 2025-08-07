@@ -6,6 +6,7 @@ import { getUserProfile, updateUserProfile, changePassword } from '../../api/aut
 import type { User } from '../../types'
 import { useRoleNames } from '../../constants/roles'
 import AvatarUpload from '../../components/AvatarUpload'
+import SalaryPasswordManagement from '../../components/SalaryPasswordManagement'
 
 const { TabPane } = Tabs
 
@@ -379,6 +380,10 @@ const Profile = () => {
               </Form>
             </Spin>
           </Card>
+        </TabPane>
+
+        <TabPane tab="薪资密码" key="3">
+          <SalaryPasswordManagement />
         </TabPane>
       </Tabs>
     </div>

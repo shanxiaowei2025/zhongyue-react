@@ -1,23 +1,83 @@
-import React, { useState } from 'react'
-import { Button, Spin, message, DatePicker, Table, Tag, Modal } from 'antd'
+import React, { useState, useEffect } from 'react'
+import { Button, Spin, message, DatePicker, Table, Tag, Modal, Space } from 'antd'
 import {
   ReloadOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   EyeOutlined,
+  LockOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { useMySalary } from '../../hooks/useMySalary'
 import MySalaryDetails from './components/MySalaryDetails'
+import SalaryAuthModal from '../../components/SalaryAuthModal'
 import type { MySalaryRecord } from '../../types/mySalary'
+import { useSalaryAuthStore } from '../../store/salaryAuth'
 
 const MySalary: React.FC = () => {
   const { selectedRecord, selectedYearMonth, salaryList, loading, operations, refreshData } =
     useMySalary()
+  const { clearToken } = useSalaryAuthStore()
+  const tokenInfo = useSalaryAuthStore(state => state.tokenInfo)
+
+  // 计算token是否有效
+  const isTokenValid = () => {
+    if (!tokenInfo) return false
+    const now = Date.now()
+    return tokenInfo.expiresAt > now
+  }
 
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
   const [detailModalVisible, setDetailModalVisible] = useState(false)
+  const [authModalVisible, setAuthModalVisible] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState(false)
+
+  // 检查薪资访问权限
+  useEffect(() => {
+    const checkAuth = () => {
+      if (isTokenValid()) {
+        setIsAuthorized(true)
+      } else {
+        setIsAuthorized(false)
+        setAuthModalVisible(true)
+      }
+    }
+
+    checkAuth()
+  }, [tokenInfo]) // 直接依赖tokenInfo，而不是函数
+
+  // 处理认证成功
+  const handleAuthSuccess = () => {
+    setAuthModalVisible(false)
+    setIsAuthorized(true)
+    // 认证成功后，SWR会因为token状态变化自动重新发起请求
+    // 手动触发刷新以确保立即更新
+    refreshData()
+  }
+
+  // 处理认证取消
+  const handleAuthCancel = () => {
+    setAuthModalVisible(false)
+    // 返回上一页或主页
+    window.history.back()
+  }
+
+  // 处理锁定按钮
+  const handleLock = () => {
+    Modal.confirm({
+      title: '确认锁定薪资访问',
+      content: '锁定后需要重新验证薪资密码才能访问薪资信息。',
+      okText: '确认锁定',
+      cancelText: '取消',
+      onOk() {
+        clearToken()
+        setIsAuthorized(false)
+        setAuthModalVisible(true)
+        message.success('已锁定薪资访问')
+      },
+    })
+  }
 
   const handleYearChange = (date: dayjs.Dayjs | null) => {
     if (date) {
@@ -268,41 +328,71 @@ const MySalary: React.FC = () => {
               picker="year"
               format="YYYY"
               placeholder="选择年份"
+              disabled={!isAuthorized}
             />
-            <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
-              刷新
-            </Button>
+            <Space>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={refreshData}
+                loading={loading}
+                disabled={!isAuthorized}
+              >
+                刷新
+              </Button>
+              <Button icon={<LockOutlined />} onClick={handleLock} disabled={!isAuthorized} danger>
+                锁定
+              </Button>
+            </Space>
           </div>
         </div>
       </div>
 
       {/* 主内容区域 */}
       <div className="flex-1 bg-white p-6 overflow-hidden">
-        <div className="mb-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">薪资记录</h2>
-            <div className="text-sm text-gray-500">共 {salaryList.length} 条记录</div>
-          </div>
-        </div>
-
-        <Table
-          columns={columns}
-          dataSource={salaryList}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          scroll={{ x: 1750, y: 'calc(100vh - 250px)' }}
-          size="middle"
-          bordered
-          locale={{
-            emptyText: (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-lg mb-2">暂无薪资记录</div>
-                <div className="text-sm">该年度暂无薪资数据</div>
+        {isAuthorized ? (
+          <>
+            <div className="mb-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">薪资记录</h2>
+                <div className="text-sm text-gray-500">共 {salaryList.length} 条记录</div>
               </div>
-            ),
-          }}
-        />
+            </div>
+
+            <Table
+              columns={columns}
+              dataSource={salaryList}
+              rowKey="id"
+              loading={loading}
+              pagination={false}
+              scroll={{ x: 1750, y: 'calc(100vh - 250px)' }}
+              size="middle"
+              bordered
+              locale={{
+                emptyText: (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="text-lg mb-2">暂无薪资记录</div>
+                    <div className="text-sm">该年度暂无薪资数据</div>
+                  </div>
+                ),
+              }}
+            />
+          </>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <LockOutlined className="text-6xl text-gray-300 mb-4" />
+              <h3 className="text-xl text-gray-600 mb-2">薪资信息已锁定</h3>
+              <p className="text-gray-500 mb-4">请验证您的薪资密码以查看薪资信息</p>
+              <Button
+                type="primary"
+                onClick={() => setAuthModalVisible(true)}
+                icon={<LockOutlined />}
+              >
+                验证密码
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 薪资详情弹窗 */}
@@ -320,6 +410,15 @@ const MySalary: React.FC = () => {
           loading={confirmingId === selectedRecord?.id}
         />
       </Modal>
+
+      {/* 薪资认证弹窗 */}
+      <SalaryAuthModal
+        visible={authModalVisible}
+        onSuccess={handleAuthSuccess}
+        onCancel={handleAuthCancel}
+        title="薪资密码验证"
+        description="为了保护您的薪资隐私，请输入薪资查看密码"
+      />
     </div>
   )
 }

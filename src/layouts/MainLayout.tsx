@@ -530,10 +530,7 @@ const MainLayout = () => {
         ]
       : []),
     // 为普通员工显示我的薪资菜单
-    ...(user?.roles &&
-    !user?.roles.some(role =>
-      ['super_admin', 'salary_admin', 'admin', '超级管理员', '薪资管理员', '管理员'].includes(role)
-    )
+    ...(user?.roles && !user?.roles.some(role => ['super_admin', '超级管理员'].includes(role))
       ? [
           {
             key: '/my-salary',

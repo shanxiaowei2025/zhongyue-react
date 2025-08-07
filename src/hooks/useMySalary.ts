@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import useSWR from 'swr'
 import { message } from 'antd'
 import { mySalaryApi, getMySalaryKeys } from '../api/mySalary'
+import { useSalaryAuthStore } from '../store/salaryAuth'
 import type {
   MySalaryRecord,
   MySalaryQueryParams,
@@ -20,6 +21,24 @@ export const useMySalary = () => {
     return `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`
   })
 
+  // 获取薪资认证状态 - 直接订阅tokenInfo以确保响应式更新
+  const tokenInfo = useSalaryAuthStore(state => state.tokenInfo)
+
+  // 计算token是否有效
+  const isTokenValid = () => {
+    if (!tokenInfo) return false
+    const now = Date.now()
+    return tokenInfo.expiresAt > now
+  }
+
+  // 获取有效的token
+  const getValidToken = () => {
+    if (!tokenInfo || !isTokenValid()) {
+      return null
+    }
+    return tokenInfo.token
+  }
+
   // 生成查询参数
   const getQueryParams = (yearMonth: string) => {
     const year = yearMonth.split('-')[0]
@@ -28,15 +47,21 @@ export const useMySalary = () => {
     return { startDate, endDate, pageSize: 50 }
   }
 
-  // 获取我的薪资列表
+  // 获取我的薪资列表 - 只有有效token时才发起请求
+  const token = getValidToken()
+  const hasValidToken = isTokenValid()
   const {
     data: salaryListData,
     isLoading: isListLoading,
     error: listError,
     mutate: mutateSalaryList,
   } = useSWR(
-    getMySalaryKeys.salaryList(getQueryParams(selectedYearMonth)),
-    () => mySalaryApi.getMySalaryList(getQueryParams(selectedYearMonth)),
+    hasValidToken && token
+      ? [...getMySalaryKeys.salaryList(getQueryParams(selectedYearMonth)), token]
+      : null,
+    hasValidToken && token
+      ? () => mySalaryApi.getMySalaryList(getQueryParams(selectedYearMonth))
+      : null,
     {
       revalidateOnFocus: false,
       fallbackData: {
@@ -49,15 +74,19 @@ export const useMySalary = () => {
     }
   )
 
-  // 获取选中薪资记录的详情
+  // 获取选中薪资记录的详情 - 只有有效token时才发起请求
   const {
     data: salaryDetail,
     isLoading: isDetailLoading,
     error: detailError,
     mutate: mutateSalaryDetail,
   } = useSWR(
-    selectedRecord ? getMySalaryKeys.salaryDetail(selectedRecord.id) : null,
-    () => mySalaryApi.getMySalaryDetail(selectedRecord!.id),
+    hasValidToken && token && selectedRecord
+      ? [...getMySalaryKeys.salaryDetail(selectedRecord.id), token]
+      : null,
+    hasValidToken && token && selectedRecord
+      ? () => mySalaryApi.getMySalaryDetail(selectedRecord.id)
+      : null,
     {
       revalidateOnFocus: false,
     }
