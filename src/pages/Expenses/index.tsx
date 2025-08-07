@@ -385,28 +385,45 @@ const Expenses: React.FC = () => {
   // 处理URL参数 - 自动打开收据模态框
   useEffect(() => {
     const openReceiptParam = urlSearchParams.get('openReceipt')
+    const openReceiptByIdParam = urlSearchParams.get('openReceiptById')
 
+    // 通过收据编号查找 (原有逻辑)
     if (openReceiptParam && expenses.length > 0 && !loading) {
-      // 根据收据编号查找对应的费用ID
       const targetExpense = expenses.find(expense => expense.receiptNo === openReceiptParam)
 
       if (targetExpense) {
         console.log('找到收据对应的费用记录:', targetExpense)
-        // 自动打开收据模态框
         setReceiptExpenseId(targetExpense.id)
         setReceiptVisible(true)
 
-        // 清除URL参数，避免重复打开
         const newSearchParams = new URLSearchParams(urlSearchParams)
         newSearchParams.delete('openReceipt')
         setUrlSearchParams(newSearchParams, { replace: true })
       } else {
-        // 如果没找到对应的收据，显示提示信息
         message.warning(`未找到收据编号为 ${openReceiptParam} 的费用记录`)
 
-        // 清除URL参数
         const newSearchParams = new URLSearchParams(urlSearchParams)
         newSearchParams.delete('openReceipt')
+        setUrlSearchParams(newSearchParams, { replace: true })
+      }
+    }
+
+    // 通过费用ID直接打开 (新增逻辑)
+    if (openReceiptByIdParam && !loading) {
+      const expenseId = parseInt(openReceiptByIdParam, 10)
+      if (!isNaN(expenseId)) {
+        console.log('直接通过费用ID打开收据:', expenseId)
+        setReceiptExpenseId(expenseId)
+        setReceiptVisible(true)
+
+        const newSearchParams = new URLSearchParams(urlSearchParams)
+        newSearchParams.delete('openReceiptById')
+        setUrlSearchParams(newSearchParams, { replace: true })
+      } else {
+        message.warning('无效的费用ID')
+
+        const newSearchParams = new URLSearchParams(urlSearchParams)
+        newSearchParams.delete('openReceiptById')
         setUrlSearchParams(newSearchParams, { replace: true })
       }
     }

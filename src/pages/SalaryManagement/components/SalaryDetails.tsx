@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Card,
   Tabs,
@@ -11,6 +11,9 @@ import {
   message,
   Empty,
   Tag,
+  List,
+  Spin,
+  Divider,
 } from 'antd'
 import {
   EditOutlined,
@@ -18,9 +21,13 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { SalaryRecord, UpdateSalaryDto } from '../../../types/salaryIntegrated'
+import type { Expense } from '../../../types/expense'
+import { getExpenseList } from '../../../api/expense'
 import SalaryCalculator from './SalaryCalculator'
 import AmountInput from './AmountInput'
 
@@ -34,6 +41,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   const [editing, setEditing] = useState(false)
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
+  const [expenseLoading, setExpenseLoading] = useState(false)
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const navigate = useNavigate()
 
   // 安全的数值转换和格式化函数
   const toNumber = (value: any): number => {
@@ -48,6 +58,65 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       maximumFractionDigits: 2,
     })
   }
+
+  // 获取关联收据
+  const loadRelatedExpenses = async (employeeName: string, salaryYearMonth: string) => {
+    try {
+      setExpenseLoading(true)
+
+      // 计算薪资月份的第一天和最后一天
+      const monthStart = dayjs(salaryYearMonth).startOf('month').format('YYYY-MM-DD')
+      const monthEnd = dayjs(salaryYearMonth).endOf('month').format('YYYY-MM-DD')
+
+      const response = await getExpenseList({
+        page: 1,
+        pageSize: 100,
+        salesperson: employeeName,
+        status: 1, // 已审核
+        chargeDateStart: monthStart,
+        chargeDateEnd: monthEnd,
+      })
+
+      if (response.data && response.data.list) {
+        setExpenses(response.data.list)
+      }
+    } catch (error) {
+      console.error('加载关联收据失败:', error)
+      message.error('加载关联收据失败')
+    } finally {
+      setExpenseLoading(false)
+    }
+  }
+
+  // 格式化收费日期
+  const formatChargeDate = (dateString: string) => {
+    return dayjs(dateString).format('YYYY-MM-DD')
+  }
+
+  // 格式化金额
+  const formatAmount = (amount: string | number) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+    if (isNaN(numAmount)) return '¥0.00'
+
+    return new Intl.NumberFormat('zh-CN', {
+      style: 'currency',
+      currency: 'CNY',
+      minimumFractionDigits: 2,
+    }).format(numAmount)
+  }
+
+  // 处理收据链接点击
+  const handleReceiptClick = (expense: Expense) => {
+    // 直接使用费用ID跳转，而不是收据编号，这样可以避免在费用页面查找不到的问题
+    navigate(`/expenses?openReceiptById=${expense.id}`)
+  }
+
+  // 当员工变化时加载关联收据
+  useEffect(() => {
+    if (employee && employee.name && yearMonth) {
+      loadRelatedExpenses(employee.name, yearMonth)
+    }
+  }, [employee?.name, yearMonth])
 
   if (!employee) {
     return (
@@ -675,6 +744,99 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                   <h3 className="font-semibold text-lg">{employee.name} - 计算明细</h3>
                 </div>
                 <SalaryCalculator salary={employee} />
+              </div>
+            ),
+          },
+          {
+            key: 'related-expenses',
+            label: '关联收据',
+            children: (
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-semibold text-lg">
+                    {employee.name} - 关联收据
+                    <span className="text-sm text-gray-500 ml-2">
+                      ({dayjs(yearMonth).format('YYYY年MM月')})
+                    </span>
+                  </h3>
+                </div>
+                <Spin spinning={expenseLoading}>
+                  {expenses.length > 0 ? (
+                    <>
+                      <List
+                        dataSource={expenses}
+                        renderItem={(expense: Expense) => (
+                          <List.Item
+                            key={expense.id}
+                            style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}
+                          >
+                            <div style={{ width: '100%' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                }}
+                              >
+                                <div style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
+                                  <div
+                                    style={{ fontWeight: 500, fontSize: '16px', marginBottom: 8 }}
+                                  >
+                                    {formatChargeDate(expense.chargeDate)}
+                                  </div>
+                                  <Button
+                                    type="link"
+                                    icon={<FileTextOutlined />}
+                                    onClick={() => handleReceiptClick(expense)}
+                                    style={{ padding: 0, height: 'auto', marginBottom: 4 }}
+                                    title="点击查看收据详情"
+                                  >
+                                    收据: {expense.receiptNo || '-'}
+                                  </Button>
+                                  <div
+                                    style={{
+                                      fontSize: '14px',
+                                      color: '#666',
+                                      wordBreak: 'break-all',
+                                    }}
+                                  >
+                                    {expense.companyName}
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                  <div
+                                    style={{
+                                      fontWeight: 'bold',
+                                      color: '#1890ff',
+                                      fontSize: '18px',
+                                    }}
+                                  >
+                                    {formatAmount(expense.totalFee)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </List.Item>
+                        )}
+                      />
+                      <Divider />
+                      <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                        <div style={{ fontSize: 16, marginBottom: 8 }}>
+                          <span className="text-gray-600">费用合计</span>
+                        </div>
+                        <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1890ff' }}>
+                          {formatAmount(
+                            expenses.reduce((sum, expense) => sum + Number(expense.totalFee), 0)
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 50 }}>
+                      <Empty description="本月暂无关联收据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                    </div>
+                  )}
+                </Spin>
               </div>
             ),
           },
