@@ -24,8 +24,8 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
   onConfirm,
   loading = false,
 }) => {
-  const formatCurrency = (amount: number | undefined | null) => {
-    if (amount === undefined || amount === null || isNaN(Number(amount))) {
+  const formatCurrency = (amount: string | number | undefined | null) => {
+    if (amount === undefined || amount === null || amount === '' || isNaN(Number(amount))) {
       return '¥0.00'
     }
     const numAmount = Number(amount)
@@ -57,7 +57,7 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
     )
   }
 
-  const canConfirm = !record.isConfirmed && record.totalPayable > 0
+  const canConfirm = !record.isConfirmed && Number(record.totalPayable) > 0
 
   return (
     <Card
@@ -119,7 +119,7 @@ const MySalaryCard: React.FC<MySalaryCardProps> = ({
               <Text type="secondary">基本工资:</Text>
               <Text>{formatCurrency(record.baseSalary)}</Text>
             </div>
-            {record.temporaryIncrease > 0 && (
+            {Number(record.temporaryIncrease) > 0 && (
               <div className="flex justify-between">
                 <Text type="secondary">
                   临时增加{record.temporaryIncreaseItem ? `(${record.temporaryIncreaseItem})` : ''}:

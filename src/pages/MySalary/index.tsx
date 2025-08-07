@@ -119,8 +119,8 @@ const MySalary: React.FC = () => {
   }
 
   // 格式化货币
-  const formatCurrency = (amount: number | undefined | null) => {
-    if (amount === undefined || amount === null || isNaN(Number(amount))) {
+  const formatCurrency = (amount: string | number | undefined | null) => {
+    if (amount === undefined || amount === null || amount === '' || isNaN(Number(amount))) {
       return '¥0.00'
     }
     const numAmount = Number(amount)
@@ -142,7 +142,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'baseSalary',
       key: 'baseSalary',
       width: 110,
-      render: (value: number) => formatCurrency(value),
+      render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
@@ -150,7 +150,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'totalSubsidy',
       key: 'totalSubsidy',
       width: 110,
-      render: (value: number) => formatCurrency(value),
+      render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
@@ -158,7 +158,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'performanceCommission',
       key: 'performanceCommission',
       width: 110,
-      render: (value: number) => formatCurrency(value),
+      render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
@@ -166,7 +166,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'totalPayable',
       key: 'totalPayable',
       width: 120,
-      render: (value: number) => (
+      render: (value: string | number) => (
         <span className="font-semibold text-green-600">{formatCurrency(value)}</span>
       ),
       align: 'right',
@@ -176,7 +176,9 @@ const MySalary: React.FC = () => {
       dataIndex: 'personalInsuranceTotal',
       key: 'personalInsuranceTotal',
       width: 110,
-      render: (value: number) => <span className="text-red-600">-{formatCurrency(value)}</span>,
+      render: (value: string | number) => (
+        <span className="text-red-600">-{formatCurrency(value)}</span>
+      ),
       align: 'right',
     },
     {
@@ -184,7 +186,9 @@ const MySalary: React.FC = () => {
       dataIndex: 'personalIncomeTax',
       key: 'personalIncomeTax',
       width: 110,
-      render: (value: number) => <span className="text-red-600">-{formatCurrency(value)}</span>,
+      render: (value: string | number) => (
+        <span className="text-red-600">-{formatCurrency(value)}</span>
+      ),
       align: 'right',
     },
     {
@@ -192,10 +196,12 @@ const MySalary: React.FC = () => {
       dataIndex: 'totalPayable',
       key: 'netSalary',
       width: 120,
-      render: (value: number, record: MySalaryRecord) => {
+      render: (value: string | number, record: MySalaryRecord) => {
         // 计算实发工资：应发合计 - 个人社保 - 个人所得税
         const netSalary =
-          value - (record.personalInsuranceTotal || 0) - (record.personalIncomeTax || 0)
+          Number(value) -
+          Number(record.personalInsuranceTotal || 0) -
+          Number(record.personalIncomeTax || 0)
         return <span className="font-semibold text-blue-600">{formatCurrency(netSalary)}</span>
       },
       align: 'right',
@@ -205,7 +211,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'bankCardOrWechat',
       key: 'bankCardOrWechat',
       width: 120,
-      render: (value: number) => formatCurrency(value),
+      render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
@@ -213,7 +219,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'cashPaid',
       key: 'cashPaid',
       width: 110,
-      render: (value: number) => formatCurrency(value),
+      render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
@@ -221,7 +227,7 @@ const MySalary: React.FC = () => {
       dataIndex: 'corporatePayment',
       key: 'corporatePayment',
       width: 110,
-      render: (value: number) => formatCurrency(value),
+      render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
@@ -274,7 +280,7 @@ const MySalary: React.FC = () => {
       key: 'action',
       width: 140,
       render: (_, record: MySalaryRecord) => {
-        const canConfirm = !record.isConfirmed && record.totalPayable > 0
+        const canConfirm = !record.isConfirmed && Number(record.totalPayable) > 0
 
         return (
           <div className="flex flex-col gap-1">

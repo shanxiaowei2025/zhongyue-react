@@ -27,8 +27,8 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
     )
   }
 
-  const formatCurrency = (amount: number | undefined | null) => {
-    if (amount === undefined || amount === null || isNaN(Number(amount))) {
+  const formatCurrency = (amount: string | number | undefined | null) => {
+    if (amount === undefined || amount === null || amount === '' || isNaN(Number(amount))) {
       return '¥0.00'
     }
     const numAmount = Number(amount)
@@ -54,7 +54,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
     )
   }
 
-  const canConfirm = !detail.isConfirmed && detail.totalPayable > 0
+  const canConfirm = !detail.isConfirmed && Number(detail.totalPayable) > 0
 
   return (
     <div className="space-y-6">
@@ -102,7 +102,8 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           <Descriptions.Item label="部门">{detail.department}</Descriptions.Item>
           <Descriptions.Item label="员工类型">{detail.type}</Descriptions.Item>
           <Descriptions.Item label="银行卡号">{detail.bankCardNumber}</Descriptions.Item>
-          <Descriptions.Item label="对应公司">{detail.company}</Descriptions.Item>
+          <Descriptions.Item label="所属公司">{detail.company}</Descriptions.Item>
+          <Descriptions.Item label="发薪公司">{detail.payrollCompany}</Descriptions.Item>
         </Descriptions>
       </Card>
 
@@ -115,11 +116,9 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           <Descriptions.Item label="底薪临时增加">
             {formatCurrency(detail.temporaryIncrease)}
           </Descriptions.Item>
-          {detail.temporaryIncreaseItem && (
-            <Descriptions.Item label="临时增加项目" span={2}>
-              {detail.temporaryIncreaseItem}
-            </Descriptions.Item>
-          )}
+          <Descriptions.Item label="临时增加项目" span={2}>
+            {detail.temporaryIncreaseItem && detail.temporaryIncreaseItem}
+          </Descriptions.Item>
           <Descriptions.Item label="考勤扣款">
             <Text className="text-red-600">-{formatCurrency(detail.attendanceDeduction)}</Text>
           </Descriptions.Item>
@@ -174,6 +173,9 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           </Descriptions.Item>
           <Descriptions.Item label="保证金扣除">
             <Text className="text-red-600">-{formatCurrency(detail.depositDeduction)}</Text>
+          </Descriptions.Item>
+          <Descriptions.Item label="保证金合计">
+            {formatCurrency(detail.depositTotal)}
           </Descriptions.Item>
           <Descriptions.Item label="个人所得税">
             <Text className="text-red-600">-{formatCurrency(detail.personalIncomeTax)}</Text>

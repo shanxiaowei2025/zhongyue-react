@@ -7,34 +7,36 @@ export interface MySalaryRecord {
   name: string
   idCard: string
   type: string
-  baseSalary: number
-  temporaryIncrease: number
+  baseSalary: string | number
+  temporaryIncrease: string | number
   temporaryIncreaseItem?: string
-  attendanceDeduction: number
-  basicSalaryPayable: number
-  fullAttendance: number
-  totalSubsidy: number
-  seniority: number
-  agencyFeeCommission: number
-  performanceCommission: number
+  attendanceDeduction: string | number
+  basicSalaryPayable: string | number
+  fullAttendance: string | number
+  totalSubsidy: string | number
+  seniority: string | number
+  agencyFeeCommission: string | number
+  performanceCommission: string | number
   performanceDeductions?: number[]
-  businessCommission: number
-  otherDeductions: number
-  personalMedical: number
-  personalPension: number
-  personalUnemployment: number
-  personalInsuranceTotal: number
-  companyInsuranceTotal: number
-  depositDeduction: number
-  personalIncomeTax: number
-  other: number
-  totalPayable: number
+  businessCommission: string | number
+  otherDeductions: string | number
+  personalMedical: string | number
+  personalPension: string | number
+  personalUnemployment: string | number
+  personalInsuranceTotal: string | number
+  companyInsuranceTotal: string | number
+  depositDeduction: string | number
+  depositTotal: string | number // 新增字段
+  personalIncomeTax: string | number
+  other: string | number
+  totalPayable: string | number
   bankCardNumber: string
   company: string
-  bankCardOrWechat: number
-  cashPaid: number
-  corporatePayment: number
-  taxDeclaration: number
+  payrollCompany: string // 新增字段
+  bankCardOrWechat: string | number
+  cashPaid: string | number
+  corporatePayment: string | number
+  taxDeclaration: string | number
   isPaid: boolean
   isConfirmed: boolean
   confirmedAt?: string
