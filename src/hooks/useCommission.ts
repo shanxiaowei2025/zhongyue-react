@@ -3,7 +3,6 @@ import useSWR from 'swr'
 import { message } from 'antd'
 import { commissionApi } from '../api/commission'
 import type {
-  AgencyCommission,
   BusinessSalesCommission,
   BusinessConsultantCommission,
   BusinessOtherCommission,
@@ -14,7 +13,6 @@ import type {
 
 // 提成数据汇总
 export interface CommissionSummary {
-  agency: AgencyCommission[]
   sales: BusinessSalesCommission[]
   consultant: BusinessConsultantCommission[]
   other: BusinessOtherCommission[]
@@ -25,17 +23,6 @@ export const useCommission = () => {
   const [loading, setLoading] = useState(false)
 
   // 获取所有提成配置数据
-  const {
-    data: agencyData,
-    mutate: mutateAgency,
-    error: agencyError,
-  } = useSWR('/commission/agency', commissionApi.agency.list, {
-    onError: error => {
-      console.error('获取代理费提成数据失败:', error)
-    },
-    fallbackData: [],
-  })
-
   const {
     data: salesData,
     mutate: mutateSales,
@@ -82,7 +69,6 @@ export const useCommission = () => {
 
   // 汇总所有提成数据 - 确保始终返回数组
   const commissionSummary: CommissionSummary = {
-    agency: Array.isArray(agencyData) ? agencyData : [],
     sales: Array.isArray(salesData) ? salesData : [],
     consultant: Array.isArray(consultantData) ? consultantData : [],
     other: Array.isArray(otherData) ? otherData : [],
@@ -91,13 +77,7 @@ export const useCommission = () => {
 
   // 刷新所有数据
   const refreshAll = async () => {
-    await Promise.all([
-      mutateAgency(),
-      mutateSales(),
-      mutateConsultant(),
-      mutateOther(),
-      mutatePerformance(),
-    ])
+    await Promise.all([mutateSales(), mutateConsultant(), mutateOther(), mutatePerformance()])
   }
 
   // 查询提成比率
@@ -115,56 +95,6 @@ export const useCommission = () => {
     } finally {
       setLoading(false)
     }
-  }
-
-  // 代理费提成操作
-  const agencyOperations = {
-    create: async (data: Omit<AgencyCommission, 'id' | 'createdAt' | 'updatedAt'>) => {
-      try {
-        setLoading(true)
-        const result = await commissionApi.agency.create(data)
-        await mutateAgency()
-        message.success('代理费提成配置创建成功')
-        return result
-      } catch (error) {
-        console.error('创建代理费提成配置失败:', error)
-        message.error('创建失败')
-        throw error
-      } finally {
-        setLoading(false)
-      }
-    },
-
-    update: async (id: number, data: Partial<AgencyCommission>) => {
-      try {
-        setLoading(true)
-        const result = await commissionApi.agency.update(id, data)
-        await mutateAgency()
-        message.success('代理费提成配置更新成功')
-        return result
-      } catch (error) {
-        console.error('更新代理费提成配置失败:', error)
-        message.error('更新失败')
-        throw error
-      } finally {
-        setLoading(false)
-      }
-    },
-
-    delete: async (id: number) => {
-      try {
-        setLoading(true)
-        await commissionApi.agency.delete(id)
-        await mutateAgency()
-        message.success('代理费提成配置删除成功')
-      } catch (error) {
-        console.error('删除代理费提成配置失败:', error)
-        message.error('删除失败')
-        throw error
-      } finally {
-        setLoading(false)
-      }
-    },
   }
 
   // 业务销售提成操作
@@ -217,8 +147,155 @@ export const useCommission = () => {
     },
   }
 
-  // 业务顾问提成操作（其他操作类似，为简洁起见省略）
-  // ... 类似的 consultantOperations, otherOperations, performanceOperations
+  // 业务顾问提成操作
+  const consultantOperations = {
+    create: async (data: Omit<BusinessConsultantCommission, 'id' | 'createdAt' | 'updatedAt'>) => {
+      try {
+        setLoading(true)
+        const result = await commissionApi.consultant.create(data)
+        await mutateConsultant()
+        message.success('业务顾问提成配置创建成功')
+        return result
+      } catch (error) {
+        console.error('创建业务顾问提成配置失败:', error)
+        message.error('创建失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+
+    update: async (id: number, data: Partial<BusinessConsultantCommission>) => {
+      try {
+        setLoading(true)
+        const result = await commissionApi.consultant.update(id, data)
+        await mutateConsultant()
+        message.success('业务顾问提成配置更新成功')
+        return result
+      } catch (error) {
+        console.error('更新业务顾问提成配置失败:', error)
+        message.error('更新失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+
+    delete: async (id: number) => {
+      try {
+        setLoading(true)
+        await commissionApi.consultant.delete(id)
+        await mutateConsultant()
+        message.success('业务顾问提成配置删除成功')
+      } catch (error) {
+        console.error('删除业务顾问提成配置失败:', error)
+        message.error('删除失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+  }
+
+  // 业务其他提成操作
+  const otherOperations = {
+    create: async (data: Omit<BusinessOtherCommission, 'id' | 'createdAt' | 'updatedAt'>) => {
+      try {
+        setLoading(true)
+        const result = await commissionApi.other.create(data)
+        await mutateOther()
+        message.success('业务其他提成配置创建成功')
+        return result
+      } catch (error) {
+        console.error('创建业务其他提成配置失败:', error)
+        message.error('创建失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+
+    update: async (id: number, data: Partial<BusinessOtherCommission>) => {
+      try {
+        setLoading(true)
+        const result = await commissionApi.other.update(id, data)
+        await mutateOther()
+        message.success('业务其他提成配置更新成功')
+        return result
+      } catch (error) {
+        console.error('更新业务其他提成配置失败:', error)
+        message.error('更新失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+
+    delete: async (id: number) => {
+      try {
+        setLoading(true)
+        await commissionApi.other.delete(id)
+        await mutateOther()
+        message.success('业务其他提成配置删除成功')
+      } catch (error) {
+        console.error('删除业务其他提成配置失败:', error)
+        message.error('删除失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+  }
+
+  // 绩效提成操作
+  const performanceOperations = {
+    create: async (data: Omit<PerformanceCommission, 'id' | 'createdAt' | 'updatedAt'>) => {
+      try {
+        setLoading(true)
+        const result = await commissionApi.performance.create(data)
+        await mutatePerformance()
+        message.success('绩效提成配置创建成功')
+        return result
+      } catch (error) {
+        console.error('创建绩效提成配置失败:', error)
+        message.error('创建失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+
+    update: async (id: number, data: Partial<PerformanceCommission>) => {
+      try {
+        setLoading(true)
+        const result = await commissionApi.performance.update(id, data)
+        await mutatePerformance()
+        message.success('绩效提成配置更新成功')
+        return result
+      } catch (error) {
+        console.error('更新绩效提成配置失败:', error)
+        message.error('更新失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+
+    delete: async (id: number) => {
+      try {
+        setLoading(true)
+        await commissionApi.performance.delete(id)
+        await mutatePerformance()
+        message.success('绩效提成配置删除成功')
+      } catch (error) {
+        console.error('删除绩效提成配置失败:', error)
+        message.error('删除失败')
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+  }
 
   return {
     // 数据
@@ -227,7 +304,6 @@ export const useCommission = () => {
 
     // 错误信息
     errors: {
-      agency: agencyError,
       sales: salesError,
       consultant: consultantError,
       other: otherError,
@@ -237,11 +313,10 @@ export const useCommission = () => {
     // 操作
     refreshAll,
     getCommissionRate,
-    agencyOperations,
     salesOperations,
-    // consultantOperations,
-    // otherOperations,
-    // performanceOperations,
+    consultantOperations,
+    otherOperations,
+    performanceOperations,
   }
 }
 

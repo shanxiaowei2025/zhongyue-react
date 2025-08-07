@@ -1,16 +1,6 @@
 import request from './request'
 
 // 提成类型定义
-export interface AgencyCommission {
-  id?: number
-  agencyCount: string
-  minCommissionBase: number
-  feeRange: string
-  commissionRate: number
-  createdAt?: string
-  updatedAt?: string
-}
-
 export interface BusinessSalesCommission {
   id?: number
   type: string
@@ -51,8 +41,7 @@ export interface PerformanceCommission {
 // 提成比率查询参数
 export interface CommissionRateQuery {
   amount: number
-  type: 'agency' | 'sales' | 'consultant' | 'other'
-  agencyCount?: number
+  type: 'sales' | 'consultant' | 'other'
   salesType?: string
 }
 
@@ -66,27 +55,21 @@ export interface CommissionRateResult {
 
 // API请求函数
 export const commissionApi = {
-  // 代理费提成
-  agency: {
-    create: (data: Omit<AgencyCommission, 'id' | 'createdAt' | 'updatedAt'>) =>
-      request.post<AgencyCommission>('/commission/agency', data),
-
-    list: () => request.get<AgencyCommission[]>('/commission/agency'),
-
-    getById: (id: number) => request.get<AgencyCommission>(`/commission/agency/${id}`),
-
-    update: (id: number, data: Partial<AgencyCommission>) =>
-      request.patch<AgencyCommission>(`/commission/agency/${id}`, data),
-
-    delete: (id: number) => request.delete(`/commission/agency/${id}`),
-  },
-
   // 业务销售提成
   sales: {
     create: (data: Omit<BusinessSalesCommission, 'id' | 'createdAt' | 'updatedAt'>) =>
       request.post<BusinessSalesCommission>('/commission/sales', data),
 
-    list: () => request.get<BusinessSalesCommission[]>('/commission/sales'),
+    list: async (): Promise<BusinessSalesCommission[]> => {
+      const response = await request.get<{ data: { data: any[] } }>('/commission/sales', {
+        params: { pageSize: 99999 },
+      })
+      return response.data.data.map((item: any) => ({
+        ...item,
+        baseSalary: parseFloat(item.baseSalary),
+        commissionRate: parseFloat(item.commissionRate) * 100, // 转换为百分比
+      }))
+    },
 
     getById: (id: number) => request.get<BusinessSalesCommission>(`/commission/sales/${id}`),
 
@@ -101,7 +84,15 @@ export const commissionApi = {
     create: (data: Omit<BusinessConsultantCommission, 'id' | 'createdAt' | 'updatedAt'>) =>
       request.post<BusinessConsultantCommission>('/commission/consultant', data),
 
-    list: () => request.get<BusinessConsultantCommission[]>('/commission/consultant'),
+    list: async (): Promise<BusinessConsultantCommission[]> => {
+      const response = await request.get<{ data: { data: any[] } }>('/commission/consultant', {
+        params: { pageSize: 99999 },
+      })
+      return response.data.data.map((item: any) => ({
+        ...item,
+        commissionRate: parseFloat(item.commissionRate) * 100, // 转换为百分比
+      }))
+    },
 
     getById: (id: number) =>
       request.get<BusinessConsultantCommission>(`/commission/consultant/${id}`),
@@ -117,7 +108,15 @@ export const commissionApi = {
     create: (data: Omit<BusinessOtherCommission, 'id' | 'createdAt' | 'updatedAt'>) =>
       request.post<BusinessOtherCommission>('/commission/other', data),
 
-    list: () => request.get<BusinessOtherCommission[]>('/commission/other'),
+    list: async (): Promise<BusinessOtherCommission[]> => {
+      const response = await request.get<{ data: { data: any[] } }>('/commission/other', {
+        params: { pageSize: 99999 },
+      })
+      return response.data.data.map((item: any) => ({
+        ...item,
+        commissionRate: parseFloat(item.commissionRate) * 100, // 转换为百分比
+      }))
+    },
 
     getById: (id: number) => request.get<BusinessOtherCommission>(`/commission/other/${id}`),
 
@@ -132,7 +131,16 @@ export const commissionApi = {
     create: (data: Omit<PerformanceCommission, 'id' | 'createdAt' | 'updatedAt'>) =>
       request.post<PerformanceCommission>('/commission/performance', data),
 
-    list: () => request.get<PerformanceCommission[]>('/commission/performance'),
+    list: async (): Promise<PerformanceCommission[]> => {
+      const response = await request.get<{ data: { data: any[] } }>('/commission/performance', {
+        params: { pageSize: 99999 },
+      })
+      return response.data.data.map((item: any) => ({
+        ...item,
+        baseSalary: item.baseSalary ? parseFloat(item.baseSalary) : undefined,
+        performance: item.performance ? parseFloat(item.performance) : undefined,
+      }))
+    },
 
     getById: (id: number) => request.get<PerformanceCommission>(`/commission/performance/${id}`),
 
