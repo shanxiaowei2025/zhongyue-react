@@ -233,18 +233,10 @@ export const useSalaryIntegrated = () => {
 
           message.destroy()
 
-          if (result.success) {
-            message.success(`导入成功，共导入 ${result.successCount} 条记录`)
-
-            // 刷新相关数据
-            await mutateMonthly()
-            if (selectedEmployee) {
-              await mutateRelated()
-            }
-          } else {
-            message.warning(
-              `导入完成，成功 ${result.successCount} 条，失败 ${result.failedCount} 条`
-            )
+          // 刷新相关数据
+          await mutateMonthly()
+          if (selectedEmployee) {
+            await mutateRelated()
           }
 
           return result

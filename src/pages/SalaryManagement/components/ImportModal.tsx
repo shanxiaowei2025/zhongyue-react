@@ -92,12 +92,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       const result = await onImport(file)
       setImportResult(result)
 
-      if (result.success && result.failedCount === 0) {
-        // 导入完全成功，关闭弹窗
-        setTimeout(() => {
-          handleCancel()
-        }, 2000)
-      }
+      // 不自动关闭模态框，让用户手动关闭
     } catch (error) {
       console.error('导入失败:', error)
     } finally {
@@ -205,15 +200,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
           <div className="mt-4">
             <Alert
               message={`导入${importResult.success ? '成功' : '完成'}`}
-              description={
-                <div>
-                  <p>成功导入: {importResult.successCount} 条</p>
-                  {importResult.failedCount > 0 && (
-                    <p className="text-red-500">失败: {importResult.failedCount} 条</p>
-                  )}
-                  {importResult.message && <p>{importResult.message}</p>}
-                </div>
-              }
+              description={<div>{importResult.message && <p>{importResult.message}</p>}</div>}
               type={importResult.success && importResult.failedCount === 0 ? 'success' : 'warning'}
               showIcon
             />

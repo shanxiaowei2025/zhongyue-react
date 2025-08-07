@@ -1,5 +1,17 @@
 import React, { useState } from 'react'
-import { Card, Tabs, Descriptions, Button, Space, Modal, Form, message, Empty, Tag } from 'antd'
+import {
+  Card,
+  Tabs,
+  Descriptions,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Empty,
+  Tag,
+} from 'antd'
 import {
   EditOutlined,
   SaveOutlined,
@@ -47,9 +59,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
 
   const handleEdit = () => {
     form.setFieldsValue({
-      baseSalary: employee.baseSalary,
       temporaryIncrease: employee.temporaryIncrease,
       temporaryIncreaseItem: employee.temporaryIncreaseItem,
+      basicSalaryPayable: employee.basicSalaryPayable,
       fullAttendance: employee.fullAttendance,
       totalSubsidy: employee.totalSubsidy,
       seniority: employee.seniority,
@@ -61,12 +73,18 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       personalMedical: employee.personalMedical,
       personalPension: employee.personalPension,
       personalUnemployment: employee.personalUnemployment,
+      personalInsuranceTotal: employee.personalInsuranceTotal,
+      companyInsuranceTotal: employee.companyInsuranceTotal,
       personalIncomeTax: employee.personalIncomeTax,
+      other: employee.other,
       depositDeduction: employee.depositDeduction,
+      totalPayable: employee.totalPayable,
       bankCardNumber: employee.bankCardNumber,
+      payrollCompany: employee.payrollCompany,
       bankCardOrWechat: employee.bankCardOrWechat,
       cashPaid: employee.cashPaid,
       corporatePayment: employee.corporatePayment,
+      taxDeclaration: employee.taxDeclaration,
     })
     setEditing(true)
   }
@@ -115,6 +133,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
               {dayjs(employee.yearMonth).format('YYYY年MM月')}
             </Descriptions.Item>
             <Descriptions.Item label="银行卡号">{employee.bankCardNumber}</Descriptions.Item>
+            <Descriptions.Item label="薪资发放公司">
+              {employee.payrollCompany || '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="发放状态">
               <Tag
                 icon={employee.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
@@ -135,14 +156,14 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
           {editing ? (
             <Form form={form} layout="vertical">
               <div className="grid grid-cols-2 gap-4">
-                <Form.Item label="工资基数" name="baseSalary">
-                  <AmountInput />
-                </Form.Item>
                 <Form.Item label="临时增加" name="temporaryIncrease">
                   <AmountInput />
                 </Form.Item>
                 <Form.Item label="临时增加项目" name="temporaryIncreaseItem">
-                  <input className="ant-input" placeholder="请输入临时增加项目名称" />
+                  <Input placeholder="请输入临时增加项目名称" />
+                </Form.Item>
+                <Form.Item label="基础薪资应发" name="basicSalaryPayable">
+                  <AmountInput />
                 </Form.Item>
                 <Form.Item label="全勤奖励" name="fullAttendance">
                   <AmountInput />
@@ -174,11 +195,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                   </Descriptions.Item>
                   <Descriptions.Item label="临时增加">
                     ¥{formatCurrency(employee.temporaryIncrease)}
-                    {employee.temporaryIncreaseItem && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        项目：{employee.temporaryIncreaseItem}
-                      </div>
-                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="临时增加项目">
+                    {employee.temporaryIncreaseItem || '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="全勤奖励">
                     ¥{formatCurrency(employee.fullAttendance)}
@@ -233,7 +252,16 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                 <Form.Item label="个人失业" name="personalUnemployment">
                   <AmountInput />
                 </Form.Item>
+                <Form.Item label="个人社保合计" name="personalInsuranceTotal">
+                  <AmountInput />
+                </Form.Item>
+                <Form.Item label="公司承担合计" name="companyInsuranceTotal">
+                  <AmountInput />
+                </Form.Item>
                 <Form.Item label="个人所得税" name="personalIncomeTax">
+                  <AmountInput />
+                </Form.Item>
+                <Form.Item label="其他" name="other">
                   <AmountInput />
                 </Form.Item>
                 <Form.Item label="保证金扣除" name="depositDeduction">
@@ -291,7 +319,10 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
             <Form form={form} layout="vertical">
               <div className="grid grid-cols-2 gap-4">
                 <Form.Item label="银行卡号" name="bankCardNumber">
-                  <input className="ant-input" />
+                  <Input placeholder="请输入银行卡号" />
+                </Form.Item>
+                <Form.Item label="应发合计" name="totalPayable">
+                  <AmountInput />
                 </Form.Item>
                 <div></div>
                 <Form.Item label="银行卡/微信" name="bankCardOrWechat">
@@ -301,6 +332,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                   <AmountInput />
                 </Form.Item>
                 <Form.Item label="对公转账" name="corporatePayment">
+                  <AmountInput />
+                </Form.Item>
+                <Form.Item label="个税申报" name="taxDeclaration">
                   <AmountInput />
                 </Form.Item>
               </div>
@@ -367,6 +401,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                     {dayjs(employee.yearMonth).format('YYYY年MM月')}
                   </Descriptions.Item>
                   <Descriptions.Item label="银行卡号">{employee.bankCardNumber}</Descriptions.Item>
+                  <Descriptions.Item label="薪资发放公司">
+                    {employee.payrollCompany || '-'}
+                  </Descriptions.Item>
                   <Descriptions.Item label="发放状态">
                     <Tag
                       icon={employee.isPaid ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
@@ -411,14 +448,14 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                 {editing ? (
                   <Form form={form} layout="vertical">
                     <div className="grid grid-cols-2 gap-4">
-                      <Form.Item label="工资基数" name="baseSalary">
-                        <AmountInput />
-                      </Form.Item>
                       <Form.Item label="临时增加" name="temporaryIncrease">
                         <AmountInput />
                       </Form.Item>
                       <Form.Item label="临时增加项目" name="temporaryIncreaseItem">
-                        <input className="ant-input" placeholder="请输入临时增加项目名称" />
+                        <Input placeholder="请输入临时增加项目名称" />
+                      </Form.Item>
+                      <Form.Item label="基础薪资应发" name="basicSalaryPayable">
+                        <AmountInput />
                       </Form.Item>
                       <Form.Item label="全勤奖励" name="fullAttendance">
                         <AmountInput />
@@ -450,11 +487,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                         </Descriptions.Item>
                         <Descriptions.Item label="临时增加">
                           ¥{formatCurrency(employee.temporaryIncrease)}
-                          {employee.temporaryIncreaseItem && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              项目：{employee.temporaryIncreaseItem}
-                            </div>
-                          )}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="临时增加项目">
+                          {employee.temporaryIncreaseItem || '-'}
                         </Descriptions.Item>
                         <Descriptions.Item label="全勤奖励">
                           ¥{formatCurrency(employee.fullAttendance)}
@@ -512,7 +547,16 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                       <Form.Item label="个人失业" name="personalUnemployment">
                         <AmountInput />
                       </Form.Item>
+                      <Form.Item label="个人社保合计" name="personalInsuranceTotal">
+                        <AmountInput />
+                      </Form.Item>
+                      <Form.Item label="公司承担合计" name="companyInsuranceTotal">
+                        <AmountInput />
+                      </Form.Item>
                       <Form.Item label="个人所得税" name="personalIncomeTax">
+                        <AmountInput />
+                      </Form.Item>
+                      <Form.Item label="其他" name="other">
                         <AmountInput />
                       </Form.Item>
                       <Form.Item label="保证金扣除" name="depositDeduction">
@@ -573,7 +617,10 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                   <Form form={form} layout="vertical">
                     <div className="grid grid-cols-2 gap-4">
                       <Form.Item label="银行卡号" name="bankCardNumber">
-                        <input className="ant-input" />
+                        <Input placeholder="请输入银行卡号" />
+                      </Form.Item>
+                      <Form.Item label="应发合计" name="totalPayable">
+                        <AmountInput />
                       </Form.Item>
                       <div></div>
                       <Form.Item label="银行卡/微信" name="bankCardOrWechat">
@@ -583,6 +630,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                         <AmountInput />
                       </Form.Item>
                       <Form.Item label="对公转账" name="corporatePayment">
+                        <AmountInput />
+                      </Form.Item>
+                      <Form.Item label="个税申报" name="taxDeclaration">
                         <AmountInput />
                       </Form.Item>
                     </div>

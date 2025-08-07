@@ -40,6 +40,7 @@ export interface SalaryRecord {
   // 结算
   totalPayable: number
   bankCardNumber?: string
+  payrollCompany?: string
   company?: string
   bankCardOrWechat: number
   cashPaid: number
@@ -214,6 +215,7 @@ export interface CreateSalaryDto {
   other?: number
   totalPayable: number
   bankCardNumber?: string
+  payrollCompany?: string
   company?: string
   bankCardOrWechat?: number
   cashPaid?: number

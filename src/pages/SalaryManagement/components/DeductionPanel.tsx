@@ -142,14 +142,6 @@ const DeductionPanel: React.FC<DeductionPanelProps> = ({
               +¥{attendanceData!.fullAttendanceBonus.toLocaleString()}
             </span>
           </Descriptions.Item>
-          <Descriptions.Item label="净扣款金额" span={2}>
-            <span className="text-lg font-bold text-blue-600">
-              ¥
-              {(
-                attendanceData!.attendanceDeduction - attendanceData!.fullAttendanceBonus
-              ).toLocaleString()}
-            </span>
-          </Descriptions.Item>
           <Descriptions.Item label="备注" span={2}>
             {attendanceData!.remark || '-'}
           </Descriptions.Item>

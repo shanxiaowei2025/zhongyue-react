@@ -1,5 +1,40 @@
 import request from './request'
 import type { AxiosResponse } from 'axios'
+
+// 通用的分页响应格式处理函数
+const normalizePaginatedResponse = <T>(responseData: any): PaginatedResponse<T> => {
+  // 处理 {data: [...], total: number} 格式（如社保API）
+  if (responseData.data && Array.isArray(responseData.data)) {
+    return {
+      data: responseData.data,
+      total: responseData.total || 0,
+      page: responseData.page || 1,
+      pageSize: responseData.pageSize || 10,
+      totalPages: responseData.totalPages || 1,
+    }
+  }
+
+  // 处理 {items: [...], meta: {...}} 格式（如考勤API）
+  if (responseData.items && responseData.meta) {
+    return {
+      data: responseData.items,
+      total: responseData.meta.total || 0,
+      page: responseData.meta.page || 1,
+      pageSize: responseData.meta.pageSize || 10,
+      totalPages: responseData.meta.totalPages || 1,
+    }
+  }
+
+  // 兜底处理
+  return {
+    data: responseData.data || responseData.items || [],
+    total: responseData.total || responseData.meta?.total || 0,
+    page: responseData.page || responseData.meta?.page || 1,
+    pageSize: responseData.pageSize || responseData.meta?.pageSize || 10,
+    totalPages: responseData.totalPages || responseData.meta?.totalPages || 1,
+  }
+}
+
 import type {
   SalaryRecord,
   SocialInsuranceRecord,
@@ -162,17 +197,15 @@ export const socialInsuranceApi = {
     page?: number
     pageSize?: number
   }): Promise<PaginatedResponse<SocialInsuranceRecord>> {
-    const response = await request.get<ApiResponse<PaginatedResponse<SocialInsuranceRecord>>>(
-      '/social-insurance',
-      {
-        params: {
-          ...params,
-          page: params.page || 1,
-          pageSize: params.pageSize || 10,
-        },
-      }
-    )
-    return response.data
+    const response = await request.get<ApiResponse<any>>('/social-insurance', {
+      params: {
+        ...params,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+      },
+    })
+
+    return normalizePaginatedResponse(response.data)
   },
 
   // 根据员工获取社保信息 - 通过列表接口查询
@@ -254,17 +287,15 @@ export const subsidyApi = {
     page?: number
     pageSize?: number
   }): Promise<PaginatedResponse<SubsidySummaryRecord>> {
-    const response = await request.get<ApiResponse<PaginatedResponse<SubsidySummaryRecord>>>(
-      '/subsidy-summary',
-      {
-        params: {
-          ...params,
-          page: params.page || 1,
-          pageSize: params.pageSize || 10,
-        },
-      }
-    )
-    return response.data
+    const response = await request.get<ApiResponse<any>>('/subsidy-summary', {
+      params: {
+        ...params,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+      },
+    })
+
+    return normalizePaginatedResponse(response.data)
   },
 
   // 根据员工获取补贴信息 - 通过列表接口查询
@@ -332,17 +363,15 @@ export const attendanceApi = {
     page?: number
     pageSize?: number
   }): Promise<PaginatedResponse<AttendanceDeductionRecord>> {
-    const response = await request.get<ApiResponse<PaginatedResponse<AttendanceDeductionRecord>>>(
-      '/attendance-deduction',
-      {
-        params: {
-          ...params,
-          page: params.page || 1,
-          pageSize: params.pageSize || 10,
-        },
-      }
-    )
-    return response.data
+    const response = await request.get<ApiResponse<any>>('/attendance-deduction', {
+      params: {
+        ...params,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+      },
+    })
+
+    return normalizePaginatedResponse(response.data)
   },
 
   // 根据员工获取考勤扣款信息 - 通过列表接口查询
@@ -416,17 +445,15 @@ export const friendCircleApi = {
     page?: number
     pageSize?: number
   }): Promise<PaginatedResponse<FriendCirclePaymentRecord>> {
-    const response = await request.get<ApiResponse<PaginatedResponse<FriendCirclePaymentRecord>>>(
-      '/friend-circle-payment',
-      {
-        params: {
-          ...params,
-          page: params.page || 1,
-          pageSize: params.pageSize || 10,
-        },
-      }
-    )
-    return response.data
+    const response = await request.get<ApiResponse<any>>('/friend-circle-payment', {
+      params: {
+        ...params,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+      },
+    })
+
+    return normalizePaginatedResponse(response.data)
   },
 
   // 根据员工获取朋友圈扣款信息 - 通过列表接口查询
@@ -499,14 +526,15 @@ export const depositApi = {
     page?: number
     pageSize?: number
   }): Promise<PaginatedResponse<DepositRecord>> {
-    const response = await request.get<ApiResponse<PaginatedResponse<DepositRecord>>>('/deposit', {
+    const response = await request.get<ApiResponse<any>>('/deposit', {
       params: {
         ...params,
         page: params.page || 1,
         pageSize: params.pageSize || 10,
       },
     })
-    return response.data
+
+    return normalizePaginatedResponse(response.data)
   },
 
   // 根据员工获取保证金记录
@@ -611,24 +639,34 @@ export const integratedApi = {
   // 加载员工相关所有数据
   async loadEmployeeRelatedData(employeeName: string, yearMonth: string): Promise<RelatedData> {
     try {
-      // TODO: 这些API模块尚未实现，暂时返回空数据
-      // const [socialInsurance, subsidy, attendance, friendCircle, deposit] = await Promise.all([
-      //   socialInsuranceApi.getByEmployee(employeeName, yearMonth),
-      //   subsidyApi.getByEmployee(employeeName, yearMonth),
-      //   attendanceApi.getByEmployee(employeeName, yearMonth),
-      //   friendCircleApi.getByEmployee(employeeName, yearMonth),
-      //   depositApi.getByEmployee(employeeName),
-      // ])
+      console.log('加载员工关联数据:', { employeeName, yearMonth })
 
-      // 暂时返回空的默认数据结构
+      // 并发获取所有相关数据
+      const [socialInsurance, subsidy, attendance, friendCircle, deposit] = await Promise.all([
+        socialInsuranceApi.getByEmployee(employeeName, yearMonth),
+        subsidyApi.getByEmployee(employeeName, yearMonth),
+        attendanceApi.getByEmployee(employeeName, yearMonth),
+        friendCircleApi.getByEmployee(employeeName, yearMonth),
+        depositApi.getByEmployee(employeeName),
+      ])
+
+      console.log('获取到的关联数据:', {
+        socialInsurance,
+        subsidy,
+        attendance,
+        friendCircle,
+        deposit,
+      })
+
       return {
-        socialInsurance: undefined,
-        subsidy: undefined,
-        attendance: undefined,
-        friendCircle: undefined,
-        deposit: [],
+        socialInsurance: socialInsurance || undefined,
+        subsidy: subsidy || undefined,
+        attendance: attendance || undefined,
+        friendCircle: friendCircle || undefined,
+        deposit: deposit || [],
       }
     } catch (error) {
+      console.error('加载员工关联数据失败:', error)
       // 发生错误时返回空的默认数据结构
       return {
         socialInsurance: undefined,
