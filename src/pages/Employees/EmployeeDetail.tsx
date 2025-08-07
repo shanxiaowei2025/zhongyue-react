@@ -32,6 +32,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { useEmployeeDetail } from '../../hooks/useEmployee'
 import { buildImageUrl } from '../../utils/upload'
+import { useAuthStore } from '../../store/auth'
 import type { Employee, ResumeFile } from '../../types/employee'
 
 const { Title, Text } = Typography
@@ -57,8 +58,13 @@ const FILE_ICONS: Record<string, React.ReactNode> = {
 const EmployeeDetail: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuthStore()
 
   const { employee, isLoading, error } = useEmployeeDetail(id ? parseInt(id) : null)
+
+  // 检查用户是否有权限查看基础工资
+  const canViewSalary =
+    user?.roles?.includes('super_admin') || user?.roles?.includes('salary_admin')
 
   // 预览状态
   const [previewVisible, setPreviewVisible] = useState(false)
@@ -339,20 +345,22 @@ const EmployeeDetail: React.FC = () => {
           </Descriptions>
         </Card>
 
-        {/* 薪资信息 */}
-        <Card title="薪资信息">
-          <Descriptions column={2} bordered>
-            <Descriptions.Item label="基础工资">
-              {renderSalary(employee.baseSalary)}
-            </Descriptions.Item>
-            <Descriptions.Item label="薪资发放公司">
-              {employee.payrollCompany || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="入职时间">
-              {employee.hireDate ? dayjs(employee.hireDate).format('YYYY-MM-DD') : '-'}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
+        {/* 薪资信息 - 仅 super_admin 和 salary_admin 可见 */}
+        {canViewSalary && (
+          <Card title="薪资信息">
+            <Descriptions column={2} bordered>
+              <Descriptions.Item label="基础工资">
+                {renderSalary(employee.baseSalary)}
+              </Descriptions.Item>
+              <Descriptions.Item label="薪资发放公司">
+                {employee.payrollCompany || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="入职时间">
+                {employee.hireDate ? dayjs(employee.hireDate).format('YYYY-MM-DD') : '-'}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        )}
 
         {/* 个人信息 */}
         <Card title="个人信息">

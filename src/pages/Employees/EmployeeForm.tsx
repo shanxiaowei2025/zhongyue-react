@@ -23,6 +23,7 @@ import MultiFileUpload from '../../components/MultiFileUpload'
 import { useDepartments, getDepartmentPath } from '../../hooks/useDepartments'
 import { useEmployeeDetail, useCreateEmployee, useUpdateEmployee } from '../../hooks/useEmployee'
 import { useEmployeeFormStore } from '../../store/employeeForm'
+import { useAuthStore } from '../../store/auth'
 import type { CreateEmployeeDto, UpdateEmployeeDto, ResumeFile } from '../../types/employee'
 import type { ImageType } from '../../types'
 
@@ -97,9 +98,14 @@ const EmployeeForm: React.FC = () => {
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuthStore()
   const isEdit = Boolean(id)
 
   const [loading, setLoading] = useState(false)
+
+  // 检查用户是否有权限编辑基础工资
+  const canEditSalary =
+    user?.roles?.includes('super_admin') || user?.roles?.includes('salary_admin')
   const [resumeFiles, setResumeFiles] = useState<Record<string, ImageType>>({})
   const [isResigned, setIsResigned] = useState(false)
 
@@ -561,21 +567,24 @@ const EmployeeForm: React.FC = () => {
               <Title level={4}>薪资信息</Title>
             </Col>
 
-            <Col xs={24} sm={12} md={8}>
-              <Form.Item label="基础工资" name="baseSalary">
-                <InputNumber
-                  placeholder="请输入基础工资"
-                  style={{ width: '100%' }}
-                  precision={2}
-                  min={0}
-                  formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value?: string) => {
-                    const parsed = parseFloat(value?.replace(/\¥\s?|(,*)/g, '') || '0')
-                    return parsed || 0
-                  }}
-                />
-              </Form.Item>
-            </Col>
+            {/* 基础工资字段 - 仅 super_admin 和 salary_admin 可见 */}
+            {canEditSalary && (
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item label="基础工资" name="baseSalary">
+                  <InputNumber
+                    placeholder="请输入基础工资"
+                    style={{ width: '100%' }}
+                    precision={2}
+                    min={0}
+                    formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value?: string) => {
+                      const parsed = parseFloat(value?.replace(/\¥\s?|(,*)/g, '') || '0')
+                      return parsed || 0
+                    }}
+                  />
+                </Form.Item>
+              </Col>
+            )}
 
             <Col xs={24} sm={12} md={8}>
               <Form.Item label="薪资发放公司" name="payrollCompany">

@@ -4,6 +4,7 @@ import { EditOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import type { Employee } from '../types/employee'
+import { useAuthStore } from '../store/auth'
 
 interface EmployeeTableProps extends Omit<TableProps<Employee>, 'columns' | 'dataSource'> {
   employees: Employee[]
@@ -21,6 +22,12 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   loading,
   ...tableProps
 }) => {
+  const { user } = useAuthStore()
+
+  // 检查用户是否有权限查看基础工资
+  const canViewSalary =
+    user?.roles?.includes('super_admin') || user?.roles?.includes('salary_admin')
+
   const columns: ColumnsType<Employee> = [
     {
       title: 'ID',
@@ -87,13 +94,18 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
         <Tag color={!isResigned ? 'success' : 'error'}>{!isResigned ? '在职' : '已离职'}</Tag>
       ),
     },
-    {
-      title: '基础工资',
-      dataIndex: 'baseSalary',
-      key: 'baseSalary',
-      width: 120,
-      render: (salary: number) => (salary ? `¥${salary.toLocaleString()}` : '-'),
-    },
+    // 基础工资列 - 仅 super_admin 和 salary_admin 可见
+    ...(canViewSalary
+      ? [
+          {
+            title: '基础工资',
+            dataIndex: 'baseSalary',
+            key: 'baseSalary',
+            width: 120,
+            render: (salary: number) => (salary ? `¥${salary.toLocaleString()}` : '-'),
+          },
+        ]
+      : []),
     {
       title: '工龄',
       dataIndex: 'workYears',
