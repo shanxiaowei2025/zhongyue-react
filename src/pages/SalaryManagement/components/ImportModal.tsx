@@ -77,7 +77,18 @@ const ImportModal: React.FC<ImportModalProps> = ({
 
     try {
       setImporting(true)
-      const file = fileList[0].originFileObj as File
+      const uploadFile = fileList[0]
+      // 获取文件对象，优先使用originFileObj，如果不存在则使用file本身
+      const file = uploadFile.originFileObj || (uploadFile as any as File)
+
+      // 添加调试日志
+      console.log('导入文件信息:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+      })
+
       const result = await onImport(file)
       setImportResult(result)
 

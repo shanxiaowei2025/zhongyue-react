@@ -206,7 +206,6 @@ const SalaryManagement: React.FC = () => {
                     <ImportExportPanel
                       yearMonth={selectedYearMonth}
                       onImport={operations.importData}
-                      onExport={operations.exportData}
                     />
                   </div>
                 ),

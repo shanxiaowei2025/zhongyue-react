@@ -189,9 +189,8 @@ const request = {
     })
   },
   post<T>(url: string, data?: object): Promise<T> {
-    // 检查是否为FormData类型，如果是FormData则设置正确的Content-Type
-    const config =
-      data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    // 对于FormData，让浏览器自动设置Content-Type（包含boundary）
+    const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {}
     return instance.post(url, data, config).then(res => res.data)
   },
   put<T>(url: string, data?: object): Promise<T> {
@@ -248,8 +247,7 @@ export const publicRequest = {
     return publicInstance.get(url, { params }).then(res => res.data)
   },
   post<T>(url: string, data?: object): Promise<T> {
-    const config =
-      data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {}
     return publicInstance.post(url, data, config).then(res => res.data)
   },
 }

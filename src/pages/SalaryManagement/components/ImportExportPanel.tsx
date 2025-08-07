@@ -1,52 +1,53 @@
 import React, { useState } from 'react'
-import { Button, Card, Space, Divider, List, Typography } from 'antd'
-import {
-  ImportOutlined,
-  ExportOutlined,
-  FileExcelOutlined,
-  DownloadOutlined,
-} from '@ant-design/icons'
-import type { ImportType, ExportType, ImportResult } from '../../../types/salaryIntegrated'
+import { Button, Card, message } from 'antd'
+import { ImportOutlined, FileExcelOutlined, DownloadOutlined } from '@ant-design/icons'
+import type { ImportType, ImportResult } from '../../../types/salaryIntegrated'
 import ImportModal from './ImportModal'
-import ExportButton from './ExportButton'
-
-const { Text } = Typography
 
 interface ImportExportPanelProps {
   yearMonth: string
   onImport: (type: ImportType, file: File) => Promise<ImportResult>
-  onExport: (type: ExportType, params?: any) => Promise<void>
 }
 
-const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImport, onExport }) => {
+const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImport }) => {
   const [importModalVisible, setImportModalVisible] = useState(false)
   const [importType, setImportType] = useState<ImportType>('socialInsurance')
 
-  const importTypes: { type: ImportType; name: string; description: string }[] = [
+  const importTypes: {
+    type: ImportType
+    name: string
+    description: string
+    templateFile: string
+  }[] = [
     {
       type: 'socialInsurance',
       name: '社保数据',
       description: '导入员工社保缴费信息',
+      templateFile: '社保信息导入模板.xlsx',
     },
     {
       type: 'subsidy',
       name: '补贴数据',
       description: '导入员工补贴明细',
+      templateFile: '补贴合计导入模板.xlsx',
     },
     {
       type: 'attendance',
       name: '考勤数据',
       description: '导入员工考勤扣款信息',
+      templateFile: '考勤扣款导入模板.xlsx',
     },
     {
       type: 'friendCircle',
       name: '朋友圈数据',
       description: '导入朋友圈扣款信息',
+      templateFile: '朋友圈扣款导入模板.xlsx',
     },
     {
       type: 'deposit',
       name: '保证金数据',
       description: '导入保证金扣除记录',
+      templateFile: '保证金扣除导入模板.xlsx',
     },
   ]
 
@@ -57,6 +58,16 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImpo
 
   const handleImportModalCancel = () => {
     setImportModalVisible(false)
+  }
+
+  const handleDownloadTemplate = (templateFile: string, name: string) => {
+    const link = document.createElement('a')
+    link.href = `/templates/${templateFile}`
+    link.download = templateFile
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    message.success(`${name}模板下载成功`)
   }
 
   return (
@@ -79,85 +90,37 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImpo
                       <div className="text-xs text-gray-500">{item.description}</div>
                     </div>
                   </div>
-                  <Button
-                    size="small"
-                    icon={<ImportOutlined />}
-                    onClick={() => handleImportClick(item.type)}
-                  >
-                    导入
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="small"
+                      icon={<DownloadOutlined />}
+                      onClick={() => handleDownloadTemplate(item.templateFile, item.name)}
+                      type="text"
+                    >
+                      下载模板
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<ImportOutlined />}
+                      onClick={() => handleImportClick(item.type)}
+                      type="primary"
+                    >
+                      导入数据
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           </Card>
 
-          <Divider className="my-4" />
-
-          {/* 数据导出 */}
-          <Card title="数据导出" size="small">
-            <div className="mb-4">
-              <ExportButton
-                yearMonth={yearMonth}
-                onExport={onExport}
-                showDropdown={true}
-                types={[
-                  'salary',
-                  'socialInsurance',
-                  'subsidy',
-                  'attendance',
-                  'friendCircle',
-                  'deposit',
-                ]}
-              />
-            </div>
-
-            <div className="text-xs text-gray-500 space-y-1">
-              <div>• 导出当前月份({yearMonth})的数据</div>
-              <div>• 支持Excel格式，便于后续处理</div>
-              <div>• 包含所有字段的完整数据</div>
-            </div>
-          </Card>
-
-          <Divider className="my-4" />
-
-          {/* 快速操作 */}
-          <Card title="快速操作" size="small">
-            <List size="small">
-              <List.Item
-                actions={[
-                  <Button key="template" size="small" icon={<DownloadOutlined />} type="link">
-                    下载
-                  </Button>,
-                ]}
-              >
-                <div>
-                  <div className="font-medium">导入模板</div>
-                  <div className="text-xs text-gray-500">下载标准导入模板</div>
-                </div>
-              </List.Item>
-
-              <List.Item
-                actions={[
-                  <Button key="guide" size="small" type="link">
-                    查看
-                  </Button>,
-                ]}
-              >
-                <div>
-                  <div className="font-medium">操作指南</div>
-                  <div className="text-xs text-gray-500">查看详细使用说明</div>
-                </div>
-              </List.Item>
-            </List>
-          </Card>
-
           {/* 注意事项 */}
           <Card title="注意事项" size="small">
             <div className="text-xs text-gray-600 space-y-2">
-              <div>• 导入数据会覆盖相同月份的现有数据</div>
-              <div>• 请确保数据格式符合模板要求</div>
-              <div>• 建议在导入前备份现有数据</div>
-              <div>• 导入完成后请检查数据完整性</div>
+              <div>• 请先下载对应的模板文件，按照模板格式准备数据</div>
+              <div>• 导入数据会覆盖相同月份的现有数据，请谨慎操作</div>
+              <div>• 请确保数据格式严格符合模板要求</div>
+              <div>• 导入完成后请检查数据完整性和准确性</div>
+              <div>• 建议在导入前备份现有重要数据</div>
             </div>
           </Card>
         </div>

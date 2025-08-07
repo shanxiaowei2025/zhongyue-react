@@ -611,21 +611,22 @@ export const integratedApi = {
   // 加载员工相关所有数据
   async loadEmployeeRelatedData(employeeName: string, yearMonth: string): Promise<RelatedData> {
     try {
-      const [socialInsurance, subsidy, attendance, friendCircle, deposit] = await Promise.all([
-        socialInsuranceApi.getByEmployee(employeeName, yearMonth),
-        subsidyApi.getByEmployee(employeeName, yearMonth),
-        attendanceApi.getByEmployee(employeeName, yearMonth),
-        friendCircleApi.getByEmployee(employeeName, yearMonth),
-        depositApi.getByEmployee(employeeName),
-      ])
+      // TODO: 这些API模块尚未实现，暂时返回空数据
+      // const [socialInsurance, subsidy, attendance, friendCircle, deposit] = await Promise.all([
+      //   socialInsuranceApi.getByEmployee(employeeName, yearMonth),
+      //   subsidyApi.getByEmployee(employeeName, yearMonth),
+      //   attendanceApi.getByEmployee(employeeName, yearMonth),
+      //   friendCircleApi.getByEmployee(employeeName, yearMonth),
+      //   depositApi.getByEmployee(employeeName),
+      // ])
 
-      // 确保返回一致的数据结构
+      // 暂时返回空的默认数据结构
       return {
-        socialInsurance: socialInsurance || undefined,
-        subsidy: subsidy || undefined,
-        attendance: attendance || undefined,
-        friendCircle: friendCircle || undefined,
-        deposit: deposit || [],
+        socialInsurance: undefined,
+        subsidy: undefined,
+        attendance: undefined,
+        friendCircle: undefined,
+        deposit: [],
       }
     } catch (error) {
       // 发生错误时返回空的默认数据结构
@@ -679,6 +680,76 @@ export const integratedApi = {
     }
   },
 
+  // 社保信息导入
+  async importSocialInsurance(file: File): Promise<ImportResult> {
+    console.log('社保导入API - 文件信息:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+    })
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 验证FormData内容
+    console.log('FormData内容:')
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value)
+    }
+
+    const response = await request.post<ApiResponse<ImportResult>>(
+      '/social-insurance/import',
+      formData
+    )
+    return response.data
+  },
+
+  // 补贴合计导入
+  async importSubsidy(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await request.post<ApiResponse<ImportResult>>(
+      '/subsidy-summary/import',
+      formData
+    )
+    return response.data
+  },
+
+  // 朋友圈扣款导入
+  async importFriendCircle(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await request.post<ApiResponse<ImportResult>>(
+      '/friend-circle-payment/import',
+      formData
+    )
+    return response.data
+  },
+
+  // 考勤扣款导入
+  async importAttendance(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await request.post<ApiResponse<ImportResult>>(
+      '/attendance-deduction/import',
+      formData
+    )
+    return response.data
+  },
+
+  // 保证金导入
+  async importDeposit(file: File): Promise<ImportResult> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await request.post<ApiResponse<ImportResult>>('/deposit/upload', formData)
+    return response.data
+  },
+
   // 批量导入数据
   async batchImport(type: string, file: File): Promise<ImportResult> {
     switch (type) {
@@ -686,15 +757,15 @@ export const integratedApi = {
         // 薪资数据暂不支持导入，因为是计算结果
         throw new Error('薪资数据不支持导入，请使用自动生成功能')
       case 'socialInsurance':
-        return await socialInsuranceApi.importSocialInsurance(file)
+        return await this.importSocialInsurance(file)
       case 'subsidy':
-        return await subsidyApi.importSubsidy(file)
+        return await this.importSubsidy(file)
       case 'attendance':
-        return await attendanceApi.importAttendance(file)
+        return await this.importAttendance(file)
       case 'friendCircle':
-        return await friendCircleApi.importFriendCircle(file)
+        return await this.importFriendCircle(file)
       case 'deposit':
-        return await depositApi.importDeposit(file)
+        return await this.importDeposit(file)
       default:
         throw new Error(`不支持的导入类型: ${type}`)
     }
