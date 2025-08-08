@@ -3,6 +3,7 @@ import { Card, Descriptions, Typography, Tag, Button, Alert } from 'antd'
 import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { MySalaryRecord } from '../../../types/mySalary'
+import PerformanceDeductionsEditor from '../../SalaryManagement/components/PerformanceDeductionsEditor'
 
 const { Title, Text } = Typography
 
@@ -37,6 +38,11 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
 
   const formatYearMonth = (yearMonth: string) => {
     return dayjs(yearMonth).format('YYYY年MM月')
+  }
+
+  const calculatePerformanceDeductionTotal = (deductions?: number[]) => {
+    if (!deductions || !Array.isArray(deductions)) return 0
+    return deductions.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0)
   }
 
   const getStatusTag = () => {
@@ -102,7 +108,6 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           <Descriptions.Item label="部门">{detail.department}</Descriptions.Item>
           <Descriptions.Item label="员工类型">{detail.type}</Descriptions.Item>
           <Descriptions.Item label="银行卡号">{detail.bankCardNumber}</Descriptions.Item>
-          <Descriptions.Item label="所属公司">{detail.company}</Descriptions.Item>
           <Descriptions.Item label="发薪公司">{detail.payrollCompany}</Descriptions.Item>
         </Descriptions>
       </Card>
@@ -110,20 +115,23 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       {/* 薪资结构 */}
       <Card title="薪资结构">
         <Descriptions column={2} bordered>
+          <Descriptions.Item label="应发基本工资">
+            {formatCurrency(detail.basicSalaryPayable)}
+          </Descriptions.Item>
           <Descriptions.Item label="工资基数">
             {formatCurrency(detail.baseSalary)}
           </Descriptions.Item>
           <Descriptions.Item label="底薪临时增加">
             {formatCurrency(detail.temporaryIncrease)}
           </Descriptions.Item>
-          <Descriptions.Item label="临时增加项目" span={2}>
+          <Descriptions.Item label="临时增加项目">
             {detail.temporaryIncreaseItem && detail.temporaryIncreaseItem}
           </Descriptions.Item>
           <Descriptions.Item label="考勤扣款">
             <Text className="text-red-600">-{formatCurrency(detail.attendanceDeduction)}</Text>
           </Descriptions.Item>
-          <Descriptions.Item label="应发基本工资">
-            {formatCurrency(detail.basicSalaryPayable)}
+          <Descriptions.Item label="考勤扣款备注">
+            {detail.attendanceRemark || '-'}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -153,7 +161,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       {/* 扣款明细 */}
       <Card title="扣款明细">
         <Descriptions column={2} bordered>
-          <Descriptions.Item label="其他扣款">
+          <Descriptions.Item label="朋友圈扣款">
             <Text className="text-red-600">-{formatCurrency(detail.otherDeductions)}</Text>
           </Descriptions.Item>
           <Descriptions.Item label="个人医疗">
@@ -185,6 +193,13 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {/* 绩效扣除明细 */}
+      {detail.performanceDeductions && (
+        <Card>
+          <PerformanceDeductionsEditor value={detail.performanceDeductions} disabled={true} />
+        </Card>
+      )}
 
       {/* 发放汇总 */}
       <Card title="发放汇总">

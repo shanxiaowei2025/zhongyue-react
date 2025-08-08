@@ -139,7 +139,7 @@ export const mySalaryApi = {
         personalInsuranceTotal: toNumber(salaryRecord.personalInsuranceTotal),
         personalIncomeTax: toNumber(salaryRecord.personalIncomeTax),
         attendanceDeduction: 0, // 需要从后端获取
-        otherDeduction: 0, // 其他扣款
+        otherDeduction: 0, // 朋友圈扣款
         totalDeduction:
           toNumber(salaryRecord.personalInsuranceTotal) + toNumber(salaryRecord.personalIncomeTax),
       },

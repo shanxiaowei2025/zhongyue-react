@@ -23,7 +23,7 @@ export interface SalaryRecord {
   // 提成
   agencyFeeCommission: number
   performanceCommission: number
-  performanceDeductions?: PerformanceDeduction[]
+  performanceDeductions?: number[]
   businessCommission: number
 
   // 扣除
@@ -202,7 +202,7 @@ export interface CreateSalaryDto {
   seniority?: number
   agencyFeeCommission?: number
   performanceCommission?: number
-  performanceDeductions?: PerformanceDeduction[]
+  performanceDeductions?: number[]
   businessCommission?: number
   otherDeductions?: number
   personalMedical?: number

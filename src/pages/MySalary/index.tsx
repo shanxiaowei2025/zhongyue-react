@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Spin, message, DatePicker, Table, Tag, Modal, Space } from 'antd'
+import { Button, Spin, message, DatePicker, Table, Tag, Modal, Space, Tooltip } from 'antd'
 import {
   ReloadOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   EyeOutlined,
   LockOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
@@ -138,10 +139,36 @@ const MySalary: React.FC = () => {
       fixed: 'left',
     },
     {
-      title: '基本工资',
+      title: '工资基数',
       dataIndex: 'baseSalary',
       key: 'baseSalary',
-      width: 110,
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: '考勤扣款',
+      dataIndex: 'attendanceDeduction',
+      key: 'attendanceDeduction',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '临时增加',
+      dataIndex: 'temporaryIncrease',
+      key: 'temporaryIncrease',
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: '全勤奖励',
+      dataIndex: 'fullAttendance',
+      key: 'fullAttendance',
+      width: 100,
       render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
@@ -149,6 +176,50 @@ const MySalary: React.FC = () => {
       title: '补贴合计',
       dataIndex: 'totalSubsidy',
       key: 'totalSubsidy',
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: '工龄津贴',
+      dataIndex: 'seniority',
+      key: 'seniority',
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: (
+        <span>
+          代理费提成{' '}
+          <Tooltip
+            title={
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: 8 }}>代理费提成比例</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #d9d9d9' }}>
+                        续费
+                      </td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #d9d9d9' }}>1%</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '4px 8px' }}>软件费、地址费</td>
+                      <td style={{ padding: '4px 8px' }}>10%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            }
+            placement="top"
+          >
+            <QuestionCircleOutlined style={{ fontSize: '12px', color: '#999' }} />
+          </Tooltip>
+        </span>
+      ),
+      dataIndex: 'agencyFeeCommission',
+      key: 'agencyFeeCommission',
       width: 110,
       render: (value: string | number) => formatCurrency(value),
       align: 'right',
@@ -157,60 +228,118 @@ const MySalary: React.FC = () => {
       title: '绩效提成',
       dataIndex: 'performanceCommission',
       key: 'performanceCommission',
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: '业务提成',
+      dataIndex: 'businessCommission',
+      key: 'businessCommission',
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: '朋友圈扣款',
+      dataIndex: 'otherDeductions',
+      key: 'otherDeductions',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '个人医疗',
+      dataIndex: 'personalMedical',
+      key: 'personalMedical',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '个人养老',
+      dataIndex: 'personalPension',
+      key: 'personalPension',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '个人失业',
+      dataIndex: 'personalUnemployment',
+      key: 'personalUnemployment',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '社保合计',
+      dataIndex: 'personalInsuranceTotal',
+      key: 'personalInsuranceTotal',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="font-medium text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '公司承担合计',
+      dataIndex: 'companyInsuranceTotal',
+      key: 'companyInsuranceTotal',
       width: 110,
       render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
-      title: '应发工资',
+      title: '保证金扣除',
+      dataIndex: 'depositDeduction',
+      key: 'depositDeduction',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '个税',
+      dataIndex: 'personalIncomeTax',
+      key: 'personalIncomeTax',
+      width: 100,
+      render: (value: string | number) => (
+        <span className="font-medium text-red-500">-{formatCurrency(value)}</span>
+      ),
+      align: 'right',
+    },
+    {
+      title: '应发合计',
       dataIndex: 'totalPayable',
       key: 'totalPayable',
       width: 120,
       render: (value: string | number) => (
-        <span className="font-semibold text-green-600">{formatCurrency(value)}</span>
+        <span className="font-mono font-bold text-green-600">{formatCurrency(value)}</span>
       ),
       align: 'right',
     },
     {
-      title: '社保个人',
-      dataIndex: 'personalInsuranceTotal',
-      key: 'personalInsuranceTotal',
-      width: 110,
-      render: (value: string | number) => (
-        <span className="text-red-600">-{formatCurrency(value)}</span>
-      ),
-      align: 'right',
-    },
-    {
-      title: '个人所得税',
-      dataIndex: 'personalIncomeTax',
-      key: 'personalIncomeTax',
-      width: 110,
-      render: (value: string | number) => (
-        <span className="text-red-600">-{formatCurrency(value)}</span>
-      ),
-      align: 'right',
-    },
-    {
-      title: '实发工资',
-      dataIndex: 'totalPayable',
-      key: 'netSalary',
-      width: 120,
-      render: (value: string | number, record: MySalaryRecord) => {
-        // 计算实发工资：应发合计 - 个人社保 - 个人所得税
-        const netSalary =
-          Number(value) -
-          Number(record.personalInsuranceTotal || 0) -
-          Number(record.personalIncomeTax || 0)
-        return <span className="font-semibold text-blue-600">{formatCurrency(netSalary)}</span>
-      },
-      align: 'right',
+      title: '银行卡号',
+      dataIndex: 'bankCardNumber',
+      key: 'bankCardNumber',
+      width: 140,
+      ellipsis: true,
     },
     {
       title: '银行卡/微信',
       dataIndex: 'bankCardOrWechat',
       key: 'bankCardOrWechat',
-      width: 120,
+      width: 110,
       render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
@@ -218,15 +347,23 @@ const MySalary: React.FC = () => {
       title: '现金发放',
       dataIndex: 'cashPaid',
       key: 'cashPaid',
-      width: 110,
+      width: 100,
       render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
     {
-      title: '公司代付',
+      title: '对公转账',
       dataIndex: 'corporatePayment',
       key: 'corporatePayment',
-      width: 110,
+      width: 100,
+      render: (value: string | number) => formatCurrency(value),
+      align: 'right',
+    },
+    {
+      title: '个税申报',
+      dataIndex: 'taxDeclaration',
+      key: 'taxDeclaration',
+      width: 100,
       render: (value: string | number) => formatCurrency(value),
       align: 'right',
     },
@@ -370,7 +507,7 @@ const MySalary: React.FC = () => {
               rowKey="id"
               loading={loading}
               pagination={false}
-              scroll={{ x: 1750, y: 'calc(100vh - 250px)' }}
+              scroll={{ x: 2800, y: 'calc(100vh - 250px)' }}
               size="middle"
               bordered
               locale={{

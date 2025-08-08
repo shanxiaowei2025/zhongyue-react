@@ -1,5 +1,16 @@
 import React, { useState } from 'react'
-import { Card, Descriptions, Button, Form, message, Space, Tag, Collapse } from 'antd'
+import {
+  Card,
+  Descriptions,
+  Button,
+  Form,
+  message,
+  Space,
+  Tag,
+  Collapse,
+  Input,
+  Checkbox,
+} from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import type {
   AttendanceDeductionRecord,
@@ -126,7 +137,7 @@ const DeductionPanel: React.FC<DeductionPanelProps> = ({
           </Form.Item>
         </div>
         <Form.Item label="备注" name="remark">
-          <input className="ant-input" placeholder="请输入备注信息" />
+          <Input placeholder="请输入备注信息" />
         </Form.Item>
       </Form>
     ) : (
@@ -177,7 +188,7 @@ const DeductionPanel: React.FC<DeductionPanelProps> = ({
             <AmountInput />
           </Form.Item>
           <Form.Item label="是否完成" name="isCompleted" valuePropName="checked">
-            <input type="checkbox" />
+            <Checkbox />
           </Form.Item>
         </div>
       </Form>

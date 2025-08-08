@@ -100,7 +100,7 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
             <Descriptions.Item label="个人所得税">
               {formatDeduction(salary.personalIncomeTax)}
             </Descriptions.Item>
-            <Descriptions.Item label="其他扣款">
+            <Descriptions.Item label="朋友圈扣款">
               {formatDeduction(
                 toNumber(salary.attendanceDeduction) +
                   toNumber(salary.otherDeductions) +
@@ -152,20 +152,8 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
 
           {/* 发放状态 */}
           <div className="mt-2">
-            <Tag
-              color={
-                toNumber(salary.bankCardOrWechat) > 0 ||
-                toNumber(salary.cashPaid) > 0 ||
-                toNumber(salary.corporatePayment) > 0
-                  ? 'green'
-                  : 'orange'
-              }
-            >
-              {toNumber(salary.bankCardOrWechat) > 0 ||
-              toNumber(salary.cashPaid) > 0 ||
-              toNumber(salary.corporatePayment) > 0
-                ? '已发放'
-                : '待发放'}
+            <Tag color={salary.isPaid ? 'green' : 'orange'}>
+              {salary.isPaid ? '已发放' : '未发放'}
             </Tag>
           </div>
         </div>

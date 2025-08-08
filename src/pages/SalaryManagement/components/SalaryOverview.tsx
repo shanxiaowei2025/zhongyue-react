@@ -1,8 +1,8 @@
 import React from 'react'
-import { Table, Tag, Badge, Button } from 'antd'
+import { Table, Tag, Badge, Button, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { CheckCircleOutlined, ClockCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import type { SalaryRecord, SalaryStatistics } from '../../../types/salaryIntegrated'
 
 interface SalaryOverviewProps {
@@ -98,7 +98,35 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       align: 'right',
     },
     {
-      title: '代理费提成',
+      title: (
+        <span>
+          代理费提成{' '}
+          <Tooltip
+            title={
+              <div>
+                <div style={{ fontWeight: 'bold', marginBottom: 8 }}>代理费提成比例</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #d9d9d9' }}>
+                        续费
+                      </td>
+                      <td style={{ padding: '4px 8px', borderBottom: '1px solid #d9d9d9' }}>1%</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '4px 8px' }}>软件费、地址费</td>
+                      <td style={{ padding: '4px 8px' }}>10%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            }
+            placement="top"
+          >
+            <QuestionCircleOutlined style={{ fontSize: '12px', color: '#999' }} />
+          </Tooltip>
+        </span>
+      ),
       dataIndex: 'agencyFeeCommission',
       width: 110,
       render: value => formatCurrency(toNumber(value)),
@@ -119,7 +147,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       align: 'right',
     },
     {
-      title: '其他扣款',
+      title: '朋友圈扣款',
       dataIndex: 'otherDeductions',
       width: 100,
       render: value => <span className="text-red-500">-{formatCurrency(toNumber(value))}</span>,

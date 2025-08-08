@@ -11,6 +11,7 @@ export interface MySalaryRecord {
   temporaryIncrease: string | number
   temporaryIncreaseItem?: string
   attendanceDeduction: string | number
+  attendanceRemark?: string
   basicSalaryPayable: string | number
   fullAttendance: string | number
   totalSubsidy: string | number
