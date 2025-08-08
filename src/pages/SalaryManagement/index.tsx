@@ -77,9 +77,9 @@ const SalaryManagement: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
       {/* 页头 */}
-      <div className="bg-white border-b shadow-sm pb-6">
+      <div className="bg-white border-b shadow-sm pb-6 flex-shrink-0">
         <div className="flex justify-between items-center">
           <div className="w-1/2">
             {/* 员工确认进度 */}

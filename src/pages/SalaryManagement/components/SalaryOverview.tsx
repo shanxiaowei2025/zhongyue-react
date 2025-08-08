@@ -1,9 +1,15 @@
-import React from 'react'
-import { Table, Tag, Badge, Button, Tooltip } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { Table, Tag, Badge, Button, Tooltip, InputNumber, message } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import { CheckCircleOutlined, ClockCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons'
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  QuestionCircleOutlined,
+  EditOutlined,
+} from '@ant-design/icons'
 import type { SalaryRecord, SalaryStatistics } from '../../../types/salaryIntegrated'
+import { salaryApi } from '../../../api/salaryIntegrated'
 
 interface SalaryOverviewProps {
   salaryData: SalaryRecord[]
@@ -24,6 +30,131 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
   statistics,
   onMarkPaid,
 }) => {
+  const [editingCell, setEditingCell] = useState<string | null>(null)
+  const [editedValues, setEditedValues] = useState<Record<string, number>>({})
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const [tableScrollY, setTableScrollY] = useState<number>(400)
+
+  // 计算表格滚动区域高度
+  useEffect(() => {
+    const calculateScrollHeight = () => {
+      if (tableContainerRef.current) {
+        const containerHeight = tableContainerRef.current.clientHeight
+        // 减去表头高度(约40px) + 底部边距(约20px) + 安全边距(约20px)
+        setTableScrollY(containerHeight - 40)
+      }
+    }
+
+    calculateScrollHeight()
+    const resizeObserver = new ResizeObserver(calculateScrollHeight)
+
+    if (tableContainerRef.current) {
+      resizeObserver.observe(tableContainerRef.current)
+    }
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  // 可编辑单元格组件
+  const EditableCell: React.FC<{
+    value: number
+    recordId: number
+    field: 'bankCardOrWechat' | 'cashPaid'
+    onSave: (recordId: number, field: string, value: number) => Promise<void>
+  }> = React.memo(({ value, recordId, field, onSave }) => {
+    const cellKey = `${recordId}-${field}`
+    const isEditing = editingCell === cellKey
+
+    // 获取要显示的值：如果有编辑过的值就显示编辑过的，否则显示原始值
+    const displayValue = editedValues[cellKey] !== undefined ? editedValues[cellKey] : value
+    const [inputValue, setInputValue] = useState(displayValue)
+
+    // 当displayValue变化时，如果不在编辑状态，则同步更新inputValue
+    useEffect(() => {
+      if (!isEditing) {
+        setInputValue(displayValue)
+      }
+    }, [displayValue, isEditing])
+
+    const handleEdit = async (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (isEditing) return
+
+      // 直接切换到新的编辑状态，设置输入值为当前显示值
+      setEditingCell(cellKey)
+      setInputValue(displayValue) // 重要：使用当前显示的值，而不是原始值
+    }
+
+    const handleBlur = async () => {
+      // 失去焦点时保存
+      if (inputValue === displayValue) {
+        setEditingCell(null)
+        return
+      }
+
+      try {
+        await onSave(recordId, field, inputValue)
+        setEditingCell(null)
+        // 保存成功后，更新编辑过的值记录
+        setEditedValues(prev => ({
+          ...prev,
+          [cellKey]: inputValue,
+        }))
+        message.success('保存成功')
+      } catch (error) {
+        console.error('保存失败:', error)
+        message.error('保存失败')
+        setInputValue(displayValue) // 恢复为当前显示值
+      }
+    }
+
+    const handleInputChange = (val: number | null) => {
+      setInputValue(val !== null ? val : 0)
+    }
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleBlur()
+      } else if (e.key === 'Escape') {
+        setEditingCell(null)
+        setInputValue(displayValue) // 恢复为当前显示值
+      }
+    }
+
+    if (isEditing) {
+      return (
+        <div onClick={e => e.stopPropagation()}>
+          <InputNumber
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyPress}
+            min={0}
+            precision={2}
+            style={{ width: '100%' }}
+            autoFocus
+            placeholder="请输入金额"
+          />
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+        onClick={handleEdit}
+      >
+        {formatCurrency(toNumber(displayValue))}
+      </div>
+    )
+  })
+
+  // 保存编辑的函数
+  const handleSaveField = async (recordId: number, field: string, value: number) => {
+    await salaryApi.updateSalary(recordId, { [field]: value })
+    // 不触发数据刷新，保持界面稳定
+    message.success('保存成功')
+  }
   const columns: ColumnsType<SalaryRecord> = [
     {
       title: '姓名',
@@ -224,18 +355,46 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       ellipsis: true,
     },
     {
-      title: '银行卡/微信',
+      title: (
+        <span>
+          银行卡/微信 <EditOutlined style={{ fontSize: '12px', color: '#1890ff', opacity: 0.8 }} />
+        </span>
+      ),
       dataIndex: 'bankCardOrWechat',
       width: 110,
-      render: value => formatCurrency(toNumber(value)),
+      render: (value, record) => (
+        <EditableCell
+          value={toNumber(value)}
+          recordId={record.id}
+          field="bankCardOrWechat"
+          onSave={handleSaveField}
+        />
+      ),
       align: 'right',
+      onCell: () => ({
+        onClick: (e: React.MouseEvent) => e.stopPropagation(),
+      }),
     },
     {
-      title: '现金发放',
+      title: (
+        <span>
+          现金发放 <EditOutlined style={{ fontSize: '12px', color: '#1890ff', opacity: 0.8 }} />
+        </span>
+      ),
       dataIndex: 'cashPaid',
       width: 100,
-      render: value => formatCurrency(toNumber(value)),
+      render: (value, record) => (
+        <EditableCell
+          value={toNumber(value)}
+          recordId={record.id}
+          field="cashPaid"
+          onSave={handleSaveField}
+        />
+      ),
       align: 'right',
+      onCell: () => ({
+        onClick: (e: React.MouseEvent) => e.stopPropagation(),
+      }),
     },
     {
       title: '对公转账',
@@ -328,16 +487,18 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       </div>
 
       {/* 薪资列表表格 - 弹性高度 */}
-      <div className="flex-1 overflow-hidden">
+      <div ref={tableContainerRef} className="flex-1 overflow-hidden">
         <Table
           columns={columns}
           dataSource={salaryData}
           loading={loading}
           pagination={false}
-          scroll={{ y: 500, x: 2800 }}
+          scroll={{
+            x: 2800,
+            y: tableScrollY,
+          }}
           rowKey="id"
           size="small"
-          className="h-full"
           rowClassName={record => (selectedEmployee?.id === record.id ? 'bg-blue-50' : '')}
           onRow={record => ({
             onClick: () => onSelectEmployee(record),
