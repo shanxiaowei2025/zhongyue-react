@@ -21,7 +21,6 @@ import type {
   UpdateSalaryDto,
   ImportResult,
   ImportType,
-  ExportType,
 } from '../types/salaryIntegrated'
 
 // 集成化薪资管理主Hook
@@ -251,43 +250,49 @@ export const useSalaryIntegrated = () => {
       [mutateMonthly, mutateRelated, selectedEmployee, setLoading]
     ),
 
-    // 导出数据
-    exportData: useCallback(
-      async (type: ExportType, params: { yearMonth?: string } = {}) => {
+    // 导出薪资数据为CSV
+    exportSalaryCsv: useCallback(
+      async (
+        additionalParams: {
+          department?: string
+          name?: string
+          idCard?: string
+          type?: string
+          company?: string
+          startDate?: string
+          endDate?: string
+          isPaid?: boolean
+          isConfirmed?: boolean
+        } = {}
+      ) => {
         try {
-          message.loading('正在导出数据...', 0)
+          message.loading('正在导出薪资数据...', 0)
 
-          const blob = await integratedApi.batchExport(type, {
+          const blob = await salaryApi.exportSalaryCsv({
             yearMonth: selectedYearMonth,
-            ...params,
+            ...additionalParams,
           })
 
           // 创建下载链接
           const url = window.URL.createObjectURL(blob)
           const link = document.createElement('a')
           link.href = url
-
-          // 根据类型设置文件名
-          const typeNames: Record<ExportType, string> = {
-            salary: '薪资数据',
-            socialInsurance: '社保数据',
-            subsidy: '补贴数据',
-            attendance: '考勤数据',
-            friendCircle: '朋友圈数据',
-            deposit: '保证金数据',
-          }
-
-          link.download = `${typeNames[type]}_${selectedYearMonth}.xlsx`
+          link.download = `薪资数据_${selectedYearMonth}.csv`
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
 
           message.destroy()
-          message.success('导出成功')
+          message.success('薪资数据导出成功')
         } catch (error: any) {
           message.destroy()
-          message.error(`导出失败: ${error.message}`)
+          // 如果是404错误，说明后端接口未实现
+          if (error.response?.status === 404) {
+            message.error('导出功能正在开发中，请稍后再试')
+          } else {
+            message.error(`导出薪资数据失败: ${error.message}`)
+          }
           throw error
         }
       },

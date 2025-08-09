@@ -140,13 +140,20 @@ export const salaryApi = {
     throw new Error('响应数据格式异常')
   },
 
-  // 导出薪资数据
-  async exportSalaryData(params: SalaryQueryParams): Promise<Blob> {
-    const response = (await request.get('/salary/export', {
-      params,
-      responseType: 'blob',
-    })) as AxiosResponse<Blob>
-    return response.data
+  // 导出薪资数据为CSV
+  async exportSalaryCsv(params?: {
+    department?: string
+    name?: string
+    idCard?: string
+    type?: string
+    company?: string
+    yearMonth?: string
+    startDate?: string
+    endDate?: string
+    isPaid?: boolean
+    isConfirmed?: boolean
+  }): Promise<Blob> {
+    return request.get<Blob>('/salary/export/csv', params, 'blob')
   },
 
   // 基于薪资列表数据计算统计信息（避免重复请求）
@@ -806,26 +813,6 @@ export const integratedApi = {
         return await this.importDeposit(file)
       default:
         throw new Error(`不支持的导入类型: ${type}`)
-    }
-  },
-
-  // 批量导出数据
-  async batchExport(type: string, params: { yearMonth?: string }): Promise<Blob> {
-    switch (type) {
-      case 'salary':
-        return await salaryApi.exportSalaryData(params)
-      case 'socialInsurance':
-        return await socialInsuranceApi.exportSocialInsurance(params)
-      case 'subsidy':
-        return await subsidyApi.exportSubsidy(params)
-      case 'attendance':
-        return await attendanceApi.exportAttendance(params)
-      case 'friendCircle':
-        return await friendCircleApi.exportFriendCircle(params)
-      case 'deposit':
-        return await depositApi.exportDeposit(params)
-      default:
-        throw new Error(`不支持的导出类型: ${type}`)
     }
   },
 }

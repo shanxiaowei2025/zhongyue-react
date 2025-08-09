@@ -8,6 +8,7 @@ import {
   MenuUnfoldOutlined,
   LeftOutlined,
   RightOutlined,
+  ExportOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
@@ -34,6 +35,7 @@ const SalaryManagement: React.FC = () => {
 
   const [autoGenerating, setAutoGenerating] = useState(false)
   const [markingAllPaid, setMarkingAllPaid] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
 
@@ -86,6 +88,15 @@ const SalaryManagement: React.FC = () => {
     await operations.markEmployeePaid(id)
   }
 
+  const handleExportCsv = async () => {
+    try {
+      setExporting(true)
+      await operations.exportSalaryCsv()
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
       {/* 页头 */}
@@ -122,6 +133,9 @@ const SalaryManagement: React.FC = () => {
             />
             <Button icon={<ReloadOutlined />} onClick={refreshData} loading={loading}>
               刷新
+            </Button>
+            <Button icon={<ExportOutlined />} onClick={handleExportCsv} loading={exporting}>
+              导出CSV
             </Button>
             <Button
               icon={<CheckCircleOutlined />}
