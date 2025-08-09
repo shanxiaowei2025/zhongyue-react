@@ -23,6 +23,8 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -45,6 +47,21 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   const [loading, setLoading] = useState(false)
   const [expenseLoading, setExpenseLoading] = useState(false)
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [fullscreenTable, setFullscreenTable] = useState(false)
+
+  // 全屏时阻止body滚动
+  useEffect(() => {
+    if (fullscreenTable) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    // 清理函数
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [fullscreenTable])
   const navigate = useNavigate()
 
   // 安全的数值转换和格式化函数
@@ -631,6 +648,16 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                       ({dayjs(yearMonth).format('YYYY年MM月')})
                     </span>
                   </h3>
+                  {expenses.length > 0 && (
+                    <Button
+                      type="text"
+                      icon={<FullscreenOutlined />}
+                      onClick={() => setFullscreenTable(true)}
+                      title="全屏显示表格"
+                    >
+                      全屏
+                    </Button>
+                  )}
                 </div>
                 <Spin spinning={expenseLoading}>
                   {expenses.length > 0 ? (
@@ -672,6 +699,106 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
           borderBottom: '1px solid #f0f0f0',
         }}
       />
+
+      {/* 全屏表格模态框 */}
+      <Modal
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              {employee.name} - 关联收据 ({dayjs(yearMonth).format('YYYY年MM月')})
+            </span>
+            <Button
+              type="text"
+              icon={<FullscreenExitOutlined />}
+              onClick={() => setFullscreenTable(false)}
+              title="退出全屏"
+            >
+              退出全屏
+            </Button>
+          </div>
+        }
+        open={fullscreenTable}
+        onCancel={() => setFullscreenTable(false)}
+        width="100vw"
+        height="100vh"
+        style={{
+          top: 0,
+          left: 0,
+          padding: 0,
+          margin: 0,
+          maxWidth: 'none',
+          position: 'fixed',
+        }}
+        styles={{
+          body: {
+            padding: 0,
+            height: 'calc(100vh - 55px)', // 减去标题栏高度
+            overflow: 'hidden',
+          },
+          mask: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+          },
+        }}
+        footer={null}
+        destroyOnClose
+        centered={false}
+        maskClosable={true}
+      >
+        <div
+          style={{
+            height: '100%',
+            padding: '16px',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Spin spinning={expenseLoading} style={{ height: '100%' }}>
+            {expenses.length > 0 ? (
+              (() => {
+                const tableData = transformToTableData(expenses)
+                const summaryRow = calculateSummaryRow(tableData)
+                const columns = generateTableColumns(tableData)
+                const dataWithSummary = [...tableData, summaryRow]
+
+                return (
+                  <Table
+                    columns={columns}
+                    dataSource={dataWithSummary}
+                    rowKey="companyName"
+                    pagination={false}
+                    scroll={{
+                      x: 'max-content',
+                      y: 'calc(100vh - 150px)', // 固定表头，可滚动内容
+                    }}
+                    size="middle"
+                    bordered
+                    rowClassName={(record, index) =>
+                      index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
+                    }
+                    sticky
+                  />
+                )
+              })()
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                }}
+              >
+                <Empty description="本月暂无关联收据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              </div>
+            )}
+          </Spin>
+        </div>
+      </Modal>
     </div>
   )
 }

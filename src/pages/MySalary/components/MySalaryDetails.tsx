@@ -10,8 +10,14 @@ import {
   Spin,
   Empty,
   message,
+  Modal,
 } from 'antd'
-import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined,
+} from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { MySalaryRecord } from '../../../types/mySalary'
 import type { Expense } from '../../../types/expense'
@@ -33,6 +39,21 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
 }) => {
   const [expenseLoading, setExpenseLoading] = useState(false)
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [fullscreenTable, setFullscreenTable] = useState(false)
+
+  // 全屏时阻止body滚动
+  useEffect(() => {
+    if (fullscreenTable) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    // 清理函数
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [fullscreenTable])
 
   if (!detail) {
     return (
@@ -393,12 +414,22 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       {/* 关联收据 */}
       <Card>
         <div className="flex justify-between items-center mb-4">
-          <Title level={4} className="!mb-0">
+          <Title level={4} className="!m-0">
             关联收据
             <span className="text-sm text-gray-500 ml-2">
               ({formatYearMonth(detail.yearMonth)})
             </span>
           </Title>
+          {expenses.length > 0 && (
+            <Button
+              type="text"
+              icon={<FullscreenOutlined />}
+              onClick={() => setFullscreenTable(true)}
+              title="全屏显示表格"
+            >
+              全屏
+            </Button>
+          )}
         </div>
         <Spin spinning={expenseLoading}>
           {expenses.length > 0 ? (
@@ -442,6 +473,106 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           </div>
         </Card>
       )}
+
+      {/* 全屏表格模态框 */}
+      <Modal
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              {detail.name} - 关联收据 ({formatYearMonth(detail.yearMonth)})
+            </span>
+            <Button
+              type="text"
+              icon={<FullscreenExitOutlined />}
+              onClick={() => setFullscreenTable(false)}
+              title="退出全屏"
+            >
+              退出全屏
+            </Button>
+          </div>
+        }
+        open={fullscreenTable}
+        onCancel={() => setFullscreenTable(false)}
+        width="100vw"
+        height="100vh"
+        style={{
+          top: 0,
+          left: 0,
+          padding: 0,
+          margin: 0,
+          maxWidth: 'none',
+          position: 'fixed',
+        }}
+        styles={{
+          body: {
+            padding: 0,
+            height: 'calc(100vh - 55px)', // 减去标题栏高度
+            overflow: 'hidden',
+          },
+          mask: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+          },
+        }}
+        footer={null}
+        destroyOnClose
+        centered={false}
+        maskClosable={true}
+      >
+        <div
+          style={{
+            height: '100%',
+            padding: '16px',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Spin spinning={expenseLoading} style={{ height: '100%' }}>
+            {expenses.length > 0 ? (
+              (() => {
+                const tableData = transformToTableData(expenses)
+                const summaryRow = calculateSummaryRow(tableData)
+                const columns = generateTableColumns(tableData)
+                const dataWithSummary = [...tableData, summaryRow]
+
+                return (
+                  <Table
+                    columns={columns}
+                    dataSource={dataWithSummary}
+                    rowKey="companyName"
+                    pagination={false}
+                    scroll={{
+                      x: 'max-content',
+                      y: 'calc(100vh - 150px)', // 固定表头，可滚动内容
+                    }}
+                    size="middle"
+                    bordered
+                    rowClassName={(record, index) =>
+                      index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
+                    }
+                    sticky
+                  />
+                )
+              })()
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                }}
+              >
+                <Empty description="本月暂无关联收据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              </div>
+            )}
+          </Spin>
+        </div>
+      </Modal>
     </div>
   )
 }
