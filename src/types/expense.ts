@@ -172,6 +172,8 @@ export interface ExpenseQueryParams {
   createDateRange?: any
   chargeDateStart?: string
   chargeDateEnd?: string
+  auditDateStart?: string
+  auditDateEnd?: string
 }
 
 // 费用审核DTO

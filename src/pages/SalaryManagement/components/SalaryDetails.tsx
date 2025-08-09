@@ -14,6 +14,7 @@ import {
   List,
   Spin,
   Divider,
+  Table,
 } from 'antd'
 import {
   EditOutlined,
@@ -71,11 +72,11 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
 
       const response = await getExpenseList({
         page: 1,
-        pageSize: 100,
+        pageSize: 1000, // 增加页面大小以获取更多数据
         salesperson: employeeName,
         status: 1, // 已审核
-        chargeDateStart: monthStart,
-        chargeDateEnd: monthEnd,
+        auditDateStart: monthStart,
+        auditDateEnd: monthEnd,
       })
 
       if (response.data && response.data.list) {
@@ -87,6 +88,111 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     } finally {
       setExpenseLoading(false)
     }
+  }
+
+  // 费用类型映射
+  const FEE_TYPE_MAP = {
+    agencyFee: '代理费',
+    addressFee: '地址费',
+    accountingSoftwareFee: '记账软件费',
+    socialInsuranceAgencyFee: '社保代理费',
+    housingFundAgencyFee: '公积金代理费',
+    licenseFee: '行政许可证',
+    brandFee: '牌子费',
+    recordSealFee: '备案章费',
+    generalSealFee: '一般刻章费',
+    invoiceSoftwareFee: '开票软件费',
+    statisticalReportFee: '统计局报表费',
+    changeFee: '变更收费',
+    administrativeLicenseFee: '行政许可收费',
+    otherBusinessFee: '其他业务（自有）',
+    otherBusinessOutsourcingFee: '其他业务（外包）',
+  }
+
+  // 数据透视转换：将费用列表转换为表格数据
+  const transformToTableData = (expenseList: Expense[]) => {
+    // 按公司分组
+    const companyMap = new Map<string, any>()
+
+    expenseList.forEach(expense => {
+      const companyName = expense.companyName
+      if (!companyMap.has(companyName)) {
+        companyMap.set(companyName, {
+          companyName,
+          totalAmount: 0,
+        })
+      }
+
+      const company = companyMap.get(companyName)!
+
+      // 遍历所有费用类型
+      Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
+        const amount = toNumber((expense as any)[key])
+        if (amount > 0) {
+          company[key] = (company[key] || 0) + amount
+          company.totalAmount += amount
+        }
+      })
+    })
+
+    return Array.from(companyMap.values())
+  }
+
+  // 生成表格列定义
+  const generateTableColumns = (tableData: any[]) => {
+    // 基础列
+    const columns = [
+      {
+        title: '公司名称',
+        dataIndex: 'companyName',
+        key: 'companyName',
+        fixed: 'left' as const,
+        width: 200,
+        render: (text: string) => (
+          <div style={{ wordBreak: 'break-all', whiteSpace: 'normal' }}>{text}</div>
+        ),
+      },
+    ]
+
+    // 动态生成费用类型列
+    const feeColumns = Object.entries(FEE_TYPE_MAP).map(([key, label]) => ({
+      title: label,
+      dataIndex: key,
+      key,
+      width: 100,
+      render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+      align: 'right' as const,
+    }))
+
+    // 合计列
+    const totalColumn = {
+      title: '合计',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      fixed: 'right' as const,
+      width: 120,
+      render: (value: number) => (
+        <strong style={{ color: '#1890ff' }}>{formatCurrency(value)}</strong>
+      ),
+      align: 'right' as const,
+    }
+
+    return [...columns, ...feeColumns, totalColumn]
+  }
+
+  // 计算合计行
+  const calculateSummaryRow = (tableData: any[]) => {
+    const summary: any = {
+      companyName: '合计',
+      totalAmount: 0,
+    }
+
+    Object.keys(FEE_TYPE_MAP).forEach(key => {
+      summary[key] = tableData.reduce((sum, row) => sum + (row[key] || 0), 0)
+      summary.totalAmount += summary[key]
+    })
+
+    return summary
   }
 
   // 格式化收费日期
@@ -528,75 +634,27 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                 </div>
                 <Spin spinning={expenseLoading}>
                   {expenses.length > 0 ? (
-                    <>
-                      <List
-                        dataSource={expenses}
-                        renderItem={(expense: Expense) => (
-                          <List.Item
-                            key={expense.id}
-                            style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}
-                          >
-                            <div style={{ width: '100%' }}>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'flex-start',
-                                }}
-                              >
-                                <div style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
-                                  <div
-                                    style={{ fontWeight: 500, fontSize: '16px', marginBottom: 8 }}
-                                  >
-                                    {formatChargeDate(expense.chargeDate)}
-                                  </div>
-                                  <Button
-                                    type="link"
-                                    icon={<FileTextOutlined />}
-                                    onClick={() => handleReceiptClick(expense)}
-                                    style={{ padding: 0, height: 'auto', marginBottom: 4 }}
-                                    title="点击查看收据详情"
-                                  >
-                                    收据: {expense.receiptNo || '-'}
-                                  </Button>
-                                  <div
-                                    style={{
-                                      fontSize: '14px',
-                                      color: '#666',
-                                      wordBreak: 'break-all',
-                                    }}
-                                  >
-                                    {expense.companyName}
-                                  </div>
-                                </div>
-                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                  <div
-                                    style={{
-                                      fontWeight: 'bold',
-                                      color: '#1890ff',
-                                      fontSize: '18px',
-                                    }}
-                                  >
-                                    {formatAmount(expense.totalFee)}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </List.Item>
-                        )}
-                      />
-                      <Divider />
-                      <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                        <div style={{ fontSize: 16, marginBottom: 8 }}>
-                          <span className="text-gray-600">费用合计</span>
-                        </div>
-                        <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1890ff' }}>
-                          {formatAmount(
-                            expenses.reduce((sum, expense) => sum + Number(expense.totalFee), 0)
-                          )}
-                        </div>
-                      </div>
-                    </>
+                    (() => {
+                      const tableData = transformToTableData(expenses)
+                      const summaryRow = calculateSummaryRow(tableData)
+                      const columns = generateTableColumns(tableData)
+                      const dataWithSummary = [...tableData, summaryRow]
+
+                      return (
+                        <Table
+                          columns={columns}
+                          dataSource={dataWithSummary}
+                          rowKey="companyName"
+                          pagination={false}
+                          scroll={{ x: 'max-content' }}
+                          size="small"
+                          bordered
+                          rowClassName={(record, index) =>
+                            index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
+                          }
+                        />
+                      )
+                    })()
                   ) : (
                     <div style={{ textAlign: 'center', padding: 50 }}>
                       <Empty description="本月暂无关联收据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
