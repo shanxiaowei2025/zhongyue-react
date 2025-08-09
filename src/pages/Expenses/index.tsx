@@ -168,6 +168,7 @@ const Expenses: React.FC = () => {
     businessType?: string
     dateRange?: any // 使用any类型避免typescript错误
     createDateRange?: any // 开据时间范围
+    auditDateRange?: any // 审核时间范围
     page: number
     pageSize: number
   }>(PAGE_STATE_KEY, {
@@ -178,6 +179,7 @@ const Expenses: React.FC = () => {
     businessType: undefined,
     dateRange: undefined,
     createDateRange: undefined,
+    auditDateRange: undefined,
     page: 1,
     pageSize: 10,
   })
@@ -213,6 +215,20 @@ const Expenses: React.FC = () => {
     return undefined
   }, [savedState.createDateRange])
 
+  // 正确处理savedState中的审核时间范围
+  const initialAuditDateRange = useMemo(() => {
+    if (!savedState.auditDateRange) return undefined
+    try {
+      // 确保日期是有效的数组
+      if (Array.isArray(savedState.auditDateRange) && savedState.auditDateRange.length === 2) {
+        return [dayjs(savedState.auditDateRange[0]), dayjs(savedState.auditDateRange[1])]
+      }
+    } catch (error) {
+      console.error('解析审核时间范围失败:', error)
+    }
+    return undefined
+  }, [savedState.auditDateRange])
+
   const [searchParams, setSearchParams] = useState({
     companyName: savedState.companyName || '',
     unifiedSocialCreditCode: savedState.unifiedSocialCreditCode || '',
@@ -221,6 +237,7 @@ const Expenses: React.FC = () => {
     businessType: savedState.businessType || undefined,
     dateRange: initialDateRange,
     createDateRange: initialCreateDateRange,
+    auditDateRange: initialAuditDateRange,
     page: Number(savedState.page) || 1,
     pageSize: Number(savedState.pageSize) || 10,
   })
@@ -264,6 +281,7 @@ const Expenses: React.FC = () => {
       businessType: searchParams.businessType,
       dateRange: searchParams.dateRange,
       createDateRange: searchParams.createDateRange,
+      auditDateRange: searchParams.auditDateRange,
     })
   }, [form, searchParams])
 
@@ -290,6 +308,12 @@ const Expenses: React.FC = () => {
             searchParams.createDateRange[1].format('YYYY-MM-DD'),
           ]
         : undefined,
+      auditDateRange: searchParams.auditDateRange
+        ? [
+            searchParams.auditDateRange[0].format('YYYY-MM-DD'),
+            searchParams.auditDateRange[1].format('YYYY-MM-DD'),
+          ]
+        : undefined,
     }
 
     // 使用ref或变量来跟踪初始渲染
@@ -308,6 +332,7 @@ const Expenses: React.FC = () => {
     searchParams.pageSize,
     searchParams.dateRange,
     searchParams.createDateRange,
+    searchParams.auditDateRange,
     setSavedState,
   ])
 
@@ -340,6 +365,13 @@ const Expenses: React.FC = () => {
       params.createDateRange = undefined
     }
 
+    // 如果有审核时间范围，格式化后加入查询参数
+    if (values.auditDateRange && values.auditDateRange.length === 2) {
+      params.auditDateRange = values.auditDateRange
+    } else {
+      params.auditDateRange = undefined
+    }
+
     setSearchParams(params)
   }
 
@@ -369,6 +401,16 @@ const Expenses: React.FC = () => {
           currentValues.createDateRange.some((date: any) => !date)))
     ) {
       form.setFieldValue('createDateRange', undefined)
+    }
+
+    // 特殊处理auditDateRange字段，确保当它被清空时能正确设置为undefined
+    if (
+      currentValues.auditDateRange === null ||
+      (Array.isArray(currentValues.auditDateRange) &&
+        (currentValues.auditDateRange.length === 0 ||
+          currentValues.auditDateRange.some((date: any) => !date)))
+    ) {
+      form.setFieldValue('auditDateRange', undefined)
     }
 
     setIsSearching(true)
@@ -441,6 +483,7 @@ const Expenses: React.FC = () => {
       businessType: undefined,
       dateRange: undefined,
       createDateRange: undefined,
+      auditDateRange: undefined,
       page: 1,
       pageSize: 10,
     })
@@ -627,6 +670,15 @@ const Expenses: React.FC = () => {
         if (createDateRange && createDateRange[0] && createDateRange[1]) {
           exportParams.startDate = dayjs(createDateRange[0]).format('YYYY-MM-DD')
           exportParams.endDate = dayjs(createDateRange[1]).format('YYYY-MM-DD')
+        }
+      }
+
+      // 处理审核时间范围
+      if (form.getFieldValue('auditDateRange')) {
+        const auditDateRange = form.getFieldValue('auditDateRange')
+        if (auditDateRange && auditDateRange[0] && auditDateRange[1]) {
+          exportParams.auditDateStart = dayjs(auditDateRange[0]).format('YYYY-MM-DD')
+          exportParams.auditDateEnd = dayjs(auditDateRange[1]).format('YYYY-MM-DD')
         }
       }
 
@@ -898,6 +950,17 @@ const Expenses: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="createDateRange" label="开据时间" className="m-0 w-full lg:col-span-2">
+              <RangePicker
+                allowClear
+                style={{ width: '100%' }}
+                onChange={() => {
+                  // 日期变化时特殊处理，确保能正确触发搜索
+                  setTimeout(handleFormFieldChange, 0)
+                }}
+              />
+            </Form.Item>
+
+            <Form.Item name="auditDateRange" label="审核时间" className="m-0 w-full lg:col-span-2">
               <RangePicker
                 allowClear
                 style={{ width: '100%' }}

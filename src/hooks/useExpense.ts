@@ -89,6 +89,25 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
       delete queryParams.endDate
     }
 
+    // 处理审核时间范围
+    if (params.auditDateRange && Array.isArray(params.auditDateRange)) {
+      queryParams.auditDateStart = Array.isArray(params.auditDateRange[0])
+        ? params.auditDateRange[0][0]
+        : params.auditDateRange[0]?.format?.('YYYY-MM-DD') || params.auditDateRange[0]
+
+      queryParams.auditDateEnd = Array.isArray(params.auditDateRange[1])
+        ? params.auditDateRange[1][0]
+        : params.auditDateRange[1]?.format?.('YYYY-MM-DD') || params.auditDateRange[1]
+
+      // 删除原始auditDateRange参数，避免发送不必要的数据
+      delete queryParams.auditDateRange
+    } else {
+      // 确保当auditDateRange为undefined或null时，删除可能存在的日期参数
+      delete queryParams.auditDateRange
+      delete queryParams.auditDateStart
+      delete queryParams.auditDateEnd
+    }
+
     // 确保page和pageSize参数是有效的数字
     queryParams.page = Number(queryParams.page) || 1
     queryParams.pageSize = Number(queryParams.pageSize) || 10
