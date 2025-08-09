@@ -1,11 +1,19 @@
 import React, { useState } from 'react'
 import { Button, Spin, Tabs, Progress, Modal } from 'antd'
 import type { TabsProps } from 'antd'
-import { ReloadOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import {
+  ReloadOutlined,
+  CheckCircleOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  LeftOutlined,
+  RightOutlined,
+} from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
 import MonthSelector from './components/MonthSelector'
 import SalaryOverview from './components/SalaryOverview'
+import CompactEmployeeList from './components/CompactEmployeeList'
 import SalaryDetails from './components/SalaryDetails'
 import RelatedDataTabs from './components/RelatedDataTabs'
 import ImportExportPanel from './components/ImportExportPanel'
@@ -26,6 +34,8 @@ const SalaryManagement: React.FC = () => {
 
   const [autoGenerating, setAutoGenerating] = useState(false)
   const [markingAllPaid, setMarkingAllPaid] = useState(false)
+  const [leftCollapsed, setLeftCollapsed] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
 
   const handleMonthChange = (yearMonth: string) => {
     operations.switchMonth(yearMonth)
@@ -129,89 +139,170 @@ const SalaryManagement: React.FC = () => {
       </div>
 
       {/* 主内容区域 */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* 左侧：薪资总览 */}
-        <div className="w-1/2 border-r bg-white">
-          <SalaryOverview
-            salaryData={salaryData}
-            loading={loading}
-            selectedEmployee={selectedEmployee}
-            onSelectEmployee={handleSelectEmployee}
-            onRefresh={refreshData}
-            statistics={statistics}
-            onMarkPaid={handleMarkEmployeePaid}
-          />
+        <div
+          className={`border-r bg-white transition-all duration-300 relative ${
+            leftCollapsed ? 'border-r-0' : ''
+          }`}
+          style={{
+            width: leftCollapsed ? '120px' : rightCollapsed ? '100%' : '50%',
+          }}
+        >
+          {leftCollapsed ? (
+            <CompactEmployeeList
+              salaryData={salaryData}
+              loading={loading}
+              selectedEmployee={selectedEmployee}
+              onSelectEmployee={handleSelectEmployee}
+            />
+          ) : (
+            <SalaryOverview
+              salaryData={salaryData}
+              loading={loading}
+              selectedEmployee={selectedEmployee}
+              onSelectEmployee={handleSelectEmployee}
+              onRefresh={refreshData}
+              statistics={statistics}
+              onMarkPaid={handleMarkEmployeePaid}
+            />
+          )}
         </div>
 
         {/* 右侧：功能模块标签页 */}
-        <div className="w-1/2 bg-white flex flex-col">
-          <Tabs
-            defaultActiveKey="details"
-            size="large"
-            className="scrollable-tabs"
-            tabBarStyle={{
-              margin: 0,
-              paddingLeft: 24,
-              paddingRight: 24,
-              borderBottom: '1px solid #f0f0f0',
-              backgroundColor: '#fafafa',
-            }}
-            items={[
-              {
-                key: 'details',
-                label: '薪资详情',
-                children: (
-                  <div className="tab-content-container">
-                    <SalaryDetails
-                      employee={selectedEmployee}
-                      yearMonth={selectedYearMonth}
-                      onUpdate={operations.updateSalary}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: 'related',
-                label: '关联数据',
-                children: (
-                  <div className="tab-content-container">
-                    <RelatedDataTabs
-                      employee={selectedEmployee}
-                      yearMonth={selectedYearMonth}
-                      relatedData={relatedData}
-                      onUpdate={operations.updateRelatedData}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: 'commission',
-                label: '提成详情',
-                children: (
-                  <div className="tab-content-container">
-                    <CommissionPanel
-                      employeeName={selectedEmployee?.name || ''}
-                      yearMonth={selectedYearMonth}
-                      data={relatedData.commission}
-                      onUpdate={data => operations.updateRelatedData('commission', data)}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: 'operations',
-                label: '数据操作',
-                children: (
-                  <div className="tab-content-container" style={{ padding: '24px' }}>
-                    <ImportExportPanel
-                      yearMonth={selectedYearMonth}
-                      onImport={operations.importData}
-                    />
-                  </div>
-                ),
-              },
-            ]}
-          />
+        <div
+          className="bg-white flex flex-col transition-all duration-300 relative"
+          style={{
+            width: rightCollapsed ? '20px' : leftCollapsed ? 'calc(100% - 120px)' : '50%',
+          }}
+        >
+          {!rightCollapsed && (
+            /* 右侧展开时显示完整内容 */
+            <Tabs
+              defaultActiveKey="details"
+              size="large"
+              className="scrollable-tabs"
+              tabBarStyle={{
+                margin: 0,
+                paddingLeft: 24,
+                paddingRight: 24,
+                borderBottom: '1px solid #f0f0f0',
+                backgroundColor: '#fafafa',
+              }}
+              items={[
+                {
+                  key: 'details',
+                  label: '薪资详情',
+                  children: (
+                    <div className="tab-content-container">
+                      <SalaryDetails
+                        employee={selectedEmployee}
+                        yearMonth={selectedYearMonth}
+                        onUpdate={operations.updateSalary}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: 'related',
+                  label: '关联数据',
+                  children: (
+                    <div className="tab-content-container">
+                      <RelatedDataTabs
+                        employee={selectedEmployee}
+                        yearMonth={selectedYearMonth}
+                        relatedData={relatedData}
+                        onUpdate={operations.updateRelatedData}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: 'commission',
+                  label: '提成详情',
+                  children: (
+                    <div className="tab-content-container">
+                      <CommissionPanel
+                        employeeName={selectedEmployee?.name || ''}
+                        yearMonth={selectedYearMonth}
+                        data={relatedData.commission}
+                        onUpdate={data => operations.updateRelatedData('commission', data)}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: 'operations',
+                  label: '数据操作',
+                  children: (
+                    <div className="tab-content-container" style={{ padding: '24px' }}>
+                      <ImportExportPanel
+                        yearMonth={selectedYearMonth}
+                        onImport={operations.importData}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          )}
+        </div>
+
+        {/* 分割线上的折叠按钮组 */}
+        <div
+          className="absolute top-1/2 transform -translate-y-1/2 z-20"
+          style={{
+            left: leftCollapsed ? '120px' : rightCollapsed ? 'calc(100% - 40px)' : '50%',
+            marginLeft: rightCollapsed ? '0' : '-16px',
+          }}
+        >
+          <div className="flex flex-col space-y-1">
+            {/* 左侧折叠按钮 - 左侧折叠时隐藏 */}
+            {!leftCollapsed && (
+              <Button
+                type="text"
+                size="small"
+                icon={<LeftOutlined />}
+                onClick={() => {
+                  setLeftCollapsed(true)
+                  setRightCollapsed(false)
+                }}
+                className="bg-white border border-gray-200 shadow-md hover:shadow-lg"
+                title="折叠左侧面板"
+                style={{ width: 32, height: 32 }}
+              />
+            )}
+            {/* 右侧折叠按钮 - 右侧折叠时隐藏 */}
+            {!rightCollapsed && (
+              <Button
+                type="text"
+                size="small"
+                icon={<RightOutlined />}
+                onClick={() => {
+                  setRightCollapsed(true)
+                  setLeftCollapsed(false)
+                }}
+                className="bg-white border border-gray-200 shadow-md hover:shadow-lg"
+                title="折叠右侧面板"
+                style={{ width: 32, height: 32 }}
+              />
+            )}
+            {/* 恢复按钮 - 任一侧折叠时显示 */}
+            {(leftCollapsed || rightCollapsed) && (
+              <Button
+                type="text"
+                size="small"
+                icon={leftCollapsed ? <RightOutlined /> : <LeftOutlined />}
+                onClick={() => {
+                  setLeftCollapsed(false)
+                  setRightCollapsed(false)
+                }}
+                className="bg-white border border-gray-200 shadow-md hover:shadow-lg"
+                title="恢复初始状态"
+                style={{ width: 32, height: 32 }}
+              />
+            )}
+          </div>
         </div>
       </div>
 
