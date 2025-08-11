@@ -257,13 +257,13 @@ export function ResizableTable<T extends Record<string, any>>({
             border-bottom: 1px solid #f0f0f0;
             background: #fafafa;
             font-weight: 500;
-            padding: 10px 16px;
+            padding: 14px 16px;
             text-align: left;
           }
           
           .resizable-table-container .ant-table-container > .ant-table-content > table > tbody > tr > td {
             border-bottom: 1px solid #f0f0f0;
-            padding: 10px 16px;
+            padding: 14px 16px;
           }
           
           /* 悬停效果 */

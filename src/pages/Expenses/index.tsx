@@ -10,6 +10,7 @@ import {
   Popconfirm,
   DatePicker,
   Tag,
+  Tooltip,
 } from 'antd'
 import type { ColumnType, ColumnGroupType } from 'antd/es/table'
 import {
@@ -23,6 +24,7 @@ import {
   DownloadOutlined,
   FileSearchOutlined,
   UploadOutlined,
+  CloseOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
@@ -95,6 +97,24 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     render: (value: string) => value || '-',
   },
   {
+    title: '代理费起止日期',
+    key: 'agencyDateRange',
+    width: 220,
+    ellipsis: false,
+    render: (record: Expense) => {
+      const startDate = record.agencyStartDate
+      const endDate = record.agencyEndDate
+
+      if (!startDate || !endDate) return '-'
+
+      return (
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {`${dayjs(startDate).format('YYYY-MM-DD')} ~ ${dayjs(endDate).format('YYYY-MM-DD')}`}
+        </span>
+      )
+    },
+  },
+  {
     title: '收费日期',
     dataIndex: 'chargeDate',
     key: 'chargeDate',
@@ -133,7 +153,7 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     title: '操作',
     key: 'action',
     fixed: 'right',
-    width: 220,
+    width: 150,
   },
 ]
 
@@ -731,37 +751,37 @@ const Expenses: React.FC = () => {
       case ExpenseStatus.Pending: // 未审核
         return (
           <Space size="small" className="action-buttons">
-            {/* 新增预览收据按钮 */}
-            <Button
-              type="link"
-              size="small"
-              icon={<FileSearchOutlined />}
-              className="preview-btn"
-              onClick={() => handlePreviewReceipt(record.id)}
-            >
-              预览收据
-            </Button>
+            {/* 预览收据按钮 */}
+            <Tooltip title="预览收据">
+              <Button
+                type="link"
+                size="small"
+                icon={<FileSearchOutlined />}
+                className="preview-btn"
+                onClick={() => handlePreviewReceipt(record.id)}
+              />
+            </Tooltip>
 
             {canEditExpense && (
-              <Button
-                type="link"
-                size="small"
-                icon={<EditOutlined />}
-                className="edit-btn"
-                onClick={() => handleEdit(record)}
-              >
-                编辑
-              </Button>
+              <Tooltip title="编辑">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined />}
+                  className="edit-btn"
+                  onClick={() => handleEdit(record)}
+                />
+              </Tooltip>
             )}
             {canAuditExpense && (
-              <Button
-                type="link"
-                size="small"
-                icon={<AuditOutlined />}
-                onClick={() => handleAudit(record)}
-              >
-                审核
-              </Button>
+              <Tooltip title="审核">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<AuditOutlined />}
+                  onClick={() => handleAudit(record)}
+                />
+              </Tooltip>
             )}
             {canDeleteExpense && (
               <Popconfirm
@@ -770,15 +790,15 @@ const Expenses: React.FC = () => {
                 okText="确定"
                 cancelText="取消"
               >
-                <Button
-                  type="link"
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                  className="delete-btn"
-                >
-                  删除
-                </Button>
+                <Tooltip title="删除">
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    className="delete-btn"
+                  />
+                </Tooltip>
               </Popconfirm>
             )}
           </Space>
@@ -788,20 +808,26 @@ const Expenses: React.FC = () => {
         return (
           <Space size="small" className="action-buttons">
             {canViewReceipt && (
-              <Button
-                type="link"
-                size="small"
-                icon={<EyeOutlined />}
-                className="view-btn"
-                onClick={() => handleViewReceipt(record.id)}
-              >
-                查看收据
-              </Button>
+              <Tooltip title="查看收据">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  className="view-btn"
+                  onClick={() => handleViewReceipt(record.id)}
+                />
+              </Tooltip>
             )}
             {canCancelAuditExpense && (
-              <Button type="link" size="small" danger onClick={() => handleCancelAudit(record)}>
-                取消审核
-              </Button>
+              <Tooltip title="取消审核">
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  icon={<CloseOutlined />}
+                  onClick={() => handleCancelAudit(record)}
+                />
+              </Tooltip>
             )}
           </Space>
         )
@@ -810,15 +836,15 @@ const Expenses: React.FC = () => {
         return (
           <Space size="small" className="action-buttons">
             {canEditExpense && (
-              <Button
-                type="link"
-                size="small"
-                icon={<EditOutlined />}
-                className="edit-btn"
-                onClick={() => handleEdit(record)}
-              >
-                编辑
-              </Button>
+              <Tooltip title="编辑">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<EditOutlined />}
+                  className="edit-btn"
+                  onClick={() => handleEdit(record)}
+                />
+              </Tooltip>
             )}
             <Popconfirm
               title={
@@ -852,9 +878,9 @@ const Expenses: React.FC = () => {
               overlayStyle={{ maxWidth: '400px' }}
               icon={null}
             >
-              <Button type="link" size="small" danger>
-                退回原因
-              </Button>
+              <Tooltip title="退回原因">
+                <Button type="link" size="small" danger icon={<InfoCircleOutlined />} />
+              </Tooltip>
             </Popconfirm>
             {canDeleteExpense && (
               <Popconfirm
@@ -863,15 +889,15 @@ const Expenses: React.FC = () => {
                 okText="确定"
                 cancelText="取消"
               >
-                <Button
-                  type="link"
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                  className="delete-btn"
-                >
-                  删除
-                </Button>
+                <Tooltip title="删除">
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    className="delete-btn"
+                  />
+                </Tooltip>
               </Popconfirm>
             )}
           </Space>
