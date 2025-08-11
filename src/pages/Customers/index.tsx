@@ -19,7 +19,9 @@ import {
   Form,
   Tooltip,
   Popover,
+  Pagination,
 } from 'antd'
+import ResizableTable from '../../components/ResizableTable'
 import {
   PlusOutlined,
   EditOutlined,
@@ -40,6 +42,7 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Customer, ImageType } from '../../types'
+import type { ResizableTableColumn } from '../../types/table'
 import type { TabsProps } from 'antd'
 import type { UploadProps } from 'antd'
 import CustomerForm from './CustomerForm'
@@ -774,71 +777,85 @@ export default function Customers() {
     return false // 阻止默认上传行为
   }
 
-  const columns: ColumnsType<Customer> = [
+  // 新的可拖拽列定义
+  const resizableColumns: ResizableTableColumn<Customer>[] = [
     {
-      title: '企业名称',
-      dataIndex: 'companyName',
-      key: 'companyName',
-      width: isMobile ? 160 : 200,
+      id: 'companyName',
+      accessorKey: 'companyName',
+      header: '企业名称',
+      enableResizing: true,
+      size: isMobile ? 160 : 200,
+      minSize: 120,
       fixed: 'left',
-      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 140 : 180} />,
-    },
-    {
-      title: '客户分级',
-      dataIndex: 'customerLevel',
-      key: 'customerLevel',
-      width: isMobile ? 120 : 150,
-      responsive: ['md'],
-      render: (text: string) => (
-        <CustomerLevelDisplay level={text} maxWidth={isMobile ? 100 : 130} placement="right" />
+      cell: ({ getValue }) => (
+        <EllipsisText text={(getValue() as string) || '-'} maxWidth={undefined} />
       ),
     },
     {
-      title: '企业类型',
-      dataIndex: 'enterpriseType',
-      key: 'enterpriseType',
-      width: 120,
-      responsive: ['lg'],
-      render: text => <EllipsisText text={text || '-'} maxWidth={100} />,
-    },
-    {
-      title: '所属分局',
-      dataIndex: 'taxBureau',
-      key: 'taxBureau',
-      width: 150,
-      responsive: ['lg'],
-      render: text => <EllipsisText text={text || '-'} maxWidth={130} />,
-    },
-    {
-      title: '归属地',
-      dataIndex: 'location',
-      key: 'location',
-      width: 150,
-      responsive: ['lg'],
-      render: text => <EllipsisText text={text || '-'} maxWidth={130} />,
-    },
-    {
-      title: '实际负责人',
-      dataIndex: 'actualResponsibleName',
-      key: 'actualResponsibleName',
-      width: isMobile ? 100 : 120,
-      responsive: ['sm'],
-      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 80 : 100} />,
-    },
-    {
-      title: '联系电话',
-      dataIndex: 'actualResponsiblePhone',
-      key: 'actualResponsiblePhone',
-      width: isMobile ? 100 : 120,
+      id: 'customerLevel',
+      accessorKey: 'customerLevel',
+      header: '客户分级',
+      size: isMobile ? 120 : 150,
       responsive: ['md'],
-      render: text => <EllipsisText text={text || '-'} maxWidth={isMobile ? 80 : 100} />,
+      cell: ({ getValue }) => (
+        <CustomerLevelDisplay
+          level={getValue() as string}
+          maxWidth={isMobile ? 100 : 130}
+          placement="right"
+        />
+      ),
     },
     {
-      title: '工商状态',
-      dataIndex: 'enterpriseStatus',
-      key: 'enterpriseStatus',
-      width: isMobile ? 80 : 100,
-      render: (status: string) => {
+      id: 'enterpriseType',
+      accessorKey: 'enterpriseType',
+      header: '企业类型',
+      size: 120,
+      responsive: ['lg'],
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={100} />,
+    },
+    {
+      id: 'taxBureau',
+      accessorKey: 'taxBureau',
+      header: '所属分局',
+      size: 150,
+      responsive: ['lg'],
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={130} />,
+    },
+    {
+      id: 'location',
+      accessorKey: 'location',
+      header: '归属地',
+      size: 150,
+      responsive: ['lg'],
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={130} />,
+    },
+    {
+      id: 'actualResponsibleName',
+      accessorFn: row => row.actualResponsibles?.[0]?.name || '-',
+      header: '实际负责人',
+      size: isMobile ? 100 : 120,
+      responsive: ['sm'],
+      cell: ({ getValue }) => (
+        <EllipsisText text={(getValue() as string) || '-'} maxWidth={isMobile ? 80 : 100} />
+      ),
+    },
+    {
+      id: 'actualResponsiblePhone',
+      accessorFn: row => row.actualResponsibles?.[0]?.phone || '-',
+      header: '联系电话',
+      size: isMobile ? 100 : 120,
+      responsive: ['md'],
+      cell: ({ getValue }) => (
+        <EllipsisText text={(getValue() as string) || '-'} maxWidth={isMobile ? 80 : 100} />
+      ),
+    },
+    {
+      id: 'enterpriseStatus',
+      accessorKey: 'enterpriseStatus',
+      header: '工商状态',
+      size: isMobile ? 80 : 100,
+      cell: ({ getValue }) => {
+        const status = getValue() as string
         if (!status) {
           return (
             <Tooltip title="未设置" placement="topLeft" mouseEnterDelay={0.3}>
@@ -860,11 +877,12 @@ export default function Customers() {
       },
     },
     {
-      title: '税务状态',
-      dataIndex: 'businessStatus',
-      key: 'businessStatus',
-      width: isMobile ? 80 : 100,
-      render: (status: string) => {
+      id: 'businessStatus',
+      accessorKey: 'businessStatus',
+      header: '税务状态',
+      size: isMobile ? 80 : 100,
+      cell: ({ getValue }) => {
+        const status = getValue() as string
         if (!status) {
           return (
             <Tooltip title="未设置" placement="topLeft" mouseEnterDelay={0.3}>
@@ -885,54 +903,67 @@ export default function Customers() {
       },
     },
     {
-      title: '创建时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      width: isMobile ? 130 : 180,
+      id: 'createTime',
+      accessorKey: 'createTime',
+      header: '创建时间',
+      size: isMobile ? 130 : 180,
       responsive: ['lg'],
-      render: (date: string) => {
+      cell: ({ getValue }) => {
+        const date = getValue() as string
         const formattedDate = dayjs.utc(date).local().format('YYYY-MM-DD HH:mm:ss')
         return <EllipsisText text={formattedDate} maxWidth={isMobile ? 110 : 160} />
       },
     },
     {
-      title: '操作',
-      key: 'action',
+      id: 'actions',
+      header: '操作',
       fixed: 'right',
-      width: isMobile ? 90 : 150,
-      render: (_, record) => (
-        <Space size={isMobile ? 'small' : 'middle'} className="flex flex-nowrap">
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-            className={isMobile ? 'p-1 m-0 h-auto min-w-0' : ''}
-          >
-            {!isMobile && '查看'}
-          </Button>
-          {canEditCustomer && (
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-              className={isMobile ? 'p-1 m-0 h-auto min-w-0' : ''}
-            >
-              {!isMobile && '编辑'}
-            </Button>
-          )}
-          {canDeleteCustomer && (
-            <Button
-              type="link"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(record.id)}
-              className={isMobile ? 'p-1 m-0 h-auto min-w-0' : ''}
-            >
-              {!isMobile && '删除'}
-            </Button>
-          )}
-        </Space>
-      ),
+      size: isMobile ? 110 : 140,
+      minSize: isMobile ? 100 : 130,
+      cell: ({ row }) => {
+        const record = row.original
+        // 调试权限状态
+        console.log(
+          '操作列渲染 - canDeleteCustomer:',
+          canDeleteCustomer,
+          'permissionLoading:',
+          permissionLoading,
+          'customerPermissions:',
+          customerPermissions
+        )
+        return (
+          <Space size="small" className="flex flex-nowrap justify-start">
+            <Tooltip title="查看">
+              <Button
+                type="link"
+                icon={<EyeOutlined />}
+                onClick={() => handleView(record)}
+                className="p-1 m-0 h-auto min-w-0"
+              />
+            </Tooltip>
+            {canEditCustomer && (
+              <Tooltip title="编辑">
+                <Button
+                  type="link"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEdit(record)}
+                  className="p-1 m-0 h-auto min-w-0"
+                />
+              </Tooltip>
+            )}
+            <Tooltip title="删除">
+              <Button
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record.id)}
+                className="p-1 m-0 h-auto min-w-0"
+                style={{ color: '#ff4d4f' }}
+              />
+            </Tooltip>
+          </Space>
+        )
+      },
     },
   ]
 
@@ -1241,26 +1272,29 @@ export default function Customers() {
       </div>
 
       {/* 数据表格 */}
-      <Table
-        columns={columns}
+      <ResizableTable
+        columns={resizableColumns}
         dataSource={customers}
         rowKey="id"
-        pagination={{
-          total,
-          current,
-          pageSize,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: total => `共 ${total} 条记录`,
-          onChange: (page, size) => {
-            setCurrent(page)
-            if (size !== pageSize) {
-              setPageSize(size)
-            }
-          },
-          size: isMobile ? 'small' : 'default',
-          simple: isMobile,
-        }}
+        tableKey="customers-table"
+        pagination={
+          <Pagination
+            total={total}
+            current={current}
+            pageSize={pageSize}
+            showSizeChanger={true}
+            showQuickJumper={true}
+            showTotal={total => `共 ${total} 条记录`}
+            onChange={(page, size) => {
+              setCurrent(page)
+              if (size !== pageSize) {
+                setPageSize(size)
+              }
+            }}
+            size={isMobile ? 'small' : 'default'}
+            simple={isMobile}
+          />
+        }
         loading={isLoading}
         scroll={{ x: 'max-content' }}
         size={isMobile ? 'small' : 'middle'}
