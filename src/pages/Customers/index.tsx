@@ -1343,11 +1343,19 @@ export default function Customers() {
         onCancel={handleCloseModal}
         footer={null}
         width={isMobile ? '100%' : 1000}
-        style={isMobile ? { top: 10, padding: 0 } : undefined}
+        style={isMobile ? { top: 10, padding: 0 } : { top: 24, padding: 0 }}
         styles={
           isMobile
             ? { body: { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } }
-            : undefined
+            : {
+                body: {
+                  padding: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 'calc(100vh - 120px)',
+                  overflow: 'hidden',
+                },
+              }
         }
         destroyOnClose
       >
@@ -1847,7 +1855,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       label: '基本信息',
       children: (
         <Descriptions
-          title="基本信息"
           bordered
           column={{ xxl: 3, xl: 3, lg: 3, md: 2, sm: 1, xs: 1 }}
           size={isMobile ? 'small' : 'default'}

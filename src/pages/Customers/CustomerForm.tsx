@@ -2090,10 +2090,23 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   ]
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="customer-form-container w-full max-w-7xl mx-auto">
+      <style>
+        {`
+          .customer-form-container { height: 100%; display: flex; flex-direction: column; }
+          .customer-form { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+          .customer-form-scroll { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+          .customer-form-tabs { display: flex; flex-direction: column; padding: 0; }
+          .customer-form-tabs .ant-tabs-nav { position: sticky; top: 0; background: #fff; z-index: 3; margin: 0; }
+          .customer-form-tabs .ant-tabs-content { padding-right: 10px; padding-top: 10px; }
+          .customer-form-tabs .ant-tabs-content-holder { flex: 1; min-height: 0; }
+          .customer-form-footer { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #f0f0f0; padding: 8px 16px; z-index: 4; }
+        `}
+      </style>
       <Form
         form={form}
         layout="vertical"
+        className="customer-form w-full"
         initialValues={
           customer
             ? ({
@@ -2131,10 +2144,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           handleSubmit(formValues)
         }}
         onFinishFailed={handleFormValidationError}
-        className="w-full"
       >
-        <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs} className="mb-6" />
-        <div className="flex justify-end mt-6">
+        <div className="customer-form-scroll">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={tabs}
+            className="customer-form-tabs"
+          />
+          <div style={{ height: 8 }} />
+        </div>
+        <div className="customer-form-footer flex justify-end">
           <Space>
             <Button onClick={() => handleCancel()}>取消</Button>
             {mode !== 'view' && (
