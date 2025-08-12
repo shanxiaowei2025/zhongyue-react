@@ -122,12 +122,6 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     render: (value: string) => (value ? dayjs(value).format('YYYY-MM-DD') : '-'),
   },
   {
-    title: '收费方式',
-    dataIndex: 'chargeMethod',
-    key: 'chargeMethod',
-    width: 100,
-  },
-  {
     title: '业务员',
     dataIndex: 'salesperson',
     key: 'salesperson',
