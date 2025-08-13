@@ -39,8 +39,8 @@ import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
 import { mutate } from 'swr'
-import { useBranchOffices } from '../../hooks/useDepartments'
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
+import { LOCATION_OPTIONS } from '../../constants/locationOptions'
 import { useAuthStore } from '../../store/auth'
 
 // 字段名到标签页的映射
@@ -333,7 +333,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [actualResponsibleItems, setActualResponsibleItems] = useState<ActualResponsibleItem[]>([])
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
-  const { branchOffices, isLoading: isLoadingBranchOffices } = useBranchOffices()
 
   // 获取当前用户信息
   const { user } = useAuthStore()
@@ -1126,10 +1125,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             label="归属地"
             rules={[{ required: true, message: '请选择归属地' }]}
           >
-            <Select loading={isLoadingBranchOffices}>
-              {branchOffices.map(office => (
-                <Select.Option key={office.id} value={office.name}>
-                  {office.name}
+            <Select placeholder="请选择归属地">
+              {LOCATION_OPTIONS.map(option => (
+                <Select.Option key={option.value} value={option.value}>
+                  {option.label}
                 </Select.Option>
               ))}
             </Select>

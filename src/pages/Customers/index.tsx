@@ -53,6 +53,7 @@ import {
   BUSINESS_STATUS_COLOR_MAP,
   ENTERPRISE_STATUS_COLOR_MAP,
 } from '../../constants'
+import { LOCATION_OPTIONS } from '../../constants/locationOptions'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
@@ -1146,12 +1147,13 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="归属地" className="mb-2">
-                <Input
-                  placeholder="请输入归属地"
-                  value={searchParams.location}
-                  onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
-                  className="w-full"
+                <Select
+                  placeholder="请选择归属地"
+                  value={searchParams.location || undefined}
+                  onChange={value => setSearchParams({ ...searchParams, location: value })}
                   allowClear
+                  className="w-full"
+                  options={LOCATION_OPTIONS}
                 />
               </Form.Item>
 
