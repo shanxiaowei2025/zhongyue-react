@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Card,
   Tabs,
@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { SalaryRecord, UpdateSalaryDto } from '../../../types/salaryIntegrated'
 import type { Expense } from '../../../types/expense'
-import { getExpenseList } from '../../../api/expense'
+import { useExpenseList } from '../../../hooks/useExpense'
 import SalaryCalculator from './SalaryCalculator'
 import AmountInput from './AmountInput'
 import PerformanceDeductionsEditor from './PerformanceDeductionsEditor'
@@ -45,9 +45,34 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   const [editing, setEditing] = useState(false)
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [expenseLoading, setExpenseLoading] = useState(false)
-  const [expenses, setExpenses] = useState<Expense[]>([])
   const [fullscreenTable, setFullscreenTable] = useState(false)
+
+  // 构建费用查询参数
+  const expenseParams = useMemo(() => {
+    if (!employee?.name || !yearMonth) {
+      return null
+    }
+
+    const monthStart = dayjs(yearMonth).startOf('month').format('YYYY-MM-DD')
+    const monthEnd = dayjs(yearMonth).endOf('month').format('YYYY-MM-DD')
+
+    return {
+      page: 1,
+      pageSize: 1000,
+      salesperson: employee.name,
+      status: 1, // 已审核
+      auditDateStart: monthStart,
+      auditDateEnd: monthEnd,
+    }
+  }, [employee?.name, yearMonth])
+
+  // 使用 hook 获取费用数据
+  const { expenses, isLoading: expenseLoading } = useExpenseList(
+    expenseParams || {
+      page: 1,
+      pageSize: 10,
+    }
+  )
 
   // 全屏时阻止body滚动
   useEffect(() => {
@@ -76,35 +101,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
-  }
-
-  // 获取关联收据
-  const loadRelatedExpenses = async (employeeName: string, salaryYearMonth: string) => {
-    try {
-      setExpenseLoading(true)
-
-      // 计算薪资月份的第一天和最后一天
-      const monthStart = dayjs(salaryYearMonth).startOf('month').format('YYYY-MM-DD')
-      const monthEnd = dayjs(salaryYearMonth).endOf('month').format('YYYY-MM-DD')
-
-      const response = await getExpenseList({
-        page: 1,
-        pageSize: 1000, // 增加页面大小以获取更多数据
-        salesperson: employeeName,
-        status: 1, // 已审核
-        auditDateStart: monthStart,
-        auditDateEnd: monthEnd,
-      })
-
-      if (response.data && response.data.list) {
-        setExpenses(response.data.list)
-      }
-    } catch (error) {
-      console.error('加载关联收据失败:', error)
-      message.error('加载关联收据失败')
-    } finally {
-      setExpenseLoading(false)
-    }
   }
 
   // 费用类型映射
@@ -234,13 +230,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     // 直接使用费用ID跳转，而不是收据编号，这样可以避免在费用页面查找不到的问题
     navigate(`/expenses?openReceiptById=${expense.id}`)
   }
-
-  // 当员工变化时加载关联收据
-  useEffect(() => {
-    if (employee && employee.name && yearMonth) {
-      loadRelatedExpenses(employee.name, yearMonth)
-    }
-  }, [employee?.name, yearMonth])
 
   if (!employee) {
     return (

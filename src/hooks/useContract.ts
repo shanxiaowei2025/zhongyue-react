@@ -15,6 +15,7 @@ import {
   updateContract as updateContractApi,
   deleteContract as deleteContractApi,
   signContract as signContractApi,
+  generateContractToken,
 } from '../api/contract'
 
 // 生成合同列表的缓存key
@@ -220,6 +221,26 @@ export const useContractDetail = (id?: number | null) => {
     }
   }
 
+  // 生成合同签署token
+  const generateSignToken = async (contractId: number) => {
+    try {
+      const response = await generateContractToken(contractId)
+      if ((response as any).code === 0) {
+        return (response as any).data
+      } else {
+        throw new Error((response as any).message || '生成签署链接失败')
+      }
+    } catch (error) {
+      console.error('生成签署链接失败:', error)
+      if (error instanceof Error) {
+        message.error(`生成签署链接失败: ${error.message}`)
+      } else {
+        message.error('生成签署链接失败')
+      }
+      throw error
+    }
+  }
+
   return {
     data,
     isLoading,
@@ -227,5 +248,6 @@ export const useContractDetail = (id?: number | null) => {
     refreshContractDetail,
     updateContractData,
     createContractData,
+    generateSignToken,
   }
 }

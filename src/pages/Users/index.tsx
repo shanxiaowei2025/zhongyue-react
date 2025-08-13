@@ -17,9 +17,7 @@ import type { TablePaginationConfig } from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons'
 import { User, Department, ApiResponse, PaginatedResponse } from '../../types'
-import { getUserList, createUser, updateUserById, deleteUser, searchUsers } from '../../api/user'
-import { getDepartmentList, getDepartmentTree } from '../../api/department'
-import { getRoleList } from '../../api/roles'
+import { useUserList, useDepartmentTree, useRoleList, useUserOperations } from '../../hooks/useUser'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import dayjs from 'dayjs'
 
@@ -63,34 +61,32 @@ interface CascaderOption {
 }
 
 const Users = () => {
-  const [users, setUsers] = useState<ApiUser[]>([])
-  const [roles, setRoles] = useState<{ id: number; name: string; code: string }[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [departmentTree, setDepartmentTree] = useState<CascaderOption[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
   const [modalVisible, setModalVisible] = useState<boolean>(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [form] = Form.useForm()
-  const [keyword, setKeyword] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
-  const [pagination, setPagination] = useState<TablePaginationConfig>({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  })
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
 
   // 使用防抖值处理搜索
   const debouncedSearchText = useDebouncedValue(searchText, 500)
 
-  // 创建角色代码到名称的映射
-  const roleCodeToName = useMemo(() => {
-    const map: Record<string, string> = {}
-    roles.forEach(role => {
-      map[role.code] = role.name
-    })
-    return map
-  }, [roles])
+  // 使用hooks获取数据
+  const {
+    users,
+    loading,
+    pagination: userPagination,
+  } = useUserList({
+    page: currentPage,
+    pageSize: pageSize,
+    searchText: debouncedSearchText,
+  })
 
+  const { departmentTree: rawDepartmentTree } = useDepartmentTree()
+  const { roles } = useRoleList()
+  const { createUser, updateUser, deleteUser } = useUserOperations()
+
+  // 转换部门树为级联选择器格式的函数
   const transformToCascaderOptions = (departments: any[]): CascaderOption[] => {
     const transform = (depts: any[]): CascaderOption[] => {
       return depts.map(dept => ({
@@ -102,6 +98,20 @@ const Users = () => {
 
     return transform(departments)
   }
+
+  // 转换部门树为级联选择器格式
+  const departmentTree = useMemo(() => {
+    return transformToCascaderOptions(rawDepartmentTree)
+  }, [rawDepartmentTree])
+
+  // 创建角色代码到名称的映射
+  const roleCodeToName = useMemo(() => {
+    const map: Record<string, string> = {}
+    roles.forEach(role => {
+      map[role.code] = role.name
+    })
+    return map
+  }, [roles])
 
   // 添加获取部门路径的辅助函数
   const getDepartmentPath = (deptId: number | undefined, departments: any[]): number[] => {
@@ -131,116 +141,6 @@ const Users = () => {
     return path
   }
 
-  useEffect(() => {
-    fetchUsers()
-    fetchRoles()
-    fetchDepartmentTree()
-  }, [pagination.current, pagination.pageSize, debouncedSearchText])
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true)
-      let response
-
-      if (debouncedSearchText) {
-        // 使用搜索接口
-        response = await searchUsers(
-          debouncedSearchText,
-          pagination.current as number,
-          pagination.pageSize as number
-        )
-      } else {
-        // 使用常规列表接口
-        response = await getUserList(
-          pagination.current as number,
-          pagination.pageSize as number,
-          keyword
-        )
-      }
-
-      if (response) {
-        const apiResponse = response as unknown as ApiData<UserResponse>
-        if (apiResponse.code === 0 && apiResponse.data) {
-          // 获取部门树数据
-          const deptResponse = await getDepartmentTree()
-          const deptApiResponse = deptResponse as unknown as ApiData<any[]>
-
-          // 为每个用户添加部门名称
-          const usersWithDeptName = apiResponse.data.items.map(user => {
-            if (user.dept_id) {
-              // 获取部门路径
-              const deptPath = getDepartmentPath(user.dept_id, deptApiResponse.data)
-              // 获取部门名称
-              const deptNames = deptPath
-                .map(id => {
-                  const findDeptName = (depts: any[]): string | undefined => {
-                    for (const dept of depts) {
-                      if (dept.id === id) {
-                        return dept.name
-                      }
-                      if (dept.children) {
-                        const name = findDeptName(dept.children)
-                        if (name) return name
-                      }
-                    }
-                    return undefined
-                  }
-                  return findDeptName(deptApiResponse.data)
-                })
-                .filter(Boolean)
-
-              return {
-                ...user,
-                dept_name: deptNames.join(' / '),
-              }
-            }
-            return user
-          })
-
-          setUsers(usersWithDeptName)
-          setPagination({
-            ...pagination,
-            total: apiResponse.data.meta.total,
-          })
-        }
-      }
-    } catch (error) {
-      console.error('获取用户列表失败:', error)
-      message.error('获取用户列表失败')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchRoles = async () => {
-    try {
-      const response = await getRoleList()
-      const apiResponse = response as unknown as ApiData<
-        { id: number; name: string; code: string }[]
-      >
-      if (apiResponse.code === 0) {
-        setRoles(apiResponse.data)
-      }
-    } catch (error) {
-      console.error('获取角色列表失败:', error)
-      message.error('获取角色列表失败')
-    }
-  }
-
-  const fetchDepartmentTree = async () => {
-    try {
-      const response = await getDepartmentTree()
-      const apiResponse = response as unknown as ApiData<any[]>
-      if (apiResponse.code === 0) {
-        const options = transformToCascaderOptions(apiResponse.data)
-        setDepartmentTree(options)
-      }
-    } catch (error) {
-      console.error('获取部门树失败:', error)
-      message.error('获取部门树失败')
-    }
-  }
-
   const handleAdd = () => {
     setCurrentId(null)
     form.resetFields()
@@ -250,44 +150,22 @@ const Users = () => {
   const handleEdit = async (record: ApiUser) => {
     setCurrentId(record.id)
 
-    try {
-      // 获取最新的部门树数据
-      const response = await getDepartmentTree()
-      const apiResponse = response as unknown as ApiData<any[]>
-      if (apiResponse.code === 0) {
-        // 获取部门路径
-        const deptPath = getDepartmentPath(record.dept_id, apiResponse.data)
+    // 获取部门路径
+    const deptPath = getDepartmentPath(record.dept_id, rawDepartmentTree)
 
-        form.setFieldsValue({
-          username: record.username,
-          idCardNumber: record.idCardNumber,
-          phone: record.phone,
-          isActive: record.isActive,
-          dept_id: deptPath, // 设置完整的部门路径
-          roles: record.roles,
-        })
-        setModalVisible(true)
-      }
-    } catch (error) {
-      console.error('获取部门树失败:', error)
-      message.error('获取部门树失败')
-    }
+    form.setFieldsValue({
+      username: record.username,
+      idCardNumber: record.idCardNumber,
+      phone: record.phone,
+      isActive: record.isActive,
+      dept_id: deptPath, // 设置完整的部门路径
+      roles: record.roles,
+    })
+    setModalVisible(true)
   }
 
   const handleDelete = async (id: number) => {
-    try {
-      const response = await deleteUser(id)
-      const apiResponse = response as unknown as ApiData<any>
-      if (apiResponse.code === 0) {
-        message.success('删除用户成功')
-        fetchUsers()
-      } else {
-        message.error(apiResponse.message || '删除用户失败')
-      }
-    } catch (error) {
-      console.error('删除用户失败:', error)
-      message.error('删除用户失败')
-    }
+    await deleteUser(id)
   }
 
   const handleCancel = () => {
@@ -310,61 +188,41 @@ const Users = () => {
       }
 
       if (currentId) {
-        const response = await updateUserById(currentId, values)
-        const apiResponse = response as unknown as ApiData<any>
-        if (apiResponse.code === 0) {
-          message.success('更新用户成功')
-          setModalVisible(false)
-          fetchUsers()
-        } else {
-          message.error(apiResponse.message || '更新用户失败')
-        }
+        await updateUser(currentId, values)
+        setModalVisible(false)
       } else {
-        try {
-          const response = await createUser(values)
-          const apiResponse = response as unknown as ApiData<any>
-          if (apiResponse.code === 0) {
-            message.success('添加用户成功')
-            setModalVisible(false)
-            fetchUsers()
-          } else {
-            message.error(apiResponse.message || '添加用户失败')
-          }
-        } catch (error: any) {
-          // 错误已经在全局拦截器中处理，这里只是为了捕获错误
-          console.error('添加用户失败:', error)
-        }
+        await createUser(values)
+        setModalVisible(false)
       }
     } catch (error) {
-      console.error('表单验证失败:', error)
+      console.error('操作失败:', error)
     }
   }
 
   const handleTableChange = (newPagination: TablePaginationConfig) => {
-    setPagination({
-      ...pagination,
-      current: newPagination.current,
-      pageSize: newPagination.pageSize,
-    })
+    if (newPagination.current) {
+      setCurrentPage(newPagination.current)
+    }
+    if (newPagination.pageSize) {
+      setPageSize(newPagination.pageSize)
+      // 当改变页面大小时，重置到第一页
+      if (newPagination.pageSize !== pageSize) {
+        setCurrentPage(1)
+      }
+    }
   }
 
   // 处理搜索
   const handleSearch = (value: string) => {
     setSearchText(value)
     // 重置到第一页
-    setPagination(prev => ({
-      ...prev,
-      current: 1,
-    }))
+    setCurrentPage(1)
   }
 
   // 处理重置
   const handleReset = () => {
     setSearchText('')
-    setPagination(prev => ({
-      ...prev,
-      current: 1,
-    }))
+    setCurrentPage(1)
   }
 
   const columns: ColumnsType<ApiUser> = [
@@ -488,7 +346,7 @@ const Users = () => {
         loading={loading}
         scroll={{ x: 'max-content' }}
         pagination={{
-          ...pagination,
+          ...userPagination,
           position: ['bottomCenter'],
           showSizeChanger: true,
           showQuickJumper: true,

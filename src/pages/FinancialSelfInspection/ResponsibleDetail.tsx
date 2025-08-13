@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, Button, Typography, Descriptions, Spin, Tag, message, Space, Timeline } from 'antd'
 import {
@@ -12,7 +12,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { getMyResponsibleInspectionDetail } from '../../api/financialSelfInspection'
+import { useResponsibleInspectionDetail } from '../../hooks/useFinancialSelfInspection'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
   FinancialSelfInspection,
@@ -37,36 +37,13 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [loading, setLoading] = useState<boolean>(false)
-  const [data, setData] = useState<FinancialSelfInspection | null>(null)
+  // 使用统一的hook获取数据
+  const { data, loading, error } = useResponsibleInspectionDetail(id ? Number(id) : null)
 
-  // 加载详情数据
-  const loadDetailData = async () => {
-    if (!id) {
-      message.error('缺少记录ID')
-      return
-    }
-
-    try {
-      setLoading(true)
-      const response = await getMyResponsibleInspectionDetail(Number(id))
-
-      if (response.code === 0 && response.data) {
-        setData(response.data)
-      } else {
-        message.error(response.message || '获取详情失败')
-      }
-    } catch (error) {
-      console.error('加载账务自查详情失败:', error)
-      message.error('加载详情失败')
-    } finally {
-      setLoading(false)
-    }
+  // 处理错误
+  if (error) {
+    message.error('获取详情失败')
   }
-
-  useEffect(() => {
-    loadDetailData()
-  }, [id])
 
   // 返回列表
   const handleBack = () => {

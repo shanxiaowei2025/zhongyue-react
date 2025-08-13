@@ -72,6 +72,7 @@ export interface FinancialSelfInspectionQueryParams {
   inspectionDateEnd?: string // 抽查日期结束
   page?: number // 页码
   pageSize?: number // 每页数量
+  [key: string]: any
 }
 
 // API响应接口

@@ -3,7 +3,7 @@ import { Table, Button, Input, Space, Modal, Form, Select, message, Tag, Card, T
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Role } from '../../types'
-import { getRoleList, createRole, updateRole, deleteRole } from '../../api/roles'
+import { useRoleList, useRoleOperations } from '../../hooks/useRole'
 import dayjs from 'dayjs'
 
 const { Option } = Select
@@ -11,29 +11,13 @@ const { Search } = Input
 
 const Roles = () => {
   const [form] = Form.useForm()
-  const [roles, setRoles] = useState<Role[]>([])
-  const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [searchText, setSearchText] = useState('')
 
-  useEffect(() => {
-    fetchRoles()
-  }, [])
-
-  // 获取角色列表
-  const fetchRoles = async () => {
-    setLoading(true)
-    try {
-      const res = await getRoleList()
-      setRoles(res.data || [])
-    } catch (error) {
-      console.error('获取角色列表失败', error)
-      message.error('获取角色列表失败')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // 使用hooks获取数据和操作方法
+  const { roles, loading, refreshRoleList } = useRoleList()
+  const { createRole, updateRole, deleteRole } = useRoleOperations()
 
   // 添加角色
   const handleAdd = () => {
@@ -57,14 +41,7 @@ const Roles = () => {
       title: '确认删除',
       content: '确定要删除这个角色吗？这可能会影响关联的用户。',
       onOk: async () => {
-        try {
-          await deleteRole(id)
-          message.success('删除成功')
-          fetchRoles()
-        } catch (error) {
-          console.error('删除失败:', error)
-          message.error('删除失败')
-        }
+        await deleteRole(id)
       },
     })
   }
@@ -81,23 +58,18 @@ const Roles = () => {
       const values = await form.validateFields()
       if (currentId) {
         await updateRole(currentId, values)
-        message.success('更新成功')
       } else {
         await createRole(values)
-        message.success('创建成功')
       }
       setModalVisible(false)
-      fetchRoles()
     } catch (error) {
       console.error('操作失败:', error)
-      message.error('操作失败')
     }
   }
 
   // 重置搜索
   const handleReset = () => {
     setSearchText('')
-    fetchRoles()
   }
 
   // 格式化时间显示
@@ -219,7 +191,7 @@ const Roles = () => {
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               新增角色
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={fetchRoles}>
+            <Button icon={<ReloadOutlined />} onClick={refreshRoleList}>
               刷新
             </Button>
             <Search

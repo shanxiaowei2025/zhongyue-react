@@ -28,7 +28,6 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import { pdf } from '@react-pdf/renderer'
 import { useContractDetail } from '../../hooks/useContract'
-import { generateContractToken, updateContract } from '../../api/contract'
 import { uploadFile } from '../../api/upload'
 import ProductServiceAgreementView from '../../components/contracts/ProductServiceAgreementView'
 import AgencyAccountingAgreementView from '../../components/contracts/AgencyAccountingAgreementView'
@@ -96,6 +95,8 @@ const ContractDetail: React.FC = () => {
     isLoading,
     error,
     refreshContractDetail,
+    updateContractData,
+    generateSignToken,
   } = useContractDetail(contractId)
 
   // 检查合同ID有效性
@@ -957,7 +958,7 @@ const ContractDetail: React.FC = () => {
         }
 
         // 先更新合同日期信息
-        await updateContract(contractId, dateUpdateData)
+        await updateContractData(contractId, dateUpdateData)
 
         // 重新获取合同数据以刷新页面显示
         await refreshContractDetail()
@@ -1526,11 +1527,11 @@ const ContractDetail: React.FC = () => {
       const updateData: any = { contractImage: imageFileName }
 
       // 更新合同信息
-      await updateContract(contractId, updateData)
+      await updateContractData(contractId, updateData)
 
       // 生成签署链接
-      const tokenResponse = (await generateContractToken(contractId)) as any
-      const { token } = tokenResponse.data
+      const tokenResponse = await generateSignToken(contractId)
+      const { token } = tokenResponse
 
       // 生成签署页面链接，包含甲方公司名称
       const url = `https://manage.zhongyuekuaiji.cn/contract-sign/${token}`

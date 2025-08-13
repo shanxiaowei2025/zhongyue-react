@@ -3,22 +3,19 @@ import { Table, Button, message, Switch, Card, Tabs, Tooltip, Spin } from 'antd'
 import { ReloadOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { RolePermissionMatrix, Permission } from '../../types'
-import { getPermissionList, updatePermission } from '../../api/permissions'
+import { usePermission, usePermissionManagement } from '../../hooks/usePermission'
 
 // 权限管理页面
 const Permissions = () => {
   const [activeTab, setActiveTab] = useState<string>('')
   const [pageNames, setPageNames] = useState<string[]>([])
   const [rolePermissions, setRolePermissions] = useState<RolePermissionMatrix[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
   const [permissionsMap, setPermissionsMap] = useState<Record<string, Permission>>({})
   const [permissionsByPage, setPermissionsByPage] = useState<Record<string, Permission[]>>({})
 
-  // 初始化获取数据
-  useEffect(() => {
-    fetchPermissionData()
-  }, [])
+  // 使用hooks获取数据
+  const { permissions, loading: permissionLoading, refreshPermissions } = usePermission()
+  const { loading: operationLoading, updatePermission } = usePermissionManagement()
 
   // 设置默认活动的Tab
   useEffect(() => {
@@ -27,18 +24,12 @@ const Permissions = () => {
     }
   }, [pageNames, activeTab])
 
-  // 获取权限数据
-  const fetchPermissionData = async () => {
-    setLoading(true)
-    try {
-      // 获取所有权限列表
-      const permRes = await getPermissionList()
-      const permissionsList = permRes.data || []
-      setPermissions(permissionsList)
-
+  // 处理权限数据
+  useEffect(() => {
+    if (permissions && permissions.length > 0) {
       // 创建权限ID映射表，用于快速查找
       const permMap: Record<string, Permission> = {}
-      permissionsList.forEach(perm => {
+      permissions.forEach(perm => {
         const key = `${perm.role_name}:${perm.permission_name}`
         permMap[key] = perm
       })
@@ -46,7 +37,7 @@ const Permissions = () => {
 
       // 按页面名称分组权限
       const permsByPage: Record<string, Permission[]> = {}
-      permissionsList.forEach(perm => {
+      permissions.forEach(perm => {
         if (!permsByPage[perm.page_name]) {
           permsByPage[perm.page_name] = []
         }
@@ -55,12 +46,12 @@ const Permissions = () => {
       setPermissionsByPage(permsByPage)
 
       // 提取页面名称列表，用于标签页
-      const uniquePageNames = Array.from(new Set(permissionsList.map(p => p.page_name)))
+      const uniquePageNames = Array.from(new Set(permissions.map(p => p.page_name)))
       setPageNames(uniquePageNames)
 
       // 提取角色并构建角色权限矩阵
-      const roles = Array.from(new Set(permissionsList.map(p => p.role_name))).map(roleName => {
-        const rolePerms = permissionsList.filter(p => p.role_name === roleName)
+      const roles = Array.from(new Set(permissions.map(p => p.role_name))).map(roleName => {
+        const rolePerms = permissions.filter(p => p.role_name === roleName)
         const roleId = rolePerms.length > 0 ? rolePerms[0].role_id : 0
 
         const permObj: Record<string, boolean> = {}
@@ -85,13 +76,8 @@ const Permissions = () => {
       })
 
       setRolePermissions(roles)
-    } catch (error) {
-      console.error('获取权限数据失败:', error)
-      message.error('获取权限数据失败')
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [permissions])
 
   // 切换权限状态
   const handleTogglePermission = async (
@@ -109,21 +95,8 @@ const Permissions = () => {
 
     try {
       await updatePermission(permission.id, { permission_value: checked })
-      message.success('权限更新成功')
-
-      // 更新本地数据
-      setPermissionsMap(prev => ({
-        ...prev,
-        [key]: { ...permission, permission_value: checked },
-      }))
-
-      setRolePermissions(prev =>
-        prev.map(rp =>
-          rp.role.name === roleName
-            ? { ...rp, permissions: { ...rp.permissions, [permissionName]: checked } }
-            : rp
-        )
-      )
+      // 刷新权限数据
+      refreshPermissions()
     } catch (error) {
       console.error('更新权限失败:', error)
       message.error('更新权限失败')
@@ -214,7 +187,7 @@ const Permissions = () => {
   }))
 
   return (
-    <Spin spinning={loading}>
+    <Spin spinning={permissionLoading || operationLoading}>
       <Card>
         {pageNames.length > 0 ? (
           <Tabs activeKey={activeTab} onChange={setActiveTab} type="card" items={tabItems} />

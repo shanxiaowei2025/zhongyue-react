@@ -30,15 +30,13 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import type { Department, DepartmentTreeNode } from '../../types'
 import {
-  getDepartmentList,
-  getDepartmentTree,
-  createDepartment,
-  updateDepartment,
-  deleteDepartment,
-  bulkDeleteDepartments,
-  getDepartmentUsers,
-  getDepartment,
-} from '../../api/department'
+  useDepartments,
+  useDepartmentList,
+  useDepartmentDetail,
+  useDepartmentUsers,
+  useDepartmentOperations,
+  getDepartmentPath,
+} from '../../hooks/useDepartments'
 import './index.css' // 引入CSS样式文件
 
 const { Option } = Select
@@ -62,33 +60,26 @@ interface CascaderOption {
 const Departments = () => {
   const [form] = Form.useForm()
   const [departments, setDepartments] = useState<Department[]>([])
-  const [treeData, setTreeData] = useState<DepartmentTreeNode[]>([])
-  const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [userModalVisible, setUserModalVisible] = useState(false)
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [searchText, setSearchText] = useState('')
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([])
-  const [departmentUsers, setDepartmentUsers] = useState<any[]>([])
-  const [usersLoading, setUsersLoading] = useState(false)
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([])
 
+  // 使用hooks获取数据和操作方法
+  const { rawDepartments: treeData, isLoading: treeLoading } = useDepartments()
+  const { users: departmentUsers, loading: usersLoading } = useDepartmentUsers(currentId)
+  const { createDepartment, updateDepartment, deleteDepartment, bulkDeleteDepartments } =
+    useDepartmentOperations()
+
+  // 监听树形数据变化，更新departments状态
   useEffect(() => {
-    fetchDepartments()
-    fetchDepartmentTree()
-  }, [])
-
-  const fetchDepartments = async (params = {}) => {
-    setLoading(true)
-    try {
-      // 获取所有部门
-      const res = await getDepartmentTree()
-      // 设置分层级部门数据
-      setTreeData(res.data || [])
-
-      // 生成所有部门ID作为展开行的键
+    if (treeData && treeData.length > 0) {
+      setDepartments(treeData as unknown as Department[])
+      // 设置所有行默认展开
       const getAllIds = (depts: DepartmentTreeNode[]): number[] => {
         let ids: number[] = []
         depts.forEach(dept => {
@@ -99,32 +90,20 @@ const Departments = () => {
         })
         return ids
       }
-
-      // 使用树形结构数据作为表格数据源
-      setDepartments(res.data || [])
-
-      // 设置所有行默认展开
-      const allIds = getAllIds(res.data || [])
+      const allIds = getAllIds(treeData)
       setExpandedRowKeys(allIds)
-    } catch (error) {
-      console.error('获取部门列表失败', error)
-      message.error('获取部门列表失败')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchDepartmentTree = async () => {
-    try {
-      const res = await getDepartmentTree()
-      setTreeData(res.data || [])
       // 默认展开第一级节点
-      const rootKeys = res.data?.map(item => item.id) || []
+      const rootKeys = treeData.map(item => item.id)
       setExpandedKeys(rootKeys)
-    } catch (error) {
-      console.error('获取部门树失败', error)
-      message.error('获取部门树失败')
     }
+  }, [treeData])
+
+  const refreshDepartments = () => {
+    // 重置搜索和选择状态
+    setSearchText('')
+    setSelectedKeys([])
+    setSelectedRowKeys([])
+    // 数据会通过hooks自动刷新
   }
 
   const handleAdd = () => {
@@ -204,15 +183,11 @@ const Departments = () => {
       onOk: async () => {
         try {
           await deleteDepartment(id)
-          message.success('删除成功')
-          fetchDepartments()
-          fetchDepartmentTree()
           if (selectedKeys.includes(id)) {
             setSelectedKeys([])
           }
         } catch (error: any) {
           console.error('删除失败:', error)
-          message.error(error.response?.data?.message || '删除失败')
         }
       },
     })
@@ -230,14 +205,10 @@ const Departments = () => {
       content: `确定要删除选中的 ${ids.length} 个部门吗？这可能会影响关联的用户。`,
       onOk: async () => {
         try {
-          const res = await bulkDeleteDepartments(ids)
-          message.success(`删除成功: ${res.data.success} 个，失败: ${res.data.failed} 个`)
+          await bulkDeleteDepartments(ids)
           setSelectedRowKeys([])
-          fetchDepartments()
-          fetchDepartmentTree()
         } catch (error: any) {
           console.error('批量删除失败:', error)
-          message.error(error.response?.data?.message || '批量删除失败')
         }
       },
     })
@@ -279,17 +250,12 @@ const Departments = () => {
 
       if (currentId) {
         await updateDepartment(currentId, submitData)
-        message.success('更新成功')
       } else {
         await createDepartment(submitData)
-        message.success('创建成功')
       }
       setModalVisible(false)
-      fetchDepartments()
-      fetchDepartmentTree()
     } catch (error: any) {
       console.error('操作失败:', error)
-      message.error(error.response?.data?.message || '操作失败')
     }
   }
 
@@ -298,11 +264,10 @@ const Departments = () => {
     setSelectedKeys([])
 
     if (!value) {
-      fetchDepartments()
+      // 重置为完整数据
+      setDepartments(treeData as unknown as Department[])
       return
     }
-
-    setLoading(true)
 
     // 递归搜索符合条件的部门
     const searchDepartments = (departments: DepartmentTreeNode[]): DepartmentTreeNode[] => {
@@ -336,13 +301,12 @@ const Departments = () => {
     // 搜索匹配的部门
     const searchResults = searchDepartments(treeData)
     setDepartments(searchResults as unknown as Department[])
-    setLoading(false)
   }
 
   const handleReset = () => {
     setSearchText('')
     setSelectedKeys([])
-    fetchDepartments()
+    setDepartments(treeData as unknown as Department[])
   }
 
   const handleTreeSelect = (selectedKeys: React.Key[], info: any) => {
@@ -350,7 +314,6 @@ const Departments = () => {
     if (selectedKeys.length > 0) {
       const selectedId = selectedKeys[0] as number
       setSearchText('')
-      setLoading(true)
 
       // 从树形数据中找到选中的部门
       const findDepartment = (
@@ -395,45 +358,18 @@ const Departments = () => {
         const idsToExpand = [selectedDept.id, ...getAllIds(selectedDept.children || [])]
         setExpandedRowKeys(idsToExpand)
       } else {
-        // 如果在树形数据中未找到，则通过API获取
-        getDepartment(selectedId)
-          .then(res => {
-            if (res.data) {
-              setDepartments([res.data])
-
-              // 确保所有子部门都展开
-              const idsToExpand = [res.data.id]
-              if (res.data.children) {
-                idsToExpand.push(...getAllIds(res.data.children as unknown as DepartmentTreeNode[]))
-              }
-              setExpandedRowKeys(idsToExpand)
-            }
-          })
-          .catch(error => {
-            console.error('获取部门详情失败:', error)
-            message.error('获取部门详情失败')
-          })
+        // 如果在树形数据中未找到，暂时不显示任何部门
+        setDepartments([])
       }
-      setLoading(false)
     } else {
       // 如果取消选择，则显示全部部门
-      fetchDepartments()
+      setDepartments(treeData as unknown as Department[])
     }
   }
 
-  const handleViewUsers = async (deptId: number) => {
+  const handleViewUsers = (deptId: number) => {
     setCurrentId(deptId)
-    setUsersLoading(true)
-    try {
-      const res = await getDepartmentUsers(deptId)
-      setDepartmentUsers(res.data || [])
-      setUserModalVisible(true)
-    } catch (error) {
-      console.error('获取部门用户失败', error)
-      message.error('获取部门用户失败')
-    } finally {
-      setUsersLoading(false)
-    }
+    setUserModalVisible(true)
   }
 
   const userColumns = [
@@ -682,7 +618,7 @@ const Departments = () => {
                   setSelectedKeys([])
                   setSelectedRowKeys([])
                   setSearchText('')
-                  fetchDepartments()
+                  refreshDepartments()
                 }}
               >
                 刷新
@@ -708,7 +644,7 @@ const Departments = () => {
             }}
             columns={columns}
             dataSource={departments}
-            loading={loading}
+            loading={treeLoading}
             pagination={false}
             scroll={{ x: 1300 }}
             expandable={{

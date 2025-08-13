@@ -1,7 +1,13 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
+import { message } from 'antd'
 import { useAuthStore } from '../store/auth'
-import { getPermissionList } from '../api/permissions'
-import type { Permission } from '../types'
+import {
+  getPermissionList,
+  updatePermission as apiUpdatePermission,
+  batchUpdatePermissions as apiBatchUpdatePermissions,
+  getModulePermissions,
+} from '../api/permissions'
+import type { Permission, PermissionModule, RolePermissionMatrix } from '../types'
 
 /**
  * 使用权限钩子，用于判断当前用户是否拥有指定权限
@@ -250,5 +256,85 @@ export const usePermission = () => {
     expensePermissions,
     contractPermissions,
     refreshPermissions: fetchPermissions,
+  }
+}
+
+/**
+ * 权限管理操作方法
+ * 用于权限管理页面的CRUD操作
+ */
+export const usePermissionManagement = () => {
+  const [loading, setLoading] = useState(false)
+
+  // 更新单个权限
+  const updatePermission = async (id: number, data: Partial<Permission>) => {
+    try {
+      setLoading(true)
+      const response = await apiUpdatePermission(id, data)
+      if (response.code === 0) {
+        message.success('更新权限成功')
+        return response.data
+      } else {
+        message.error(response.message || '更新权限失败')
+        throw new Error(response.message || '更新权限失败')
+      }
+    } catch (error: any) {
+      console.error('更新权限失败:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 批量更新权限
+  const batchUpdatePermissions = async (
+    permissions: { id: number; permission_value: boolean }[]
+  ) => {
+    try {
+      setLoading(true)
+      const response = await apiBatchUpdatePermissions(permissions)
+      if (response.code === 0) {
+        const result = response.data as any
+        message.success(`批量更新完成：成功 ${result.success} 个，失败 ${result.failed} 个`)
+        return result
+      } else {
+        message.error(response.message || '批量更新权限失败')
+        throw new Error(response.message || '批量更新权限失败')
+      }
+    } catch (error: any) {
+      console.error('批量更新权限失败:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 获取模块权限
+  const fetchModulePermissions = async () => {
+    try {
+      setLoading(true)
+      const response = await getModulePermissions()
+      if (response.code === 0) {
+        return response.data as {
+          modules: PermissionModule[]
+          rolePermissions: RolePermissionMatrix[]
+        }
+      } else {
+        throw new Error(response.message || '获取模块权限失败')
+      }
+    } catch (error: any) {
+      console.error('获取模块权限失败:', error)
+      message.error('获取模块权限失败')
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return {
+    loading,
+    updatePermission,
+    batchUpdatePermissions,
+    fetchModulePermissions,
   }
 }

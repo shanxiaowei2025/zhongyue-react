@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Card, Descriptions, Button, Space, Typography, Spin, message, Tag, List } from 'antd'
 import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
-import { getTaxVerificationDetail } from '../../api/taxVerification'
+import { useTaxVerificationDetail } from '../../hooks/useTaxVerification'
 import type { TaxVerification, TaxVerificationAttachment } from '../../types/taxVerification'
 
 const { Title } = Typography
@@ -12,37 +12,13 @@ const TaxReviewDetail: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
 
-  // 状态管理
-  const [loading, setLoading] = useState<boolean>(false)
-  const [data, setData] = useState<TaxVerification | null>(null)
+  // 使用统一的hook获取数据
+  const { data, loading, error } = useTaxVerificationDetail(id ? Number(id) : null)
 
-  // 加载详情数据
-  const loadDetail = async () => {
-    if (!id) {
-      message.error('记录ID不存在')
-      return
-    }
-
-    try {
-      setLoading(true)
-      const response = await getTaxVerificationDetail(Number(id))
-
-      if (response.code === 0 && response.data) {
-        setData(response.data)
-      } else {
-        message.error(response.message || '获取详情失败')
-      }
-    } catch (error) {
-      console.error('获取税务核查详情失败:', error)
-      message.error('获取详情失败')
-    } finally {
-      setLoading(false)
-    }
+  // 处理错误
+  if (error) {
+    message.error('获取详情失败')
   }
-
-  useEffect(() => {
-    loadDetail()
-  }, [id])
 
   // 返回列表
   const handleBack = () => {

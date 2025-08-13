@@ -30,7 +30,10 @@ import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useDebouncedValue } from '../../hooks/useDebounce'
-import { getTaxVerificationList, createTaxVerification } from '../../api/taxVerification'
+import {
+  useTaxVerificationList,
+  useTaxVerificationOperations,
+} from '../../hooks/useTaxVerification'
 import { uploadFile } from '../../api/upload'
 import type {
   TaxVerification,
@@ -85,10 +88,7 @@ const TaxReview: React.FC = () => {
   const savedSearchParams = getState('taxVerificationSearchParams')
   const savedPagination = getState('taxVerificationPagination')
 
-  // 状态管理
-  const [loading, setLoading] = useState<boolean>(false)
-  const [data, setData] = useState<TaxVerification[]>([])
-  const [total, setTotal] = useState<number>(0)
+  // 分页状态
   const [current, setCurrent] = useState<number>(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState<number>(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState<TaxVerificationQueryParams>({
@@ -101,6 +101,16 @@ const TaxReview: React.FC = () => {
 
   // 防抖搜索参数
   const debouncedSearchParams = useDebouncedValue(searchParams, 500)
+
+  // 使用统一的hook获取数据
+  const { data, pagination, loading, refreshTaxVerificationList } = useTaxVerificationList({
+    ...debouncedSearchParams,
+    page: current,
+    pageSize: pageSize,
+  })
+
+  // 使用操作方法
+  const { createRecord } = useTaxVerificationOperations()
 
   // 表单实例
   const [searchForm] = Form.useForm()
@@ -141,38 +151,11 @@ const TaxReview: React.FC = () => {
 
   // 企业搜索使用 CustomerAutoComplete 组件
 
-  // 加载数据
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const params: TaxVerificationQueryParams = {
-        page: current,
-        pageSize: pageSize,
-        ...debouncedSearchParams,
-      }
-
-      // 保存状态
-      setState('taxVerificationSearchParams', searchParams)
-      setState('taxVerificationPagination', { current, pageSize })
-
-      const response = await getTaxVerificationList(params)
-
-      if (response.code === 0 && response.data) {
-        setData(response.data.list)
-        setTotal(response.data.total)
-      }
-    } catch (error) {
-      console.error('加载税务核查记录失败:', error)
-      message.error('加载数据失败')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 当搜索参数或分页变化时，重新加载数据
-  useEffect(() => {
-    loadData()
-  }, [current, pageSize, debouncedSearchParams])
+  // 保存状态到pageStates
+  React.useEffect(() => {
+    setState('taxVerificationSearchParams', searchParams)
+    setState('taxVerificationPagination', { current, pageSize })
+  }, [searchParams, current, pageSize])
 
   // 处理搜索
   const handleSearch = () => {
@@ -246,15 +229,8 @@ const TaxReview: React.FC = () => {
         attachments,
       }
 
-      const response = await createTaxVerification(createData)
-
-      if (response.code === 0) {
-        message.success('税务核查记录创建成功')
-        handleCloseCreateModal()
-        loadData()
-      } else {
-        message.error(response.message || '创建失败')
-      }
+      await createRecord(createData)
+      handleCloseCreateModal()
     } catch (error: any) {
       console.error('创建失败:', error)
       message.error('创建失败，请重试')
@@ -451,9 +427,7 @@ const TaxReview: React.FC = () => {
           loading={loading}
           scroll={{ x: 1200 }}
           pagination={{
-            current: current,
-            pageSize: pageSize,
-            total: total,
+            ...pagination,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,

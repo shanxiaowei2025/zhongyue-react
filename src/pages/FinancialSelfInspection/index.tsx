@@ -34,17 +34,11 @@ import dayjs from 'dayjs'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import {
-  getMySubmittedInspections,
-  getMyResponsibleInspections,
-  getMyReviewedInspections,
-  updateRectificationCompletion,
-  approvalInspection,
-  rejectInspection,
-  reviewerApprovalInspection,
-  reviewerRejectInspection,
-  createFinancialSelfInspection,
-  deleteFinancialSelfInspection,
-} from '../../api/financialSelfInspection'
+  useSubmittedInspections,
+  useResponsibleInspections,
+  useReviewedInspections,
+  useFinancialSelfInspectionOperations,
+} from '../../hooks/useFinancialSelfInspection'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
   FinancialSelfInspection,
@@ -61,7 +55,6 @@ import type {
   ReviewerApprovalRecordItem,
   ReviewerRejectRecordItem,
 } from '../../types/financialSelfInspection'
-import { getEnterpriseByNameOrCode } from '../../api/enterpriseService'
 import type { Enterprise } from '../../types/enterpriseService'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import { useAuthStore } from '../../store/auth'
@@ -118,11 +111,8 @@ const FinancialSelfInspection: React.FC = () => {
 
   // 状态管理
   const [activeTab, setActiveTab] = useState<string>(savedActiveTab)
-  const [loading, setLoading] = useState<boolean>(false)
 
   // 我提交的数据
-  const [submittedData, setSubmittedData] = useState<FinancialSelfInspection[]>([])
-  const [submittedTotal, setSubmittedTotal] = useState<number>(0)
   const [submittedCurrent, setSubmittedCurrent] = useState<number>(
     savedSubmittedPagination?.current || 1
   )
@@ -142,8 +132,6 @@ const FinancialSelfInspection: React.FC = () => {
     })
 
   // 我负责的数据
-  const [responsibleData, setResponsibleData] = useState<FinancialSelfInspection[]>([])
-  const [responsibleTotal, setResponsibleTotal] = useState<number>(0)
   const [responsibleCurrent, setResponsibleCurrent] = useState<number>(
     savedResponsiblePagination?.current || 1
   )
@@ -164,8 +152,6 @@ const FinancialSelfInspection: React.FC = () => {
     })
 
   // 我复查的数据
-  const [reviewedData, setReviewedData] = useState<FinancialSelfInspection[]>([])
-  const [reviewedTotal, setReviewedTotal] = useState<number>(0)
   const [reviewedCurrent, setReviewedCurrent] = useState<number>(
     savedReviewedPagination?.current || 1
   )
@@ -190,6 +176,54 @@ const FinancialSelfInspection: React.FC = () => {
   const debouncedResponsibleSearchParams = useDebouncedValue(responsibleSearchParams, 500)
   const debouncedReviewedSearchParams = useDebouncedValue(reviewedSearchParams, 500)
 
+  // 使用hooks获取数据
+  const {
+    data: submittedData,
+    total: submittedTotal,
+    loading: submittedLoading,
+    refreshSubmittedInspections,
+  } = useSubmittedInspections({
+    page: submittedCurrent,
+    pageSize: submittedPageSize,
+    ...debouncedSubmittedSearchParams,
+  })
+
+  const {
+    data: responsibleData,
+    total: responsibleTotal,
+    loading: responsibleLoading,
+    refreshResponsibleInspections,
+  } = useResponsibleInspections({
+    page: responsibleCurrent,
+    pageSize: responsiblePageSize,
+    ...debouncedResponsibleSearchParams,
+  })
+
+  const {
+    data: reviewedData,
+    total: reviewedTotal,
+    loading: reviewedLoading,
+    refreshReviewedInspections,
+  } = useReviewedInspections({
+    page: reviewedCurrent,
+    pageSize: reviewedPageSize,
+    ...debouncedReviewedSearchParams,
+  })
+
+  // 获取操作方法
+  const {
+    createInspection,
+    updateRectification,
+    approveInspection,
+    rejectInspectionData,
+    reviewerApproveInspection,
+    reviewerRejectInspectionData,
+    deleteInspection,
+  } = useFinancialSelfInspectionOperations()
+
+  // 统一loading状态
+  const loading = submittedLoading || responsibleLoading || reviewedLoading
+
   // 表单实例
   const [submittedForm] = Form.useForm()
   const [responsibleForm] = Form.useForm()
@@ -209,7 +243,7 @@ const FinancialSelfInspection: React.FC = () => {
   const [reviewerRejectModalVisible, setReviewerRejectModalVisible] = useState<boolean>(false)
   const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
 
-  // 加载状态
+  // 弹窗加载状态
   const [rectificationLoading, setRectificationLoading] = useState<boolean>(false)
   const [approvalLoading, setApprovalLoading] = useState<boolean>(false)
   const [rejectLoading, setRejectLoading] = useState<boolean>(false)
@@ -264,122 +298,35 @@ const FinancialSelfInspection: React.FC = () => {
     }
   }
 
-  // 数据加载函数
-  const loadSubmittedData = async () => {
-    try {
-      setLoading(true)
-      const params: FinancialSelfInspectionQueryParams = {
-        page: submittedCurrent,
-        pageSize: submittedPageSize,
-        ...debouncedSubmittedSearchParams,
-      }
-
-      setState('financialInspectionSubmittedSearchParams', submittedSearchParams)
-      setState('financialInspectionSubmittedPagination', {
-        current: submittedCurrent,
-        pageSize: submittedPageSize,
-      })
-
-      const response = await getMySubmittedInspections(params)
-
-      if (response.code === 0 && response.data) {
-        setSubmittedData(response.data.items)
-        setSubmittedTotal(response.data.total)
-      }
-    } catch (error) {
-      console.error('加载我提交的账务自查记录失败:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadResponsibleData = async () => {
-    try {
-      setLoading(true)
-      const params: FinancialSelfInspectionQueryParams = {
-        page: responsibleCurrent,
-        pageSize: responsiblePageSize,
-        ...debouncedResponsibleSearchParams,
-      }
-
-      setState('financialInspectionResponsibleSearchParams', responsibleSearchParams)
-      setState('financialInspectionResponsiblePagination', {
-        current: responsibleCurrent,
-        pageSize: responsiblePageSize,
-      })
-
-      const response = await getMyResponsibleInspections(params)
-
-      if (response.code === 0 && response.data) {
-        setResponsibleData(response.data.items)
-        setResponsibleTotal(response.data.total)
-      }
-    } catch (error) {
-      console.error('加载我负责的账务自查记录失败:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadReviewedData = async () => {
-    try {
-      setLoading(true)
-      const params: FinancialSelfInspectionQueryParams = {
-        page: reviewedCurrent,
-        pageSize: reviewedPageSize,
-        ...debouncedReviewedSearchParams,
-      }
-
-      setState('financialInspectionReviewedSearchParams', reviewedSearchParams)
-      setState('financialInspectionReviewedPagination', {
-        current: reviewedCurrent,
-        pageSize: reviewedPageSize,
-      })
-
-      const response = await getMyReviewedInspections(params)
-
-      if (response.code === 0 && response.data) {
-        setReviewedData(response.data.items)
-        setReviewedTotal(response.data.total)
-      }
-    } catch (error) {
-      console.error('加载我复查的账务自查记录失败:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 数据加载副作用
+  // 状态保存副作用
   useEffect(() => {
-    if (activeTab === 'submitted') {
-      loadSubmittedData()
-    }
-  }, [submittedCurrent, submittedPageSize, debouncedSubmittedSearchParams])
+    setState('financialInspectionSubmittedSearchParams', submittedSearchParams)
+    setState('financialInspectionSubmittedPagination', {
+      current: submittedCurrent,
+      pageSize: submittedPageSize,
+    })
+  }, [submittedSearchParams, submittedCurrent, submittedPageSize, setState])
 
   useEffect(() => {
-    if (activeTab === 'responsible') {
-      loadResponsibleData()
-    }
-  }, [responsibleCurrent, responsiblePageSize, debouncedResponsibleSearchParams])
+    setState('financialInspectionResponsibleSearchParams', responsibleSearchParams)
+    setState('financialInspectionResponsiblePagination', {
+      current: responsibleCurrent,
+      pageSize: responsiblePageSize,
+    })
+  }, [responsibleSearchParams, responsibleCurrent, responsiblePageSize, setState])
 
   useEffect(() => {
-    if (activeTab === 'reviewed') {
-      loadReviewedData()
-    }
-  }, [reviewedCurrent, reviewedPageSize, debouncedReviewedSearchParams])
+    setState('financialInspectionReviewedSearchParams', reviewedSearchParams)
+    setState('financialInspectionReviewedPagination', {
+      current: reviewedCurrent,
+      pageSize: reviewedPageSize,
+    })
+  }, [reviewedSearchParams, reviewedCurrent, reviewedPageSize, setState])
 
   // 标签页切换
   const handleTabChange = (key: string) => {
     setActiveTab(key)
     setState('financialInspectionActiveTab', key)
-
-    if (key === 'submitted') {
-      loadSubmittedData()
-    } else if (key === 'responsible') {
-      loadResponsibleData()
-    } else if (key === 'reviewed') {
-      loadReviewedData()
-    }
   }
 
   // 搜索和重置处理函数
@@ -517,26 +464,11 @@ const FinancialSelfInspection: React.FC = () => {
         rectificationRecords: [newRecord],
       }
 
-      const response = await updateRectificationCompletion(currentRecord.id, rectificationData)
-
-      if (response.code === 0) {
-        message.success('整改提交成功')
-        setRectificationModalVisible(false)
-        loadResponsibleData()
-      } else {
-        message.error(response.message || '整改提交失败')
-      }
+      await updateRectification(currentRecord.id, rectificationData)
+      setRectificationModalVisible(false)
+      refreshResponsibleInspections()
     } catch (error: any) {
       console.error('整改提交失败:', error)
-      if (error.response?.data?.message) {
-        if (Array.isArray(error.response.data.message)) {
-          message.error(error.response.data.message.join(', '))
-        } else {
-          message.error(error.response.data.message)
-        }
-      } else {
-        message.error('整改提交失败，请重试')
-      }
     } finally {
       setRectificationLoading(false)
     }
@@ -558,18 +490,11 @@ const FinancialSelfInspection: React.FC = () => {
         approvalRecords: [newRecord],
       }
 
-      const response = await approvalInspection(currentRecord.id, approvalData)
-
-      if (response.code === 0) {
-        message.success('审核通过成功')
-        setApprovalModalVisible(false)
-        loadSubmittedData()
-      } else {
-        message.error(response.message || '审核通过失败')
-      }
+      await approveInspection(currentRecord.id, approvalData)
+      setApprovalModalVisible(false)
+      refreshSubmittedInspections()
     } catch (error: any) {
       console.error('审核通过失败:', error)
-      message.error('审核通过失败，请重试')
     } finally {
       setApprovalLoading(false)
     }
@@ -591,18 +516,11 @@ const FinancialSelfInspection: React.FC = () => {
         rejectRecords: [newRecord],
       }
 
-      const response = await rejectInspection(currentRecord.id, rejectData)
-
-      if (response.code === 0) {
-        message.success('审核退回成功')
-        setRejectModalVisible(false)
-        loadSubmittedData()
-      } else {
-        message.error(response.message || '审核退回失败')
-      }
+      await rejectInspectionData(currentRecord.id, rejectData)
+      setRejectModalVisible(false)
+      refreshSubmittedInspections()
     } catch (error: any) {
       console.error('审核退回失败:', error)
-      message.error('审核退回失败，请重试')
     } finally {
       setRejectLoading(false)
     }
@@ -624,18 +542,11 @@ const FinancialSelfInspection: React.FC = () => {
         reviewerApprovalRecords: [newRecord],
       }
 
-      const response = await reviewerApprovalInspection(currentRecord.id, reviewerApprovalData)
-
-      if (response.code === 0) {
-        message.success('复查审核通过成功')
-        setReviewerApprovalModalVisible(false)
-        loadReviewedData()
-      } else {
-        message.error(response.message || '复查审核通过失败')
-      }
+      await reviewerApproveInspection(currentRecord.id, reviewerApprovalData)
+      setReviewerApprovalModalVisible(false)
+      refreshReviewedInspections()
     } catch (error: any) {
       console.error('复查审核通过失败:', error)
-      message.error('复查审核通过失败，请重试')
     } finally {
       setReviewerApprovalLoading(false)
     }
@@ -657,18 +568,11 @@ const FinancialSelfInspection: React.FC = () => {
         reviewerRejectRecords: [newRecord],
       }
 
-      const response = await reviewerRejectInspection(currentRecord.id, reviewerRejectData)
-
-      if (response.code === 0) {
-        message.success('复查审核退回成功')
-        setReviewerRejectModalVisible(false)
-        loadReviewedData()
-      } else {
-        message.error(response.message || '复查审核退回失败')
-      }
+      await reviewerRejectInspectionData(currentRecord.id, reviewerRejectData)
+      setReviewerRejectModalVisible(false)
+      refreshReviewedInspections()
     } catch (error: any) {
       console.error('复查审核退回失败:', error)
-      message.error('复查审核退回失败，请重试')
     } finally {
       setReviewerRejectLoading(false)
     }
@@ -690,26 +594,11 @@ const FinancialSelfInspection: React.FC = () => {
         solution: values.solution,
       }
 
-      const response = await createFinancialSelfInspection(createData)
-
-      if (response.code === 0) {
-        message.success('自查记录创建成功')
-        setCreateModalVisible(false)
-        loadSubmittedData()
-      } else {
-        message.error(response.message || '自查记录创建失败')
-      }
+      await createInspection(createData)
+      setCreateModalVisible(false)
+      refreshSubmittedInspections()
     } catch (error: any) {
       console.error('自查记录创建失败:', error)
-      if (error.response?.data?.message) {
-        if (Array.isArray(error.response.data.message)) {
-          message.error(error.response.data.message.join(', '))
-        } else {
-          message.error(error.response.data.message)
-        }
-      } else {
-        message.error('自查记录创建失败，请重试')
-      }
     } finally {
       setCreateLoading(false)
     }
@@ -718,17 +607,12 @@ const FinancialSelfInspection: React.FC = () => {
   // 删除处理函数
   const handleDelete = async (record: FinancialSelfInspection) => {
     try {
-      const response = await deleteFinancialSelfInspection(record.id)
-
-      if (response.code === 0) {
-        message.success('删除成功')
-        loadReviewedData()
-      } else {
-        message.error(response.message || '删除失败')
+      const success = await deleteInspection(record.id)
+      if (success) {
+        refreshReviewedInspections()
       }
     } catch (error) {
       console.error('删除失败:', error)
-      message.error('删除失败，请重试')
     }
   }
 

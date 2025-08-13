@@ -38,6 +38,7 @@ export interface EnterpriseQueryParams {
   legalRepresentativeName?: string
   enterpriseStatus?: string
   customerLevel?: string
+  [key: string]: any
 }
 
 export interface EnterpriseListResponse
@@ -57,6 +58,7 @@ export interface ServiceHistory {
 export interface ServiceHistoryQueryParams {
   companyName?: string
   unifiedSocialCreditCode?: string
+  [key: string]: any
 }
 
 export interface ServiceHistoryResponse extends ApiResponse<ServiceHistory[]> {}
@@ -77,6 +79,7 @@ export interface ExpenseContribution {
 export interface ExpenseContributionQueryParams {
   companyName?: string
   unifiedSocialCreditCode?: string
+  [key: string]: any
 }
 
 export interface ExpenseContributionResponse extends ApiResponse<ExpenseContribution> {}

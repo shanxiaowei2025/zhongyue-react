@@ -21,7 +21,7 @@ import {
   DollarCircleOutlined,
   FileTextOutlined,
 } from '@ant-design/icons'
-import { getServiceHistory, getExpenseContribution } from '../../api/enterpriseService'
+import { useServiceHistory, useExpenseContribution } from '../../hooks/useEnterpriseService'
 import type {
   Enterprise,
   ServiceHistory,
@@ -58,11 +58,25 @@ const EnterpriseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [loading, setLoading] = useState<boolean>(false)
-  const [serviceHistory, setServiceHistory] = useState<ServiceHistory[]>([])
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null)
-  const [expenseLoading, setExpenseLoading] = useState<boolean>(false)
-  const [expenseContribution, setExpenseContribution] = useState<ExpenseContribution | null>(null)
+
+  // 生成查询参数
+  const serviceHistoryParams = enterprise
+    ? enterprise.unifiedSocialCreditCode
+      ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
+      : { companyName: enterprise.companyName }
+    : null
+
+  const expenseContributionParams = enterprise
+    ? enterprise.unifiedSocialCreditCode
+      ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
+      : { companyName: enterprise.companyName }
+    : null
+
+  // 使用hooks获取数据
+  const { serviceHistory, loading } = useServiceHistory(serviceHistoryParams)
+  const { expenseContribution, loading: expenseLoading } =
+    useExpenseContribution(expenseContributionParams)
 
   // 从 localStorage 或者状态管理中获取企业信息
   // 这里简单使用 localStorage 存储，实际项目中可以使用更复杂的状态管理
@@ -76,83 +90,6 @@ const EnterpriseDetail: React.FC = () => {
       }
     }
   }, [])
-
-  // 加载服务历程数据
-  const loadServiceHistory = async () => {
-    if (!enterprise) return
-
-    try {
-      setLoading(true)
-
-      // 优先使用统一社会信用代码，没有则使用企业名称
-      const params = enterprise.unifiedSocialCreditCode
-        ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
-        : { companyName: enterprise.companyName }
-
-      const response = await getServiceHistory(params)
-
-      if (response.code === 0 && response.data) {
-        // 按创建时间从早到晚排序（从上往下显示）
-        const sortedHistory = response.data.sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        )
-        setServiceHistory(sortedHistory)
-      }
-    } catch (error) {
-      console.error('加载服务历程失败:', error)
-      message.error('加载服务历程失败')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 加载费用贡献数据
-  const loadExpenseContribution = async () => {
-    if (!enterprise) return
-
-    try {
-      setExpenseLoading(true)
-
-      // 优先使用统一社会信用代码，没有则使用企业名称
-      const params = enterprise.unifiedSocialCreditCode
-        ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
-        : { companyName: enterprise.companyName }
-
-      const response = await getExpenseContribution(params)
-
-      if (response.code === 0 && response.data) {
-        // 按收费时间从早到晚排序，时间相同时按收据编号排序
-        const sortedExpenses = {
-          ...response.data,
-          expenses: response.data.expenses.sort((a, b) => {
-            // 首先按时间排序（从早到晚）
-            const timeComparison =
-              new Date(a.chargeDate).getTime() - new Date(b.chargeDate).getTime()
-
-            // 如果时间相同，则按收据编号排序
-            if (timeComparison === 0) {
-              return a.receiptNo.localeCompare(b.receiptNo)
-            }
-
-            return timeComparison
-          }),
-        }
-        setExpenseContribution(sortedExpenses)
-      }
-    } catch (error) {
-      console.error('加载费用贡献失败:', error)
-      message.error('加载费用贡献失败')
-    } finally {
-      setExpenseLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (enterprise) {
-      loadServiceHistory()
-      loadExpenseContribution()
-    }
-  }, [enterprise])
 
   // 返回列表
   const handleBack = () => {
@@ -300,7 +237,7 @@ const EnterpriseDetail: React.FC = () => {
             style={{ height: 600, overflow: 'auto' }}
           >
             <Spin spinning={loading}>
-              {serviceHistory.length > 0 ? (
+              {serviceHistory && serviceHistory.length > 0 ? (
                 <Timeline>
                   <Timeline.Item color="green">
                     <div>
@@ -315,14 +252,18 @@ const EnterpriseDetail: React.FC = () => {
                     </div>
                   </Timeline.Item>
 
-                  {serviceHistory.map(history => (
-                    <Timeline.Item
-                      key={history.id}
-                      color={isTerminationRecord(history) ? 'red' : 'blue'}
-                    >
-                      {renderHistoryItem(history)}
-                    </Timeline.Item>
-                  ))}
+                  {serviceHistory
+                    .sort(
+                      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                    )
+                    .map(history => (
+                      <Timeline.Item
+                        key={history.id}
+                        color={isTerminationRecord(history) ? 'red' : 'blue'}
+                      >
+                        {renderHistoryItem(history)}
+                      </Timeline.Item>
+                    ))}
                 </Timeline>
               ) : (
                 <Timeline>
@@ -358,10 +299,21 @@ const EnterpriseDetail: React.FC = () => {
             style={{ height: 600, overflow: 'auto' }}
           >
             <Spin spinning={expenseLoading}>
-              {expenseContribution && expenseContribution.expenses.length > 0 ? (
+              {expenseContribution &&
+              expenseContribution.expenses &&
+              expenseContribution.expenses.length > 0 ? (
                 <>
                   <List
-                    dataSource={expenseContribution.expenses}
+                    dataSource={expenseContribution.expenses.sort((a, b) => {
+                      // 首先按时间排序（从早到晚）
+                      const timeComparison =
+                        new Date(a.chargeDate).getTime() - new Date(b.chargeDate).getTime()
+                      // 如果时间相同，则按收据编号排序
+                      if (timeComparison === 0) {
+                        return a.receiptNo.localeCompare(b.receiptNo)
+                      }
+                      return timeComparison
+                    })}
                     renderItem={(expense: ExpenseRecord) => (
                       <List.Item
                         key={expense.id}

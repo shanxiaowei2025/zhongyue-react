@@ -30,6 +30,7 @@ export interface TaxVerificationQueryParams {
   responsibleAccountant?: string
   page?: number
   pageSize?: number
+  [key: string]: any
 }
 
 // API响应接口

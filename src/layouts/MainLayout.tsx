@@ -151,7 +151,7 @@ const useTabsStore = () => {
   const [activeKey, setActiveKey] = useState('/')
 
   // 缓存组件状态的对象
-  const [cachedViews] = useState<Record<string, boolean>>({
+  const [cachedViews, setCachedViews] = useState<Record<string, boolean>>({
     '/': true,
   })
 
@@ -268,7 +268,7 @@ const useTabsStore = () => {
   }, [])
 
   // 添加新标签
-  const addTab = (newTab: TabItem) => {
+  const addTab = useCallback((newTab: TabItem) => {
     setTabs(prev => {
       // 检查标签是否已存在
       if (!prev.some(tab => tab.key === newTab.key)) {
@@ -277,11 +277,14 @@ const useTabsStore = () => {
       return prev
     })
     setActiveKey(newTab.key)
-    cachedViews[newTab.key] = true
-  }
+    setCachedViews(prev => ({
+      ...prev,
+      [newTab.key]: true,
+    }))
+  }, [])
 
   // 清理合同表单缓存数据
-  const clearContractFormCache = (tabKey: string) => {
+  const clearContractFormCache = useCallback((tabKey: string) => {
     try {
       // 检查是否是合同创建或编辑页面
       if (tabKey === '/contracts/create' || tabKey.startsWith('/contracts/edit/')) {
@@ -306,10 +309,10 @@ const useTabsStore = () => {
     } catch (error) {
       console.error('清理合同表单缓存失败:', error)
     }
-  }
+  }, [])
 
   // 清理员工表单缓存数据
-  const clearEmployeeFormCache = (tabKey: string) => {
+  const clearEmployeeFormCache = useCallback((tabKey: string) => {
     try {
       // 检查是否是员工创建或编辑页面
       if (tabKey === '/employees/create' || tabKey.startsWith('/employees/edit/')) {
@@ -329,35 +332,42 @@ const useTabsStore = () => {
     } catch (error) {
       console.error('清理员工表单缓存失败:', error)
     }
-  }
+  }, [])
 
   // 移除标签
-  const removeTab = (targetKey: string) => {
-    // 找出要删除的标签索引
-    const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
+  const removeTab = useCallback(
+    (targetKey: string) => {
+      // 找出要删除的标签索引
+      const targetIndex = tabs.findIndex(tab => tab.key === targetKey)
 
-    // 在关闭标签前清理表单缓存数据
-    clearContractFormCache(targetKey)
-    clearEmployeeFormCache(targetKey)
+      // 在关闭标签前清理表单缓存数据
+      clearContractFormCache(targetKey)
+      clearEmployeeFormCache(targetKey)
 
-    // 删除标签
-    const newTabs = tabs.filter(tab => tab.key !== targetKey)
-    setTabs(newTabs)
+      // 删除标签
+      const newTabs = tabs.filter(tab => tab.key !== targetKey)
+      setTabs(newTabs)
 
-    // 从缓存中删除视图
-    delete cachedViews[targetKey]
+      // 从缓存中删除视图
+      setCachedViews(prev => {
+        const newCachedViews = { ...prev }
+        delete newCachedViews[targetKey]
+        return newCachedViews
+      })
 
-    // 如果删除的是当前激活的标签，需要激活其他标签
-    if (newTabs.length && activeKey === targetKey) {
-      // 优先激活右侧标签，如果没有右侧标签则激活左侧标签
-      const newActiveKey =
-        newTabs[targetIndex === newTabs.length ? targetIndex - 1 : targetIndex].key
-      setActiveKey(newActiveKey)
-    }
-  }
+      // 如果删除的是当前激活的标签，需要激活其他标签
+      if (newTabs.length && activeKey === targetKey) {
+        // 优先激活右侧标签，如果没有右侧标签则激活左侧标签
+        const newActiveKey =
+          newTabs[targetIndex === newTabs.length ? targetIndex - 1 : targetIndex].key
+        setActiveKey(newActiveKey)
+      }
+    },
+    [tabs, activeKey, clearContractFormCache, clearEmployeeFormCache]
+  )
 
   // 检查视图是否被缓存
-  const isCached = (key: string) => !!cachedViews[key]
+  const isCached = useCallback((key: string) => !!cachedViews[key], [cachedViews])
 
   return {
     tabs,
@@ -797,7 +807,7 @@ const MainLayout = () => {
         closable: pathname !== '/', // 仪表盘不可关闭
       })
     }
-  }, [location.pathname])
+  }, [location.pathname, tabsStore.identifyModule, tabsStore.updateModuleState, tabsStore.addTab])
 
   // 检查用户状态，确保用户信息显示正确
   useEffect(() => {

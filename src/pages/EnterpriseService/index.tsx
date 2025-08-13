@@ -5,7 +5,7 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useDebouncedValue } from '../../hooks/useDebounce'
-import { getEnterpriseList } from '../../api/enterpriseService'
+import { useEnterpriseList } from '../../hooks/useEnterpriseService'
 import type { Enterprise, EnterpriseQueryParams } from '../../types/enterpriseService'
 
 const { Title } = Typography
@@ -71,9 +71,6 @@ const EnterpriseService: React.FC = () => {
   const savedPagination = getState('enterprisePagination')
 
   // 状态管理
-  const [loading, setLoading] = useState<boolean>(false)
-  const [enterprises, setEnterprises] = useState<Enterprise[]>([])
-  const [total, setTotal] = useState<number>(0)
   const [current, setCurrent] = useState<number>(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState<number>(savedPagination?.pageSize || 10)
   const [searchParams, setSearchParams] = useState<EnterpriseQueryParams>({
@@ -85,37 +82,18 @@ const EnterpriseService: React.FC = () => {
   // 添加防抖搜索参数
   const debouncedSearchParams = useDebouncedValue(searchParams, 500)
 
-  // 加载企业列表数据
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const params: EnterpriseQueryParams = {
-        page: current,
-        pageSize,
-        ...debouncedSearchParams,
-      }
+  // 使用hooks获取数据
+  const { enterprises, pagination, loading } = useEnterpriseList({
+    page: current,
+    pageSize,
+    ...debouncedSearchParams,
+  })
 
-      // 保存分页和搜索参数到状态管理
-      setState('enterpriseSearchParams', searchParams)
-      setState('enterprisePagination', { current, pageSize })
-
-      const response = await getEnterpriseList(params)
-
-      if (response.code === 0 && response.data) {
-        setEnterprises(response.data.data)
-        setTotal(response.data.total)
-      }
-    } catch (error) {
-      console.error('加载企业列表失败:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 当搜索参数或分页变化时，重新加载数据
+  // 保存分页和搜索参数到状态管理
   useEffect(() => {
-    loadData()
-  }, [current, pageSize, debouncedSearchParams])
+    setState('enterpriseSearchParams', searchParams)
+    setState('enterprisePagination', { current, pageSize })
+  }, [searchParams, current, pageSize, setState])
 
   // 处理搜索
   const handleSearch = () => {
@@ -260,9 +238,9 @@ const EnterpriseService: React.FC = () => {
           dataSource={enterprises}
           loading={loading}
           pagination={{
-            current,
-            pageSize,
-            total,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: total => `共 ${total} 条`,
