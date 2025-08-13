@@ -28,7 +28,12 @@ import {
 } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
-import { useExpenseList } from '../../hooks/useExpense'
+import {
+  useExpenseList,
+  useExpenseDetail,
+  expenseDetailFetcher,
+  exportExpenseData,
+} from '../../hooks/useExpense'
 import { usePermission } from '../../hooks/usePermission'
 import { useDebounce } from '../../hooks/useDebounce'
 import { Expense, ExpenseStatus, ExpenseQueryParams } from '../../types/expense'
@@ -37,7 +42,6 @@ import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import dayjs from 'dayjs'
 import './expenses.css'
-import { getExpenseById, exportExpenseCSV } from '../../api/expense'
 
 const { RangePicker } = DatePicker
 
@@ -533,7 +537,7 @@ const Expenses: React.FC = () => {
   }
 
   // 处理编辑费用
-  const handleEdit = (record: Expense) => {
+  const handleEdit = async (record: Expense) => {
     // 检查编辑权限
     if (!canEditExpense) {
       message.error('您没有编辑费用的权限')
@@ -542,28 +546,17 @@ const Expenses: React.FC = () => {
 
     console.log('选中的费用记录:', record)
 
-    // 从API重新获取最新数据
-    const fetchExpenseDetail = async () => {
-      try {
-        const response = await getExpenseById(record.id)
-        console.log('从API获取的费用详情:', response)
-        // 确保使用API返回的最新数据更新state
-        if (response && typeof response === 'object') {
-          // 处理不同的响应结构
-          const expenseData = 'data' in response ? response.data : response
-          setSelectedExpense(expenseData as Expense)
-          setFormMode('edit')
-          setFormVisible(true)
-        } else {
-          throw new Error('Invalid response format')
-        }
-      } catch (error) {
-        console.error('获取费用详情失败:', error)
-        message.error('获取费用详情失败')
-      }
+    // 使用Hook中的费用详情获取函数（包含响应处理逻辑）
+    try {
+      const expenseData = await expenseDetailFetcher(`/expense/${record.id}`)
+      console.log('获取的费用详情:', expenseData)
+      setSelectedExpense(expenseData as Expense)
+      setFormMode('edit')
+      setFormVisible(true)
+    } catch (error) {
+      console.error('获取费用详情失败:', error)
+      message.error('获取费用详情失败')
     }
-
-    fetchExpenseDetail()
   }
 
   // 处理删除费用
@@ -629,13 +622,15 @@ const Expenses: React.FC = () => {
         return
       }
 
-      await auditExpense(expenseToAudit.id, {
+      const success = await auditExpense(expenseToAudit.id, {
         status: values.status,
         reason: values.reason,
       })
 
-      setAuditModalVisible(false)
-      fetchExpenses()
+      if (success) {
+        setAuditModalVisible(false)
+        // 不需要手动调用fetchExpenses()，Hook中的auditExpense已经自动刷新了
+      }
     } catch (error) {
       console.error('审核失败:', error)
       message.error('审核操作失败')
@@ -696,16 +691,8 @@ const Expenses: React.FC = () => {
         }
       }
 
-      // 移除分页参数，导出全部数据
-      if ('page' in exportParams) {
-        delete exportParams.page
-      }
-
-      if ('pageSize' in exportParams) {
-        delete exportParams.pageSize
-      }
-
-      const response = await exportExpenseCSV(exportParams)
+      // 使用Hook中的导出函数（会自动清理分页参数）
+      const response = await exportExpenseData(exportParams)
 
       // 创建Blob对象
       const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' })

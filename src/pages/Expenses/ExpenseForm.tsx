@@ -38,7 +38,7 @@ import { BUSINESS_STATUS_MAP } from '../../constants'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
-import { getMaxDatesNextDay } from '../../api/expense'
+import { getMaxDatesForAutoFill } from '../../hooks/useExpense'
 import { useAuthStore } from '../../store/auth'
 import type { Enterprise } from '../../types/enterpriseService'
 import './expenses.css'
@@ -317,7 +317,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         if (companyName) params.companyName = companyName
         if (unifiedSocialCreditCode) params.unifiedSocialCreditCode = unifiedSocialCreditCode
 
-        const response = await getMaxDatesNextDay(params)
+        const response = await getMaxDatesForAutoFill(params)
 
         if (response.code === 0 && response.data?.dates) {
           const dates = response.data.dates

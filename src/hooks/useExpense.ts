@@ -10,6 +10,8 @@ import {
   auditExpense,
   cancelAuditExpense,
   getExpenseReceipt,
+  exportExpenseCSV,
+  getMaxDatesNextDay,
 } from '../api/expense'
 import {
   Expense,
@@ -43,6 +45,87 @@ export const getExpenseReceiptKey = (params?: { id?: number; receiptNo?: string 
   }
 
   return null
+}
+
+/**
+ * 通用的接口响应体处理方法（仅开发环境）
+ * 检测响应体中的所有字段，如果发现JSON字符串格式的数组或对象就进行解析
+ * @param data 原始响应数据
+ * @returns 处理后的响应数据
+ */
+const processResponseData = (data: any): any => {
+  // 只在开发环境中处理
+  if (process.env.NODE_ENV !== 'development' || !data) {
+    return data
+  }
+
+  // 如果是基础类型，直接返回
+  if (typeof data !== 'object' || data === null) {
+    return data
+  }
+
+  // 如果是数组，递归处理每个元素
+  if (Array.isArray(data)) {
+    return data.map(item => processResponseData(item))
+  }
+
+  // 处理对象的每个属性
+  const processedData = { ...data }
+
+  Object.keys(processedData).forEach(key => {
+    const value = processedData[key]
+
+    // 如果值是字符串，检查是否为JSON格式
+    if (typeof value === 'string' && value.trim()) {
+      try {
+        const trimmedValue = value.trim()
+
+        // 检查是否是JSON数组格式 ["item1", "item2"] 或 "[\"item1\", \"item2\"]"
+        if (
+          (trimmedValue.startsWith('[') && trimmedValue.endsWith(']')) ||
+          (trimmedValue.startsWith('"[') && trimmedValue.endsWith(']"'))
+        ) {
+          let jsonString = trimmedValue
+          // 如果是被双引号包围的，先去掉外层双引号
+          if (trimmedValue.startsWith('"[') && trimmedValue.endsWith(']"')) {
+            jsonString = trimmedValue.slice(1, -1)
+          }
+
+          const parsed = JSON.parse(jsonString)
+          if (Array.isArray(parsed)) {
+            processedData[key] = parsed
+            console.log(`[开发环境] 转换数组字段 ${key}:`, parsed)
+          }
+        }
+        // 检查是否是JSON对象格式 {"key": "value"} 或 "{\"key\": \"value\"}"
+        else if (
+          (trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) ||
+          (trimmedValue.startsWith('"{') && trimmedValue.endsWith('}"'))
+        ) {
+          let jsonString = trimmedValue
+          // 如果是被双引号包围的，先去掉外层双引号
+          if (trimmedValue.startsWith('"{') && trimmedValue.endsWith('}"')) {
+            jsonString = trimmedValue.slice(1, -1)
+          }
+
+          const parsed = JSON.parse(jsonString)
+          if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            processedData[key] = parsed
+            console.log(`[开发环境] 转换对象字段 ${key}:`, parsed)
+          }
+        }
+      } catch (error) {
+        // JSON解析失败时静默处理，保持原值
+        console.warn(`[开发环境] 字段 ${key} JSON解析失败:`, error)
+      }
+    }
+    // 如果值是对象或数组，递归处理
+    else if (typeof value === 'object' && value !== null) {
+      processedData[key] = processResponseData(value)
+    }
+  })
+
+  return processedData
 }
 
 // 费用列表数据获取函数
@@ -143,9 +226,11 @@ export const expenseDetailFetcher = async (url: string) => {
     const response = await getExpenseById(Number(url.split('/').pop()))
     console.log('费用详情API响应:', response)
 
-    // 从响应中提取data部分（与receipt fetcher保持一致的处理方式）
-    const expenseData = response.data
-    console.log('费用详情数据提取:', expenseData)
+    // 从响应中提取data部分
+    let expenseData = response.data
+
+    // 使用通用响应处理方法（仅开发环境）
+    expenseData = processResponseData(expenseData)
 
     return expenseData
   } catch (error) {
@@ -177,12 +262,11 @@ export const expenseReceiptFetcher = async (url: string) => {
     const response = await getExpenseReceipt(params)
 
     // 从响应中提取data部分
-    const receiptData = response.data
+    let receiptData = response.data
+    console.log('费用收据原始数据:', receiptData)
 
-    // 仅在开发环境且只有首次获取时记录详细日志
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`获取费用收据成功:`, { id, receiptNo })
-    }
+    // 使用通用响应处理方法（仅开发环境）
+    receiptData = processResponseData(receiptData)
 
     // 确保返回有效的对象，即使API返回不完整数据
     return (
@@ -384,5 +468,40 @@ export const useExpenseReceipt = (params?: { id?: number; receiptNo?: string } |
     isLoading,
     isValidating,
     error,
+  }
+}
+
+// 导出费用CSV文件
+export const exportExpenseData = async (params: Partial<ExpenseQueryParams>) => {
+  try {
+    // 清理导出参数，移除分页参数
+    const exportParams = { ...params }
+    if ('page' in exportParams) {
+      delete exportParams.page
+    }
+    if ('pageSize' in exportParams) {
+      delete exportParams.pageSize
+    }
+
+    const response = await exportExpenseCSV(exportParams)
+    return response
+  } catch (error) {
+    console.error('导出费用数据失败:', error)
+    message.error('导出失败')
+    throw error
+  }
+}
+
+// 获取最大日期（用于自动填充）
+export const getMaxDatesForAutoFill = async (params: {
+  companyName?: string
+  unifiedSocialCreditCode?: string
+}) => {
+  try {
+    const response = await getMaxDatesNextDay(params)
+    return response
+  } catch (error) {
+    console.error('获取最大日期失败:', error)
+    throw error
   }
 }
