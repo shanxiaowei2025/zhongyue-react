@@ -266,8 +266,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 同步计算总费用（在提交时使用，避免防抖延迟）
   const calculateTotalFeeSync = () => {
     try {
-      console.log('同步计算总费用...')
-
       // 从表单获取所有费用字段的当前值
       const values: Record<string, any> = {}
 
@@ -276,8 +274,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         const currentValue = form.getFieldValue(field as any) || 0
         values[field] = currentValue
       }
-
-      console.log('提交前费用字段值:', values)
 
       // 计算总费用
       let total = 0
@@ -288,8 +284,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           total += numValue
         }
       }
-
-      console.log('计算得出的总费用:', total)
 
       // 立即更新总费用到表单
       form.setFieldValue('totalFee', total)

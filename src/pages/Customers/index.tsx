@@ -439,7 +439,7 @@ export default function Customers() {
   }
 
   const handleDelete = (id: number) => {
-    console.log('delete click!')
+    // 删除操作
     // 再次检查删除权限
     if (!canDeleteCustomer) {
       message.error('您没有删除客户的权限')
@@ -923,14 +923,7 @@ export default function Customers() {
       cell: ({ row }) => {
         const record = row.original
         // 调试权限状态
-        console.log(
-          '操作列渲染 - canDeleteCustomer:',
-          canDeleteCustomer,
-          'permissionLoading:',
-          permissionLoading,
-          'customerPermissions:',
-          customerPermissions
-        )
+        // 操作列渲染权限检查
         return (
           <Space size="small" className="flex flex-nowrap justify-start">
             <Tooltip title="查看">
@@ -1446,7 +1439,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             supplementaryImages: response.data.supplementaryImages || {},
           }
 
-          console.log('SWR获取到客户详情数据，已处理:', processedData)
+          // SWR获取到客户详情数据，已处理
           setCurrentCustomerDetail(processedData)
           setRetryCount(0)
         }

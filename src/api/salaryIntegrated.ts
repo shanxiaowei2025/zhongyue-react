@@ -116,22 +116,18 @@ export const salaryApi = {
       `/salary/auto-generate?month=${currentMonth}`
     )
 
-    // 添加调试日志
-    console.log('autoGenerateSalary 原始响应:', response)
-    console.log('autoGenerateSalary response.data:', response.data)
+    // 薪资自动生成响应处理
 
     // 根据实际响应结构，尝试不同的访问路径
     const responseData = response.data as any
 
     // 如果 response.data 直接就是我们需要的结构
     if (responseData && responseData.success && responseData.message) {
-      console.log('使用直接访问 response.data')
       return responseData
     }
 
     // 如果需要访问 response.data.data
     if (responseData && responseData.data && responseData.data.success) {
-      console.log('使用 response.data.data 访问')
       return responseData.data
     }
 
@@ -646,7 +642,7 @@ export const integratedApi = {
   // 加载员工相关所有数据
   async loadEmployeeRelatedData(employeeName: string, yearMonth: string): Promise<RelatedData> {
     try {
-      console.log('加载员工关联数据:', { employeeName, yearMonth })
+      // 加载员工关联数据
 
       // 并发获取所有相关数据
       const [socialInsurance, subsidy, attendance, friendCircle, deposit] = await Promise.all([
@@ -657,13 +653,7 @@ export const integratedApi = {
         depositApi.getByEmployee(employeeName),
       ])
 
-      console.log('获取到的关联数据:', {
-        socialInsurance,
-        subsidy,
-        attendance,
-        friendCircle,
-        deposit,
-      })
+      // 员工关联数据获取完成
 
       return {
         socialInsurance: socialInsurance || undefined,
@@ -727,21 +717,12 @@ export const integratedApi = {
 
   // 社保信息导入
   async importSocialInsurance(file: File): Promise<ImportResult> {
-    console.log('社保导入API - 文件信息:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-    })
+    // 社保数据导入
 
     const formData = new FormData()
     formData.append('file', file)
 
-    // 验证FormData内容
-    console.log('FormData内容:')
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value)
-    }
+    // FormData数据准备完成
 
     const response = await request.post<ApiResponse<ImportResult>>(
       '/social-insurance/import',

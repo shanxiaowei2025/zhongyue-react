@@ -44,9 +44,7 @@ const CommissionPanel: React.FC<CommissionPanelProps> = ({
 
   // 添加调试信息
   useEffect(() => {
-    console.log('CommissionPanel - 提成数据:', commissionSummary)
-    console.log('CommissionPanel - 错误信息:', errors)
-    console.log('CommissionPanel - 加载状态:', loading)
+    // CommissionPanel - 提成数据、错误信息、加载状态
   }, [commissionSummary, errors, loading])
 
   // 生成行键的通用函数
@@ -253,7 +251,7 @@ const CommissionPanel: React.FC<CommissionPanelProps> = ({
       const values = editingValues[rowKey]
       if (!values) return
 
-      console.log('保存数据 - 原始values:', values)
+      // 保存数据 - 原始values
 
       // 转换提成比率为小数格式（后端需要的格式）
       const processedValues = { ...values }
@@ -271,8 +269,7 @@ const CommissionPanel: React.FC<CommissionPanelProps> = ({
 
       const { _type, _isNew, ...submitData } = processedValues
 
-      console.log('保存数据 - 处理后submitData:', submitData)
-      console.log('保存数据 - 类型:', _type, '是否新增:', _isNew)
+      // 保存数据 - 处理后submitData、类型和是否新增
 
       if (_isNew) {
         // 新增

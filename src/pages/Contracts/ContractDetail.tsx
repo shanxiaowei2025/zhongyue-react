@@ -135,7 +135,7 @@ const ContractDetail: React.FC = () => {
     try {
       // 获取所有图片元素
       const images = element.querySelectorAll('img')
-      console.log(`准备处理 ${images.length} 张图片...`)
+      // 准备处理图片
 
       // 处理所有图片
       await Promise.all(
@@ -143,14 +143,14 @@ const ContractDetail: React.FC = () => {
           try {
             if (!img.src) return
 
-            console.log(`处理图片: ${img.src}, 类名: ${img.className}`)
+            // 处理图片
 
             // 转换为base64
             const base64 = await loadImageAsBase64(img.src)
 
             // 替换图片源
             img.src = base64
-            console.log(`图片转换成功: ${img.className || '未命名图片'}`)
+            // 图片转换成功
 
             // 确保图片样式正确
             img.style.display = 'block'
@@ -159,7 +159,7 @@ const ContractDetail: React.FC = () => {
 
             // 对于logo特殊处理
             if (img.className.includes('company-logo')) {
-              console.log('发现公司logo，应用特殊样式')
+              // 发现公司logo，应用特殊样式
               img.style.width = '100px'
               img.style.height = '100px'
               img.style.objectFit = 'contain'
@@ -167,7 +167,7 @@ const ContractDetail: React.FC = () => {
 
             // 对于印章图片特殊处理
             if (img.className.includes('stamp-image')) {
-              console.log('发现印章图片，应用特殊样式')
+              // 发现印章图片，应用特殊样式
               img.style.maxWidth = img.style.maxWidth || '150px'
               img.style.maxHeight = img.style.maxHeight || '80px'
               img.style.margin = img.style.margin || '10px 0'
@@ -181,7 +181,7 @@ const ContractDetail: React.FC = () => {
       // 确保页脚元素可见
       const footerElement = element.querySelector('.contract-footer')
       if (footerElement instanceof HTMLElement) {
-        console.log('应用页脚元素样式')
+        // 应用页脚元素样式
         footerElement.style.display = 'block'
         footerElement.style.visibility = 'visible'
         footerElement.style.opacity = '1'
@@ -209,7 +209,7 @@ const ContractDetail: React.FC = () => {
       const partyHeaders = element.querySelectorAll('.party-header')
       partyHeaders.forEach(header => {
         if (header instanceof HTMLElement) {
-          console.log('修复甲方乙方布局')
+          // 修复甲方乙方布局
           // 确保标签和名称水平对齐
           header.style.display = 'flex'
           header.style.flexDirection = 'row'
@@ -331,7 +331,7 @@ const ContractDetail: React.FC = () => {
       const serviceItemsTexts = element.querySelectorAll('.service-items-text')
       serviceItemsTexts.forEach(itemsText => {
         if (itemsText instanceof HTMLElement) {
-          console.log('应用服务项目文本样式')
+          // 应用服务项目文本样式
           itemsText.style.display = 'inline-block'
           itemsText.style.color = '#000'
           itemsText.style.fontFamily = "'SourceHanSerifCN', '思源宋体', serif"
@@ -357,7 +357,7 @@ const ContractDetail: React.FC = () => {
         }
       })
 
-      console.log('所有图片和元素处理完成')
+      // 所有图片和元素处理完成
     } catch (error) {
       console.error('预处理图片失败:', error)
     }
@@ -436,7 +436,7 @@ const ContractDetail: React.FC = () => {
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
         } else {
-          console.error('未找到代理记账合同视图元素')
+          // 未找到代理记账合同视图元素
         }
       } else if (contractData.contractType === '单项服务合同') {
         // 通过ID选择单项服务合同视图元素
@@ -444,7 +444,7 @@ const ContractDetail: React.FC = () => {
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
         } else {
-          console.error('未找到单项服务合同视图元素')
+          // 未找到单项服务合同视图元素
         }
       }
 
@@ -983,7 +983,7 @@ const ContractDetail: React.FC = () => {
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
         } else {
-          console.error('未找到代理记账合同视图元素')
+          // 未找到代理记账合同视图元素
         }
       } else if (contractData.contractType === '单项服务合同') {
         // 通过ID选择单项服务合同视图元素
@@ -991,7 +991,7 @@ const ContractDetail: React.FC = () => {
         if (agreementElement && agreementElement instanceof HTMLElement) {
           targetElement = agreementElement
         } else {
-          console.error('未找到单项服务合同视图元素')
+          // 未找到单项服务合同视图元素
         }
       }
 

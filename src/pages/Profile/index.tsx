@@ -29,7 +29,7 @@ const Profile = () => {
     try {
       // 从后端获取用户信息
       const response = await getUserProfile()
-      console.log('获取到的用户资料:', response)
+      // 获取到的用户资料
 
       if (response && response.code === 0 && response.data) {
         setUserProfile(response.data)

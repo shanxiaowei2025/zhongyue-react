@@ -224,7 +224,7 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
 export const expenseDetailFetcher = async (url: string) => {
   try {
     const response = await getExpenseById(Number(url.split('/').pop()))
-    console.log('费用详情API响应:', response)
+    // 费用详情API响应
 
     // 从响应中提取data部分
     let expenseData = response.data
@@ -263,7 +263,7 @@ export const expenseReceiptFetcher = async (url: string) => {
 
     // 从响应中提取data部分
     let receiptData = response.data
-    console.log('费用收据原始数据:', receiptData)
+    // 费用收据原始数据
 
     // 使用通用响应处理方法（仅开发环境）
     receiptData = processResponseData(receiptData)
@@ -383,7 +383,7 @@ export const useExpenseDetail = (id?: number | null) => {
       dedupingInterval: 5000, // 5秒内相同请求只发送一次
       errorRetryCount: 2, // 失败后重试次数
       onSuccess: data => {
-        console.log('useExpenseDetail fetch success:', data)
+        // 获取费用详情成功
       },
       onError: err => {
         console.error('useExpenseDetail fetch error:', err)
@@ -395,7 +395,7 @@ export const useExpenseDetail = (id?: number | null) => {
   // 刷新费用详情
   const refreshExpenseDetail = async () => {
     if (id) {
-      console.log('刷新费用详情, id:', id)
+      // 刷新费用详情
       await mutate(getExpenseDetailKey(id))
     }
   }
@@ -403,7 +403,7 @@ export const useExpenseDetail = (id?: number | null) => {
   // 更新费用
   const updateExpenseData = async (expenseId: number, updateData: UpdateExpenseDto) => {
     try {
-      console.log('更新费用数据, id:', expenseId, 'data:', updateData)
+      // 更新费用数据
       const res = await updateExpense(expenseId, updateData)
 
       // 刷新当前详情数据

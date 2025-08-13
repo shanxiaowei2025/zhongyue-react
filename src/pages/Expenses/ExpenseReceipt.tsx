@@ -85,26 +85,21 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
   // 仅在开发环境下记录日志，并添加条件以避免频繁输出
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && receipt && !isLoading && visible) {
-      console.log('收据数据加载完成:', receipt)
       if (receipt.feeItems && receipt.feeItems.length > 0) {
-        console.log('费用明细项目:', receipt.feeItems)
+        // 费用明细项目数据已加载
       }
     }
   }, [receipt, isLoading, visible])
 
   // 在组件显示时初始化合同数据 - 从expense数据获取，而不是receipt
   useEffect(() => {
-    console.log('ExpenseReceipt - 初始化电子合同数据:', {
-      visible,
-      expense,
-      contractImage: expense?.contractImage,
-    })
+    // 初始化电子合同数据
 
     if (visible && expense) {
       if (expense.contractImage && expense.contractImage.length > 0) {
         // 处理contractImage数据，可能是字符串数组或单个字符串
         if (Array.isArray(expense.contractImage)) {
-          console.log('ExpenseReceipt - 处理数组格式的合同数据:', expense.contractImage)
+          // 处理数组格式的合同数据
           setContractImage(
             expense.contractImage.map((fileName: string) => ({
               fileName,
@@ -112,7 +107,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
             }))
           )
         } else if (typeof expense.contractImage === 'string' && expense.contractImage) {
-          console.log('ExpenseReceipt - 处理字符串格式的合同数据:', expense.contractImage)
+          // 处理字符串格式的合同数据
           setContractImage([
             {
               fileName: expense.contractImage,
@@ -120,26 +115,22 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
             },
           ])
         } else {
-          console.log('ExpenseReceipt - 合同数据格式不正确，清空合同数据')
+          // 合同数据格式不正确，清空合同数据
           setContractImage([])
         }
       } else {
-        console.log('ExpenseReceipt - 没有合同数据，清空合同数据')
+        // 没有合同数据，清空合同数据
         setContractImage([])
       }
     } else {
-      console.log('ExpenseReceipt - 模态框未显示或expense数据未加载，清空合同数据')
+      // 模态框未显示或expense数据未加载，清空合同数据
       setContractImage([])
     }
   }, [visible, expense])
 
   // 在组件显示时初始化关联合同数据
   useEffect(() => {
-    console.log('ExpenseReceipt - 初始化关联合同数据:', {
-      visible,
-      expense,
-      relatedContract: expense?.relatedContract,
-    })
+    // 初始化关联合同数据
 
     if (visible && expense) {
       if (expense.relatedContract && expense.relatedContract.length > 0) {

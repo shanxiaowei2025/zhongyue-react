@@ -172,10 +172,9 @@ const useTabsStore = () => {
             icon: config.icon,
           }
         })
-        console.log('📋 已从本地存储恢复模块状态:', initialStates)
         return initialStates
       } catch (error) {
-        console.warn('⚠️ 恢复模块状态失败，使用默认状态:', error)
+        // 恢复模块状态失败，使用默认状态
       }
     }
 
@@ -217,7 +216,7 @@ const useTabsStore = () => {
       try {
         localStorage.setItem('moduleStates', JSON.stringify(statesToSave))
       } catch (error) {
-        console.warn('⚠️ 保存模块状态失败:', error)
+        // 保存模块状态失败
       }
 
       return newStates
@@ -302,16 +301,7 @@ const useTabsStore = () => {
           window.dispatchEvent(clearCacheEvent)
         }
 
-        console.log('🧹 清理合同表单缓存数据:', {
-          tabKey,
-          cleared: [
-            'contractCreateParams',
-            'contractCreateData',
-            'lastFormSaveTime',
-            'contract-form-storage',
-          ],
-          reason: 'tab-close',
-        })
+        // 合同表单缓存数据已清理
       }
     } catch (error) {
       console.error('清理合同表单缓存失败:', error)
@@ -334,11 +324,7 @@ const useTabsStore = () => {
           window.dispatchEvent(clearCacheEvent)
         }
 
-        console.log('🧹 清理员工表单缓存数据:', {
-          tabKey,
-          cleared: ['employee-form-storage'],
-          reason: 'tab-close',
-        })
+        // 员工表单缓存数据已清理
       }
     } catch (error) {
       console.error('清理员工表单缓存失败:', error)
@@ -664,7 +650,7 @@ const MainLayout = () => {
     const moduleKey = tabsStore.identifyModule(pathname)
     if (moduleKey) {
       tabsStore.updateModuleState(moduleKey, pathname)
-      console.log(`📌 模块 ${moduleKey} 状态已更新为: ${pathname}`)
+      // 模块状态已更新
     }
 
     // 特殊处理企业详情页
@@ -819,12 +805,12 @@ const MainLayout = () => {
       // 如果没有用户信息但有 token，可能需要重新获取用户信息
       const token = localStorage.getItem('token')
       if (token) {
-        console.log('页面刷新后检测到 token 但没有用户信息，应该重新获取用户信息')
+        // 页面刷新后检测到 token 但没有用户信息，应该重新获取用户信息
         // 如果是真实环境，这里可以调用 API 重新获取用户信息
         // fetchUserInfo(token)
       }
     } else {
-      console.log('用户信息已加载:', user.username)
+      // 用户信息已加载
     }
   }, [user])
 
@@ -904,7 +890,7 @@ const MainLayout = () => {
         // 智能导航：优先使用保存的状态路径，否则使用传入的目标路径
         const finalTargetPath = smartTargetPath !== mainTabPath ? smartTargetPath : targetPath
 
-        console.log(`🎯 全局智能导航：${mainTabPath} → ${finalTargetPath}`)
+        // 全局智能导航
 
         // 再导航到目标路径
         setTimeout(() => {
@@ -924,12 +910,12 @@ const MainLayout = () => {
       const tabExists = tabsStore.tabs.some(tab => tab.key === tabKey)
 
       if (tabExists) {
-        console.log(`🗑️ 全局关闭标签页: ${tabKey}`)
+        // 全局关闭标签页
         tabsStore.removeTab(tabKey)
         return true
       }
 
-      console.warn(`⚠️ 尝试关闭不存在的标签页: ${tabKey}`)
+      // 尝试关闭不存在的标签页
       return false
     }
 
@@ -967,12 +953,12 @@ const MainLayout = () => {
     } else if (key === 'system') {
       // 系统管理主菜单，默认跳转到用户管理
       const targetPath = tabsStore.getModuleTargetPath('/users')
-      console.log(`🎯 系统管理：跳转到 ${targetPath}`)
+      // 系统管理跳转
       navigate(targetPath)
     } else if (key === 'enterprise') {
       // 企业服务主菜单，默认跳转到企业服务管理
       const targetPath = tabsStore.getModuleTargetPath('/enterprise-service')
-      console.log(`🎯 企业服务：跳转到 ${targetPath}`)
+      // 企业服务跳转
       navigate(targetPath)
     } else {
       // 核心改进：智能导航到模块的最后访问路径
@@ -980,7 +966,7 @@ const MainLayout = () => {
 
       // 如果路径不同，说明有历史状态，显示智能跳转提示
       if (targetPath !== key) {
-        console.log(`🎯 智能导航：${key} → ${targetPath}`)
+        // 智能导航跳转
       }
 
       navigate(targetPath)

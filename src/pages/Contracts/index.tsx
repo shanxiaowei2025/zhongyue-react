@@ -415,17 +415,7 @@ const Contracts: React.FC = () => {
         window.dispatchEvent(clearCacheEvent)
       }
 
-      console.log('🧹 创建新合同：清空表单缓存数据', {
-        signatory: selectedSignatory,
-        contractType: selectedContractType,
-        cleared: [
-          'contractCreateParams',
-          'contractCreateData',
-          'lastFormSaveTime',
-          'contract-form-storage',
-        ],
-        reason: 'new-contract-creation',
-      })
+      // 创建新合同：清空表单缓存数据
     } catch (error) {
       console.error('清空合同表单缓存失败:', error)
     }

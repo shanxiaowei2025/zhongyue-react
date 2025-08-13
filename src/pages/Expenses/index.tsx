@@ -452,7 +452,7 @@ const Expenses: React.FC = () => {
       const targetExpense = expenses.find(expense => expense.receiptNo === openReceiptParam)
 
       if (targetExpense) {
-        console.log('找到收据对应的费用记录:', targetExpense)
+        // 找到收据对应的费用记录
         setReceiptExpenseId(targetExpense.id)
         setReceiptVisible(true)
 
@@ -472,7 +472,7 @@ const Expenses: React.FC = () => {
     if (openReceiptByIdParam && !loading) {
       const expenseId = parseInt(openReceiptByIdParam, 10)
       if (!isNaN(expenseId)) {
-        console.log('直接通过费用ID打开收据:', expenseId)
+        // 直接通过费用ID打开收据
         setReceiptExpenseId(expenseId)
         setReceiptVisible(true)
 
@@ -544,12 +544,12 @@ const Expenses: React.FC = () => {
       return
     }
 
-    console.log('选中的费用记录:', record)
+    // 选中的费用记录
 
     // 使用Hook中的费用详情获取函数（包含响应处理逻辑）
     try {
       const expenseData = await expenseDetailFetcher(`/expense/${record.id}`)
-      console.log('获取的费用详情:', expenseData)
+      // 获取的费用详情
       setSelectedExpense(expenseData as Expense)
       setFormMode('edit')
       setFormVisible(true)

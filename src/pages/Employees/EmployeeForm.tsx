@@ -147,7 +147,7 @@ const EmployeeForm: React.FC = () => {
 
       if (hasCachedData && !isEdit) {
         // 创建页面：优先使用缓存数据，确保日期字段安全处理
-        console.log('🔄 恢复创建员工表单缓存数据')
+        // 恢复创建员工表单缓存数据
 
         // 安全的日期处理函数
         const safeDayjs = (dateValue: any) => {
@@ -254,7 +254,7 @@ const EmployeeForm: React.FC = () => {
             }
           : serverData
 
-        console.log('🔄 初始化编辑员工表单数据', hasCachedData ? '（含缓存）' : '（仅服务器）')
+        // 初始化编辑员工表单数据（含缓存或仅服务器数据）
         form.setFieldsValue(finalData)
         setIsResigned(finalData.isResigned || false)
 
@@ -304,7 +304,7 @@ const EmployeeForm: React.FC = () => {
     const handleClearCache = (event: CustomEvent) => {
       const { tabKey, reason } = event.detail
       if (tabKey === currentPath || reason === 'force') {
-        console.log(`🧹 [EmployeeForm] 响应外部缓存清理事件: ${tabKey} (${reason})`)
+        // 响应外部缓存清理事件
         clearFormData(currentPath)
       }
     }
@@ -369,7 +369,7 @@ const EmployeeForm: React.FC = () => {
           if (window.closeTab) {
             const success = window.closeTab(currentPath)
             if (success) {
-              console.log('✅ 编辑员工标签页已关闭，已返回员工列表')
+              // 编辑员工标签页已关闭，已返回员工列表
             } else {
               console.warn(`⚠️ 关闭编辑员工标签页失败: ${currentPath}`)
             }
@@ -392,7 +392,7 @@ const EmployeeForm: React.FC = () => {
           if (window.closeTab) {
             const success = window.closeTab('/employees/create')
             if (success) {
-              console.log('✅ 创建员工标签页已关闭，已返回员工列表')
+              // 创建员工标签页已关闭，已返回员工列表
             } else {
               console.warn('⚠️ 关闭创建员工标签页失败')
             }

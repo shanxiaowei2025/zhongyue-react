@@ -82,15 +82,9 @@ const CreateContract: React.FC = () => {
         }
 
         batchUpdateFormData(currentData)
-        console.log('💾 自动保存表单数据:', currentData)
+        // 自动保存表单数据
 
-        // 特别监控日期字段的保存
-        if (currentData.partyASignDate) {
-          console.log('📅 保存甲方签署日期:', currentData.partyASignDate)
-        }
-        if (currentData.partyBSignDate) {
-          console.log('📅 保存乙方签署日期:', currentData.partyBSignDate)
-        }
+        // 保存日期字段
       }
     } catch (error) {
       console.error('保存表单数据失败:', error)
@@ -109,14 +103,7 @@ const CreateContract: React.FC = () => {
       const isContractTypeChanged = contractType && contractType !== state.contractType
 
       if (isSignatoryChanged || isContractTypeChanged) {
-        console.log('🔄 检测到签署方或合同类型变化，清理旧缓存:', {
-          oldSignatory: signatory,
-          newSignatory: state.signatory,
-          oldContractType: contractType,
-          newContractType: state.contractType,
-          signatory_changed: isSignatoryChanged,
-          contract_type_changed: isContractTypeChanged,
-        })
+        // 检测到签署方或合同类型变化，清理旧缓存
 
         // 清理旧的表单数据
         clearAllCache()
@@ -124,15 +111,12 @@ const CreateContract: React.FC = () => {
 
       setSignatory(state.signatory)
       setContractType(state.contractType)
-      console.log('💾 保存新的合同创建参数:', {
-        signatory: state.signatory,
-        contractType: state.contractType,
-      })
+      // 保存新的合同创建参数
       return
     }
 
     // 否则zustand中已有存储的数据会自动加载
-    console.log('🔄 使用已存储的合同参数:', { signatory, contractType })
+    // 使用已存储的合同参数
   }, [
     state?.signatory,
     state?.contractType,
@@ -150,7 +134,7 @@ const CreateContract: React.FC = () => {
       saveCurrentFormData()
       // 浏览器关闭/刷新时清理数据
       clearAllCache()
-      console.log('🧹 页面关闭：清理所有表单数据')
+      // 页面关闭：清理所有表单数据
     }
 
     // 监听标签页关闭事件
@@ -158,7 +142,7 @@ const CreateContract: React.FC = () => {
       const { tabKey } = event.detail || {}
       // 如果关闭的是创建合同标签页，清理表单缓存
       if (tabKey === '/contracts/create') {
-        console.log('🗂️ 创建合同标签页关闭，清理表单缓存')
+        // 创建合同标签页关闭，清理表单缓存
         clearAllCache()
       }
     }
@@ -166,11 +150,11 @@ const CreateContract: React.FC = () => {
     // 监听来自MainLayout的缓存清理事件
     const handleClearCacheEvent = (event: CustomEvent) => {
       const { tabKey, reason } = event.detail || {}
-      console.log('📨 接收到清理缓存事件:', { tabKey, reason })
+      // 接收到清理缓存事件
 
       // 如果是针对当前页面的清理事件，执行清理
       if (tabKey === '/contracts/create') {
-        console.log('🧹 响应清理缓存事件，清理表单数据')
+        // 响应清理缓存事件，清理表单数据
         clearAllCache()
       }
     }
@@ -185,7 +169,7 @@ const CreateContract: React.FC = () => {
       window.removeEventListener('clearContractFormCache', handleClearCacheEvent as EventListener)
       // 组件卸载时只保存数据，不清理
       saveCurrentFormData()
-      console.log('💾 组件卸载：已保存表单数据，保留参数')
+      // 组件卸载：已保存表单数据，保留参数
     }
   }, [clearAllCache])
 
@@ -193,7 +177,7 @@ const CreateContract: React.FC = () => {
   const handleBack = () => {
     // 保存当前表单数据
     saveCurrentFormData()
-    console.log('📝 返回列表：已保存当前数据，下次可继续编辑')
+    // 返回列表：已保存当前数据，下次可继续编辑
     navigate('/contracts')
   }
 
@@ -201,7 +185,7 @@ const CreateContract: React.FC = () => {
   const clearStorageData = () => {
     try {
       clearAllCache()
-      console.log('🧹 手动清理：已清除所有表单数据')
+      // 手动清理：已清除所有表单数据
       message.success('已清除保存的合同数据')
     } catch (error) {
       console.error('清理数据失败:', error)
@@ -214,7 +198,7 @@ const CreateContract: React.FC = () => {
     try {
       setIsSubmitting(true)
       setIsSubmittingInProgress(true) // 标记提交进行中，暂停所有自动恢复逻辑
-      console.log('🚀 开始提交合同')
+      // 开始提交合同
 
       if (contractType === '产品服务协议') {
         if (!productServiceAgreementRef.current) {
@@ -252,7 +236,7 @@ const CreateContract: React.FC = () => {
           if (window.closeTab) {
             const success = window.closeTab('/contracts/create')
             if (success) {
-              console.log('✅ 创建合同标签页已关闭，已返回合同列表')
+              // 创建合同标签页已关闭，已返回合同列表
             } else {
               console.warn('⚠️ 创建合同标签页关闭失败')
             }
@@ -265,7 +249,7 @@ const CreateContract: React.FC = () => {
     } finally {
       setIsSubmitting(false)
       setIsSubmittingInProgress(false)
-      console.log('🔚 合同提交结束')
+      // 合同提交结束
     }
   }
 
@@ -306,7 +290,7 @@ const CreateContract: React.FC = () => {
 
     // 监听数据恢复事件，用于触发额外的恢复操作
     const handleDataRestored = () => {
-      console.log('📣 监听到表单数据恢复事件')
+      // 监听到表单数据恢复事件
 
       // 如果需要，可以在这里添加额外的恢复操作
       // 对于产品服务协议，强制同步客户信息
@@ -332,9 +316,7 @@ const CreateContract: React.FC = () => {
     // 监听合同组件的自定义表单变化事件（特别针对DatePicker等Antd组件）
     const handleContractFormFieldChange = (event: any) => {
       const { field, value, contractType: eventContractType } = event.detail || {}
-      console.log(
-        `📅 [CreateContract] 收到合同字段变化事件: ${field}=${value} (${eventContractType})`
-      )
+      // 收到合同字段变化事件
       // 触发自动保存
       debouncedSaveFormData()
     }

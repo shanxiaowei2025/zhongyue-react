@@ -4,8 +4,7 @@ import type { ApiResponse } from '../types'
 
 // 从环境变量获取API基础URL，如果未定义则默认为/api
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
-console.log('API服务器地址:', import.meta.env.VITE_API_SERVER)
-console.log('API配置 - 基础URL:', apiBaseUrl)
+// API服务器配置完成
 
 // 创建 axios 实例
 const instance = axios.create({
@@ -60,15 +59,7 @@ instance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    // 添加日志
-    console.log('API请求:', {
-      url: config.url,
-      method: config.method,
-      data: config.data,
-      headers: config.headers,
-      baseURL: config.baseURL,
-      fullUrl: config.baseURL && config.url ? `${config.baseURL}${config.url}` : config.url,
-    })
+    // 请求配置处理完成
 
     return config
   },
@@ -86,8 +77,7 @@ instance.interceptors.response.use(
       return response
     }
 
-    // 添加响应日志
-    console.log('API响应原始数据:', response.data)
+    // 响应数据处理
 
     const res = response.data as ApiResponse<unknown>
 
@@ -221,7 +211,7 @@ publicInstance.interceptors.response.use(
       return response
     }
 
-    console.log('公共API响应:', response.data)
+    // 公共API响应处理
 
     const res = response.data as ApiResponse<unknown>
 

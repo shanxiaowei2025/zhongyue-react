@@ -44,14 +44,14 @@ const Login = () => {
         }
       }>
 
-      console.log('登录响应完整数据:', response)
+      // 登录响应完整数据
 
       // 判断是否有数据
       if (response && response.code === 0 && response.data) {
         // access_token 和 user_info 在response.data里面
         const { access_token, user_info } = response.data
 
-        console.log('获取到token和用户信息:', { access_token, user_info })
+        // 获取到token和用户信息
 
         // 保存token
         setToken(access_token)

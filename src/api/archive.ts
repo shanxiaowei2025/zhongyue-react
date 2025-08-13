@@ -19,7 +19,7 @@ export interface ArchiveSearchParams extends Partial<PaginationParams> {
 
 // 档案查询API - 根据企业名称或统一社会信用代码查询档案存放信息
 export const searchArchive = (params: ArchiveSearchParams) => {
-  console.log('调用档案查询API, 参数:', params)
+  // 档案查询参数处理
 
   // 构建查询字符串，过滤空值
   const queryParams = new URLSearchParams()
@@ -30,8 +30,7 @@ export const searchArchive = (params: ArchiveSearchParams) => {
   })
 
   const queryString = queryParams.toString()
-  console.log('档案查询构建的查询字符串:', queryString)
-  console.log('完整请求URL:', `/customer/archive/search?${queryString}`)
+  // 档案查询URL构建完成
 
   return request.get<ApiResponse<ArchiveSearchResult[]>>(`/customer/archive/search?${queryString}`)
 }

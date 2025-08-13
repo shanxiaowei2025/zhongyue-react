@@ -172,12 +172,7 @@ type APICustomer = Omit<
 const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
   const result = { ...values }
 
-  console.log('转换日期前的值:', {
-    licenseExpiryDate: values.licenseExpiryDate,
-    capitalContributionDeadline: values.capitalContributionDeadline,
-    publicBankOpeningDate: values.publicBankOpeningDate,
-    generalAccountOpeningDate: values.generalAccountOpeningDate,
-  })
+  // 转换日期前的值
 
   // 只有当值存在且是Dayjs对象时才进行转换
   if (
@@ -228,12 +223,7 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     result.generalAccountOpeningDate = null
   }
 
-  console.log('转换日期后的值:', {
-    licenseExpiryDate: result.licenseExpiryDate,
-    capitalContributionDeadline: result.capitalContributionDeadline,
-    publicBankOpeningDate: result.publicBankOpeningDate,
-    generalAccountOpeningDate: result.generalAccountOpeningDate,
-  })
+  // 转换日期后的值
 
   return result
 }
@@ -521,7 +511,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       setIsSaving(true)
 
       // 打印提交的值，以便调试
-      console.log('提交的表单值:', values)
+      // 提交的表单值
 
       // 处理营业执照到期日期
       if (values.licenseNoFixedTerm) {
@@ -644,7 +634,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           onSuccess?.(isAutoSave, newCustomer?.id)
         }
       } else if (customer?.id) {
-        console.log('发送到API的数据:', cleanData)
+        // 发送到API的数据
 
         // 确保日期字段是正确的格式
         if (cleanData.licenseExpiryDate && typeof cleanData.licenseExpiryDate !== 'string') {
@@ -797,11 +787,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         // 保留实际负责人数据
         formValues.actualResponsibles = actualResponsibleItems
 
-        console.log('自动保存前的formValues:', formValues)
+        // 自动保存前的formValues
 
         // 调用 handleSubmit 并传递 isAutoSave=true
         await handleSubmit(formValues, true)
-        console.log('自动保存成功')
+        // 自动保存成功
       } catch (validationError: any) {
         // 处理验证错误但不显示消息，避免干扰用户
         console.error('自动保存验证错误:', validationError)
@@ -1413,13 +1403,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       disabled={false}
                       value={images || {}}
                       onChange={value => {
-                        console.log('MultiFileUpload onChange 被调用, value:', value)
+                        // MultiFileUpload onChange 被调用
                         // 更新实缴资本项中的图片
                         handleUpdatePaidInCapitalItem(index, 'images', value)
                       }}
                       onSuccess={() => {
                         // 调用回调但不做其他操作，避免自动保存导致图片丢失
-                        console.log('MultiFileUpload onSuccess 被调用')
+                        // MultiFileUpload onSuccess 被调用
                       }}
                     />
                   ),
@@ -1604,13 +1594,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       disabled={false}
                       value={images || {}}
                       onChange={value => {
-                        console.log('行政许可 MultiFileUpload onChange 被调用, value:', value)
+                        // 行政许可 MultiFileUpload onChange 被调用
                         // 更新行政许可项中的图片
                         handleUpdateAdministrativeLicenseItem(index, 'images', value)
                       }}
                       onSuccess={() => {
                         // 调用回调但不做其他操作，避免自动保存导致图片丢失
-                        console.log('行政许可 MultiFileUpload onSuccess 被调用')
+                        // 行政许可 MultiFileUpload onSuccess 被调用
                       }}
                     />
                   ),
@@ -2131,10 +2121,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           const licenseExpiryDateValue = formValues.licenseExpiryDate
           const licenseNoFixedTermValue = formValues.licenseNoFixedTerm
 
-          console.log('提交前的表单字段:', {
-            licenseExpiryDate: licenseExpiryDateValue,
-            licenseNoFixedTerm: licenseNoFixedTermValue,
-          })
+          // 提交前的表单字段
 
           if (licenseNoFixedTermValue) {
             // 如果勾选了无固定期限，设置为特定日期 9999-12-31

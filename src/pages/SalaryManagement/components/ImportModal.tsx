@@ -82,12 +82,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
       const file = uploadFile.originFileObj || (uploadFile as any as File)
 
       // 添加调试日志
-      console.log('导入文件信息:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified,
-      })
+      // 导入文件信息
 
       const result = await onImport(file)
       setImportResult(result)
