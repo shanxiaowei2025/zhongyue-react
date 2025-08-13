@@ -16,6 +16,7 @@ interface ContractFormData {
   partyACreditCode?: string
   partyALegalPerson?: string
   partyAPostalCode?: string
+  location?: string
 
   // 乙方信息
   partyBCompany?: string

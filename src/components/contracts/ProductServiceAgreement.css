@@ -166,6 +166,82 @@
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
 }
 
+/* 企业归属地字段 */
+.party-location {
+  display: flex;
+  margin-bottom: 12px;
+  gap: 10px;
+  margin-left: 10px;
+}
+
+.location-label {
+  font-weight: normal;
+  min-width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+}
+
+.location-select {
+  flex: 1;
+  max-width: 300px;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid #000;
+  background: transparent;
+  padding: 4px 8px;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif;
+  font-size: 12px;
+}
+
+.location-select .ant-select-selector {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 4px 8px !important;
+  height: 32px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  font-size: 12px !important;
+  box-shadow: none !important;
+}
+
+.location-select .ant-select-selection-item {
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  font-size: 12px !important;
+}
+
+.location-select:hover .ant-select-selector {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.location-select.ant-select-focused .ant-select-selector {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.location-select .ant-select-arrow {
+  color: #000 !important;
+}
+
+/* 普通Select组件的placeholder样式 - 兼容Ant Design 5.x */
+.location-select .ant-select-selection-placeholder,
+.location-select .ant-select-selection-item-placeholder {
+  font-size: 12px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  color: #999 !important;
+  padding: 4px 8px !important;
+}
+
+/* 确保所有状态下都不显示内部边框 */
+.location-select .ant-select-selector:focus,
+.location-select .ant-select-selector:hover,
+.location-select .ant-select-selector:active {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
 .party-details {
   padding-left: 10px;
 }
@@ -711,7 +787,9 @@
 }
 
 .product-service-agreement .ant-select.ant-select-auto-complete:hover .ant-select-selector,
-.product-service-agreement .ant-select.ant-select-auto-complete.ant-select-focused .ant-select-selector {
+.product-service-agreement
+  .ant-select.ant-select-auto-complete.ant-select-focused
+  .ant-select-selector {
   border: none;
   border-bottom: 1px solid #000;
   box-shadow: none;
@@ -750,14 +828,18 @@
 }
 
 /* 确保 AutoComplete 在错误状态下也保持一致的样式 */
-.product-service-agreement .ant-select.ant-select-auto-complete.ant-select-status-error .ant-select-selector {
+.product-service-agreement
+  .ant-select.ant-select-auto-complete.ant-select-status-error
+  .ant-select-selector {
   border: none;
   border-bottom: 1px solid #ff4d4f;
   box-shadow: none;
 }
 
 /* AutoComplete 禁用状态样式 */
-.product-service-agreement .ant-select.ant-select-auto-complete.ant-select-disabled .ant-select-selector {
+.product-service-agreement
+  .ant-select.ant-select-auto-complete.ant-select-disabled
+  .ant-select-selector {
   background-color: #f5f5f5;
   color: #999;
   border-bottom: 1px solid #d9d9d9;
@@ -776,7 +858,9 @@
   box-shadow: none;
 }
 
-.product-service-agreement .party-company-input.ant-select.ant-select-auto-complete .ant-select-selector {
+.product-service-agreement
+  .party-company-input.ant-select.ant-select-auto-complete
+  .ant-select-selector {
   padding: 4px 8px;
   height: 30px;
   background-color: transparent;
@@ -925,7 +1009,7 @@
   .signature-column {
     width: 100%;
   }
-  
+
   .signature-block {
     width: 100%;
   }

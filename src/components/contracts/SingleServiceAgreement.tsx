@@ -1,5 +1,5 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { Checkbox, Input, DatePicker, message } from 'antd'
+import { Checkbox, Input, DatePicker, message, Select } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -9,6 +9,7 @@ import type { Enterprise } from '../../types/enterpriseService'
 import CustomerAutoComplete from '../CustomerAutoComplete'
 import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
 import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
+import { LOCATION_OPTIONS } from '../../constants/locationOptions'
 import styles from './SingleServiceAgreement.module.css'
 
 // 获取乙方盖章图片
@@ -470,6 +471,13 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         hasErrors = true
       }
 
+      // 甲方企业归属地必填验证
+      if (!formData.location?.trim()) {
+        setValidationError('location')
+        message.error('请选择企业归属地')
+        hasErrors = true
+      }
+
       // 乙方联系人必填验证
       if (!formData.partyBContact?.trim()) {
         setValidationError('partyBContact')
@@ -569,6 +577,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           partyASignDate: formData.partyASignDate,
           partyBSignDate: formData.partyBSignDate,
           remarks: formData.remarks,
+          location: formData.location,
           ...serviceData,
         }
 
@@ -616,6 +625,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         partyAAddress: formData.partyAAddress || '',
         partyAPhone: formData.partyAPhone || '',
         partyAContact: formData.partyAContact || '',
+        location: formData.location || '',
 
         // 乙方信息
         partyBContact: formData.partyBContact || '',
@@ -793,6 +803,26 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
                   minWidth: '300px',
                 }}
               />
+            </div>
+
+            {/* 甲方企业归属地 */}
+            <div className={styles.partyLocation}>
+              <span className={styles.locationLabel}>企业归属地：</span>
+              <Select
+                className={styles.locationSelect}
+                placeholder="*请选择企业归属地"
+                value={formData.location || undefined}
+                onChange={value => handleFormChange('location', value)}
+                allowClear
+                showSearch={false}
+                notFoundContent={null}
+              >
+                {LOCATION_OPTIONS.map(option => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
+              </Select>
             </div>
 
             <div className={styles.partyDetails}>

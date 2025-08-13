@@ -12,6 +12,8 @@ import CustomerAutoComplete from '../CustomerAutoComplete'
 import { numberToChinese, formatAmount, parseAmount } from '../../utils/numberToChinese'
 import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import './ProductServiceAgreement.css'
+import { LOCATION_OPTIONS } from '../../constants/locationOptions'
+import { Select } from 'antd'
 
 // 获取乙方盖章图片
 const getPartyBStampImage = (signatory: string): string => {
@@ -699,6 +701,11 @@ const ProductServiceAgreement = forwardRef<
         return false
       }
 
+      if (!formData.location?.trim()) {
+        message.error('请选择企业归属地')
+        return false
+      }
+
       if (!formData.partyAContact?.trim()) {
         message.error('请填写甲方联系人')
         return false
@@ -795,6 +802,7 @@ const ProductServiceAgreement = forwardRef<
           contractType: formData.contractType,
           partyACompany: formData.partyACompany,
           partyACreditCode: formData.partyACreditCode,
+          location: formData.location,
           partyAAddress: formData.partyAAddress,
           partyAContact: formData.partyAContact,
           partyAPhone: formData.partyAPhone,
@@ -1092,6 +1100,32 @@ const ProductServiceAgreement = forwardRef<
                   }
                 }}
               />
+            </div>
+
+            {/* 甲方企业归属地 */}
+            <div className="party-location">
+              <span className="location-label">企业归属地：</span>
+              <Select
+                className="location-select"
+                placeholder="*请选择企业归属地"
+                value={formData.location || undefined}
+                onChange={value => {
+                  if (mode === 'edit') {
+                    setEditModeFormData(prev => ({ ...prev, location: value }))
+                  } else {
+                    updateFormField('location', value)
+                  }
+                }}
+                allowClear
+                showSearch={false}
+                notFoundContent={null}
+              >
+                {LOCATION_OPTIONS.map(option => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
+              </Select>
             </div>
 
             <div className="party-details">

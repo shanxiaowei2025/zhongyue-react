@@ -80,6 +80,7 @@ export interface Contract {
   updateTime: string
   submitter?: string
   remarks?: string
+  location?: string
 }
 
 // 合同查询参数
@@ -156,6 +157,7 @@ export interface CreateContractDto {
   paymentMethod?: string
   contractStatus?: ContractStatus
   remarks?: string
+  location?: string
 }
 
 // 更新合同DTO

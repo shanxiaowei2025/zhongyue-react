@@ -75,7 +75,8 @@
 .phoneInput,
 .contactInput,
 .businessPersonInput,
-.otherBusinessInput {
+.otherBusinessInput,
+.locationSelect {
   width: 100%;
   border: none;
   border-bottom: 1px solid #000;
@@ -85,6 +86,83 @@
   background-color: transparent;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
   padding: 2px 0;
+}
+
+/* 企业归属地Select组件的特殊样式 */
+.locationSelect :global(.ant-select-selector) {
+  border: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+}
+
+.locationSelect:hover :global(.ant-select-selector) {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.locationSelect:global(.ant-select-focused) :global(.ant-select-selector) {
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.locationSelect :global(.ant-select-arrow) {
+  color: #000 !important;
+}
+
+/* 普通Select组件的placeholder样式 - 兼容Ant Design 5.x */
+.locationSelect :global(.ant-select-selection-placeholder),
+.locationSelect :global(.ant-select-selection-item-placeholder) {
+  font-size: 12px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  color: #999 !important;
+  padding: 2px 0 !important;
+}
+
+/* 使用通配符选择器确保覆盖所有placeholder相关元素 */
+.locationSelect :global(.ant-select-selection-placeholder),
+.locationSelect :global(.ant-select-selection-item-placeholder),
+.locationSelect :global([class*='placeholder']) {
+  font-size: 12px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  color: #999 !important;
+  padding: 2px 0 !important;
+}
+
+/* 增强placeholder样式优先级 - 确保在所有情况下都能正确显示 */
+.locationSelect :global(.ant-select-selector .ant-select-selection-placeholder),
+.locationSelect :global(.ant-select-selector .ant-select-selection-item-placeholder),
+.locationSelect :global(.ant-select-selection-search .ant-select-selection-search-input::placeholder) {
+  font-size: 12px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
+  color: #999 !important;
+  padding: 2px 0 !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* 针对不同状态下的placeholder确保显示 */
+.locationSelect:global(.ant-select):not(.ant-select-customize-input) :global(.ant-select-selector),
+.locationSelect:global(.ant-select-single):not(.ant-select-customize-input) :global(.ant-select-selector) {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 确保空值时placeholder可见 */
+.locationSelect:global(.ant-select):not(.ant-select-disabled):not(.ant-select-customize-input) :global(.ant-select-selector .ant-select-selection-placeholder) {
+  pointer-events: none !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 0px !important;
+  transform: translateY(-50%) !important;
+  color: #999 !important;
+  font-size: 12px !important;
+  font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
 }
 
 /* AutoComplete 作为输入框时的特定样式覆盖 */
@@ -511,7 +589,8 @@
   align-items: center;
 }
 
-.agencyAccountingAgreement :global(.ant-select.ant-select-auto-complete .ant-select-selection-search-input) {
+.agencyAccountingAgreement
+  :global(.ant-select.ant-select-auto-complete .ant-select-selection-search-input) {
   background-color: transparent;
   border: none;
   font-size: 12px;
@@ -521,7 +600,8 @@
 }
 
 .agencyAccountingAgreement :global(.ant-select.ant-select-auto-complete:hover .ant-select-selector),
-.agencyAccountingAgreement :global(.ant-select.ant-select-auto-complete.ant-select-focused .ant-select-selector) {
+.agencyAccountingAgreement
+  :global(.ant-select.ant-select-auto-complete.ant-select-focused .ant-select-selector) {
   border: none;
   border-bottom: 1px solid #000;
   box-shadow: none;
@@ -532,7 +612,8 @@
 }
 
 /* AutoComplete placeholder 样式 */
-.agencyAccountingAgreement :global(.ant-select.ant-select-auto-complete .ant-select-selection-placeholder) {
+.agencyAccountingAgreement
+  :global(.ant-select.ant-select-auto-complete .ant-select-selection-placeholder) {
   font-size: 12px;
   font-family: 'SourceHanSerifCN', '思源宋体', serif;
   color: #999;
@@ -560,14 +641,16 @@
 }
 
 /* 确保 AutoComplete 在错误状态下也保持一致的样式 */
-.agencyAccountingAgreement :global(.ant-select.ant-select-auto-complete.ant-select-status-error .ant-select-selector) {
+.agencyAccountingAgreement
+  :global(.ant-select.ant-select-auto-complete.ant-select-status-error .ant-select-selector) {
   border: none;
   border-bottom: 1px solid #ff4d4f;
   box-shadow: none;
 }
 
 /* AutoComplete 禁用状态样式 */
-.agencyAccountingAgreement :global(.ant-select.ant-select-auto-complete.ant-select-disabled .ant-select-selector) {
+.agencyAccountingAgreement
+  :global(.ant-select.ant-select-auto-complete.ant-select-disabled .ant-select-selector) {
   background-color: #f5f5f5;
   color: #999;
   border-bottom: 1px solid #d9d9d9;

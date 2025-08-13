@@ -1,5 +1,5 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { Input, DatePicker, Checkbox, message } from 'antd'
+import { Input, DatePicker, Checkbox, message, Select } from 'antd'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import { useDebouncedValue } from '../../hooks/useDebounce'
@@ -9,6 +9,7 @@ import type { Enterprise } from '../../types/enterpriseService'
 import CustomerAutoComplete from '../CustomerAutoComplete'
 import { formatAmount, parseAmount } from '../../utils/numberToChinese'
 import { getAgencySignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
+import { LOCATION_OPTIONS } from '../../constants/locationOptions'
 import styles from './AgencyAccountingAgreement.module.css'
 
 // 邮政编码映射配置
@@ -547,6 +548,14 @@ const AgencyAccountingAgreement = forwardRef<
       return false
     }
 
+    if (!formData.location || !formData.location.trim()) {
+      console.error('❌ [代理记账合同] 企业归属地验证失败:', {
+        formData: formData.location,
+      })
+      message.error('请选择企业归属地')
+      return false
+    }
+
     if (!formData.partyAAddress || !formData.partyAAddress.trim()) {
       console.error('❌ [代理记账合同] 甲方地址验证失败:', {
         formData: formData.partyAAddress,
@@ -759,6 +768,7 @@ const AgencyAccountingAgreement = forwardRef<
       partyAContact: formData.partyAContact || '',
       partyAPostalCode: formData.partyAPostalCode || '', // 甲方邮编字段（修正名称）
       partyALegalPerson: formData.partyALegalPerson || '', // 甲方法定代表人
+      location: formData.location || '', // 企业归属地
 
       // 乙方信息（包含默认值）
       partyBAddress: formData.partyBAddress || config.address || '',
@@ -850,6 +860,27 @@ const AgencyAccountingAgreement = forwardRef<
               onChange={value => handleFormChange('partyACreditCode', value)}
               className={styles.creditCodeInput}
             />
+          </div>
+        </div>
+
+        <div className={styles.partyField}>
+          <div className={styles.partyLabel}>企业归属地：</div>
+          <div className={styles.partyContent}>
+            <Select
+              placeholder="*请选择企业归属地"
+              value={formData.location || undefined}
+              onChange={value => handleFormChange('location', value)}
+              className={styles.locationSelect}
+              allowClear
+              showSearch={false}
+              notFoundContent={null}
+            >
+              {LOCATION_OPTIONS.map(option => (
+                <Select.Option key={option.value} value={option.value}>
+                  {option.label}
+                </Select.Option>
+              ))}
+            </Select>
           </div>
         </div>
 
