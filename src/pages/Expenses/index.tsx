@@ -25,6 +25,7 @@ import {
   FileSearchOutlined,
   UploadOutlined,
   CloseOutlined,
+  MessageOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
@@ -814,6 +815,22 @@ const Expenses: React.FC = () => {
                   icon={<EyeOutlined />}
                   className="view-btn"
                   onClick={() => handleViewReceipt(record.id)}
+                />
+              </Tooltip>
+            )}
+            {record.internalRemarks && (
+              <Tooltip title={
+                <div>
+                  内部备注：
+                  <br />
+                  {record.internalRemarks}
+                </div>
+              }>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<MessageOutlined />}
+                  className="message-btn"
                 />
               </Tooltip>
             )}
