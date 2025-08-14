@@ -4,19 +4,21 @@ FROM node:20-bullseye AS builder
 # 设置工作目录
 WORKDIR /app
 
-# 安装pnpm
+# 安装pnpm（利用层缓存）
 RUN npm install -g pnpm
 
-# 配置pnpm使用国内镜像源
-RUN pnpm config set registry https://registry.npmmirror.com
-RUN pnpm config set disturl https://npmmirror.com/mirrors/node
-RUN pnpm config set electron_mirror https://npmmirror.com/mirrors/electron/
+# 配置pnpm使用国内镜像源（合并为单层减少层数）
+RUN pnpm config set registry https://registry.npmmirror.com && \
+    pnpm config set disturl https://npmmirror.com/mirrors/node && \
+    pnpm config set electron_mirror https://npmmirror.com/mirrors/electron/
 
 # 复制package.json和pnpm-lock.yaml（如果存在）
 COPY package.json pnpm-lock.yaml* ./
 
-# 安装依赖
-RUN pnpm install
+# 安装依赖（使用缓存挂载）
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store/v3 \
+    --mount=type=cache,target=/app/node_modules \
+    pnpm install --frozen-lockfile
 
 # 复制所有文件
 COPY . .
@@ -93,8 +95,9 @@ RUN echo 'server { \
     } \
 }' > /app/nginx/nginx.conf
 
-# 构建应用程序
-RUN pnpm build
+# 构建应用程序（使用缓存挂载优化构建过程）
+RUN --mount=type=cache,target=/app/node_modules \
+    pnpm build
 
 # 阶段2：配置Nginx服务
 FROM nginx:stable-alpine

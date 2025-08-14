@@ -4,6 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # 启用 BuildKit 缓存功能
+      cache_from:
+        - node:20-bullseye
+        - nginx:stable-alpine
     container_name: zhongyue-frontend
     ports:
       - '8888:80'
@@ -22,6 +26,9 @@ services:
       context: ../zhongyue-nodejs
       dockerfile: ../zhongyue-nodejs/Dockerfile
       target: production
+      # 启用 BuildKit 缓存功能
+      cache_from:
+        - node:20-bullseye
     restart: always
     ports:
       - '3000:3000'
