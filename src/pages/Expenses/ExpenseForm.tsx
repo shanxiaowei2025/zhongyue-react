@@ -20,6 +20,7 @@ import {
 import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
+import DateRangePicker from '../../components/DateRangePicker'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import {
   Expense,
@@ -1574,27 +1575,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           label="代理日期"
                           style={{ gridColumn: agencyDurationYears >= 2 ? 'span 1' : 'span 2' }}
                         >
-                          <Space style={{ width: '100%' }}>
-                            <Form.Item name="agencyStartDate" noStyle>
-                              <RestrictedDatePicker
-                                placeholder="开始日期"
-                                style={{ width: '100%' }}
-                                fieldName="代理开始日期"
-                                mode={mode}
-                                hasPermission={hasFullDateEditPermission()}
-                                hasAutoFillValue={!!autoFillDates.agencyStartDate}
-                              />
-                            </Form.Item>
-                            <span>至</span>
-                            <Form.Item name="agencyEndDate" noStyle>
-                              <DatePicker
-                                placeholder="结束日期"
-                                style={{ width: '100%' }}
-                                picker="month"
-                                format="YYYY-MM"
-                              />
-                            </Form.Item>
-                          </Space>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('agencyStartDate')}
+                            endValue={form.getFieldValue('agencyEndDate')}
+                            onStartChange={value => form.setFieldValue('agencyStartDate', value)}
+                            onEndChange={value => form.setFieldValue('agencyEndDate', value)}
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="代理开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.agencyStartDate}
+                          />
                         </Form.Item>
 
                         {/* 赠送代理时长字段，仅当代理时长大于等于两年时显示 */}
@@ -1620,27 +1613,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         </Form.Item>
 
                         <Form.Item label="记账软件日期" style={{ gridColumn: 'span 2' }}>
-                          <Space style={{ width: '100%' }}>
-                            <Form.Item name="accountingSoftwareStartDate" noStyle>
-                              <RestrictedDatePicker
-                                placeholder="开始日期"
-                                style={{ width: '100%' }}
-                                fieldName="记账软件开始日期"
-                                mode={mode}
-                                hasPermission={hasFullDateEditPermission()}
-                                hasAutoFillValue={!!autoFillDates.accountingSoftwareStartDate}
-                              />
-                            </Form.Item>
-                            <span>至</span>
-                            <Form.Item name="accountingSoftwareEndDate" noStyle>
-                              <DatePicker
-                                placeholder="结束日期"
-                                style={{ width: '100%' }}
-                                picker="month"
-                                format="YYYY-MM"
-                              />
-                            </Form.Item>
-                          </Space>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('accountingSoftwareStartDate')}
+                            endValue={form.getFieldValue('accountingSoftwareEndDate')}
+                            onStartChange={value =>
+                              form.setFieldValue('accountingSoftwareStartDate', value)
+                            }
+                            onEndChange={value =>
+                              form.setFieldValue('accountingSoftwareEndDate', value)
+                            }
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="记账软件开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.accountingSoftwareStartDate}
+                          />
                         </Form.Item>
 
                         <Form.Item name="invoiceSoftwareFee" label="开票软件费">
@@ -1655,27 +1644,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         </Form.Item>
 
                         <Form.Item label="开票软件日期" style={{ gridColumn: 'span 2' }}>
-                          <Space style={{ width: '100%' }}>
-                            <Form.Item name="invoiceSoftwareStartDate" noStyle>
-                              <RestrictedDatePicker
-                                placeholder="开始日期"
-                                style={{ width: '100%' }}
-                                fieldName="开票软件开始日期"
-                                mode={mode}
-                                hasPermission={hasFullDateEditPermission()}
-                                hasAutoFillValue={!!autoFillDates.invoiceSoftwareStartDate}
-                              />
-                            </Form.Item>
-                            <span>至</span>
-                            <Form.Item name="invoiceSoftwareEndDate" noStyle>
-                              <DatePicker
-                                placeholder="结束日期"
-                                style={{ width: '100%' }}
-                                picker="month"
-                                format="YYYY-MM"
-                              />
-                            </Form.Item>
-                          </Space>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('invoiceSoftwareStartDate')}
+                            endValue={form.getFieldValue('invoiceSoftwareEndDate')}
+                            onStartChange={value =>
+                              form.setFieldValue('invoiceSoftwareStartDate', value)
+                            }
+                            onEndChange={value =>
+                              form.setFieldValue('invoiceSoftwareEndDate', value)
+                            }
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="开票软件开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.invoiceSoftwareStartDate}
+                          />
                         </Form.Item>
                       </div>
                     ),
@@ -1760,27 +1745,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         </Form.Item>
 
                         <Form.Item label="社保日期" style={{ gridColumn: 'span 2' }}>
-                          <Space style={{ width: '100%' }}>
-                            <Form.Item name="socialInsuranceStartDate" noStyle>
-                              <RestrictedDatePicker
-                                placeholder="开始日期"
-                                style={{ width: '100%' }}
-                                fieldName="社保开始日期"
-                                mode={mode}
-                                hasPermission={hasFullDateEditPermission()}
-                                hasAutoFillValue={!!autoFillDates.socialInsuranceStartDate}
-                              />
-                            </Form.Item>
-                            <span>至</span>
-                            <Form.Item name="socialInsuranceEndDate" noStyle>
-                              <DatePicker
-                                placeholder="结束日期"
-                                style={{ width: '100%' }}
-                                picker="month"
-                                format="YYYY-MM"
-                              />
-                            </Form.Item>
-                          </Space>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('socialInsuranceStartDate')}
+                            endValue={form.getFieldValue('socialInsuranceEndDate')}
+                            onStartChange={value =>
+                              form.setFieldValue('socialInsuranceStartDate', value)
+                            }
+                            onEndChange={value =>
+                              form.setFieldValue('socialInsuranceEndDate', value)
+                            }
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="社保开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.socialInsuranceStartDate}
+                          />
                         </Form.Item>
 
                         <Form.Item
@@ -1831,27 +1812,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                 </Form.Item>
 
                                 <Form.Item label="公积金日期" style={{ gridColumn: 'span 2' }}>
-                                  <Space style={{ width: '100%' }}>
-                                    <Form.Item name="housingFundStartDate" noStyle>
-                                      <RestrictedDatePicker
-                                        placeholder="开始日期"
-                                        style={{ width: '100%' }}
-                                        fieldName="公积金开始日期"
-                                        mode={mode}
-                                        hasPermission={hasFullDateEditPermission()}
-                                        hasAutoFillValue={!!autoFillDates.housingFundStartDate}
-                                      />
-                                    </Form.Item>
-                                    <span>至</span>
-                                    <Form.Item name="housingFundEndDate" noStyle>
-                                      <DatePicker
-                                        placeholder="结束日期"
-                                        style={{ width: '100%' }}
-                                        picker="month"
-                                        format="YYYY-MM"
-                                      />
-                                    </Form.Item>
-                                  </Space>
+                                  <DateRangePicker
+                                    startValue={form.getFieldValue('housingFundStartDate')}
+                                    endValue={form.getFieldValue('housingFundEndDate')}
+                                    onStartChange={value =>
+                                      form.setFieldValue('housingFundStartDate', value)
+                                    }
+                                    onEndChange={value =>
+                                      form.setFieldValue('housingFundEndDate', value)
+                                    }
+                                    startPlaceholder="开始日期"
+                                    endPlaceholder="结束日期"
+                                    startFieldName="公积金开始日期"
+                                    style={{ width: '100%' }}
+                                    startMode={mode}
+                                    startHasPermission={hasFullDateEditPermission()}
+                                    startHasAutoFillValue={!!autoFillDates.housingFundStartDate}
+                                  />
                                 </Form.Item>
                               </div>
                             ) : null
@@ -1883,27 +1860,21 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         </Form.Item>
 
                         <Form.Item label="统计日期" style={{ gridColumn: 'span 2' }}>
-                          <Space style={{ width: '100%' }}>
-                            <Form.Item name="statisticalStartDate" noStyle>
-                              <RestrictedDatePicker
-                                placeholder="开始日期"
-                                style={{ width: '100%' }}
-                                fieldName="统计开始日期"
-                                mode={mode}
-                                hasPermission={hasFullDateEditPermission()}
-                                hasAutoFillValue={!!autoFillDates.statisticalStartDate}
-                              />
-                            </Form.Item>
-                            <span>至</span>
-                            <Form.Item name="statisticalEndDate" noStyle>
-                              <DatePicker
-                                placeholder="结束日期"
-                                style={{ width: '100%' }}
-                                picker="month"
-                                format="YYYY-MM"
-                              />
-                            </Form.Item>
-                          </Space>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('statisticalStartDate')}
+                            endValue={form.getFieldValue('statisticalEndDate')}
+                            onStartChange={value =>
+                              form.setFieldValue('statisticalStartDate', value)
+                            }
+                            onEndChange={value => form.setFieldValue('statisticalEndDate', value)}
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="统计开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.statisticalStartDate}
+                          />
                         </Form.Item>
                       </div>
                     ),
@@ -1985,27 +1956,19 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         </Form.Item>
 
                         <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
-                          <Space style={{ width: '100%' }}>
-                            <Form.Item name="addressStartDate" noStyle>
-                              <RestrictedDatePicker
-                                placeholder="开始日期"
-                                style={{ width: '100%' }}
-                                fieldName="地址开始日期"
-                                mode={mode}
-                                hasPermission={hasFullDateEditPermission()}
-                                hasAutoFillValue={!!autoFillDates.addressStartDate}
-                              />
-                            </Form.Item>
-                            <span>至</span>
-                            <Form.Item name="addressEndDate" noStyle>
-                              <DatePicker
-                                placeholder="结束日期"
-                                style={{ width: '100%' }}
-                                picker="month"
-                                format="YYYY-MM"
-                              />
-                            </Form.Item>
-                          </Space>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('addressStartDate')}
+                            endValue={form.getFieldValue('addressEndDate')}
+                            onStartChange={value => form.setFieldValue('addressStartDate', value)}
+                            onEndChange={value => form.setFieldValue('addressEndDate', value)}
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="地址开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.addressStartDate}
+                          />
                         </Form.Item>
                       </div>
                     ),
