@@ -1505,14 +1505,12 @@ const FinancialSelfInspection: React.FC = () => {
           <Form.Item
             label="备注"
             name="remark"
-            rules={[{ max: 500, message: '备注不能超过500个字符' }]}
+            rules={[
+              { required: true, message: '请输入备注信息' },
+              { max: 500, message: '备注不能超过500个字符' },
+            ]}
           >
-            <Input.TextArea
-              rows={4}
-              placeholder="请输入备注信息（可选）..."
-              showCount
-              maxLength={500}
-            />
+            <Input.TextArea rows={4} placeholder="请输入备注信息..." showCount maxLength={500} />
           </Form.Item>
         </Form>
       </Modal>
@@ -1582,14 +1580,12 @@ const FinancialSelfInspection: React.FC = () => {
           <Form.Item
             label="备注"
             name="remark"
-            rules={[{ max: 500, message: '备注不能超过500个字符' }]}
+            rules={[
+              { required: true, message: '请输入备注信息' },
+              { max: 500, message: '备注不能超过500个字符' },
+            ]}
           >
-            <Input.TextArea
-              rows={4}
-              placeholder="请输入备注信息（可选）..."
-              showCount
-              maxLength={500}
-            />
+            <Input.TextArea rows={4} placeholder="请输入备注信息..." showCount maxLength={500} />
           </Form.Item>
         </Form>
       </Modal>
