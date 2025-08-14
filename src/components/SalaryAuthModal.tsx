@@ -34,7 +34,7 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
       return status.hasPassword
     } catch (error: any) {
       console.error('检查密码状态失败:', error)
-      message.error('检查密码状态失败，请稍后重试')
+      // 错误处理由拦截器统一处理
       return false
     } finally {
       setCheckingStatus(false)
@@ -69,7 +69,7 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
         // 设置密码后自动验证
         await handleVerifyPassword({ salaryPassword: values.salaryPassword })
       } else {
-        message.error(result.message || '设置失败')
+        throw new Error(result.message || '设置失败')
       }
     } catch (error: any) {
       console.error('设置薪资密码失败:', error)

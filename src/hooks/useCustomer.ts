@@ -103,12 +103,10 @@ export const useCustomerList = (params: PaginationParams) => {
         await refreshCustomerList()
         return true
       } else {
-        message.error(response?.message || '删除失败，请稍后重试')
-        return false
+        throw new Error(response?.message || '删除失败')
       }
     } catch (error: any) {
       console.error('删除客户出错:', error)
-      message.error(error.message || '删除失败，请稍后重试')
       return false
     }
   }
@@ -179,8 +177,7 @@ export const useCustomerDetail = (id?: number | null) => {
 
         return true
       } else {
-        message.error(response?.message || '更新失败，请稍后重试')
-        return false
+        throw new Error(response?.message || '更新失败')
       }
     } catch (error: any) {
       console.error('更新客户出错:', error)
@@ -212,8 +209,7 @@ export const useCustomerDetail = (id?: number | null) => {
 
         return response.data
       } else {
-        message.error(response?.message || '创建失败，请稍后重试')
-        return null
+        throw new Error(response?.message || '创建失败')
       }
     } catch (error: any) {
       console.error('创建客户出错:', error)

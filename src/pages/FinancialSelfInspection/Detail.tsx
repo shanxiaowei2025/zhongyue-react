@@ -42,7 +42,7 @@ const FinancialSelfInspectionDetail: React.FC = () => {
 
   // 处理错误
   if (error) {
-    message.error('获取详情失败')
+    // 错误处理由拦截器统一处理
   }
 
   // 返回列表

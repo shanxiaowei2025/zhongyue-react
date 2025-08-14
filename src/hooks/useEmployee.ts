@@ -167,8 +167,7 @@ export const useCreateEmployee = () => {
       message.success('员工创建成功')
       return newEmployee
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || '创建员工失败'
-      message.error(errorMsg)
+      console.error('创建员工失败:', error)
       throw error
     }
   }
@@ -192,8 +191,7 @@ export const useUpdateEmployee = () => {
       message.success('员工信息更新成功')
       return updatedEmployee
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || '更新员工信息失败'
-      message.error(errorMsg)
+      console.error('更新员工信息失败:', error)
       throw error
     }
   }
@@ -217,8 +215,7 @@ export const useDeleteEmployee = () => {
       message.success('员工删除成功')
       return result
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || error?.message || '删除员工失败'
-      message.error(errorMsg)
+      console.error('删除员工失败:', error)
       throw error
     }
   }

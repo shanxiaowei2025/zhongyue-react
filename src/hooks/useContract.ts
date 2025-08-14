@@ -39,11 +39,6 @@ export const contractListFetcher = async ([url, params]: [string, ContractQueryP
     }
   } catch (error) {
     console.error('获取合同列表失败:', error)
-    if (error instanceof Error) {
-      message.error(`获取合同列表失败: ${error.message}`)
-    } else {
-      message.error('获取合同列表失败')
-    }
     throw error
   }
 }
@@ -66,11 +61,6 @@ export const contractDetailFetcher = async (url: string) => {
     }
   } catch (error) {
     console.error('获取合同详情失败:', error)
-    if (error instanceof Error) {
-      message.error(`获取合同详情失败: ${error.message}`)
-    } else {
-      message.error('获取合同详情失败')
-    }
     throw error
   }
 }
@@ -102,11 +92,6 @@ export const useContractList = (params: ContractQueryParams) => {
       }
     } catch (error) {
       console.error('删除合同失败:', error)
-      if (error instanceof Error) {
-        message.error(`删除合同失败: ${error.message}`)
-      } else {
-        message.error('删除合同失败')
-      }
       return false
     }
   }
@@ -126,11 +111,6 @@ export const useContractList = (params: ContractQueryParams) => {
       }
     } catch (error) {
       console.error('合同签署失败:', error)
-      if (error instanceof Error) {
-        message.error(`合同签署失败: ${error.message}`)
-      } else {
-        message.error('合同签署失败')
-      }
       throw error
     }
   }
@@ -181,11 +161,6 @@ export const useContractDetail = (id?: number | null) => {
       }
     } catch (error) {
       console.error('更新合同失败:', error)
-      if (error instanceof Error) {
-        message.error(`更新合同失败: ${error.message}`)
-      } else {
-        message.error('更新合同失败')
-      }
       throw error
     }
   }
@@ -212,11 +187,6 @@ export const useContractDetail = (id?: number | null) => {
       }
     } catch (error) {
       console.error('创建合同失败:', error)
-      if (error instanceof Error) {
-        message.error(`创建合同失败: ${error.message}`)
-      } else {
-        message.error('创建合同失败')
-      }
       throw error
     }
   }

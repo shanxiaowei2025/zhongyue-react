@@ -233,7 +233,7 @@ const TaxReview: React.FC = () => {
       handleCloseCreateModal()
     } catch (error: any) {
       console.error('创建失败:', error)
-      message.error('创建失败，请重试')
+      // 错误处理由拦截器统一处理
     } finally {
       setCreateLoading(false)
     }

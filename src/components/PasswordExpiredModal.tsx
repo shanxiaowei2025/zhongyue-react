@@ -87,13 +87,11 @@ const PasswordExpiredModal: React.FC<PasswordExpiredModalProps> = ({ visible }) 
         // 隐藏弹窗
         hidePasswordModal()
       } else {
-        message.error(response?.message || '密码修改失败，请稍后重试')
+        throw new Error(response?.message || '密码修改失败')
       }
     } catch (error: any) {
       console.error('修改密码失败', error)
-      message.error(
-        error?.response?.data?.message || error?.message || '修改密码失败，请检查原密码是否正确'
-      )
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }

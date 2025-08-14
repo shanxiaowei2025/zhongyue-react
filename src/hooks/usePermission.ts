@@ -275,7 +275,6 @@ export const usePermissionManagement = () => {
         message.success('更新权限成功')
         return response.data
       } else {
-        message.error(response.message || '更新权限失败')
         throw new Error(response.message || '更新权限失败')
       }
     } catch (error: any) {
@@ -298,7 +297,6 @@ export const usePermissionManagement = () => {
         message.success(`批量更新完成：成功 ${result.success} 个，失败 ${result.failed} 个`)
         return result
       } else {
-        message.error(response.message || '批量更新权限失败')
         throw new Error(response.message || '批量更新权限失败')
       }
     } catch (error: any) {
@@ -324,7 +322,6 @@ export const usePermissionManagement = () => {
       }
     } catch (error: any) {
       console.error('获取模块权限失败:', error)
-      message.error('获取模块权限失败')
       throw error
     } finally {
       setLoading(false)

@@ -112,19 +112,7 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error('登录失败:', error)
-
-      // 显示更详细的错误信息
-      let errorMessage = '登录失败，请检查用户名和密码'
-
-      if (error.response?.data?.message) {
-        // 使用后端返回的错误信息
-        errorMessage = error.response.data.message
-      } else if (error.message) {
-        // 使用错误对象的消息
-        errorMessage = error.message
-      }
-
-      message.error(errorMessage)
+      // 错误处理由拦截器统一处理，会显示后端返回的具体错误信息
     }
   }
 

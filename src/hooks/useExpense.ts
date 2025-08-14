@@ -325,7 +325,6 @@ export const useExpenseList = (params: ExpenseQueryParams) => {
       return true
     } catch (error) {
       console.error('删除费用失败:', error)
-      message.error('删除失败')
       return false
     }
   }
@@ -339,7 +338,6 @@ export const useExpenseList = (params: ExpenseQueryParams) => {
       return true
     } catch (error) {
       console.error('审核费用失败:', error)
-      message.error('审核失败')
       return false
     }
   }
@@ -353,7 +351,6 @@ export const useExpenseList = (params: ExpenseQueryParams) => {
       return true
     } catch (error) {
       console.error('取消审核失败:', error)
-      message.error('取消审核失败')
       return false
     }
   }
@@ -387,7 +384,7 @@ export const useExpenseDetail = (id?: number | null) => {
       },
       onError: err => {
         console.error('useExpenseDetail fetch error:', err)
-        message.error('获取费用详情失败')
+        // 错误处理由拦截器统一处理
       },
     }
   )
@@ -417,7 +414,6 @@ export const useExpenseDetail = (id?: number | null) => {
       return res
     } catch (error) {
       console.error('更新费用失败:', error)
-      message.error('更新失败')
       throw error
     }
   }
@@ -487,7 +483,6 @@ export const exportExpenseData = async (params: Partial<ExpenseQueryParams>) => 
     return response
   } catch (error) {
     console.error('导出费用数据失败:', error)
-    message.error('导出失败')
     throw error
   }
 }

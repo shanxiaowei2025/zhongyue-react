@@ -555,7 +555,7 @@ const Expenses: React.FC = () => {
       setFormVisible(true)
     } catch (error) {
       console.error('获取费用详情失败:', error)
-      message.error('获取费用详情失败')
+      // 错误处理由拦截器统一处理
     }
   }
 
@@ -633,7 +633,7 @@ const Expenses: React.FC = () => {
       }
     } catch (error) {
       console.error('审核失败:', error)
-      message.error('审核操作失败')
+      // 错误处理由拦截器统一处理
     }
   }
 
@@ -651,7 +651,7 @@ const Expenses: React.FC = () => {
       fetchExpenses()
     } catch (error) {
       console.error('取消审核失败:', error)
-      message.error('取消审核失败')
+      // 错误处理由拦截器统一处理
     }
   }
 
@@ -721,7 +721,7 @@ const Expenses: React.FC = () => {
       // 关闭加载提示
       message.destroy()
       console.error('导出错误:', error)
-      message.error('导出失败，请稍后重试')
+      // 错误处理由拦截器统一处理
     }
   }
 

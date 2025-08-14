@@ -52,7 +52,6 @@ export const useRoleOperations = () => {
         await mutate(getRoleListKey())
         return response.data
       } else {
-        message.error(response.message || '添加角色失败')
         throw new Error(response.message || '添加角色失败')
       }
     } catch (error: any) {
@@ -71,7 +70,6 @@ export const useRoleOperations = () => {
         await mutate(getRoleListKey())
         return response.data
       } else {
-        message.error(response.message || '更新角色失败')
         throw new Error(response.message || '更新角色失败')
       }
     } catch (error: any) {
@@ -90,12 +88,10 @@ export const useRoleOperations = () => {
         await mutate(getRoleListKey())
         return true
       } else {
-        message.error(response.message || '删除角色失败')
-        return false
+        throw new Error(response.message || '删除角色失败')
       }
     } catch (error: any) {
       console.error('删除角色失败:', error)
-      message.error('删除角色失败')
       return false
     }
   }

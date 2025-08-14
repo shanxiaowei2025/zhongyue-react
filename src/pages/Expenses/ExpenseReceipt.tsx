@@ -161,9 +161,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       }
     } catch (error) {
       console.error('刷新收据数据失败:', error)
-      if (showMessage) {
-        message.error('刷新收据数据失败')
-      }
+      // 错误处理由拦截器统一处理
     }
   }
 
@@ -388,7 +386,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       await refreshExpenseDetail()
     } catch (error) {
       console.error('自动保存电子合同失败:', error)
-      message.error('自动保存电子合同失败')
+      // 错误处理由拦截器统一处理
     }
   }
 
@@ -495,7 +493,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       await refreshExpenseDetail()
     } catch (error) {
       console.error('自动保存关联合同失败:', error)
-      message.error('自动保存关联合同失败')
+      // 错误处理由拦截器统一处理
     }
   }
 

@@ -132,7 +132,6 @@ export const useUserOperations = () => {
         })
         return response.data
       } else {
-        message.error(response.message || '添加用户失败')
         throw new Error(response.message || '添加用户失败')
       }
     } catch (error: any) {
@@ -153,7 +152,6 @@ export const useUserOperations = () => {
         })
         return response.data
       } else {
-        message.error(response.message || '更新用户失败')
         throw new Error(response.message || '更新用户失败')
       }
     } catch (error: any) {
@@ -174,12 +172,10 @@ export const useUserOperations = () => {
         })
         return true
       } else {
-        message.error(response.message || '删除用户失败')
-        return false
+        throw new Error(response.message || '删除用户失败')
       }
     } catch (error: any) {
       console.error('删除用户失败:', error)
-      message.error('删除用户失败')
       return false
     }
   }

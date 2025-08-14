@@ -100,11 +100,11 @@ export const useCustomerSearch = ({
         setHasMore(page * 20 < totalCount)
         setCurrentPage(page)
       } else {
-        message.error(response.message || '搜索失败')
+        throw new Error(response.message || '搜索失败')
       }
     } catch (error) {
       console.error('搜索企业失败:', error)
-      message.error('搜索失败，请稍后重试')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }

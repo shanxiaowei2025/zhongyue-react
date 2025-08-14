@@ -123,15 +123,21 @@ instance.interceptors.response.use(
     // 判断是否是修改密码请求
     const isChangePasswordRequest = requestUrl.includes('change-password')
 
+    // 统一错误信息提取：优先使用后端返回的message，其次使用默认错误信息
+    const backendMessage = error.response?.data?.message
+    const statusCode = error.response?.status
+
     // 处理不同HTTP状态码错误
-    if (error.response?.status === 401) {
+    if (statusCode === 401) {
       // 根据不同请求类型处理401错误
       if (isLoginRequest) {
-        // 登录失败，不需要清除token或跳转
-        // 错误信息已由后端提供，不需额外处理
+        // 登录失败，显示后端返回的错误信息
+        const errorMessage = backendMessage || '登录失败，请检查用户名和密码'
+        message.error(errorMessage)
       } else if (isChangePasswordRequest) {
-        // 修改密码错误，不需要清除token或跳转
-        // 错误信息已由后端提供，不需额外处理
+        // 修改密码错误，显示后端返回的错误信息
+        const errorMessage = backendMessage || '修改密码失败'
+        message.error(errorMessage)
       } else {
         // 其他API的401错误，表示登录已过期
         // 清除token并跳转到登录页
@@ -150,16 +156,18 @@ instance.interceptors.response.use(
           }, 1500)
         }
       }
-    } else if (error.response?.status === 403) {
+    } else if (statusCode === 403) {
       // 处理403错误，显示后端返回的错误消息
-      const errorMessage = error.response?.data?.message || '权限不足，无法执行此操作'
+      const errorMessage = backendMessage || '权限不足，无法执行此操作'
       message.error(errorMessage)
-
-      // 可以根据需要跳转到403页面，但不要阻止显示错误消息
-      // 已经注释掉以下代码，因为我们希望用户看到确切的错误消息
-      // setTimeout(() => {
-      //   window.location.href = '/403'
-      // }, 1500)
+    } else if (statusCode) {
+      // 处理其他HTTP错误状态码（400, 500等），统一显示后端返回的错误信息
+      const errorMessage = backendMessage || `请求失败 (${statusCode})`
+      message.error(errorMessage)
+    } else {
+      // 网络错误或其他非HTTP错误
+      const errorMessage = error.message || '网络错误，请检查网络连接'
+      message.error(errorMessage)
     }
 
     return Promise.reject(error)

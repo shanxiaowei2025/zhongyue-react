@@ -90,7 +90,7 @@ export const useCommission = () => {
       return result
     } catch (error) {
       console.error('查询提成比率失败:', error)
-      message.error('查询提成比率失败')
+      // 错误处理由拦截器统一处理
       return null
     } finally {
       setLoading(false)
@@ -108,7 +108,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('创建业务销售提成配置失败:', error)
-        message.error('创建失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -124,7 +124,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('更新业务销售提成配置失败:', error)
-        message.error('更新失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -139,7 +139,7 @@ export const useCommission = () => {
         message.success('业务销售提成配置删除成功')
       } catch (error) {
         console.error('删除业务销售提成配置失败:', error)
-        message.error('删除失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -158,7 +158,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('创建业务顾问提成配置失败:', error)
-        message.error('创建失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -174,7 +174,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('更新业务顾问提成配置失败:', error)
-        message.error('更新失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -189,7 +189,7 @@ export const useCommission = () => {
         message.success('业务顾问提成配置删除成功')
       } catch (error) {
         console.error('删除业务顾问提成配置失败:', error)
-        message.error('删除失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -208,7 +208,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('创建业务其他提成配置失败:', error)
-        message.error('创建失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -224,7 +224,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('更新业务其他提成配置失败:', error)
-        message.error('更新失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -239,7 +239,7 @@ export const useCommission = () => {
         message.success('业务其他提成配置删除成功')
       } catch (error) {
         console.error('删除业务其他提成配置失败:', error)
-        message.error('删除失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -258,7 +258,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('创建绩效提成配置失败:', error)
-        message.error('创建失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -274,7 +274,7 @@ export const useCommission = () => {
         return result
       } catch (error) {
         console.error('更新绩效提成配置失败:', error)
-        message.error('更新失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)
@@ -289,7 +289,7 @@ export const useCommission = () => {
         message.success('绩效提成配置删除成功')
       } catch (error) {
         console.error('删除绩效提成配置失败:', error)
-        message.error('删除失败')
+        // 错误处理由拦截器统一处理
         throw error
       } finally {
         setLoading(false)

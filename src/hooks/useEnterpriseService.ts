@@ -193,7 +193,6 @@ export const useEnterpriseOperations = () => {
       if (response.code === 0) {
         return response.data
       } else {
-        message.error(response.message || '搜索客户失败')
         throw new Error(response.message || '搜索客户失败')
       }
     } catch (error: any) {
@@ -212,7 +211,6 @@ export const useEnterpriseOperations = () => {
       if (response.code === 0) {
         return (response.data as any)?.data || []
       } else {
-        message.error(response.message || '查询企业失败')
         throw new Error(response.message || '查询企业失败')
       }
     } catch (error: any) {

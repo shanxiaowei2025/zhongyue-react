@@ -172,7 +172,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
     } catch (error) {
       console.error('上传出错:', error)
-      message.error('上传失败')
+      // 错误处理由拦截器统一处理
       onError('上传失败')
     } finally {
       setLoading(false)
@@ -211,7 +211,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return false
     } catch (error) {
       console.error('删除出错:', error)
-      message.error('删除失败')
+      // 错误处理由拦截器统一处理
       return false
     } finally {
       setLoading(false)

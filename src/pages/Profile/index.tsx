@@ -41,11 +41,11 @@ const Profile = () => {
           phone: response.data.phone || '',
         })
       } else {
-        message.error('获取用户资料失败')
+        throw new Error('获取用户资料失败')
       }
     } catch (error) {
       console.error('获取用户信息失败', error)
-      message.error('获取用户信息失败')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -73,15 +73,11 @@ const Profile = () => {
           })
         }
       } else {
-        // 显示具体的错误信息
-        message.error(response?.message || '更新个人资料失败，请稍后重试')
+        throw new Error(response?.message || '更新个人资料失败')
       }
     } catch (error: any) {
       console.error('更新个人资料失败', error)
-      // 显示更详细的错误信息
-      message.error(
-        error?.response?.data?.message || error?.message || '更新个人资料失败，请检查网络连接'
-      )
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -118,13 +114,11 @@ const Profile = () => {
         const now = new Date().toISOString()
         useAuthStore.getState().setPasswordUpdatedAt(now)
       } else {
-        message.error(response?.message || '密码修改失败，请稍后重试')
+        throw new Error(response?.message || '密码修改失败')
       }
     } catch (error: any) {
       console.error('修改密码失败', error)
-      message.error(
-        error?.response?.data?.message || error?.message || '修改密码失败，请检查原密码是否正确'
-      )
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -156,11 +150,11 @@ const Profile = () => {
 
         message.success('头像更新成功')
       } else {
-        message.error('头像保存失败')
+        throw new Error('头像保存失败')
       }
     } catch (error) {
       console.error('保存头像失败:', error)
-      message.error('头像保存失败')
+      // 错误处理由拦截器统一处理
     }
   }
 
@@ -190,11 +184,11 @@ const Profile = () => {
 
         message.success('头像删除成功')
       } else {
-        message.error('头像删除失败')
+        throw new Error('头像删除失败')
       }
     } catch (error) {
       console.error('删除头像失败:', error)
-      message.error('头像删除失败')
+      // 错误处理由拦截器统一处理
     }
   }
 
