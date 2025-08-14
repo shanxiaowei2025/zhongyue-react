@@ -41,7 +41,7 @@ const createSalaryRequest = () => {
     },
     error => {
       console.log('薪资API拦截器被触发:', error) // 调试日志
-      
+
       // 优先使用后端返回的message，没有则使用默认错误提示
       const backendMessage = error.response?.data?.message
       const errorMessage = backendMessage || '请求失败，请稍后重试'

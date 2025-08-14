@@ -122,7 +122,7 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
         if (!idCard) return '-'
         return (
           <Tooltip title={idCard}>
-            <span>{idCard.replace(/(\d{6})\d{8}(\d{4})/, '$1********$2')}</span>
+            <span>{idCard.replace(/(\d{6})\d{8}(\d{3}[0-9X])/, '$1********$2')}</span>
           </Tooltip>
         )
       },
