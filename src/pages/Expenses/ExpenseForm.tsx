@@ -1383,7 +1383,42 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   />
                 </Form.Item>
 
-                <Form.Item name="contractImage" label="电子合同" tooltip="上传签署的电子合同文件">
+                <Form.Item
+                  name="contractImage"
+                  label="电子合同"
+                  tooltip="上传签署的电子合同文件"
+                  dependencies={['agencyFee', 'relatedContract']}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                        const relatedContract = getFieldValue('relatedContract') || []
+
+                        // 如果代理费有值且大于0
+                        if (agencyFee > 0) {
+                          // 检查电子合同是否有值
+                          const hasContractImage =
+                            value &&
+                            ((typeof value === 'object' && Object.keys(value).length > 0) ||
+                              (Array.isArray(value) && value.length > 0))
+
+                          // 检查关联合同是否有值
+                          const hasRelatedContract =
+                            Array.isArray(relatedContract) && relatedContract.length > 0
+
+                          // 如果电子合同和关联合同都没有值，则报错
+                          if (!hasContractImage && !hasRelatedContract) {
+                            return Promise.reject(
+                              new Error('代理费有值时，电子合同或关联合同必须至少填写其中一项')
+                            )
+                          }
+                        }
+
+                        return Promise.resolve()
+                      },
+                    }),
+                  ]}
+                >
                   <MultiFileUpload
                     label="电子合同"
                     onSuccess={isAutoSave => {
@@ -1403,6 +1438,38 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   tooltip="输入合同编号关联现有合同"
                   name="relatedContract"
                   style={{ display: 'none' }} // 隐藏真实字段，仅用于存储数据
+                  dependencies={['agencyFee', 'contractImage']}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                        const contractImage = getFieldValue('contractImage')
+
+                        // 如果代理费有值且大于0
+                        if (agencyFee > 0) {
+                          // 检查关联合同是否有值
+                          const hasRelatedContract =
+                            Array.isArray(relatedContracts) && relatedContracts.length > 0
+
+                          // 检查电子合同是否有值
+                          const hasContractImage =
+                            contractImage &&
+                            ((typeof contractImage === 'object' &&
+                              Object.keys(contractImage).length > 0) ||
+                              (Array.isArray(contractImage) && contractImage.length > 0))
+
+                          // 如果关联合同和电子合同都没有值，则报错
+                          if (!hasRelatedContract && !hasContractImage) {
+                            return Promise.reject(
+                              new Error('代理费有值时，关联合同或电子合同必须至少填写其中一项')
+                            )
+                          }
+                        }
+
+                        return Promise.resolve()
+                      },
+                    }),
+                  ]}
                 >
                   <Input />
                 </Form.Item>

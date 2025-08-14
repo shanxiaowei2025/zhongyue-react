@@ -819,13 +819,15 @@ const Expenses: React.FC = () => {
               </Tooltip>
             )}
             {record.internalRemarks && (
-              <Tooltip title={
-                <div>
-                  内部备注：
-                  <br />
-                  {record.internalRemarks}
-                </div>
-              }>
+              <Tooltip
+                title={
+                  <div>
+                    内部备注：
+                    <br />
+                    {record.internalRemarks}
+                  </div>
+                }
+              >
                 <Button
                   type="link"
                   size="small"
