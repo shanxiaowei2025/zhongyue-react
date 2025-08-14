@@ -122,6 +122,13 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     otherBusinessOutsourcingFee: '其他业务（外包）',
   }
 
+  // 提成类型映射
+  const COMMISSION_TYPE_MAP = {
+    businessCommissionOwn: '业务提成(自有)',
+    businessCommissionOutsource: '业务提成(外包)',
+    agencyCommission: '代理费提成',
+  }
+
   // 数据透视转换：将费用列表转换为表格数据
   const transformToTableData = (expenseList: Expense[]) => {
     // 按公司分组
@@ -146,6 +153,40 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
           company.totalAmount += amount
         }
       })
+
+      // 遍历所有提成类型
+      Object.entries(COMMISSION_TYPE_MAP).forEach(([key, label]) => {
+        const amount = toNumber((expense as any)[key])
+        if (amount > 0) {
+          company[key] = (company[key] || 0) + amount
+          // 提成不计入总费用
+        }
+      })
+
+      // 处理业务类型字段（文本字段，取第一个非空值或合并多个值）
+      if (expense.businessType && expense.businessType.trim()) {
+        if (!company.businessType) {
+          company.businessType = expense.businessType
+        } else if (company.businessType !== expense.businessType) {
+          // 如果有多个不同的业务类型，用逗号分隔
+          const types = company.businessType.split(',').map((s: string) => s.trim())
+          if (!types.includes(expense.businessType.trim())) {
+            company.businessType += `, ${expense.businessType.trim()}`
+          }
+        }
+      }
+
+      if (expense.socialInsuranceBusinessType && expense.socialInsuranceBusinessType.trim()) {
+        if (!company.socialInsuranceBusinessType) {
+          company.socialInsuranceBusinessType = expense.socialInsuranceBusinessType
+        } else if (company.socialInsuranceBusinessType !== expense.socialInsuranceBusinessType) {
+          // 如果有多个不同的社保业务类型，用逗号分隔
+          const types = company.socialInsuranceBusinessType.split(',').map((s: string) => s.trim())
+          if (!types.includes(expense.socialInsuranceBusinessType.trim())) {
+            company.socialInsuranceBusinessType += `, ${expense.socialInsuranceBusinessType.trim()}`
+          }
+        }
+      }
     })
 
     return Array.from(companyMap.values())
@@ -167,22 +208,50 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       },
     ]
 
-    // 动态生成费用类型列
-    const feeColumns = Object.entries(FEE_TYPE_MAP).map(([key, label]) => ({
-      title: label,
-      dataIndex: key,
-      key,
-      width: 100,
-      render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
-      align: 'right' as const,
-    }))
+    // 手动构建费用类型列，在特定位置插入业务类型列
+    const feeColumns: any[] = []
+
+    Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
+      // 在代理费前插入代理费业务类型列
+      if (key === 'agencyFee') {
+        feeColumns.push({
+          title: '代理费业务类型',
+          dataIndex: 'businessType',
+          key: 'businessType',
+          width: 150,
+          render: (value: string) => value || '-',
+          align: 'center' as const,
+        })
+      }
+
+      // 在社保代理费前插入社保代理业务类型列
+      if (key === 'socialInsuranceAgencyFee') {
+        feeColumns.push({
+          title: '社保代理业务类型',
+          dataIndex: 'socialInsuranceBusinessType',
+          key: 'socialInsuranceBusinessType',
+          width: 180,
+          render: (value: string) => value || '-',
+          align: 'center' as const,
+        })
+      }
+
+      // 添加费用列
+      feeColumns.push({
+        title: label,
+        dataIndex: key,
+        key,
+        width: 100,
+        render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+        align: 'right' as const,
+      })
+    })
 
     // 合计列
     const totalColumn = {
       title: '合计',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      fixed: 'right' as const,
       width: 120,
       render: (value: number) => (
         <strong style={{ color: '#1890ff' }}>{formatCurrency(value)}</strong>
@@ -190,7 +259,21 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       align: 'right' as const,
     }
 
-    return [...columns, ...feeColumns, totalColumn]
+    // 提成主列，包含子列
+    const commissionColumn = {
+      title: '提成',
+      key: 'commission',
+      children: Object.entries(COMMISSION_TYPE_MAP).map(([key, label]) => ({
+        title: label,
+        dataIndex: key,
+        key,
+        width: 120,
+        render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+        align: 'right' as const,
+      })),
+    }
+
+    return [...columns, ...feeColumns, totalColumn, commissionColumn]
   }
 
   // 计算合计行
@@ -200,10 +283,20 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       totalAmount: 0,
     }
 
+    // 计算费用类型合计
     Object.keys(FEE_TYPE_MAP).forEach(key => {
       summary[key] = tableData.reduce((sum, row) => sum + (row[key] || 0), 0)
       summary.totalAmount += summary[key]
     })
+
+    // 计算提成类型合计（不计入总费用）
+    Object.keys(COMMISSION_TYPE_MAP).forEach(key => {
+      summary[key] = tableData.reduce((sum, row) => sum + (row[key] || 0), 0)
+    })
+
+    // 业务类型字段在合计行中显示为"-"
+    summary.businessType = '-'
+    summary.socialInsuranceBusinessType = '-'
 
     return summary
   }
@@ -762,7 +855,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                     pagination={false}
                     scroll={{
                       x: 'max-content',
-                      y: 'calc(100vh - 150px)', // 固定表头，可滚动内容
+                      y: 'calc(100vh - 200px)', // 固定表头，可滚动内容，减少高度预留值
                     }}
                     size="middle"
                     bordered

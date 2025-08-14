@@ -185,10 +185,14 @@ export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryPar
       // 删除原始auditDateRange参数，避免发送不必要的数据
       delete queryParams.auditDateRange
     } else {
-      // 确保当auditDateRange为undefined或null时，删除可能存在的日期参数
+      // 删除auditDateRange参数，但保留直接传入的auditDateStart和auditDateEnd
       delete queryParams.auditDateRange
-      delete queryParams.auditDateStart
-      delete queryParams.auditDateEnd
+
+      // 只有在没有直接传入auditDateStart/auditDateEnd时才删除这些参数
+      if (!params.auditDateStart && !params.auditDateEnd) {
+        delete queryParams.auditDateStart
+        delete queryParams.auditDateEnd
+      }
     }
 
     // 确保page和pageSize参数是有效的数字

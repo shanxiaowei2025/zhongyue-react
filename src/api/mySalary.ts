@@ -1,5 +1,7 @@
 import axios from 'axios'
 import type { AxiosResponse } from 'axios'
+import { message } from 'antd'
+import request from './request'
 import type {
   MySalaryRecord,
   MySalaryQueryParams,
@@ -15,14 +17,14 @@ import { useSalaryAuthStore } from '../store/salaryAuth'
 // 获取API基础URL
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 
-// 创建带薪资token的axios实例
+// 创建带薪资token的axios实例（带完整错误处理）
 const createSalaryRequest = () => {
   const token = useSalaryAuthStore.getState().getValidToken()
   if (!token) {
     throw new Error('SALARY_TOKEN_REQUIRED')
   }
 
-  return axios.create({
+  const instance = axios.create({
     baseURL: apiBaseUrl,
     timeout: 120000,
     headers: {
@@ -31,6 +33,26 @@ const createSalaryRequest = () => {
       Authorization: `Bearer ${localStorage.getItem('token')}`, // 同时需要JWT token
     },
   })
+
+  // 添加响应拦截器以处理错误消息显示
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      return response
+    },
+    error => {
+      console.log('薪资API拦截器被触发:', error) // 调试日志
+      
+      // 优先使用后端返回的message，没有则使用默认错误提示
+      const backendMessage = error.response?.data?.message
+      const errorMessage = backendMessage || '请求失败，请稍后重试'
+
+      console.log('准备显示错误消息:', errorMessage) // 调试日志
+      message.error(errorMessage)
+      return Promise.reject(error)
+    }
+  )
+
+  return instance
 }
 
 // 我的薪资API接口

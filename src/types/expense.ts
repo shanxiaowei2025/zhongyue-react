@@ -48,6 +48,7 @@ export interface Expense {
   insuranceTypes: string | string[]
   insuredCount: number | string
   socialInsuranceAgencyFee: number | string
+  socialInsuranceBusinessType?: string
   socialInsuranceStartDate: string
   socialInsuranceEndDate: string
   hasHousingFund: boolean
@@ -80,6 +81,9 @@ export interface Expense {
   receiptRemarks?: string
   internalRemarks?: string
   receiptNo?: string // 收据编号
+  businessCommissionOwn?: number // 业务提成(自有)
+  businessCommissionOutsource?: number // 业务提成(外包)
+  agencyCommission?: number // 代理费提成
 }
 
 // 前端表单使用的类型定义，支持文件上传组件
@@ -122,6 +126,7 @@ export interface CreateExpenseDto {
   insuranceTypes?: string | string[]
   insuredCount?: number | string
   socialInsuranceAgencyFee?: number | string
+  socialInsuranceBusinessType?: string
   socialInsuranceStartDate?: string
   socialInsuranceEndDate?: string
   hasHousingFund?: boolean
@@ -147,6 +152,9 @@ export interface CreateExpenseDto {
   chargeMethod?: string | string[]
   receiptRemarks?: string
   internalRemarks?: string
+  businessCommissionOwn?: number // 业务提成(自有)
+  businessCommissionOutsource?: number // 业务提成(外包)
+  agencyCommission?: number // 代理费提成
 }
 
 // 费用更新DTO
