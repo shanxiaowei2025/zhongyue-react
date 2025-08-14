@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Form, Input, Button, message } from 'antd'
+import { showValidationError, showSuccess, showWarning } from '../utils/messageHelper'
 import { useAuthStore } from '../store/auth'
 import { changePassword } from '../api/auth'
 
@@ -50,20 +51,20 @@ const PasswordExpiredModal: React.FC<PasswordExpiredModalProps> = ({ visible }) 
 
   // 禁止用户通过点击蒙层或ESC键关闭Modal
   const handleCancel = () => {
-    message.warning('您的密码已过期，必须修改密码才能继续使用系统')
+    showWarning.passwordExpired()
   }
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields()
       if (values.newPassword !== values.confirmPassword) {
-        message.error('两次输入的新密码不一致')
+        showValidationError.newPasswordMismatch()
         return
       }
 
       // 验证新密码不能与旧密码相同
       if (values.oldPassword === values.newPassword) {
-        message.error('新密码不能与当前密码相同')
+        showValidationError.passwordSameAsOld()
         return
       }
 
@@ -75,7 +76,7 @@ const PasswordExpiredModal: React.FC<PasswordExpiredModalProps> = ({ visible }) 
       })
 
       if (response && response.code === 0) {
-        message.success('密码修改成功')
+        showSuccess.passwordChanged()
 
         // 更新密码修改时间为当前时间
         const now = new Date().toISOString()

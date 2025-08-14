@@ -1,5 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
 import { Checkbox, Input, DatePicker, message, Select } from 'antd'
+import { showSuccess, showValidationError } from '../../utils/messageHelper'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -229,7 +230,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
         }
       }
 
-      message.success('企业信息已自动填入')
+      showSuccess.enterpriseInfoFilled()
     }
 
     // 处理统一社会信用代码选择的自动填写
@@ -254,7 +255,7 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
           handleFormChange('partyAPhone', firstResponsible.phone)
         }
       }
-      message.success('企业信息已自动填入')
+      showSuccess.enterpriseInfoFilled()
     }
 
     const config = getProductSignatoryConfig(signatory)
@@ -446,55 +447,55 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       // 检查必填字段
       if (!formData.partyACompany?.trim()) {
         setValidationError('partyACompany')
-        message.error('请填写甲方公司名称')
+        showValidationError.requiredCompanyName()
         hasErrors = true
       }
 
       // 甲方统一社会信用代码必填验证
       if (!formData.partyACreditCode?.trim()) {
         setValidationError('partyACreditCode')
-        message.error('请填写甲方统一社会信用代码')
+        showValidationError.requiredCreditCode()
         hasErrors = true
       }
 
       // 甲方联系人必填验证
       if (!formData.partyAContact?.trim()) {
         setValidationError('partyAContact')
-        message.error('请填写甲方联系人')
+        showValidationError.requiredContactPersonA()
         hasErrors = true
       }
 
       // 甲方联系电话必填验证
       if (!formData.partyAPhone?.trim()) {
         setValidationError('partyAPhone')
-        message.error('请填写甲方联系电话')
+        showValidationError.requiredContactPhoneA()
         hasErrors = true
       }
 
       // 甲方企业归属地必填验证
       if (!formData.location?.trim()) {
         setValidationError('location')
-        message.error('请选择企业归属地')
+        showValidationError.requiredLocation()
         hasErrors = true
       }
 
       // 乙方联系人必填验证
       if (!formData.partyBContact?.trim()) {
         setValidationError('partyBContact')
-        message.error('请填写乙方联系人')
+        showValidationError.requiredContactPersonB()
         hasErrors = true
       }
 
       // 乙方联系电话必填验证
       if (!formData.partyBPhone?.trim()) {
         setValidationError('partyBPhone')
-        message.error('请填写乙方联系电话')
+        showValidationError.requiredContactPhoneB()
         hasErrors = true
       }
 
       if (!formData.totalCost || formData.totalCost <= 0) {
         setValidationError('totalCost')
-        message.error('请填写费用总计')
+        showValidationError.requiredTotalFee()
         hasErrors = true
       }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Card, Button, Space, Breadcrumb, Divider, Alert, message } from 'antd'
+import { showValidationError, showError, showSuccess } from '../../utils/messageHelper'
 import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
@@ -186,10 +187,10 @@ const CreateContract: React.FC = () => {
     try {
       clearAllCache()
       // 手动清理：已清除所有表单数据
-      message.success('已清除保存的合同数据')
+      showSuccess.save()
     } catch (error) {
       console.error('清理数据失败:', error)
-      message.error('清理数据失败')
+      showError.delete()
     }
   }
 
@@ -202,24 +203,24 @@ const CreateContract: React.FC = () => {
 
       if (contractType === '产品服务协议') {
         if (!productServiceAgreementRef.current) {
-          message.error('合同组件未准备就绪')
+          showValidationError.contractComponentNotReady()
           return
         }
         await productServiceAgreementRef.current.handleSubmit()
       } else if (contractType === '代理记账合同') {
         if (!agencyAccountingAgreementRef.current) {
-          message.error('合同组件未准备就绪')
+          showValidationError.contractComponentNotReady()
           return
         }
         await agencyAccountingAgreementRef.current.handleSubmit()
       } else if (contractType === '单项服务合同') {
         if (!singleServiceAgreementRef.current) {
-          message.error('合同组件未准备就绪')
+          showValidationError.contractComponentNotReady()
           return
         }
         await singleServiceAgreementRef.current.handleSubmit()
       } else {
-        message.error('不支持的合同类型')
+        showValidationError.invalidContractType()
         return
       }
 
@@ -245,7 +246,7 @@ const CreateContract: React.FC = () => {
       }, 800)
     } catch (error) {
       console.error('提交合同失败:', error)
-      message.error('提交合同失败，请检查填写内容后重试')
+      showError.create()
     } finally {
       setIsSubmitting(false)
       setIsSubmittingInProgress(false)

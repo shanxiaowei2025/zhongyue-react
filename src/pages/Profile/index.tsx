@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, Button, Form, Input, message, Tabs, Spin, Tag, Descriptions } from 'antd'
 import { UserOutlined, LockOutlined, PhoneOutlined } from '@ant-design/icons'
+import { showValidationError, showSuccess } from '../../utils/messageHelper'
 import { useAuthStore } from '../../store/auth'
 import { getUserProfile, updateUserProfile, changePassword } from '../../api/auth'
 import type { User } from '../../types'
@@ -89,13 +90,13 @@ const Profile = () => {
     confirmPassword: string
   }) => {
     if (values.newPassword !== values.confirmPassword) {
-      message.error('两次输入的新密码不一致')
+      showValidationError.newPasswordMismatch()
       return
     }
 
     // 验证新密码不能与旧密码相同
     if (values.oldPassword === values.newPassword) {
-      message.error('新密码不能与当前密码相同')
+      showValidationError.passwordSameAsOld()
       return
     }
 
@@ -107,7 +108,7 @@ const Profile = () => {
       })
 
       if (response && response.code === 0) {
-        message.success('密码修改成功')
+        showSuccess.passwordChanged()
         passwordForm.resetFields()
 
         // 更新密码修改时间

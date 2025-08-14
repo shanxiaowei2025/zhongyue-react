@@ -7,6 +7,7 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
 } from '@ant-design/icons'
+import { showValidationError, showSuccess, showError, showInfo } from '../utils/messageHelper'
 import { salaryAuthApi } from '../api/salaryAuth'
 import type { SalaryPasswordStatus } from '../types/salaryAuth'
 import dayjs from 'dayjs'
@@ -26,7 +27,7 @@ const SalaryPasswordManagement: React.FC = () => {
       setPasswordStatus(status)
     } catch (error: any) {
       console.error('获取薪资密码状态失败:', error)
-      message.error('获取密码状态失败')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoadingStatus(false)
     }
@@ -39,7 +40,7 @@ const SalaryPasswordManagement: React.FC = () => {
   // 设置薪资密码
   const handleSetPassword = async (values: { salaryPassword: string; confirmPassword: string }) => {
     if (values.salaryPassword !== values.confirmPassword) {
-      message.error('两次输入的密码不一致')
+      showValidationError.passwordMismatch()
       return
     }
 
@@ -47,15 +48,15 @@ const SalaryPasswordManagement: React.FC = () => {
     try {
       const result = await salaryAuthApi.setSalaryPassword(values.salaryPassword)
       if (result.success) {
-        message.success('薪资密码设置成功')
+        showSuccess.passwordSet()
         setPasswordForm.resetFields()
         await fetchPasswordStatus() // 刷新状态
       } else {
-        message.error(result.message || '设置失败')
+        showError.passwordSet()
       }
     } catch (error: any) {
       console.error('设置薪资密码失败:', error)
-      message.error(error?.response?.data?.message || '设置失败，请稍后重试')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -68,12 +69,12 @@ const SalaryPasswordManagement: React.FC = () => {
     confirmPassword: string
   }) => {
     if (values.newSalaryPassword !== values.confirmPassword) {
-      message.error('两次输入的新密码不一致')
+      showValidationError.newPasswordMismatch()
       return
     }
 
     if (values.currentSalaryPassword === values.newSalaryPassword) {
-      message.error('新密码不能与当前密码相同')
+      showValidationError.passwordSameAsOld()
       return
     }
 
@@ -84,15 +85,15 @@ const SalaryPasswordManagement: React.FC = () => {
         values.newSalaryPassword
       )
       if (result.success) {
-        message.success('薪资密码修改成功')
+        showSuccess.passwordChanged()
         changePasswordForm.resetFields()
         await fetchPasswordStatus() // 刷新状态
       } else {
-        message.error(result.message || '修改失败')
+        showError.passwordChange()
       }
     } catch (error: any) {
       console.error('修改薪资密码失败:', error)
-      message.error(error?.response?.data?.message || '修改失败，请检查当前密码是否正确')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -113,7 +114,7 @@ const SalaryPasswordManagement: React.FC = () => {
       okType: 'danger',
       cancelText: '取消',
       onOk() {
-        message.info('请联系管理员重置薪资密码')
+        showInfo.contactAdmin()
       },
     })
   }

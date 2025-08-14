@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Button, message, Modal, Spin, Image, Space, Popconfirm } from 'antd'
+import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -140,7 +141,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       })
 
       if (!isAccepted) {
-        message.error('文件格式不支持！')
+        showValidationError.invalidFileFormat()
         return false
       }
     }
@@ -159,7 +160,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       if (result) {
         onChange?.(result)
         onUploadSuccess('上传成功')
-        message.success('上传成功')
+        showSuccess.upload()
         setFileError(false)
 
         // 记录上传的文件
@@ -199,7 +200,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       const success = await deleteFile(fileNameToDelete)
       if (success) {
         onChange?.(undefined)
-        message.success('删除成功')
+        showSuccess.delete()
 
         // 通知外部组件文件已删除
         onFileRemove?.()

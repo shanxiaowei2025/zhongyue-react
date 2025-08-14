@@ -1,5 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
 import { Input, DatePicker, Checkbox, message, Select } from 'antd'
+import { showSuccess, showValidationError } from '../../utils/messageHelper'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import { useDebouncedValue } from '../../hooks/useDebounce'
@@ -357,7 +358,7 @@ const AgencyAccountingAgreement = forwardRef<
     }
 
     console.log('💾 客户选择完成，更新表单数据:', customerData)
-    message.success('企业信息已自动填入')
+    showSuccess.enterpriseInfoFilled()
 
     // 获取委托日期
     fetchAgencyDates()
@@ -415,7 +416,7 @@ const AgencyAccountingAgreement = forwardRef<
     }
 
     console.log('💾 [信用代码选择] 客户选择完成，更新表单数据:', customerData)
-    message.success('企业信息已自动填入')
+    showSuccess.enterpriseInfoFilled()
 
     // 获取委托日期
     fetchAgencyDates()

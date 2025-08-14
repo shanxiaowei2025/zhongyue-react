@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Button, message, Modal, Spin, Space, Card, Image, Popconfirm } from 'antd'
+import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -183,7 +184,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       })
 
       if (!isAccepted) {
-        message.error('文件格式不支持！')
+        showValidationError.invalidFileFormat()
         return false
       }
     }
@@ -222,7 +223,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         })
 
         onUploadSuccess('上传成功')
-        message.success(`${file.name} 上传成功`)
+        showSuccess.fileUpload(file.name)
 
         // 调用文件上传回调
         onFileUpload?.(result.fileName)
@@ -234,7 +235,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       }
     } catch (error) {
       console.error('上传出错:', error)
-      message.error(`${file.name} 上传失败`)
+      showError.fileUpload(file.name)
       onError('上传失败')
     } finally {
       setUploadingCount(prev => prev - 1)
@@ -284,7 +285,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       delete newImageErrors[item.key]
       setImageErrors(newImageErrors)
 
-      message.success('删除成功')
+      showSuccess.delete()
 
       // 调用文件删除回调
       onFileRemove?.(item.fileName)

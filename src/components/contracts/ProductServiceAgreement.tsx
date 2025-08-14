@@ -1,5 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react'
 import { Checkbox, Input, DatePicker, message } from 'antd'
+import { showSuccess, showValidationError } from '../../utils/messageHelper'
 import type { CheckboxProps } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -309,7 +310,7 @@ const ProductServiceAgreement = forwardRef<
           // 创建模式：使用store缓存
           batchUpdateFormData(updateData)
         }
-        message.success('企业信息已自动填入')
+        showSuccess.enterpriseInfoFilled()
       },
       [mode, batchUpdateFormData, formData.partyAAddress]
     )
@@ -345,7 +346,7 @@ const ProductServiceAgreement = forwardRef<
           // 创建模式：使用store缓存
           batchUpdateFormData(updateData)
         }
-        message.success('企业信息已自动填入')
+        showSuccess.enterpriseInfoFilled()
       },
       [mode, batchUpdateFormData, formData.partyAAddress]
     )
@@ -692,42 +693,42 @@ const ProductServiceAgreement = forwardRef<
     const validateForm = (): boolean => {
       // 检查必填字段
       if (!formData.partyACompany?.trim()) {
-        message.error('请填写甲方公司名称')
+        showValidationError.requiredCompanyName()
         return false
       }
 
       if (!formData.partyACreditCode?.trim()) {
-        message.error('请填写甲方统一社会信用代码')
+        showValidationError.requiredCreditCode()
         return false
       }
 
       if (!formData.location?.trim()) {
-        message.error('请选择企业归属地')
+        showValidationError.requiredLocation()
         return false
       }
 
       if (!formData.partyAContact?.trim()) {
-        message.error('请填写甲方联系人')
+        showValidationError.requiredContactPersonA()
         return false
       }
 
       if (!formData.partyAPhone?.trim()) {
-        message.error('请填写甲方联系电话')
+        showValidationError.requiredContactPhoneA()
         return false
       }
 
       if (!formData.partyBContact?.trim()) {
-        message.error('请填写乙方联系人')
+        showValidationError.requiredContactPersonB()
         return false
       }
 
       if (!formData.partyBPhone?.trim()) {
-        message.error('请填写乙方联系电话')
+        showValidationError.requiredContactPhoneB()
         return false
       }
 
       if (!formData.totalCost || formData.totalCost <= 0) {
-        message.error('请填写费用总计')
+        showValidationError.requiredTotalFee()
         return false
       }
 
@@ -770,7 +771,7 @@ const ProductServiceAgreement = forwardRef<
       ])
 
       if (hasBusinessItems && (!formData.businessServiceFee || formData.businessServiceFee <= 0)) {
-        message.error('已勾选工商服务项目，请填写工商服务费')
+        showValidationError.requiredBusinessServiceFee()
         return false
       }
 

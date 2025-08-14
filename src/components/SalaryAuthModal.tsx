@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Modal, Form, Input, Button, message, Alert, Space } from 'antd'
 import { LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons'
+import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
 import { salaryAuthApi } from '../api/salaryAuth'
 import { useSalaryAuthStore } from '../store/salaryAuth'
 
@@ -55,7 +56,7 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
   // 设置薪资密码
   const handleSetPassword = async (values: { salaryPassword: string; confirmPassword: string }) => {
     if (values.salaryPassword !== values.confirmPassword) {
-      message.error('两次输入的密码不一致')
+      showValidationError.passwordMismatch()
       return
     }
 
@@ -63,7 +64,7 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
     try {
       const result = await salaryAuthApi.setSalaryPassword(values.salaryPassword)
       if (result.success) {
-        message.success('薪资密码设置成功')
+        showSuccess.passwordSet()
         setHasPassword(true)
         form.resetFields()
         // 设置密码后自动验证
@@ -73,7 +74,7 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
       }
     } catch (error: any) {
       console.error('设置薪资密码失败:', error)
-      message.error(error?.response?.data?.message || '设置失败，请稍后重试')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -92,14 +93,14 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
           expiresAt: expiresAt,
         })
 
-        message.success('验证成功')
+        showSuccess.verification()
         onSuccess()
       } else {
-        message.error(result.message || '密码错误')
+        showError.verification()
       }
     } catch (error: any) {
       console.error('验证薪资密码失败:', error)
-      message.error(error?.response?.data?.message || '验证失败，请检查密码是否正确')
+      // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
     }

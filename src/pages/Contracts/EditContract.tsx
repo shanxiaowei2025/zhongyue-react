@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Card, Button, Space, Breadcrumb, Divider, Alert, message, Spin } from 'antd'
+import { showValidationError, showSuccess, showError } from '../../utils/messageHelper'
 import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
@@ -30,7 +31,7 @@ const EditContract: React.FC = () => {
   // 检查合同ID有效性
   useEffect(() => {
     if (!id || isNaN(contractId)) {
-      message.error('无效的合同ID')
+      showError.invalidId()
       navigate('/contracts', { replace: true })
     }
   }, [id, contractId, navigate])
@@ -48,7 +49,7 @@ const EditContract: React.FC = () => {
   // 处理合同更新 - 通过ref调用
   const handleContractUpdate = async () => {
     if (!contractId) {
-      message.error('合同ID无效')
+      showError.invalidId()
       return
     }
 
@@ -57,35 +58,35 @@ const EditContract: React.FC = () => {
 
       if (contractData?.contractType === '产品服务协议') {
         if (!productServiceAgreementRef.current) {
-          message.error('合同组件未准备就绪')
+          showValidationError.contractComponentNotReady()
           return
         }
         await productServiceAgreementRef.current.handleSubmit()
       } else if (contractData?.contractType === '代理记账合同') {
         if (!agencyAccountingAgreementRef.current) {
-          message.error('合同组件未准备就绪')
+          showValidationError.contractComponentNotReady()
           return
         }
         await agencyAccountingAgreementRef.current.handleSubmit()
       } else if (contractData?.contractType === '单项服务合同') {
         if (!singleServiceAgreementRef.current) {
-          message.error('合同组件未准备就绪')
+          showValidationError.contractComponentNotReady()
           return
         }
         await singleServiceAgreementRef.current.handleSubmit()
       } else {
-        message.error('不支持的合同类型')
+        showError.unsupportedContractType()
         return
       }
 
-      message.success('合同更新成功！')
+      showSuccess.contractUpdate()
       // 更新成功后返回合同详情
       setTimeout(() => {
         navigate(`/contracts/detail/${id}`)
       }, 1500)
     } catch (error) {
       console.error('更新合同失败:', error)
-      message.error('更新合同失败，请检查填写内容后重试')
+      showError.contractUpdate()
     } finally {
       setIsSubmitting(false)
     }
