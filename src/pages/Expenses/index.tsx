@@ -358,6 +358,16 @@ const Expenses: React.FC = () => {
   const handleSearch = () => {
     const values = form.getFieldsValue()
 
+    // 处理业务类型：将"-"转换为空字符串
+    let processedBusinessType = values.businessType
+    if (Array.isArray(processedBusinessType)) {
+      // 多选情况：将数组中的"-"替换为空字符串
+      processedBusinessType = processedBusinessType.map(type => (type === '-' ? '' : type))
+    } else if (processedBusinessType === '-') {
+      // 单选情况：将"-"替换为空字符串
+      processedBusinessType = ''
+    }
+
     // 处理日期范围
     const params: any = {
       ...searchParams,
@@ -365,7 +375,7 @@ const Expenses: React.FC = () => {
       unifiedSocialCreditCode: values.unifiedSocialCreditCode,
       status: values.status,
       salesperson: values.salesperson,
-      businessType: values.businessType,
+      businessType: processedBusinessType,
       page: 1,
     }
 
@@ -935,7 +945,13 @@ const Expenses: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="businessType" label="业务类型" className="m-0 w-full">
-              <Select placeholder="选择业务类型" allowClear className="w-full">
+              <Select
+                mode="multiple"
+                placeholder="选择业务类型"
+                allowClear
+                className="w-full"
+                maxTagCount="responsive"
+              >
                 {BUSINESS_TYPE_OPTIONS.map(option => (
                   <Select.Option key={option.value} value={option.value}>
                     {option.label}

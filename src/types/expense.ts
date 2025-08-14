@@ -165,7 +165,7 @@ export interface ExpenseQueryParams {
   unifiedSocialCreditCode?: string
   status?: ExpenseStatus
   salesperson?: string
-  businessType?: string
+  businessType?: string | string[]
   startDate?: string
   endDate?: string
   dateRange?: any
