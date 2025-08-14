@@ -113,7 +113,7 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
 
       return (
         <span style={{ whiteSpace: 'nowrap' }}>
-          {`${dayjs(startDate).format('YYYY-MM-DD')} ~ ${dayjs(endDate).format('YYYY-MM-DD')}`}
+          {`${dayjs(startDate).format('YYYY-MM')} ~ ${dayjs(endDate).format('YYYY-MM')}`}
         </span>
       )
     },
