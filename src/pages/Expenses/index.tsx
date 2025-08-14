@@ -291,12 +291,20 @@ const Expenses: React.FC = () => {
 
   // 初始化表单
   useEffect(() => {
+    // 处理业务类型：将空字符串转换为"__EMPTY__"以便在界面上显示为"-"
+    let displayBusinessType: string | string[] | undefined = searchParams.businessType
+    if (Array.isArray(displayBusinessType)) {
+      displayBusinessType = displayBusinessType.map(type => (type === '' ? '__EMPTY__' : type))
+    } else if (displayBusinessType === '') {
+      displayBusinessType = '__EMPTY__'
+    }
+
     form.setFieldsValue({
       companyName: searchParams.companyName,
       unifiedSocialCreditCode: searchParams.unifiedSocialCreditCode,
       status: searchParams.status,
       salesperson: searchParams.salesperson,
-      businessType: searchParams.businessType,
+      businessType: displayBusinessType,
       dateRange: searchParams.dateRange,
       createDateRange: searchParams.createDateRange,
       auditDateRange: searchParams.auditDateRange,
@@ -358,13 +366,13 @@ const Expenses: React.FC = () => {
   const handleSearch = () => {
     const values = form.getFieldsValue()
 
-    // 处理业务类型：将"-"转换为空字符串
+    // 处理业务类型：将"__EMPTY__"转换为空字符串
     let processedBusinessType = values.businessType
     if (Array.isArray(processedBusinessType)) {
-      // 多选情况：将数组中的"-"替换为空字符串
-      processedBusinessType = processedBusinessType.map(type => (type === '-' ? '' : type))
-    } else if (processedBusinessType === '-') {
-      // 单选情况：将"-"替换为空字符串
+      // 多选情况：将数组中的"__EMPTY__"替换为空字符串
+      processedBusinessType = processedBusinessType.map(type => (type === '__EMPTY__' ? '' : type))
+    } else if (processedBusinessType === '__EMPTY__') {
+      // 单选情况：将"__EMPTY__"替换为空字符串
       processedBusinessType = ''
     }
 
@@ -957,7 +965,7 @@ const Expenses: React.FC = () => {
                     {option.label}
                   </Select.Option>
                 ))}
-                <Select.Option value="-">-</Select.Option>
+                <Select.Option value="__EMPTY__">-</Select.Option>
               </Select>
             </Form.Item>
 

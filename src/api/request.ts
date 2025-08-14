@@ -19,29 +19,27 @@ const instance = axios.create({
 
     // 遍历参数对象的所有key
     Object.entries(params).forEach(([key, value]) => {
-      // 处理空值查询：如果值为'-'，转换为空字符串并发送
-      if (value === '-') {
-        searchParams.append(key, '')
-        return
-      }
-
-      // 过滤掉空值
-      if (value !== undefined && value !== null && value !== '') {
+      // 过滤掉空值，但保留空字符串（用于业务类型的空值查询）
+      if (value !== undefined && value !== null) {
         // 对象类型处理 - 数组我们需要特殊处理
         if (Array.isArray(value)) {
-          // 数组值按照标准RESTful API约定处理
+          // 数组值处理：对于多选参数，使用相同的参数名
           value.forEach(item => {
-            searchParams.append(`${key}[]`, String(item))
+            searchParams.append(key, String(item))
           })
         } else if (typeof value === 'object' && value !== null) {
           // 避免将对象序列化为JSON字符串，而是展平对象的属性
           Object.entries(value).forEach(([subKey, subValue]) => {
-            if (subValue !== undefined && subValue !== null && subValue !== '') {
+            if (subValue !== undefined && subValue !== null) {
               searchParams.append(subKey, String(subValue))
             }
           })
-        } else {
+        } else if (value !== '') {
+          // 非空字符串直接添加
           searchParams.append(key, String(value))
+        } else if (value === '' && key === 'businessType') {
+          // 特殊处理：业务类型的空字符串需要发送
+          searchParams.append(key, '')
         }
       }
     })
