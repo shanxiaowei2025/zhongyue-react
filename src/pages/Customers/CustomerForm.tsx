@@ -19,6 +19,7 @@ import {
 import type {
   Customer,
   ImageType,
+  ImageTypeWithRemarks,
   PaidInCapitalItem,
   AdministrativeLicenseItem,
   ActualResponsibleItem,
@@ -244,13 +245,14 @@ const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCu
     }
 
     if (typeof field === 'object') {
-      const processedField: Record<string, ImageType> = {}
+      const processedField: Record<string, ImageType | ImageTypeWithRemarks> = {}
 
       // 遍历对象的每个key-value对
       Object.entries(field).forEach(([key, value]) => {
-        // 检查value是否为有效的ImageType对象
+        // 检查value是否为有效的ImageType或ImageTypeWithRemarks对象
         if (value && typeof value === 'object' && ('url' in value || 'fileName' in value)) {
-          processedField[key] = value as ImageType
+          // 保留完整的对象，包括备注信息
+          processedField[key] = value as ImageType | ImageTypeWithRemarks
         } else if (value && typeof value === 'string') {
           // 处理可能出现的字符串URL情况
           processedField[key] = { url: value } as ImageType
@@ -1978,6 +1980,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">
@@ -1989,6 +1992,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     safeSetFieldValue(form, ['legalPersonIdImages', 'back'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
                 />
               </Form.Item>
             </div>
@@ -2006,6 +2010,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     safeSetFieldValue(form, ['businessLicenseImages', 'main'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
                 />
               </Form.Item>
               <Form.Item name={['businessLicenseImages', 'copy']} label="营业执照副本">
@@ -2017,6 +2022,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     safeSetFieldValue(form, ['businessLicenseImages', 'copy'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
                 />
               </Form.Item>
             </div>
@@ -2034,6 +2040,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'basic'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
                 />
               </Form.Item>
               <Form.Item name={['bankAccountLicenseImages', 'general']} label="一般户开户许可证">
@@ -2045,13 +2052,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'general'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
                 />
               </Form.Item>
             </div>
           </div>
 
           <div>
-            <Form.Item name="otherIdImages" label="其他人员身份证照片">
+            <Form.Item name="otherIdImages">
               <MultiFileUpload
                 title="其他人员身份证照片"
                 disabled={mode === 'view'}
@@ -2063,7 +2071,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           </div>
 
           <div>
-            <Form.Item name="supplementaryImages" label="补充资料照片">
+            <Form.Item name="supplementaryImages">
               <MultiFileUpload
                 title="补充资料照片"
                 disabled={mode === 'view'}

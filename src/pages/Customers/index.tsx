@@ -41,7 +41,7 @@ import {
   FileJpgOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import type { Customer, ImageType } from '../../types'
+import type { Customer, ImageType, ImageTypeWithRemarks } from '../../types'
 import type { ResizableTableColumn } from '../../types/table'
 import type { TabsProps } from 'antd'
 import type { UploadProps } from 'antd'
@@ -1619,7 +1619,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   }
 
   // 渲染单张文件（图片或其他文件）
-  const renderImage = (image: ImageType | undefined, label: string) => {
+  const renderImage = (image: ImageType | ImageTypeWithRemarks | undefined, label: string) => {
     if (!image || !image.url) {
       return <div className="no-image-placeholder">暂无文件</div>
     }
@@ -1650,20 +1650,31 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           setImagePreview({ visible: true, url: fileUrl })
         }
 
+        // 检查是否有备注
+        const hasRemarks = 'remarks' in image && image.remarks?.trim()
+
         return (
-          <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
-            <img
-              src={fileUrl}
-              alt={label}
-              className="w-full h-24 object-cover rounded-md border border-gray-200"
-              onError={e => {
-                ;(e.target as HTMLImageElement).onerror = null
-                ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
-                ;(e.target as HTMLImageElement).className =
-                  'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
-                ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
-              }}
-            />
+          <div className="customer-image-container">
+            <div className="customer-image-preview cursor-pointer" onClick={handlePreviewClick}>
+              <img
+                src={fileUrl}
+                alt={label}
+                className="w-full h-24 object-cover rounded-md border border-gray-200"
+                onError={e => {
+                  ;(e.target as HTMLImageElement).onerror = null
+                  ;(e.target as HTMLImageElement).src = '/images/image-placeholder.svg'
+                  ;(e.target as HTMLImageElement).className =
+                    'w-full h-24 object-contain rounded-md opacity-60 border border-gray-200'
+                  ;(e.target as HTMLImageElement).style.cursor = 'not-allowed'
+                }}
+              />
+            </div>
+            {hasRemarks && (
+              <div className="image-remarks mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border">
+                <span className="font-medium">备注：</span>
+                {(image as ImageTypeWithRemarks).remarks}
+              </div>
+            )}
           </div>
         )
       } else {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Upload, Button, message, Modal, Spin, Image, Space, Popconfirm } from 'antd'
+import { Upload, Button, message, Modal, Spin, Image, Space, Popconfirm, Input } from 'antd'
 import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
 import {
   UploadOutlined,
@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
+import type { ImageType, ImageTypeWithRemarks } from '../types'
 
 const { Dragger } = Upload
 
@@ -43,14 +44,15 @@ const FILE_ICONS: Record<string, React.ReactNode> = {
 
 interface FileUploadProps {
   label: string
-  value?: { fileName: string; url: string }
-  onChange?: (value: { fileName: string; url: string } | undefined) => void
+  value?: ImageType | ImageTypeWithRemarks
+  onChange?: (value: (ImageType | ImageTypeWithRemarks) | undefined) => void
   disabled?: boolean
   onSuccess?: (isAutoSave: boolean) => void
   accept?: string
   showDragArea?: boolean // 是否显示拖拽上传区域
   onFileUpload?: (fileName: string) => void
   onFileRemove?: () => void
+  enableRemarks?: boolean // 是否启用备注功能
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -63,6 +65,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   showDragArea = false,
   onFileUpload,
   onFileRemove,
+  enableRemarks = false,
 }) => {
   const [loading, setLoading] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
@@ -158,7 +161,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
     try {
       const result = await uploadFile(file)
       if (result) {
-        onChange?.(result)
+        // 如果启用备注功能，保留现有备注
+        const newValue =
+          enableRemarks && value && 'remarks' in value
+            ? { ...result, remarks: value.remarks }
+            : result
+
+        onChange?.(newValue)
         onUploadSuccess('上传成功')
         showSuccess.upload()
         setFileError(false)
@@ -255,6 +264,16 @@ const FileUpload: React.FC<FileUploadProps> = ({
         ]
       : []
 
+  // 处理备注变更
+  const handleRemarksChange = (remarks: string) => {
+    if (value && enableRemarks) {
+      const newValue = { ...value, remarks }
+      onChange?.(newValue)
+      // 备注变更后调用自动保存
+      setTimeout(() => onSuccess?.(true), 300)
+    }
+  }
+
   // 处理图片加载错误
   const handleImageError = () => {
     if (retryCount < maxRetries && value?.url) {
@@ -350,6 +369,20 @@ const FileUpload: React.FC<FileUploadProps> = ({
             )}
           </div>
         )}
+
+        {value && enableRemarks && (
+          <div className="file-remarks mt-2">
+            <Input
+              placeholder="请输入图片备注..."
+              value={(value as ImageTypeWithRemarks)?.remarks || ''}
+              onChange={e => handleRemarksChange(e.target.value)}
+              disabled={disabled}
+              maxLength={200}
+              showCount
+              size="small"
+            />
+          </div>
+        )}
       </Spin>
 
       <Modal
@@ -361,7 +394,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         width={800}
       >
         <div className="flex justify-center">
-          {value && checkIsImage(value.fileName) ? (
+          {value && value.fileName && checkIsImage(value.fileName) ? (
             // 图片预览
             <Image
               alt={label}

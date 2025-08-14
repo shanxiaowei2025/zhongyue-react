@@ -198,17 +198,17 @@ export interface Customer {
   capitalContributionDeadline: string
   paidInCapital: PaidInCapitalItem[]
   legalPersonIdImages: {
-    front?: ImageType
-    back?: ImageType
+    front?: ImageTypeWithRemarks
+    back?: ImageTypeWithRemarks
   }
   otherIdImages: Record<string, ImageType>
   businessLicenseImages: {
-    main?: ImageType
-    copy?: ImageType
+    main?: ImageTypeWithRemarks
+    copy?: ImageTypeWithRemarks
   }
   bankAccountLicenseImages: {
-    basic?: ImageType
-    general?: ImageType
+    basic?: ImageTypeWithRemarks
+    general?: ImageTypeWithRemarks
   }
   supplementaryImages: Record<string, ImageType>
   administrativeLicense: AdministrativeLicenseItem[]
@@ -266,6 +266,10 @@ export interface Customer {
 export interface ImageType {
   fileName?: string
   url?: string
+}
+
+export interface ImageTypeWithRemarks extends ImageType {
+  remarks?: string // 图片备注
 }
 
 export interface PaidInCapitalItem {
