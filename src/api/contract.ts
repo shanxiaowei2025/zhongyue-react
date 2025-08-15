@@ -1,5 +1,5 @@
 import request from './request'
-import { publicRequest } from './request'
+import { publicRequest, silentRequest } from './request'
 import type {
   Contract,
   ContractQueryParams,
@@ -90,12 +90,12 @@ export const getContractViewLink = (contractId: number) => {
   >(`/contract/${contractId}/view-link`)
 }
 
-// 获取代理记账合同的委托日期
+// 获取代理记账合同的委托日期（静默执行，不显示任何提示）
 export const getAgencyContractDates = (params: {
   companyName?: string
   unifiedSocialCreditCode?: string
 }) => {
-  return request.get<
+  return silentRequest.get<
     ApiResponse<{
       agencyStartDate: string
       agencyEndDate: string

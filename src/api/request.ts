@@ -248,4 +248,112 @@ export const publicRequest = {
   },
 }
 
+// 创建静默请求实例（不显示任何成功或错误消息）
+const silentInstance = axios.create({
+  baseURL: apiBaseUrl,
+  timeout: 0,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  paramsSerializer: params => {
+    const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          value.forEach(item => {
+            searchParams.append(key, String(item))
+          })
+        } else if (typeof value === 'object' && value !== null) {
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            if (subValue !== undefined && subValue !== null) {
+              searchParams.append(subKey, String(subValue))
+            }
+          })
+        } else if (value !== '') {
+          searchParams.append(key, String(value))
+        } else if (value === '' && key === 'businessType') {
+          searchParams.append(key, '')
+        }
+      }
+    })
+    return searchParams.toString()
+  },
+})
+
+// 静默实例的请求拦截器
+silentInstance.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => {
+    console.error('静默请求拦截器错误:', error)
+    return Promise.reject(error)
+  }
+)
+
+// 静默实例的响应拦截器（不显示任何消息）
+silentInstance.interceptors.response.use(
+  (response: AxiosResponse) => {
+    if (response.config.responseType === 'blob') {
+      return response
+    }
+    const res = response.data as ApiResponse<unknown>
+    if (res.code !== 0) {
+      console.warn('静默API业务逻辑错误:', res)
+      return Promise.reject(new Error(res.message || '请求失败'))
+    }
+    return response
+  },
+  error => {
+    console.error('静默API错误:', error)
+    const statusCode = error.response?.status
+    if (statusCode === 401) {
+      const requestUrl = error.config?.url || ''
+      const requestMethod = error.config?.method || ''
+      const isLoginRequest =
+        requestUrl.includes('/auth/login') && requestMethod.toLowerCase() === 'post'
+      if (!isLoginRequest) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        const currentPath = window.location.pathname
+        if (currentPath !== '/login') {
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 1500)
+        }
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+// 静默请求方法
+export const silentRequest = {
+  get<T>(url: string, params?: object, responseType?: ResponseType): Promise<T> {
+    return silentInstance.get(url, { params, responseType }).then(res => {
+      if (responseType === 'blob') {
+        return res.data as T
+      }
+      return res.data
+    })
+  },
+  post<T>(url: string, data?: object): Promise<T> {
+    const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {}
+    return silentInstance.post(url, data, config).then(res => res.data)
+  },
+  put<T>(url: string, data?: object): Promise<T> {
+    return silentInstance.put(url, data).then(res => res.data)
+  },
+  patch<T>(url: string, data?: object): Promise<T> {
+    return silentInstance.patch(url, data).then(res => res.data)
+  },
+  delete<T>(url: string): Promise<T> {
+    return silentInstance.delete(url).then(res => res.data)
+  },
+}
+
 export default request
