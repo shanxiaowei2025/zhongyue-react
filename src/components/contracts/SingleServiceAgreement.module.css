@@ -183,7 +183,8 @@
 .locationSelect :global(.ant-select-selector .ant-select-selection-placeholder),
 .locationSelect :global(.ant-select-selector .ant-select-selection-item-placeholder),
 .locationSelect :global([class*='placeholder']),
-.locationSelect :global(.ant-select-selection-search .ant-select-selection-search-input::placeholder) {
+.locationSelect
+  :global(.ant-select-selection-search .ant-select-selection-search-input::placeholder) {
   font-size: 12px !important;
   font-family: 'SourceHanSerifCN', '思源宋体', serif !important;
   color: #999 !important;
@@ -194,13 +195,15 @@
 
 /* 针对不同状态下的placeholder确保显示 */
 .locationSelect:global(.ant-select):not(.ant-select-customize-input) :global(.ant-select-selector),
-.locationSelect:global(.ant-select-single):not(.ant-select-customize-input) :global(.ant-select-selector) {
+.locationSelect:global(.ant-select-single):not(.ant-select-customize-input)
+  :global(.ant-select-selector) {
   display: flex !important;
   align-items: center !important;
 }
 
 /* 确保空值时placeholder可见 */
-.locationSelect:global(.ant-select):not(.ant-select-disabled):not(.ant-select-customize-input) :global(.ant-select-selector .ant-select-selection-placeholder) {
+.locationSelect:global(.ant-select):not(.ant-select-disabled):not(.ant-select-customize-input)
+  :global(.ant-select-selector .ant-select-selection-placeholder) {
   pointer-events: none !important;
   position: absolute !important;
   top: 50% !important;

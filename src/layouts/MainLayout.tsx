@@ -5,6 +5,12 @@ declare global {
   interface Window {
     activateMenuTab?: (mainTabPath: string, targetPath: string) => boolean
     closeTab?: (tabKey: string) => boolean
+    addTab?: (tab: {
+      key: string
+      label: string
+      icon?: React.ReactNode
+      closable: boolean
+    }) => void
   }
 }
 import { Layout, Menu, Avatar, Dropdown, Button, Drawer, Badge, Tooltip, message, Tabs } from 'antd'
@@ -34,6 +40,7 @@ import {
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import { buildImageUrl } from '../utils/upload'
+import NotificationBell from '../components/NotificationBell'
 import type { MenuProps } from 'antd'
 
 const { Header, Sider, Content } = Layout
@@ -394,15 +401,7 @@ const MainLayout = () => {
   // 使用自定义的tabsStore
   const tabsStore = useTabsStore()
 
-  // 模拟通知数量
-  const [notificationCount] = useState(5)
-
-  // 模拟通知数据
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: '系统通知', content: '欢迎使用中岳会计系统' },
-    { id: 2, title: '更新提醒', content: '系统已更新至最新版本' },
-    { id: 3, title: '任务提醒', content: '您有3个待处理的任务' },
-  ])
+  // 通知系统已移至 NotificationBell 组件中管理
 
   // 检查用户是否有企业服务权限
   const hasEnterpriseServicePermission = () => {
@@ -845,27 +844,7 @@ const MainLayout = () => {
     },
   ]
 
-  const notificationMenuItems: MenuProps['items'] = [
-    {
-      key: 'notification1',
-      label: '有新的客户信息需要处理',
-    },
-    {
-      key: 'notification2',
-      label: '系统更新通知',
-    },
-    {
-      key: 'notification3',
-      label: '欢迎使用中岳会计系统',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'viewAll',
-      label: '查看全部通知',
-    },
-  ]
+  // 通知菜单项已移至 NotificationBell 组件中管理
 
   // 定义全局导航函数，用于从其他组件调用，支持智能导航
   React.useEffect(() => {
@@ -929,10 +908,22 @@ const MainLayout = () => {
       return false
     }
 
+    // 定义全局函数，用于从其他组件添加tab
+    window.addTab = (tab: {
+      key: string
+      label: string
+      icon?: React.ReactNode
+      closable: boolean
+    }) => {
+      tabsStore.addTab(tab)
+      navigate(tab.key)
+    }
+
     // 清理函数
     return () => {
       delete window.activateMenuTab
       delete window.closeTab
+      delete window.addTab
     }
   }, [menuItems, navigate, tabsStore])
 
@@ -954,12 +945,7 @@ const MainLayout = () => {
     } else if (key === 'settings') {
       // 跳转到账号设置页面
       message.info('账号设置功能即将上线')
-    } else if (key === 'viewAll') {
-      // 跳转到通知中心
-      message.info('通知中心功能即将上线')
-    } else if (key.startsWith('notification')) {
-      // 处理通知点击事件
-      setNotifications(notifications.filter(n => n.id !== parseInt(key)))
+      // 通知相关的点击事件已移至 NotificationBell 组件中处理
     } else if (key === 'system') {
       // 系统管理主菜单，默认跳转到用户管理
       const targetPath = tabsStore.getModuleTargetPath('/users')
@@ -970,6 +956,18 @@ const MainLayout = () => {
       const targetPath = tabsStore.getModuleTargetPath('/enterprise-service')
       // 企业服务跳转
       navigate(targetPath)
+    } else if (key === '/notifications') {
+      // 通知中心页面，创建独立的tab
+      tabsStore.addTab({
+        key: '/notifications',
+        label: '通知中心',
+        icon: <BellOutlined />,
+        closable: true,
+      })
+      navigate('/notifications')
+      if (isMobile) {
+        setDrawerVisible(false)
+      }
     } else {
       // 核心改进：智能导航到模块的最后访问路径
       const targetPath = tabsStore.getModuleTargetPath(key)
@@ -1153,20 +1151,7 @@ const MainLayout = () => {
             )}
 
             {/* 通知中心 */}
-            <Dropdown
-              menu={{
-                items: notificationMenuItems,
-                onClick: handleMenuClick,
-              }}
-              placement="bottomRight"
-              arrow={{ pointAtCenter: true }}
-            >
-              <div className="mx-3 cursor-pointer">
-                <Badge count={notificationCount} size="small">
-                  <BellOutlined className="text-lg" />
-                </Badge>
-              </div>
-            </Dropdown>
+            <NotificationBell className="mx-3" />
 
             {/* 用户信息下拉菜单 */}
             <Dropdown

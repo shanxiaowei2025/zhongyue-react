@@ -6,6 +6,10 @@ import { Spin, ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import './index.css'
 import { useAuthStore } from './store/auth'
+import { useNotificationStore } from './store/notification'
+import webSocketService from './services/websocket'
+import { mutate } from 'swr'
+import { getNewNotificationsKey, getNotificationListKey } from './hooks/useNotification'
 import PasswordExpiredModal from './components/PasswordExpiredModal'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
@@ -24,6 +28,13 @@ const App = () => {
     checkAndHandleAutoLogout,
     updateLastActivity,
   } = useAuthStore()
+
+  const {
+    addNewNotification,
+    setWebSocketConnected,
+    updateStats,
+    reset: resetNotificationStore,
+  } = useNotificationStore()
 
   // 在应用启动时预加载角色数据，但仅当用户已登录时
   useEffect(() => {
@@ -104,6 +115,53 @@ const App = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]) // 仅在认证状态变化时重新运行
+
+  // WebSocket 连接管理
+  useEffect(() => {
+    if (isAuthenticated) {
+      // 用户登录后建立 WebSocket 连接
+      webSocketService.connect()
+
+      // 注册 WebSocket 事件监听器
+      const unsubscribeNotification = webSocketService.onNotification(data => {
+        // 收到新通知时更新 store
+        addNewNotification(data)
+        // 刷新SWR缓存以确保通知弹窗和通知中心数据同步
+        mutate(getNewNotificationsKey({ page: 1, limit: 999 }))
+        mutate(getNotificationListKey({ page: 1, limit: 50 }))
+        // 可以在这里添加通知提示
+        console.log('收到新通知:', data.title)
+      })
+
+      const unsubscribeConnect = webSocketService.onConnect(() => {
+        setWebSocketConnected(true)
+        console.log('WebSocket 连接成功')
+      })
+
+      const unsubscribeDisconnect = webSocketService.onDisconnect(() => {
+        setWebSocketConnected(false)
+        console.log('WebSocket 连接断开')
+      })
+
+      const unsubscribeError = webSocketService.onError(error => {
+        console.error('WebSocket 连接错误:', error)
+      })
+
+      // 清理函数
+      return () => {
+        unsubscribeNotification()
+        unsubscribeConnect()
+        unsubscribeDisconnect()
+        unsubscribeError()
+        webSocketService.disconnect()
+      }
+    } else {
+      // 用户未登录时断开 WebSocket 连接并重置通知状态
+      webSocketService.disconnect()
+      setWebSocketConnected(false)
+      resetNotificationStore()
+    }
+  }, [isAuthenticated, addNewNotification, setWebSocketConnected, resetNotificationStore])
 
   // 显示一个全屏加载指示器，直到预加载完成
   if (loading) {

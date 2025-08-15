@@ -41,6 +41,7 @@ const EmployeeDetail = lazy(() => import('../pages/Employees/EmployeeDetail'))
 const SalaryManagement = lazy(() => import('../pages/SalaryManagement'))
 const MySalary = lazy(() => import('../pages/MySalary'))
 const DataQuery = lazy(() => import('../pages/DataQuery'))
+const Notifications = lazy(() => import('../pages/Notifications'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
 // 路由守卫组件
@@ -291,6 +292,10 @@ const routes: RouteObject[] = [
             <TaxReviewDetail />
           </AuthorizedRoute>
         ),
+      },
+      {
+        path: 'notifications',
+        element: <Notifications />,
       },
       {
         path: 'profile',
