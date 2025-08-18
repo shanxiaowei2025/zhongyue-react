@@ -1654,6 +1654,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startMode={mode}
                             startHasPermission={hasFullDateEditPermission()}
                             startHasAutoFillValue={!!autoFillDates.agencyStartDate}
+                            startFieldName_formField="agencyStartDate"
+                            endFieldName_formField="agencyEndDate"
                           />
                         </Form.Item>
 
@@ -1696,6 +1698,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startMode={mode}
                             startHasPermission={hasFullDateEditPermission()}
                             startHasAutoFillValue={!!autoFillDates.accountingSoftwareStartDate}
+                            startFieldName_formField="accountingSoftwareStartDate"
+                            endFieldName_formField="accountingSoftwareEndDate"
                           />
                         </Form.Item>
 
@@ -1727,6 +1731,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startMode={mode}
                             startHasPermission={hasFullDateEditPermission()}
                             startHasAutoFillValue={!!autoFillDates.invoiceSoftwareStartDate}
+                            startFieldName_formField="invoiceSoftwareStartDate"
+                            endFieldName_formField="invoiceSoftwareEndDate"
                           />
                         </Form.Item>
                       </div>
@@ -1828,6 +1834,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startMode={mode}
                             startHasPermission={hasFullDateEditPermission()}
                             startHasAutoFillValue={!!autoFillDates.socialInsuranceStartDate}
+                            startFieldName_formField="socialInsuranceStartDate"
+                            endFieldName_formField="socialInsuranceEndDate"
                           />
                         </Form.Item>
 
@@ -1895,6 +1903,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                     startMode={mode}
                                     startHasPermission={hasFullDateEditPermission()}
                                     startHasAutoFillValue={!!autoFillDates.housingFundStartDate}
+                                    startFieldName_formField="housingFundStartDate"
+                                    endFieldName_formField="housingFundEndDate"
                                   />
                                 </Form.Item>
                               </div>
@@ -1941,6 +1951,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startMode={mode}
                             startHasPermission={hasFullDateEditPermission()}
                             startHasAutoFillValue={!!autoFillDates.statisticalStartDate}
+                            startFieldName_formField="statisticalStartDate"
+                            endFieldName_formField="statisticalEndDate"
                           />
                         </Form.Item>
                       </div>
@@ -2035,6 +2047,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startMode={mode}
                             startHasPermission={hasFullDateEditPermission()}
                             startHasAutoFillValue={!!autoFillDates.addressStartDate}
+                            startFieldName_formField="addressStartDate"
+                            endFieldName_formField="addressEndDate"
                           />
                         </Form.Item>
                       </div>

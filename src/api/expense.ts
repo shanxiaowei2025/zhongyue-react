@@ -1,4 +1,4 @@
-import request from './request'
+import request, { silentRequest } from './request'
 import {
   Expense,
   ExpenseQueryParams,
@@ -98,12 +98,12 @@ export const exportExpenseCSV = (params?: Partial<ExpenseQueryParams>) => {
   return request.get<Blob>('/expense/export/csv', params, 'blob')
 }
 
-// 获取最大日期的下一天（用于自动填写开始日期）
+// 获取最大日期的下一天（用于自动填写开始日期）- 使用静默请求，不显示任何提示
 export const getMaxDatesNextDay = (params: {
   companyName?: string
   unifiedSocialCreditCode?: string
 }) => {
-  return request.get<{
+  return silentRequest.get<{
     data: {
       companyName: string
       unifiedSocialCreditCode: string

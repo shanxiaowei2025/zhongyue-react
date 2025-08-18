@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { DatePicker, Space, Popconfirm } from 'antd'
+import React, { useState, useEffect, useContext } from 'react'
+import { DatePicker, Space, Popconfirm, Form } from 'antd'
 import type { Dayjs } from 'dayjs'
 
 interface DateRangePickerProps {
@@ -17,6 +17,9 @@ interface DateRangePickerProps {
   startHasAutoFillValue?: boolean
   // 是否启用一年期限检查
   enableYearCheck?: boolean
+  // 新增：表单字段名
+  startFieldName_formField?: string
+  endFieldName_formField?: string
 }
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -32,8 +35,15 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   startHasPermission = true,
   startHasAutoFillValue = false,
   enableYearCheck = true,
+  startFieldName_formField,
+  endFieldName_formField,
 }) => {
   const [showYearWarning, setShowYearWarning] = useState(false)
+  // 跟踪用户是否手动修改过日期
+  const [userHasModified, setUserHasModified] = useState(false)
+
+  // 获取表单实例
+  const form = Form.useFormInstance()
 
   // 计算最终是否受限（与原 RestrictedDatePicker 逻辑一致）
   const finalStartIsRestricted =
@@ -78,9 +88,18 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   }
 
   // 检查日期范围是否小于11个月
-  const checkDateRange = (start: Dayjs | null | undefined, end: Dayjs | null | undefined) => {
+  const checkDateRange = (
+    start: Dayjs | null | undefined,
+    end: Dayjs | null | undefined,
+    isUserAction: boolean = false
+  ) => {
     if (!enableYearCheck || !start || !end) {
       setShowYearWarning(false)
+      return
+    }
+
+    // 只有在用户手动操作时才显示警告
+    if (!isUserAction && !userHasModified) {
       return
     }
 
@@ -90,27 +109,42 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   // 处理开始日期变化
   const handleStartChange = (value: Dayjs | null) => {
+    // 标记用户已手动修改
+    setUserHasModified(true)
+
+    // 同时更新表单字段和回调
+    if (startFieldName_formField && form) {
+      form.setFieldValue(startFieldName_formField, value)
+    }
     onStartChange?.(value)
 
-    // 如果结束日期已存在，检查范围
+    // 如果结束日期已存在，检查范围（用户操作）
     if (value && endValue) {
-      checkDateRange(value, endValue)
+      checkDateRange(value, endValue, true)
     }
   }
 
   // 处理结束日期变化
   const handleEndChange = (value: Dayjs | null) => {
+    // 标记用户已手动修改
+    setUserHasModified(true)
+
+    // 同时更新表单字段和回调
+    if (endFieldName_formField && form) {
+      form.setFieldValue(endFieldName_formField, value)
+    }
     onEndChange?.(value)
 
-    // 如果开始日期已存在，检查范围
+    // 如果开始日期已存在，检查范围（用户操作）
     if (startValue && value) {
-      checkDateRange(startValue, value)
+      checkDateRange(startValue, value, true)
     }
   }
 
-  // 当外部值变化时检查日期范围
+  // 当外部值变化时检查日期范围（不触发警告，仅用于非用户操作的情况）
   useEffect(() => {
-    checkDateRange(startValue, endValue)
+    // 不传递 isUserAction 参数，这样就不会在初始化时显示警告
+    checkDateRange(startValue, endValue, false)
   }, [startValue, endValue, enableYearCheck])
 
   const startDatePicker = (
@@ -162,15 +196,29 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   )
 
   return (
-    <Space style={style}>
-      {finalStartIsRestricted ? (
-        <div title={getStartTooltipTitle()}>{startDatePicker}</div>
-      ) : (
-        startDatePicker
+    <>
+      {/* 隐藏的表单项用于正确注册字段到 Ant Design Form 系统 */}
+      {startFieldName_formField && (
+        <Form.Item name={startFieldName_formField} style={{ display: 'none' }}>
+          <input type="hidden" />
+        </Form.Item>
       )}
-      <span>至</span>
-      {endDatePickerWithConfirm}
-    </Space>
+      {endFieldName_formField && (
+        <Form.Item name={endFieldName_formField} style={{ display: 'none' }}>
+          <input type="hidden" />
+        </Form.Item>
+      )}
+
+      <Space style={style}>
+        {finalStartIsRestricted ? (
+          <div title={getStartTooltipTitle()}>{startDatePicker}</div>
+        ) : (
+          startDatePicker
+        )}
+        <span>至</span>
+        {endDatePickerWithConfirm}
+      </Space>
+    </>
   )
 }
 
