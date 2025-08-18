@@ -407,6 +407,13 @@ const NotificationsPage: React.FC = () => {
           setDetailModalVisible(false)
           setSelectedNotification(null)
         }}
+        onMarkAsRead={async notificationId => {
+          const success = await markAsReadAction(notificationId)
+          if (success) {
+            updateStats()
+          }
+          return success
+        }}
         showCopyButton={true}
       />
     </div>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Modal, Button, Typography, Badge, message } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -11,6 +11,7 @@ interface NotificationDetailProps {
   notification: Notification | null
   onClose: () => void
   showCopyButton?: boolean
+  onMarkAsRead?: (notificationId: number) => Promise<boolean>
 }
 
 const NotificationDetail: React.FC<NotificationDetailProps> = ({
@@ -18,7 +19,9 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
   notification,
   onClose,
   showCopyButton = true,
+  onMarkAsRead,
 }) => {
+  const [loading, setLoading] = useState(false)
   // 复制通知内容
   const handleCopyNotification = async () => {
     if (!notification) return
@@ -31,6 +34,24 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
     }
   }
 
+  // 处理已读并关闭
+  const handleMarkAsReadAndClose = async () => {
+    if (!notification || !onMarkAsRead) return
+
+    setLoading(true)
+    try {
+      const success = await onMarkAsRead(notification.notificationId)
+      if (success) {
+        // 关闭模态框
+        onClose()
+      }
+    } catch (error) {
+      // 错误处理已在onMarkAsRead中处理
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const footer = [
     ...(showCopyButton
       ? [
@@ -39,9 +60,20 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
           </Button>,
         ]
       : []),
-    <Button key="close" type="primary" onClick={onClose}>
-      关闭
-    </Button>,
+    notification?.readStatus === 0 ? (
+      <Button
+        key="markAsReadAndClose"
+        type="primary"
+        loading={loading}
+        onClick={handleMarkAsReadAndClose}
+      >
+        已读并关闭
+      </Button>
+    ) : (
+      <Button key="close" type="primary" onClick={onClose}>
+        关闭
+      </Button>
+    ),
   ]
 
   return (
