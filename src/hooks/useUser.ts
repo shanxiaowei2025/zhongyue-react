@@ -16,12 +16,14 @@ export const getUserListKey = (params: {
   pageSize?: number
   keyword?: string
   searchText?: string
+  role?: string
 }) => {
-  const { page = 1, pageSize = 10, keyword, searchText } = params
+  const { page = 1, pageSize = 10, keyword, searchText, role } = params
   if (searchText) {
     return `/user/search?page=${page}&pageSize=${pageSize}&searchText=${searchText}`
   }
-  return `/user?page=${page}&pageSize=${pageSize}${keyword ? `&keyword=${keyword}` : ''}`
+  const roleParam = role ? `&role=${role}` : ''
+  return `/user?page=${page}&pageSize=${pageSize}${keyword ? `&keyword=${keyword}` : ''}${roleParam}`
 }
 
 // 用户列表数据获取器
@@ -31,13 +33,14 @@ export const userListFetcher = async (key: string) => {
   const pageSize = parseInt(url.searchParams.get('pageSize') || '10')
   const keyword = url.searchParams.get('keyword') || ''
   const searchText = url.searchParams.get('searchText')
+  const role = url.searchParams.get('role') || ''
 
   if (searchText) {
     // 使用搜索接口
     return await apiSearchUsers(searchText, page, pageSize)
   } else {
     // 使用常规列表接口
-    return await getUserList(page, pageSize, keyword)
+    return await getUserList(page, pageSize, keyword, role)
   }
 }
 
@@ -59,6 +62,7 @@ export const useUserList = (params: {
   pageSize?: number
   keyword?: string
   searchText?: string
+  role?: string
 }) => {
   const key = getUserListKey(params)
   const { data, error, isLoading } = useSWR(key, userListFetcher, {

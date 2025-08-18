@@ -34,10 +34,13 @@ export const changePassword = (data: { oldPassword: string; newPassword: string 
 }
 
 // 获取用户列表
-export const getUserList = (page = 1, limit = 10, keyword?: string) => {
+export const getUserList = (page = 1, limit = 10, keyword?: string, role?: string) => {
   const params: any = { page, limit }
   if (keyword) {
     params.keyword = keyword
+  }
+  if (role) {
+    params.role = role
   }
   return request.get<ApiResponse<PaginatedResponse<User>>>('/users', params)
 }

@@ -65,6 +65,7 @@ const Users = () => {
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [form] = Form.useForm()
   const [searchText, setSearchText] = useState<string>('')
+  const [selectedRole, setSelectedRole] = useState<string>('')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
 
@@ -80,6 +81,7 @@ const Users = () => {
     page: currentPage,
     pageSize: pageSize,
     searchText: debouncedSearchText,
+    role: selectedRole,
   })
 
   const { departmentTree: rawDepartmentTree } = useDepartmentTree()
@@ -219,9 +221,17 @@ const Users = () => {
     setCurrentPage(1)
   }
 
+  // 处理角色筛选
+  const handleRoleChange = (value: string) => {
+    setSelectedRole(value)
+    // 重置到第一页
+    setCurrentPage(1)
+  }
+
   // 处理重置
   const handleReset = () => {
     setSearchText('')
+    setSelectedRole('')
     setCurrentPage(1)
   }
 
@@ -335,6 +345,19 @@ const Users = () => {
             style={{ width: 200 }}
             allowClear
           />
+          <Select
+            placeholder="选择角色"
+            value={selectedRole || undefined}
+            onChange={handleRoleChange}
+            style={{ width: 150 }}
+            allowClear
+          >
+            {roles.map(role => (
+              <Select.Option key={role.code} value={role.code}>
+                {role.name}
+              </Select.Option>
+            ))}
+          </Select>
           <Button onClick={handleReset}>重置</Button>
         </Space>
       </div>
