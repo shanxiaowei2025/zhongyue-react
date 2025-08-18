@@ -23,9 +23,8 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
   const handleCopyNotification = async () => {
     if (!notification) return
 
-    const content = `标题：${notification.title}\n内容：${notification.content}\n时间：${dayjs(notification.createdAt).format('YYYY-MM-DD HH:mm:ss')}`
     try {
-      await navigator.clipboard.writeText(content)
+      await navigator.clipboard.writeText(notification.content)
       message.success('通知内容已复制到剪贴板')
     } catch (error) {
       message.error('复制失败，请手动选择复制')
