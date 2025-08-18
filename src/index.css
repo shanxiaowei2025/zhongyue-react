@@ -478,6 +478,19 @@ body.ant-modal-open {
   }
 }
 
+/* 通知弹窗样式 */
+.notification-dropdown {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.notification-dropdown .ant-dropdown-menu {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+}
+
 /* 客户管理表格样式优化 */
 .customer-table {
   margin-bottom: 24px;

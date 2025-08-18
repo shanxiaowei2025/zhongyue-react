@@ -41,6 +41,7 @@ import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
 import { getMaxDatesForAutoFill } from '../../hooks/useExpense'
 import { useAuthStore } from '../../store/auth'
+import { useExpenseNotification } from '../../hooks/useExpenseNotification'
 import type { Enterprise } from '../../types/enterpriseService'
 import './expenses.css'
 
@@ -194,6 +195,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const [prevFormValues, setPrevFormValues] = useState<Record<string, any>>({})
 
   const { createExpense, updateExpense } = useExpenseDetail(mode === 'edit' ? expense?.id : null)
+
+  // 费用通知Hook
+  const { sendExpenseNotification } = useExpenseNotification()
 
   // 费用字段列表
   const feeFields = [
@@ -981,9 +985,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       console.log('合同图片转换后:', formattedValues.contractImage)
       console.log('收据凭证转换后:', formattedValues.proofOfCharge)
 
+      let createdExpense: Expense | null = null
+
       if (mode === 'add') {
         const response = await createExpense(formattedValues)
         message.success((response as any)?.message || '费用创建成功')
+
+        // 保存创建的费用数据，用于发送通知
+        if (response && typeof response === 'object' && 'data' in response) {
+          createdExpense = response.data as Expense
+        }
       } else if (mode === 'edit' && expense) {
         // 如果是编辑被退回的费用，重新提交后设置状态为待审核并清空退回原因
         if (expense.status === ExpenseStatus.Rejected) {
@@ -993,6 +1004,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         await updateExpense(expense.id, formattedValues)
         message.success('费用更新成功')
+      }
+
+      // 如果是新增费用且创建成功，发送通知
+      if (mode === 'add' && createdExpense) {
+        // 异步发送通知，不阻塞用户操作
+        sendExpenseNotification(createdExpense).catch(error => {
+          console.error('发送费用通知失败:', error)
+        })
       }
 
       // 只有当keepOpen为false时才关闭模态框

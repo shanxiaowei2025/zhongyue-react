@@ -23,6 +23,10 @@ export interface User {
   last_name: string
   create_time: string
   update_time: string
+  department?: {
+    id: number
+    name: string
+  }
 }
 
 // 部门相关类型

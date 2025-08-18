@@ -41,6 +41,10 @@ const Login = () => {
           idCardNumber: string | null
           avatar: string | null
           passwordUpdatedAt?: string
+          department?: {
+            id: number
+            name: string
+          }
         }
       }>
 
@@ -64,6 +68,7 @@ const Login = () => {
           idCardNumber: user_info.idCardNumber,
           avatar: user_info.avatar,
           roles: user_info.roles,
+          department: user_info.department,
           // 以下是必要的字段，但API没有返回，设置默认值
           password: '',
           email: '',
