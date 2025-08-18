@@ -40,6 +40,10 @@ export const getUserProfile = () => {
       passwordUpdatedAt?: string
       createdAt?: string
       updatedAt?: string
+      department?: {
+        id: number
+        name: string
+      }
     }>
   >('/auth/profile')
 }

@@ -266,6 +266,9 @@ const Profile = () => {
                       {userProfile.phone || '未设置'}
                     </div>
                   </Descriptions.Item>
+                  <Descriptions.Item label="所属部门" span={3}>
+                    {userProfile.department?.name || '未设置'}
+                  </Descriptions.Item>
                   <Descriptions.Item label="角色" span={3}>
                     {userProfile.roles &&
                       userProfile.roles.map((role: string) => (
