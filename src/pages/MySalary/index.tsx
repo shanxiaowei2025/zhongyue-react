@@ -34,6 +34,32 @@ const MySalary: React.FC = () => {
   const [authModalVisible, setAuthModalVisible] = useState(false)
   const [isAuthorized, setIsAuthorized] = useState(false)
 
+  // 处理锁定按钮
+  const handleLock = (isAutoExpired = false) => {
+    // 如果是自动过期，直接执行锁定逻辑，不显示确认对话框
+    if (isAutoExpired) {
+      clearToken()
+      setIsAuthorized(false)
+      setAuthModalVisible(true)
+      message.success('薪资访问权限已过期，请重新验证')
+      return
+    }
+
+    // 用户主动锁定，显示确认对话框
+    Modal.confirm({
+      title: '确认锁定薪资访问',
+      content: '锁定后需要重新验证薪资密码才能访问薪资信息。',
+      okText: '确认锁定',
+      cancelText: '取消',
+      onOk() {
+        clearToken()
+        setIsAuthorized(false)
+        setAuthModalVisible(true)
+        message.success('已锁定薪资访问')
+      },
+    })
+  }
+
   // 检查薪资访问权限
   useEffect(() => {
     const checkAuth = () => {
@@ -46,6 +72,22 @@ const MySalary: React.FC = () => {
     }
 
     checkAuth()
+
+    // 添加定时器，定期检查token是否过期
+    const checkTokenExpiry = () => {
+      if (tokenInfo && !isTokenValid()) {
+        // token已过期，自动触发锁定逻辑
+        handleLock(true)
+      }
+    }
+
+    // 每分钟检查一次token是否过期
+    const intervalId = setInterval(checkTokenExpiry, 60000)
+
+    // 清理定时器
+    return () => {
+      clearInterval(intervalId)
+    }
   }, [tokenInfo]) // 直接依赖tokenInfo，而不是函数
 
   // 处理认证成功
@@ -62,22 +104,6 @@ const MySalary: React.FC = () => {
     setAuthModalVisible(false)
     // 返回上一页或主页
     window.history.back()
-  }
-
-  // 处理锁定按钮
-  const handleLock = () => {
-    Modal.confirm({
-      title: '确认锁定薪资访问',
-      content: '锁定后需要重新验证薪资密码才能访问薪资信息。',
-      okText: '确认锁定',
-      cancelText: '取消',
-      onOk() {
-        clearToken()
-        setIsAuthorized(false)
-        setAuthModalVisible(true)
-        message.success('已锁定薪资访问')
-      },
-    })
   }
 
   const handleYearChange = (date: dayjs.Dayjs | null) => {
@@ -482,7 +508,12 @@ const MySalary: React.FC = () => {
               >
                 刷新
               </Button>
-              <Button icon={<LockOutlined />} onClick={handleLock} disabled={!isAuthorized} danger>
+              <Button
+                icon={<LockOutlined />}
+                onClick={() => handleLock()}
+                disabled={!isAuthorized}
+                danger
+              >
                 锁定
               </Button>
             </Space>
