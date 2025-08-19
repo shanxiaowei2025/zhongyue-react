@@ -34,10 +34,19 @@ class WebSocketService {
       // 如果 VITE_API_BASE_URL 是完整URL，直接使用
       baseUrl = apiBaseUrl.replace(/\/api$/, '')
     } else {
-      // 如果是相对路径或未设置，使用当前域名 + 端口3000
+      // 在生产环境中，使用当前域名（通过Nginx代理）
+      // 在开发环境中，使用localhost:3000
       const protocol = window.location.protocol
       const hostname = window.location.hostname
-      baseUrl = `${protocol}//${hostname}:3000`
+      const port = window.location.port
+
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // 开发环境：使用localhost:3000
+        baseUrl = `${protocol}//${hostname}:3000`
+      } else {
+        // 生产环境：使用当前域名（通过Nginx代理到后端）
+        baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`
+      }
     }
 
     return `${baseUrl}/ws`

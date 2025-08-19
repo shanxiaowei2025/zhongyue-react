@@ -58,6 +58,22 @@ RUN echo 'server { \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
+    # WebSocket代理配置 \
+    location /ws { \
+        proxy_pass http://api:3000/ws; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+        proxy_read_timeout 86400; \
+        proxy_send_timeout 86400; \
+        proxy_connect_timeout 60; \
+        proxy_cache off; \
+        proxy_buffering off; \
+    } \
     # HTML文件 - 确保每次都重新获取 \
     location ~ \.html$ { \
         add_header Cache-Control "no-cache, no-store, must-revalidate"; \
