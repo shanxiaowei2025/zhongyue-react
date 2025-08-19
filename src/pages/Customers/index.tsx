@@ -47,6 +47,7 @@ import type { TabsProps } from 'antd'
 import type { UploadProps } from 'antd'
 import CustomerForm from './CustomerForm'
 import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
+import { useClanDetail } from '../../hooks/useClan'
 import {
   BUSINESS_STATUS_MAP,
   ENTERPRISE_STATUS_MAP,
@@ -1387,6 +1388,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     url: '',
   })
 
+  // 获取客户的宗族详情（如果有clanId）
+  const customerClanId = customer?.clanId
+  const { clan: customerClan } = useClanDetail(customerClanId)
+
   const [activeTabKey, setActiveTabKey] = useState(
     usePageStates.getState().getState('customerDetailTab') || 'basic'
   )
@@ -1402,8 +1407,20 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
       otherIdImages: customer.otherIdImages || {},
       supplementaryImages: customer.supplementaryImages || {},
+      // 初始化宗族信息
+      clan: customer.clan,
     }
   })
+
+  // 当宗族数据更新时，合并到客户详情中
+  useEffect(() => {
+    if (customerClan) {
+      setCurrentCustomerDetail(prev => ({
+        ...prev,
+        clan: customerClan,
+      }))
+    }
+  }, [customerClan])
 
   // 记录重试次数
   const [retryCount, setRetryCount] = useState(0)
@@ -1441,8 +1458,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             supplementaryImages: response.data.supplementaryImages || {},
           }
 
-          // SWR获取到客户详情数据，已处理
-          setCurrentCustomerDetail(processedData)
+          // SWR获取到客户详情数据，合并宗族信息
+          setCurrentCustomerDetail(prev => ({
+            ...processedData,
+            clan: prev.clan || processedData.clan, // 保留之前的宗族信息或使用新的宗族信息
+          }))
           setRetryCount(0)
         }
       },
@@ -1490,14 +1510,20 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   // 如果获取到了新数据，更新当前显示的客户详情
   useEffect(() => {
     if (fetchedCustomerDetail && Object.keys(fetchedCustomerDetail).length > 0) {
-      setCurrentCustomerDetail(fetchedCustomerDetail)
+      setCurrentCustomerDetail(prev => ({
+        ...fetchedCustomerDetail,
+        clan: prev.clan || fetchedCustomerDetail.clan, // 保留之前的宗族信息
+      }))
     }
   }, [fetchedCustomerDetail])
 
   // 保证在组件挂载时至少有初始数据可用
   useEffect(() => {
     if (customer && Object.keys(customer).length > 0) {
-      setCurrentCustomerDetail(customer)
+      setCurrentCustomerDetail(prev => ({
+        ...customer,
+        clan: prev?.clan || customer.clan, // 保留之前的宗族信息
+      }))
     }
   }, [customer])
 
@@ -1908,8 +1934,24 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="企业画像" span={3}>
             {displayCustomer.enterpriseProfile || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="同宗企业" span={3}>
-            {displayCustomer.affiliatedEnterprises || '-'}
+          <Descriptions.Item label="所属宗族">
+            {displayCustomer.clan?.clanName || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="同宗企业成员" span={2}>
+            {displayCustomer.clan?.memberList && displayCustomer.clan.memberList.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {displayCustomer.clan.memberList.map((member, index) => (
+                  <span
+                    key={index}
+                    className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+                  >
+                    {member}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              '-'
+            )}
           </Descriptions.Item>
           <Descriptions.Item label="行业大类">
             {displayCustomer.industryCategory || '-'}

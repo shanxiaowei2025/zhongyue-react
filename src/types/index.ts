@@ -175,6 +175,39 @@ export interface AuthGroupPermission {
   permission_id: number
 }
 
+// 宗族相关类型
+export interface Clan {
+  id: number
+  clanName: string
+  memberList: string[]
+  createTime: string
+  updateTime: string
+}
+
+export interface ClanListItem {
+  id: number
+  clanName: string
+}
+
+// 宗族查询参数
+export interface ClanQueryParams {
+  page?: number
+  pageSize?: number
+  clanName?: string
+  memberName?: string
+  exactMatch?: boolean
+  namesOnly?: boolean
+}
+
+// 宗族分页响应
+export interface ClanPaginatedResponse {
+  data: Clan[] | ClanListItem[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 // 客户相关类型
 export interface Customer {
   id: number
@@ -190,7 +223,8 @@ export interface Customer {
   location: string
   businessAddress: string
   taxBureau: string
-  affiliatedEnterprises: string
+  clanId?: number // 新增宗族ID字段
+  clan?: Clan // 新增宗族详情字段（populate时包含）
   bossProfile: string
   enterpriseProfile: string
   industryCategory: string

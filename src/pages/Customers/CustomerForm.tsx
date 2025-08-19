@@ -15,9 +15,12 @@ import {
   Table,
   Popconfirm,
   Popover,
+  Modal,
 } from 'antd'
 import type {
   Customer,
+  Clan,
+  ClanListItem,
   ImageType,
   ImageTypeWithRemarks,
   PaidInCapitalItem,
@@ -31,6 +34,7 @@ import {
   DeleteOutlined,
   InfoCircleOutlined,
   QuestionCircleOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons'
 import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
@@ -39,6 +43,7 @@ import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
+import { useClanList, useClanDetail } from '../../hooks/useClan'
 import { mutate } from 'swr'
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
 import { LOCATION_OPTIONS } from '../../constants/locationOptions'
@@ -63,7 +68,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   businessAddress: 'basic',
   bossProfile: 'basic',
   enterpriseProfile: 'basic',
-  affiliatedEnterprises: 'basic',
+  clanId: 'basic',
   industryCategory: 'basic',
   industrySubcategory: 'basic',
   hasTaxBenefits: 'basic',
@@ -336,6 +341,34 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
 
+  // 宗族相关状态
+  const [selectedClanId, setSelectedClanId] = useState<number | null>(null)
+  const [selectedClanName, setSelectedClanName] = useState<string>('')
+  const [clanSearchText, setClanSearchText] = useState<string>('')
+  const [clanOptions, setClanOptions] = useState<Clan[]>([])
+  const [clanPage, setClanPage] = useState(1)
+  const [hasMoreClans, setHasMoreClans] = useState(true)
+  const [previousClanId, setPreviousClanId] = useState<number | null>(null)
+
+  // 获取宗族列表用于AutoComplete
+  const {
+    clanList,
+    loading: clanListLoading,
+    pagination,
+  } = useClanList({
+    page: clanPage,
+    pageSize: 10,
+    clanName: clanSearchText || undefined, // 如果为空则不传递，这样会获取所有宗族
+  })
+
+  // 获取当前客户的宗族详情
+  const {
+    clan: selectedClan,
+    addMemberToClan,
+    createClan,
+    deleteClan,
+  } = useClanDetail(selectedClanId)
+
   // 获取当前用户信息
   const { user } = useAuthStore()
 
@@ -379,6 +412,32 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         licenseNoFixedTerm: customer.licenseExpiryDate === '9999-12-31',
       }
       form.setFieldsValue(formValues)
+
+      // 初始化宗族相关数据
+      if (customer.clanId) {
+        setSelectedClanId(customer.clanId)
+        setPreviousClanId(customer.clanId)
+        // 确保表单的隐藏clanId字段也被设置
+        form.setFieldValue('clanId', customer.clanId)
+        // 如果有宗族信息，设置显示名称
+        if (customer.clan?.clanName) {
+          setSelectedClanName(customer.clan.clanName)
+        } else {
+          // 如果没有宗族名称但有ID，主动查询宗族详情
+          const fetchClanName = async () => {
+            try {
+              const { getClanById } = await import('../../api/clan')
+              const response = await getClanById(customer.clanId!)
+              if (response && response.code === 0 && (response.data as any)?.data?.clanName) {
+                setSelectedClanName((response.data as any).data.clanName)
+              }
+            } catch (error) {
+              console.warn('获取宗族名称失败:', error)
+            }
+          }
+          fetchClanName()
+        }
+      }
 
       // 初始化实缴资本数据
       if (customer.paidInCapital && Array.isArray(customer.paidInCapital)) {
@@ -489,6 +548,56 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       form.setFieldValue('submitter', user.username)
     }
   }, [mode, user?.username, form])
+
+  // 宗族选项更新
+  useEffect(() => {
+    if (clanList && Array.isArray(clanList) && clanList.length > 0) {
+      console.log('📋 宗族列表更新:', {
+        clanList: clanList,
+        clanPage,
+        clanSearchText,
+        clanListLength: clanList.length,
+        pagination: pagination,
+        hasMoreClans: hasMoreClans,
+      })
+
+      if (clanPage === 1) {
+        // 第一页直接设置选项（无论是初始加载还是搜索结果的第一页）
+        setClanOptions(clanList as Clan[])
+        console.log('📋 第一页，直接设置宗族选项:', clanList.length, '个')
+      } else {
+        // 其他页面都追加到现有选项（用于分页加载更多数据）
+        setClanOptions(prev => {
+          const newOptions = [...prev, ...(clanList as Clan[])]
+          console.log(
+            '📋 第',
+            clanPage,
+            '页，追加宗族选项:',
+            prev.length,
+            '+',
+            clanList.length,
+            '=',
+            newOptions.length
+          )
+          return newOptions
+        })
+      }
+      const newHasMoreClans = clanPage < pagination.totalPages
+      console.log('🎯 更新hasMoreClans状态:', {
+        clanPage,
+        totalPages: pagination.totalPages,
+        calculated: `${clanPage} < ${pagination.totalPages}`,
+        result: newHasMoreClans,
+      })
+      setHasMoreClans(newHasMoreClans)
+    }
+  }, [clanList, clanPage])
+
+  // 监听当前选中的宗族详情
+
+  // 调试宗族选项
+
+  // 强制初始化宗族数据（临时调试用）
 
   // 监听licenseNoFixedTerm变化，当用户选择无固定期限时自动清空日期
   useEffect(() => {
@@ -620,7 +729,23 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       } = dataWithImages
 
       if (mode === 'add') {
+        // 先处理宗族相关操作，获取最终的宗族ID
+        const finalClanId = await handleClanOperations(
+          values.companyName,
+          cleanData.clanId,
+          null,
+          selectedClanName
+        )
+
+        // 将宗族ID设置到客户数据中
+        if (finalClanId) {
+          cleanData.clanId = finalClanId
+          // 同时更新状态，以便界面显示正确
+          setSelectedClanId(finalClanId)
+        }
+
         const newCustomer = await createCustomer(cleanData as Partial<Customer>)
+
         if (!isAutoSave) {
           // 创建成功后，直接调用 onSuccess 回调
           onSuccess?.(isAutoSave, newCustomer?.id)
@@ -635,15 +760,29 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           onSuccess?.(isAutoSave, newCustomer?.id)
         }
       } else if (customer?.id) {
-        // 发送到API的数据
-
         // 确保日期字段是正确的格式
         if (cleanData.licenseExpiryDate && typeof cleanData.licenseExpiryDate !== 'string') {
           // @ts-ignore
           cleanData.licenseExpiryDate = dayjs(cleanData.licenseExpiryDate).format('YYYY-MM-DD')
         }
 
+        // 先处理宗族相关操作，获取最终的宗族ID
+        const finalClanId = await handleClanOperations(
+          customer.companyName,
+          cleanData.clanId,
+          previousClanId,
+          selectedClanName
+        )
+
+        // 将宗族ID设置到客户数据中
+        if (finalClanId !== null) {
+          cleanData.clanId = finalClanId
+          // 同时更新状态，以便界面显示正确
+          setSelectedClanId(finalClanId)
+        }
+
         await updateCustomer(customer.id, cleanData as Partial<Customer>)
+
         if (!isAutoSave) {
           message.success('保存成功')
         }
@@ -1007,6 +1146,134 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     setActualResponsibleItems(newItems)
   }
 
+  // 宗族相关处理函数
+  const handleClanSearch = (searchText: string) => {
+    setClanSearchText(searchText)
+    setClanPage(1)
+  }
+
+  const handleClanSelect = (value: string, option: any) => {
+    const clanId = option?.key
+    // 忽略loading和加载更多选项的选择
+    if (clanId && clanId !== -1 && clanId !== -2) {
+      setSelectedClanId(parseInt(clanId))
+      setSelectedClanName(value)
+      form.setFieldValue('clanId', parseInt(clanId))
+    }
+  }
+
+  const handleClanChange = (value: string) => {
+    setSelectedClanName(value)
+    if (!value) {
+      setSelectedClanId(null)
+      form.setFieldValue('clanId', null)
+    }
+  }
+
+  const handleClanDropdownVisibleChange = (open: boolean) => {
+    // 下拉框打开时不自动加载，改为滚动加载
+  }
+
+  // 处理AutoComplete下拉框滚动加载
+  const handleClanDropdownScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { target } = e
+    const element = target as HTMLElement
+    const { scrollTop, scrollHeight, clientHeight } = element
+
+    console.log('📜 滚动事件:', {
+      scrollTop,
+      scrollHeight,
+      clientHeight,
+      isAtBottom: scrollHeight - scrollTop === clientHeight,
+      hasMoreClans,
+      clanListLoading,
+      clanPage,
+    })
+
+    // 当滚动到底部时加载更多数据
+    if (scrollHeight - scrollTop === clientHeight && hasMoreClans && !clanListLoading) {
+      console.log('🔄 触发加载下一页:', clanPage + 1)
+      setClanPage(prev => prev + 1)
+    }
+  }
+
+  // 删除宗族处理函数
+  const handleDeleteClan = async (clanId: number, clanName: string, event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    Modal.confirm({
+      title: '确认删除宗族',
+      content: `确定要删除宗族 "${clanName}" 吗？此操作不可恢复。`,
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          const success = await deleteClan(clanId)
+          if (success) {
+            // 删除成功后刷新宗族列表
+            setClanOptions(prev => prev.filter(clan => clan.id !== clanId))
+            // 如果删除的是当前选中的宗族，清空选择
+            if (selectedClanId === clanId) {
+              setSelectedClanId(null)
+              setSelectedClanName('')
+              form.setFieldValue('clanId', null)
+            }
+          }
+        } catch (error) {
+          console.error('删除宗族失败:', error)
+        }
+      },
+    })
+  }
+
+  // 处理宗族相关操作的核心函数，返回最终的宗族ID
+  const handleClanOperations = async (
+    companyName: string,
+    newClanId?: number | null,
+    oldClanId?: number | null,
+    clanName?: string
+  ): Promise<number | null> => {
+    try {
+      // 1. 如果从之前的宗族改变，需要从旧宗族中移除该成员
+      if (oldClanId && oldClanId !== newClanId) {
+        // 导入removeMemberFromClan API
+        const { removeMemberFromClan } = await import('../../api/clan')
+        const response = await removeMemberFromClan(oldClanId, companyName)
+        if (response && response.code === 0) {
+          const successMsg = (response.data as any)?.message || response.message || '移除成员成功'
+          message.success(successMsg)
+        }
+      }
+
+      // 2. 处理宗族选择
+      if (newClanId) {
+        // 添加到现有宗族
+        await addMemberToClan(newClanId, companyName)
+        return newClanId
+      } else if (clanName && !newClanId) {
+        // 如果有宗族名称但没有ID，说明是新输入的宗族，需要创建
+        const createdClan = await createClan({
+          clanName: clanName,
+          memberList: [companyName],
+        })
+        return createdClan?.id || null
+      }
+
+      return null
+    } catch (error: any) {
+      console.error('宗族操作失败:', error)
+      const errorMsg =
+        error.response?.data?.data?.message ||
+        error.response?.data?.message ||
+        error.message ||
+        '宗族操作失败'
+      message.error(errorMsg)
+      throw error // 重新抛出错误，让调用方处理
+    }
+  }
+
   const tabs: TabsProps['items'] = [
     {
       key: 'basic',
@@ -1184,13 +1451,83 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input.TextArea rows={2} />
           </Form.Item>
 
-          <Form.Item
-            name="affiliatedEnterprises"
-            label="同宗企业"
-            className="col-span-1 md:col-span-2"
-          >
-            <Input.TextArea rows={2} />
+          <Form.Item label="所属宗族">
+            <AutoComplete
+              value={selectedClanName}
+              placeholder="请选择或输入宗族名称"
+              allowClear
+              disabled={mode === 'view'}
+              onSearch={handleClanSearch}
+              onSelect={handleClanSelect}
+              onChange={handleClanChange}
+              onDropdownVisibleChange={handleClanDropdownVisibleChange}
+              options={(() => {
+                const options = clanOptions.map(clan => ({
+                  key: clan.id,
+                  value: clan.clanName,
+                  label: (
+                    <div className="flex items-center justify-between w-full group">
+                      <span className="flex-1">{clan.clanName}</span>
+                      {(!clan.memberList || clan.memberList.length === 0) && mode !== 'view' && (
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                          onClick={e => handleDeleteClan(clan.id, clan.clanName, e)}
+                        />
+                      )}
+                    </div>
+                  ),
+                }))
+
+                return options
+              })()}
+              filterOption={false}
+              dropdownStyle={{ maxHeight: '300px' }}
+              onPopupScroll={handleClanDropdownScroll}
+              dropdownRender={(menu: React.ReactNode) => (
+                <>
+                  {menu}
+                  {/* 如果正在加载且还有更多数据，显示loading */}
+                  {clanListLoading && hasMoreClans && (
+                    <div className="flex items-center justify-center py-2 text-gray-500 border-t border-gray-200">
+                      <LoadingOutlined className="mr-2" />
+                      <span>加载中...</span>
+                    </div>
+                  )}
+                </>
+              )}
+            />
           </Form.Item>
+
+          {/* 隐藏的clanId字段 */}
+          <Form.Item name="clanId" style={{ display: 'none' }}>
+            <Input />
+          </Form.Item>
+
+          {/* 同宗企业成员列表显示 */}
+          {mode !== 'add' && selectedClan && (
+            <Form.Item label="同宗企业成员" className="col-span-1 md:col-span-2">
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 min-h-[60px]">
+                {selectedClan.memberList && selectedClan.memberList.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedClan.memberList.map((member: string, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+                      >
+                        {member}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-500">暂无成员</span>
+                )}
+              </div>
+            </Form.Item>
+          )}
 
           <Form.Item name="industryCategory" label="行业大类">
             <Input />
