@@ -63,7 +63,7 @@ export const useExpenseNotification = () => {
         await createNotification({
           title: '喜报',
           content,
-          type: 'system',
+          type: '费用',
           targetRoles: ['admin'],
         })
 

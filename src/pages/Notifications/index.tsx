@@ -221,9 +221,21 @@ const NotificationsPage: React.FC = () => {
       dataIndex: 'type',
       key: 'type',
       width: 100,
-      render: (type: string) => (
-        <Tag color={type === 'system' ? 'blue' : 'green'}>{type === 'system' ? '系统' : type}</Tag>
-      ),
+      render: (type: string) => {
+        let color = 'default'
+        let displayText = type || '系统'
+
+        if (type === '客户') {
+          color = 'green'
+        } else if (type === '费用') {
+          color = 'yellow'
+        } else if (type === 'system') {
+          color = 'blue'
+          displayText = '系统'
+        }
+
+        return <Tag color={color}>{displayText}</Tag>
+      },
     },
     {
       title: '时间',

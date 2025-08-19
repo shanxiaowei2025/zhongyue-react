@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Badge, Dropdown, Button, List, Typography, Empty, Spin, Tooltip } from 'antd'
+import { Badge, Dropdown, Button, List, Typography, Empty, Spin, Tooltip, Tag } from 'antd'
 import { BellOutlined, CheckOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router-dom'
@@ -123,7 +123,13 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ className }) => {
             renderItem={notification => (
               <List.Item
                 className={`px-3 py-2 cursor-pointer hover:bg-gray-50 ${
-                  notification.readStatus === 0 ? 'bg-blue-50' : ''
+                  notification.readStatus === 0
+                    ? notification.type === '客户'
+                      ? 'bg-green-50'
+                      : notification.type === '费用'
+                        ? 'bg-yellow-50'
+                        : 'bg-blue-50'
+                    : ''
                 }`}
                 onClick={() => handleViewNotification(notification)}
                 actions={[
@@ -157,6 +163,18 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ className }) => {
                       >
                         {notification.title}
                       </Text>
+                      {/* 通知类型标签 */}
+                      <Tag
+                        color={
+                          notification.type === '客户'
+                            ? 'success'
+                            : notification.type === '费用'
+                              ? 'warning'
+                              : 'processing'
+                        }
+                      >
+                        {notification.type || '系统'}
+                      </Tag>
                       {notification.readStatus === 0 && (
                         <div className="w-2 h-2 bg-blue-500 rounded-full" />
                       )}

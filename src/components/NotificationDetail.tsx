@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, Button, Typography, Badge, message } from 'antd'
+import { Modal, Button, Typography, Badge, message, Tag } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { Notification } from '../types/notification'
@@ -115,9 +115,17 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
 
           <div>
             <Text type="secondary">类型：</Text>
-            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs">
-              {notification.type === 'system' ? '系统通知' : notification.type}
-            </span>
+            <Tag
+              color={
+                notification.type === '客户'
+                  ? 'green'
+                  : notification.type === '费用'
+                    ? 'yellow'
+                    : 'blue'
+              }
+            >
+              {notification.type === 'system' ? '系统通知' : notification.type || '系统'}
+            </Tag>
           </div>
 
           <div>

@@ -7,6 +7,8 @@ import {
   updateCustomer as apiUpdateCustomer,
   deleteCustomer as apiDeleteCustomer,
 } from '../api/customer'
+import { createNotification } from '../api/notification'
+import { useAuthStore } from '../store/auth'
 import type { Customer, PaginationParams } from '../types'
 
 /**
@@ -126,6 +128,59 @@ export const useCustomerList = (params: PaginationParams) => {
 }
 
 /**
+ * 检测会计字段变化并发送通知
+ */
+const sendAccountantAssignmentNotification = async (
+  oldCustomer: Customer | undefined,
+  newData: Partial<Customer>,
+  currentUser: any
+) => {
+  try {
+    const notifications = []
+
+    // 检查顾问会计字段变化
+    if (
+      newData.consultantAccountant &&
+      newData.consultantAccountant !== (oldCustomer?.consultantAccountant || '')
+    ) {
+      notifications.push({
+        title: '客户分配',
+        content: `${newData.companyName || '未知公司'}的「顾问会计」已由${currentUser?.realName || currentUser?.username || '未知用户'}分配为您`,
+        type: '客户',
+        targetUserNames: [newData.consultantAccountant],
+      })
+    }
+
+    // 检查记账会计字段变化
+    if (
+      newData.bookkeepingAccountant &&
+      newData.bookkeepingAccountant !== (oldCustomer?.bookkeepingAccountant || '')
+    ) {
+      notifications.push({
+        title: '客户分配',
+        content: `${newData.companyName || '未知公司'}的「记账会计」已由${currentUser?.realName || currentUser?.username || '未知用户'}分配为您`,
+        type: '客户',
+        targetUserNames: [newData.bookkeepingAccountant],
+      })
+    }
+
+    // 发送所有通知
+    for (const notification of notifications) {
+      try {
+        await createNotification(notification)
+        console.log('会计分配通知发送成功:', notification)
+      } catch (error) {
+        console.error('发送会计分配通知失败:', error)
+        // 通知发送失败不影响主要业务流程
+      }
+    }
+  } catch (error) {
+    console.error('处理会计分配通知时出错:', error)
+    // 通知处理失败不影响主要业务流程
+  }
+}
+
+/**
  * 使用SWR获取客户详情的钩子
  */
 export const useCustomerDetail = (id?: number | null) => {
@@ -161,6 +216,12 @@ export const useCustomerDetail = (id?: number | null) => {
       const response = await apiUpdateCustomer(customerId, data)
 
       if (response && response.code === 0) {
+        // 获取当前用户信息用于发送通知
+        const currentUser = useAuthStore.getState().user
+
+        // 发送会计分配通知
+        await sendAccountantAssignmentNotification(customer, data, currentUser)
+
         // 刷新详情和列表
         await refreshCustomerDetail()
         await mutate(
@@ -192,6 +253,12 @@ export const useCustomerDetail = (id?: number | null) => {
       const response = await apiCreateCustomer(data)
 
       if (response && response.code === 0) {
+        // 获取当前用户信息用于发送通知
+        const currentUser = useAuthStore.getState().user
+
+        // 发送会计分配通知（创建时，oldCustomer为undefined）
+        await sendAccountantAssignmentNotification(undefined, data, currentUser)
+
         message.success('客户创建成功')
 
         // 刷新列表

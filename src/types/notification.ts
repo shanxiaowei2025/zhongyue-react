@@ -19,6 +19,7 @@ export interface CreateNotificationDto {
   content: string
   type?: string
   targetUsers?: number[]
+  targetUserNames?: string[]
   targetRoles?: string[]
   targetDepts?: number[]
 }
