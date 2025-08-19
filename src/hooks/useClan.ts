@@ -104,18 +104,46 @@ export const useClanDetail = (id?: number | null) => {
   const createClan = async (data: { clanName: string; memberList?: string[] }) => {
     try {
       const response = await apiCreateClan(data)
+      console.log('创建宗族API响应:', response) // 调试信息
+
       if (response && response.code === 0) {
-        // 显示后端内层返回的消息，优先使用内层的message
-        const successMsg = (response.data as any)?.message || response.message || '创建宗族成功'
-        message.success(successMsg)
+        // 尝试多种可能的响应结构
+        let clanData = null
 
-        // 刷新宗族列表
-        await mutate((key: any) => typeof key === 'string' && key.startsWith('/clan'), undefined, {
-          revalidate: true,
-        })
+        // 结构1: response.data.data (您提供的格式)
+        if (response.data && typeof response.data === 'object' && (response.data as any).data) {
+          clanData = (response.data as any).data
+        }
+        // 结构2: response.data (直接包含宗族数据)
+        else if (response.data && typeof response.data === 'object' && (response.data as any).id) {
+          clanData = response.data
+        }
 
-        return response.data
+        console.log('提取的宗族数据:', clanData) // 调试信息
+
+        if (clanData && clanData.id) {
+          // 显示成功消息
+          const successMsg = clanData.message || response.message || '创建宗族成功'
+          message.success(successMsg)
+
+          // 刷新宗族列表
+          await mutate(
+            (key: any) => typeof key === 'string' && key.startsWith('/clan'),
+            undefined,
+            {
+              revalidate: true,
+            }
+          )
+
+          // 返回宗族数据
+          console.log('返回的宗族数据:', clanData) // 调试信息
+          return clanData
+        } else {
+          console.error('无法提取有效的宗族数据，response:', response) // 调试信息
+          throw new Error('宗族数据格式错误')
+        }
       } else {
+        console.error('外层响应码错误，response:', response) // 调试信息
         throw new Error(response?.message || '创建失败')
       }
     } catch (error: any) {

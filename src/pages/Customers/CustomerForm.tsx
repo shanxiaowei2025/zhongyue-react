@@ -729,19 +729,26 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       } = dataWithImages
 
       if (mode === 'add') {
-        // 先处理宗族相关操作，获取最终的宗族ID
-        const finalClanId = await handleClanOperations(
-          values.companyName,
-          cleanData.clanId,
-          null,
-          selectedClanName
-        )
+        // 检查宗族字段是否真的需要处理
+        const needsClanOperation = cleanData.clanId || selectedClanName // 有宗族ID或新输入的宗族名称
 
-        // 将宗族ID设置到客户数据中
-        if (finalClanId) {
-          cleanData.clanId = finalClanId
-          // 同时更新状态，以便界面显示正确
-          setSelectedClanId(finalClanId)
+        // 只有在需要时才执行宗族操作
+        if (needsClanOperation) {
+          const finalClanId = await handleClanOperations(
+            values.companyName,
+            cleanData.clanId,
+            null,
+            selectedClanName
+          )
+
+          // 将宗族ID设置到客户数据中
+          if (finalClanId) {
+            cleanData.clanId = finalClanId
+            // 同时更新状态，以便界面显示正确
+            setSelectedClanId(finalClanId)
+            // 同步更新表单字段值，确保数据一致性
+            form.setFieldValue('clanId', finalClanId)
+          }
         }
 
         const newCustomer = await createCustomer(cleanData as Partial<Customer>)
@@ -766,19 +773,27 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           cleanData.licenseExpiryDate = dayjs(cleanData.licenseExpiryDate).format('YYYY-MM-DD')
         }
 
-        // 先处理宗族相关操作，获取最终的宗族ID
-        const finalClanId = await handleClanOperations(
-          customer.companyName,
-          cleanData.clanId,
-          previousClanId,
-          selectedClanName
-        )
+        // 检查宗族字段是否真的发生了变化
+        const clanFieldChanged =
+          cleanData.clanId !== previousClanId || (selectedClanName && !cleanData.clanId) // 新输入的宗族名称
 
-        // 将宗族ID设置到客户数据中
-        if (finalClanId !== null) {
-          cleanData.clanId = finalClanId
-          // 同时更新状态，以便界面显示正确
-          setSelectedClanId(finalClanId)
+        // 只有在宗族字段真正发生变化时才执行宗族操作
+        if (clanFieldChanged) {
+          const finalClanId = await handleClanOperations(
+            customer.companyName,
+            cleanData.clanId,
+            previousClanId,
+            selectedClanName
+          )
+
+          // 将宗族ID设置到客户数据中
+          if (finalClanId !== null) {
+            cleanData.clanId = finalClanId
+            // 同时更新状态，以便界面显示正确
+            setSelectedClanId(finalClanId)
+            // 同步更新表单字段值，确保数据一致性
+            form.setFieldValue('clanId', finalClanId)
+          }
         }
 
         await updateCustomer(customer.id, cleanData as Partial<Customer>)
@@ -1165,6 +1180,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const handleClanChange = (value: string) => {
     setSelectedClanName(value)
     if (!value) {
+      setSelectedClanId(null)
+      form.setFieldValue('clanId', null)
+    } else {
+      // 如果用户输入了新的宗族名称，清空宗族ID（因为这是新宗族）
       setSelectedClanId(null)
       form.setFieldValue('clanId', null)
     }
