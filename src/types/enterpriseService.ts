@@ -79,6 +79,7 @@ export interface ExpenseContribution {
 export interface ExpenseContributionQueryParams {
   companyName?: string
   unifiedSocialCreditCode?: string
+  year?: string
   [key: string]: any
 }
 

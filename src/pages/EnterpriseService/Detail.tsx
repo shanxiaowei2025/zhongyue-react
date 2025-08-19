@@ -14,6 +14,7 @@ import {
   List,
   Space,
   Divider,
+  DatePicker,
 } from 'antd'
 import {
   ArrowLeftOutlined,
@@ -59,6 +60,7 @@ const EnterpriseDetail: React.FC = () => {
   const navigate = useNavigate()
 
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null)
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined)
 
   // 生成查询参数
   const serviceHistoryParams = enterprise
@@ -69,8 +71,14 @@ const EnterpriseDetail: React.FC = () => {
 
   const expenseContributionParams = enterprise
     ? enterprise.unifiedSocialCreditCode
-      ? { unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode }
-      : { companyName: enterprise.companyName }
+      ? {
+          unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+          ...(selectedYear && { year: selectedYear }),
+        }
+      : {
+          companyName: enterprise.companyName,
+          ...(selectedYear && { year: selectedYear }),
+        }
     : null
 
   // 使用hooks获取数据
@@ -129,6 +137,15 @@ const EnterpriseDetail: React.FC = () => {
     // 跳转到费用管理页面并自动打开收据模态框
     // 使用receiptNo作为查询参数，费用管理页面会根据此参数自动打开模态框
     navigate(`/expenses?openReceipt=${receiptNo}`)
+  }
+
+  // 处理年份选择
+  const handleYearChange = (date: dayjs.Dayjs | null) => {
+    if (date) {
+      setSelectedYear(date.format('YYYY'))
+    } else {
+      setSelectedYear(undefined)
+    }
   }
 
   // 格式化字段值
@@ -288,13 +305,26 @@ const EnterpriseDetail: React.FC = () => {
         <Col xs={24} lg={12}>
           <Card
             title={
-              <span>
-                <DollarCircleOutlined style={{ marginRight: 8 }} />
-                费用贡献
-                <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                  (点击收据编号可查看收据详情)
-                </Text>
-              </span>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span>
+                  <DollarCircleOutlined style={{ marginRight: 8 }} />
+                  费用贡献
+                  <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+                    (点击收据编号可查看收据详情)
+                  </Text>
+                </span>
+                <DatePicker
+                  picker="year"
+                  placeholder="选择年份"
+                  allowClear
+                  value={selectedYear ? dayjs(selectedYear) : null}
+                  onChange={handleYearChange}
+                  style={{ width: 120 }}
+                  size="small"
+                />
+              </div>
             }
             style={{ height: 600, overflow: 'auto' }}
           >
