@@ -22,21 +22,18 @@ class WebSocketService {
   // 获取WebSocket服务器地址
   private getServerUrl(): string {
     const hostname = window.location.hostname
-    const port = window.location.port
     const protocol = window.location.protocol
 
     // 开发环境：使用localhost直连WebSocket服务器
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'ws://127.0.0.1:3000/ws'
+      return 'ws://127.0.0.1:3000'
     }
 
-    // 生产环境：使用专用的WebSocket TCP端口3001
+    // 生产环境：使用相对路径，通过Nginx代理转发
     if (protocol === 'https:') {
-      // HTTPS环境下使用WSS协议，通过专用端口连接
-      return `wss://${hostname}:3001/ws`
+      return `wss://${hostname}`
     } else {
-      // HTTP环境下使用WS协议
-      return `ws://${hostname}${port ? `:${port}` : ''}/ws`
+      return `ws://${hostname}`
     }
   }
 
@@ -58,7 +55,17 @@ class WebSocketService {
 
     console.log('正在连接WebSocket服务器:', serverUrl)
 
-    this.socket = io(serverUrl, {
+    const socketOptions: {
+      auth: { token: string }
+      transports: string[]
+      timeout: number
+      forceNew: boolean
+      reconnection: boolean
+      reconnectionAttempts: number
+      reconnectionDelay: number
+      reconnectionDelayMax: number
+      path?: string
+    } = {
       auth: {
         token: token,
       },
@@ -69,7 +76,11 @@ class WebSocketService {
       reconnectionAttempts: 3, // 减少最大重连次数
       reconnectionDelay: 2000, // 增加重连延迟到2秒
       reconnectionDelayMax: 10000, // 增加最大重连延迟到10秒
-    })
+    }
+
+    // 后端使用 /ws 命名空间，但Socket.IO路径仍是默认的 /socket.io
+    // 需要连接到 /ws 命名空间
+    this.socket = io(`${serverUrl}/ws`, socketOptions)
 
     this.setupEventListeners()
   }
