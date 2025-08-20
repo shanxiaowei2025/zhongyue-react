@@ -30,10 +30,10 @@ class WebSocketService {
       return 'ws://127.0.0.1:3000/ws'
     }
 
-    // 生产环境：根据当前协议确定WebSocket协议
+    // 生产环境：使用专用的WebSocket TCP端口3001
     if (protocol === 'https:') {
-      // HTTPS环境下使用WSS协议，通过当前域名连接
-      return `wss://${hostname}${port ? `:${port}` : ''}/ws`
+      // HTTPS环境下使用WSS协议，通过专用端口连接
+      return `wss://${hostname}:3001/ws`
     } else {
       // HTTP环境下使用WS协议
       return `ws://${hostname}${port ? `:${port}` : ''}/ws`
