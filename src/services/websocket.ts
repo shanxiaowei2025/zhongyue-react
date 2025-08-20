@@ -21,35 +21,23 @@ class WebSocketService {
 
   // 获取WebSocket服务器地址
   private getServerUrl(): string {
-    // 优先使用 VITE_API_SERVER，如果不存在则使用 VITE_API_BASE_URL
-    const apiServer = import.meta.env.VITE_API_SERVER
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+    const hostname = window.location.hostname
+    const port = window.location.port
+    const protocol = window.location.protocol
 
-    let baseUrl: string
-
-    if (apiServer) {
-      // 如果有 VITE_API_SERVER，直接使用（移除末尾的斜杠）
-      baseUrl = apiServer.replace(/\/$/, '')
-    } else if (apiBaseUrl && apiBaseUrl.startsWith('http')) {
-      // 如果 VITE_API_BASE_URL 是完整URL，直接使用
-      baseUrl = apiBaseUrl.replace(/\/api$/, '')
-    } else {
-      // 在生产环境中，使用当前域名（通过Nginx代理）
-      // 在开发环境中，使用localhost:3000
-      const protocol = window.location.protocol
-      const hostname = window.location.hostname
-      const port = window.location.port
-
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        // 开发环境：使用localhost:3000
-        baseUrl = `${protocol}//${hostname}:3000`
-      } else {
-        // 生产环境：使用当前域名（通过Nginx代理到后端）
-        baseUrl = `${protocol}//${hostname}${port ? `:${port}` : ''}`
-      }
+    // 开发环境：使用localhost直连WebSocket服务器
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'ws://127.0.0.1:3000/ws'
     }
 
-    return `${baseUrl}/ws`
+    // 生产环境：根据当前协议确定WebSocket协议
+    if (protocol === 'https:') {
+      // HTTPS环境下使用WSS协议，通过当前域名连接
+      return `wss://${hostname}${port ? `:${port}` : ''}/ws`
+    } else {
+      // HTTP环境下使用WS协议
+      return `ws://${hostname}${port ? `:${port}` : ''}/ws`
+    }
   }
 
   // 连接WebSocket
