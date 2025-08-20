@@ -58,9 +58,9 @@ RUN echo 'server { \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
-    # WebSocket代理配置 \
-    location /ws { \
-        proxy_pass http://api:3000/ws; \
+    # Socket.IO WebSocket代理配置 \
+    location /socket.io/ { \
+        proxy_pass http://api:3000/socket.io/; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
