@@ -36,7 +36,6 @@ declare global {
 
 const { Title } = Typography
 const { Option } = Select
-const { TextArea } = Input
 
 // 预定义选项
 const employeeTypeOptions = [
@@ -111,15 +110,8 @@ const EmployeeForm: React.FC = () => {
 
   // 表单状态管理
   const currentPath = isEdit ? `/employees/edit/${id}` : '/employees/create'
-  const {
-    updateFormField,
-    batchUpdateFormData,
-    clearFormData,
-    clearAllCache,
-    getFormData,
-    hasFormData,
-    setRestoring,
-  } = useEmployeeFormStore()
+  const { batchUpdateFormData, clearFormData, getFormData, hasFormData, setRestoring } =
+    useEmployeeFormStore()
 
   // 获取部门数据
   const { departments, rawDepartments } = useDepartments()
@@ -167,7 +159,7 @@ const EmployeeForm: React.FC = () => {
             try {
               const date = dayjs(dateValue)
               return date.isValid() ? date : undefined
-            } catch (error) {
+            } catch {
               console.warn('Invalid date string:', dateValue)
               return undefined
             }
@@ -177,7 +169,7 @@ const EmployeeForm: React.FC = () => {
           try {
             const date = dayjs(dateValue)
             return date.isValid() ? date : undefined
-          } catch (error) {
+          } catch {
             console.warn('Invalid date value:', dateValue)
             return undefined
           }
@@ -220,7 +212,7 @@ const EmployeeForm: React.FC = () => {
             try {
               const date = dayjs(dateValue)
               return date.isValid() ? date : undefined
-            } catch (error) {
+            } catch {
               console.warn('Invalid date string:', dateValue)
               return undefined
             }
@@ -230,7 +222,7 @@ const EmployeeForm: React.FC = () => {
           try {
             const date = dayjs(dateValue)
             return date.isValid() ? date : undefined
-          } catch (error) {
+          } catch {
             console.warn('Invalid date value:', dateValue)
             return undefined
           }
@@ -578,7 +570,7 @@ const EmployeeForm: React.FC = () => {
                     min={0}
                     formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value?: string) => {
-                      const parsed = parseFloat(value?.replace(/\¥\s?|(,*)/g, '') || '0')
+                      const parsed = parseFloat(value?.replace(/¥\s?|(,*)/g, '') || '0')
                       return parsed || 0
                     }}
                   />

@@ -1,9 +1,7 @@
 import React from 'react'
-import { Tag } from 'antd'
-import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
-import { formatText, formatCurrency, formatDate, formatFeeAmount } from '../../utils/formatUtils'
+import { formatText, formatDate, formatFeeAmount } from '../../utils/formatUtils'
 import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import './ProductServiceAgreement.css'
 
@@ -262,7 +260,7 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
 
     return (
       <div className="service-items-container">
-        {allPossibleItems.map((possibleItem, index) => {
+        {allPossibleItems.map(possibleItem => {
           const isSelected = isItemSelected(items, possibleItem.itemKey)
           const amount = getItemAmount(items, possibleItem.itemKey)
           const dates = getItemDates(items, possibleItem.itemKey)

@@ -29,7 +29,7 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
     try {
       await navigator.clipboard.writeText(notification.content)
       message.success('通知内容已复制到剪贴板')
-    } catch (error) {
+    } catch {
       message.error('复制失败，请手动选择复制')
     }
   }
@@ -45,7 +45,7 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
         // 关闭模态框
         onClose()
       }
-    } catch (error) {
+    } catch {
       // 错误处理已在onMarkAsRead中处理
     } finally {
       setLoading(false)

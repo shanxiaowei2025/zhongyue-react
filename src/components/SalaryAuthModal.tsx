@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Modal, Form, Input, Button, message, Alert, Space } from 'antd'
+import { Modal, Form, Input, Button, Alert, Space } from 'antd'
 import { LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons'
 import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
 import { salaryAuthApi } from '../api/salaryAuth'

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, message, Switch, Card, Tabs, Tooltip, Spin } from 'antd'
-import { ReloadOutlined, QuestionCircleOutlined } from '@ant-design/icons'
+import { Table, message, Switch, Card, Tabs, Tooltip, Spin } from 'antd'
+import { QuestionCircleOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { RolePermissionMatrix, Permission } from '../../types'
 import { usePermission, usePermissionManagement } from '../../hooks/usePermission'
@@ -151,7 +151,7 @@ const Permissions = () => {
         dataIndex: ['permissions', permission.name],
         key: permission.name,
         width: 140,
-        align: 'center' as 'center',
+        align: 'center' as const,
         render: (value: boolean, record: RolePermissionMatrix) => (
           <Switch
             checked={!!record.permissions?.[permission.name]}

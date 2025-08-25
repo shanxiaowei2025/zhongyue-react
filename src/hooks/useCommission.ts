@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import useSWR from 'swr'
 import { message } from 'antd'
 import { commissionApi } from '../api/commission'

@@ -15,7 +15,6 @@ import dayjs from 'dayjs'
 import { useResponsibleInspectionDetail } from '../../hooks/useFinancialSelfInspection'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
-  FinancialSelfInspection,
   RectificationRecordItem,
   ApprovalRecordItem,
   RejectRecordItem,
@@ -23,7 +22,7 @@ import type {
   ReviewerRejectRecordItem,
 } from '../../types/financialSelfInspection'
 
-const { Title, Text } = Typography
+const { Text } = Typography
 
 // 时间线记录项类型
 interface TimelineRecord {

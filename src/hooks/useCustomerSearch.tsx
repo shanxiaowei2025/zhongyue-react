@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react'
-import { message } from 'antd'
 import { searchCustomers } from '../api/enterpriseService'
 import type { CustomerSearchOption, Enterprise } from '../types/enterpriseService'
 import { useDebounce } from './useDebounce'

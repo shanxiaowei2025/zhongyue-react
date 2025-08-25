@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 import useSWR from 'swr'
 import { message } from 'antd'
 import {
@@ -16,7 +16,6 @@ import {
 } from '../store/salaryIntegratedStore'
 import type {
   SalaryRecord,
-  RelatedData,
   CreateSalaryDto,
   UpdateSalaryDto,
   ImportResult,
@@ -42,12 +41,7 @@ export const useSalaryIntegrated = () => {
   } = useSalaryIntegratedActions()
 
   // 获取月度数据
-  const {
-    data: monthlyData,
-    isLoading: isMonthlyLoading,
-    isValidating: isMonthlyValidating,
-    mutate: mutateMonthly,
-  } = useSWR(
+  const { isLoading: isMonthlyLoading, mutate: mutateMonthly } = useSWR(
     getSWRKeys.monthlyData(selectedYearMonth),
     () => integratedApi.loadMonthlyData(selectedYearMonth),
     {
@@ -76,12 +70,7 @@ export const useSalaryIntegrated = () => {
   )
 
   // 获取选中员工的关联数据
-  const {
-    data: employeeRelatedData,
-    isLoading: isRelatedLoading,
-    isValidating: isRelatedValidating,
-    mutate: mutateRelated,
-  } = useSWR(
+  const { isLoading: isRelatedLoading, mutate: mutateRelated } = useSWR(
     selectedEmployee ? getSWRKeys.relatedData(selectedEmployee.name, selectedYearMonth) : null,
     () => integratedApi.loadEmployeeRelatedData(selectedEmployee!.name, selectedYearMonth),
     {

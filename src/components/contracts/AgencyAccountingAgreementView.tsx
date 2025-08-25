@@ -1,10 +1,8 @@
 import React from 'react'
-import { Tag, Typography } from 'antd'
 import dayjs from 'dayjs'
-import { numberToChinese } from '../../utils/numberToChinese'
 import { formatText, formatAgencyFee, formatDate } from '../../utils/formatUtils'
 import { getAgencySignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
-import type { Contract, ContractStatus } from '../../types/contract'
+import type { Contract } from '../../types/contract'
 import styles from './AgencyAccountingAgreementView.module.css'
 
 // 获取乙方盖章图片
@@ -53,42 +51,9 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
     accountingSoftwareFee,
     invoicingSoftwareFee,
     accountBookFee,
-    paymentMethod,
-    contractStatus,
-    contractSignature,
     partyASignDate,
     partyBSignDate,
   } = contractData
-
-  // 合同状态标签
-  const getStatusTag = (status?: ContractStatus) => {
-    switch (status) {
-      case '0':
-        return <Tag color="default">未签署</Tag>
-      case '1':
-        return <Tag color="success">已签署</Tag>
-      case '2':
-        return <Tag color="error">已终止</Tag>
-      default:
-        return <Tag color="default">未知</Tag>
-    }
-  }
-
-  // 计算大写金额
-  const totalFeeInWords = React.useMemo(() => {
-    if (!totalAgencyAccountingFee) return ''
-
-    // 确保转换为数字类型
-    const numAmount =
-      typeof totalAgencyAccountingFee === 'string'
-        ? parseFloat(totalAgencyAccountingFee)
-        : totalAgencyAccountingFee
-
-    // 检查是否为有效数字
-    if (isNaN(numAmount) || !isFinite(numAmount) || numAmount <= 0) return ''
-
-    return numberToChinese(numAmount)
-  }, [totalAgencyAccountingFee])
 
   // 获取签署方配置
   const config = signatory ? getAgencySignatoryConfig(signatory) : null
@@ -115,7 +80,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
     return (
       <div className={`${styles.serviceCheckboxes} ${styles.viewMode}`}>
         {DECLARATION_SERVICE_OPTIONS.map((option, index) => {
-          const isSelected = selectedServiceMap.hasOwnProperty(option.value)
+          const isSelected = Object.prototype.hasOwnProperty.call(selectedServiceMap, option.value)
 
           return (
             <div key={index} className={styles.serviceItem}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Card, Table, Button, Space, Input, Form, Row, Col, Tag, Tooltip, Typography } from 'antd'
+import { Card, Table, Button, Space, Input, Form, Row, Col, Tooltip } from 'antd'
 import { SearchOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
@@ -7,8 +7,6 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import { useEnterpriseList } from '../../hooks/useEnterpriseService'
 import type { Enterprise, EnterpriseQueryParams } from '../../types/enterpriseService'
-
-const { Title } = Typography
 
 // 智能文本渲染组件 - 只在文本被截断时显示tooltip
 const EllipsisText: React.FC<{

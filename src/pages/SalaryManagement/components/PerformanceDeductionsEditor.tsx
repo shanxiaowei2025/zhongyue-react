@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table, Input, InputNumber, Typography } from 'antd'
+import { Table, InputNumber, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 
 const { Text } = Typography

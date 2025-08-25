@@ -1,6 +1,6 @@
 import React from 'react'
 import { Table, Typography } from 'antd'
-import { CUSTOMER_LEVEL_TIPS, type CustomerLevelTip } from '../utils/customerLevelTips'
+import { CUSTOMER_LEVEL_TIPS } from '../utils/customerLevelTips'
 
 const { Title, Text } = Typography
 
@@ -149,14 +149,8 @@ const CustomerLevelTipComponent: React.FC<CustomerLevelTipProps> = ({ level }) =
         bordered
         style={{ fontSize: '12px' }}
         scroll={{ y: level ? undefined : 400 }}
-        rowClassName={(record, index) => {
+        rowClassName={record => {
           const levelGroup = record.level.charAt(0)
-          const colorMap: Record<string, string> = {
-            A: 'rgba(24, 144, 255, 0.05)', // 蓝色背景
-            B: 'rgba(82, 196, 26, 0.05)', // 绿色背景
-            C: 'rgba(250, 140, 22, 0.05)', // 橙色背景
-            D: 'rgba(245, 34, 45, 0.05)', // 红色背景
-          }
           return levelGroup ? `customer-level-${levelGroup.toLowerCase()}` : ''
         }}
       />

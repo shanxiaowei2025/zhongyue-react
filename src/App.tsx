@@ -32,7 +32,6 @@ const App = () => {
   const {
     addNewNotification,
     setWebSocketConnected,
-    updateStats,
     reset: resetNotificationStore,
   } = useNotificationStore()
 

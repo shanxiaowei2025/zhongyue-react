@@ -221,7 +221,7 @@ export const socialInsuranceApi = {
         pageSize: 1,
       })
       return response.data.length > 0 ? response.data[0] : null
-    } catch (error) {
+    } catch {
       return null
     }
   },
@@ -311,7 +311,7 @@ export const subsidyApi = {
         pageSize: 1,
       })
       return response.data.length > 0 ? response.data[0] : null
-    } catch (error) {
+    } catch {
       return null
     }
   },
@@ -387,7 +387,7 @@ export const attendanceApi = {
         pageSize: 1,
       })
       return response.data.length > 0 ? response.data[0] : null
-    } catch (error) {
+    } catch {
       return null
     }
   },
@@ -469,7 +469,7 @@ export const friendCircleApi = {
         pageSize: 1,
       })
       return response.data.length > 0 ? response.data[0] : null
-    } catch (error) {
+    } catch {
       return null
     }
   },
@@ -548,7 +548,7 @@ export const depositApi = {
         pageSize: 1000, // 获取该员工所有记录
       })
       return response.data || []
-    } catch (error) {
+    } catch {
       return []
     }
   },
@@ -696,7 +696,7 @@ export const integratedApi = {
         salaryData,
         statistics,
       }
-    } catch (error) {
+    } catch {
       // 发生错误时返回空的默认数据结构
       return {
         salaryData: [],

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import {
-  Card,
   Tabs,
   Descriptions,
   Button,
@@ -11,9 +10,7 @@ import {
   message,
   Empty,
   Tag,
-  List,
   Spin,
-  Divider,
   Table,
 } from 'antd'
 import {
@@ -22,11 +19,10 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  FileTextOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+
 import dayjs from 'dayjs'
 import type { SalaryRecord, UpdateSalaryDto } from '../../../types/salaryIntegrated'
 import type { Expense } from '../../../types/expense'
@@ -87,7 +83,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       document.body.style.overflow = 'unset'
     }
   }, [fullscreenTable])
-  const navigate = useNavigate()
 
   // 安全的数值转换和格式化函数
   const toNumber = (value: any): number => {
@@ -146,7 +141,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       const company = companyMap.get(companyName)!
 
       // 遍历所有费用类型
-      Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
+      Object.entries(FEE_TYPE_MAP).forEach(([key]) => {
         const amount = toNumber((expense as any)[key])
         if (amount > 0) {
           company[key] = (company[key] || 0) + amount
@@ -155,7 +150,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       })
 
       // 遍历所有提成类型
-      Object.entries(COMMISSION_TYPE_MAP).forEach(([key, label]) => {
+      Object.entries(COMMISSION_TYPE_MAP).forEach(([key]) => {
         const amount = toNumber((expense as any)[key])
         if (amount > 0) {
           company[key] = (company[key] || 0) + amount
@@ -193,7 +188,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   }
 
   // 生成表格列定义
-  const generateTableColumns = (tableData: any[]) => {
+  const generateTableColumns = () => {
     // 基础列
     const columns = [
       {
@@ -299,29 +294,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     summary.socialInsuranceBusinessType = '-'
 
     return summary
-  }
-
-  // 格式化收费日期
-  const formatChargeDate = (dateString: string) => {
-    return dayjs(dateString).format('YYYY-MM-DD')
-  }
-
-  // 格式化金额
-  const formatAmount = (amount: string | number) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
-    if (isNaN(numAmount)) return '¥0.00'
-
-    return new Intl.NumberFormat('zh-CN', {
-      style: 'currency',
-      currency: 'CNY',
-      minimumFractionDigits: 2,
-    }).format(numAmount)
-  }
-
-  // 处理收据链接点击
-  const handleReceiptClick = (expense: Expense) => {
-    // 直接使用费用ID跳转，而不是收据编号，这样可以避免在费用页面查找不到的问题
-    navigate(`/expenses?openReceiptById=${expense.id}`)
   }
 
   if (!employee) {
@@ -746,7 +718,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                     (() => {
                       const tableData = transformToTableData(expenses)
                       const summaryRow = calculateSummaryRow(tableData)
-                      const columns = generateTableColumns(tableData)
+                      const columns = generateTableColumns()
                       const dataWithSummary = [...tableData, summaryRow]
 
                       return (
@@ -758,7 +730,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                           scroll={{ x: 'max-content' }}
                           size="small"
                           bordered
-                          rowClassName={(record, index) =>
+                          rowClassName={(_, index) =>
                             index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
                           }
                         />
@@ -844,7 +816,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
               (() => {
                 const tableData = transformToTableData(expenses)
                 const summaryRow = calculateSummaryRow(tableData)
-                const columns = generateTableColumns(tableData)
+                const columns = generateTableColumns()
                 const dataWithSummary = [...tableData, summaryRow]
 
                 return (
@@ -859,7 +831,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                     }}
                     size="middle"
                     bordered
-                    rowClassName={(record, index) =>
+                    rowClassName={(_, index) =>
                       index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
                     }
                     sticky

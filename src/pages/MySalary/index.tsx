@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Spin, message, DatePicker, Table, Tag, Modal, Space, Tooltip } from 'antd'
+import { Button, message, DatePicker, Table, Tag, Modal, Space, Tooltip } from 'antd'
 import {
   ReloadOutlined,
   CheckCircleOutlined,
@@ -123,7 +123,7 @@ const MySalary: React.FC = () => {
       setConfirmingId(record.id)
       await operations.confirmSalary(record.id)
       message.success('薪资确认成功')
-    } catch (error) {
+    } catch {
       // 错误已在hook中处理
     } finally {
       setConfirmingId(null)
@@ -138,7 +138,7 @@ const MySalary: React.FC = () => {
       await operations.confirmSalary(selectedRecord.id)
       setDetailModalVisible(false)
       message.success('薪资确认成功')
-    } catch (error) {
+    } catch {
       // 错误已在hook中处理
     } finally {
       setConfirmingId(null)

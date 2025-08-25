@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Modal, Upload, Button, message, Alert, Table, Typography } from 'antd'
-import { UploadOutlined, DownloadOutlined, InboxOutlined } from '@ant-design/icons'
+import { DownloadOutlined, InboxOutlined } from '@ant-design/icons'
 import type { UploadProps, UploadFile } from 'antd'
-import type { ImportResult, ImportFailedRecord, ImportType } from '../../../types/salaryIntegrated'
+import type { ImportResult, ImportType } from '../../../types/salaryIntegrated'
 
 const { Dragger } = Upload
-const { Text, Link } = Typography
+const { Text } = Typography
 
 interface ImportModalProps {
   visible: boolean

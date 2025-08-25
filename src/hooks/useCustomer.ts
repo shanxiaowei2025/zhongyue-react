@@ -17,7 +17,7 @@ import type { Customer, PaginationParams } from '../types'
 export const getCustomerListKey = (params: PaginationParams) => {
   const { page, pageSize, ...searchParams } = params
   const searchStr = Object.entries(searchParams)
-    .filter(([_, v]) => v !== undefined && v !== '')
+    .filter(([, v]) => v !== undefined && v !== '')
     .map(([k, v]) => `${k}=${v}`)
     .join('&')
 

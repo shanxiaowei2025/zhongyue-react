@@ -1,17 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import {
-  Card,
-  Descriptions,
-  Typography,
-  Tag,
-  Button,
-  Alert,
-  Table,
-  Spin,
-  Empty,
-  message,
-  Modal,
-} from 'antd'
+import { Card, Descriptions, Typography, Tag, Button, Alert, Table, Spin, Empty, Modal } from 'antd'
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -99,7 +87,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
   }
 
   // 安全的数值转换函数
-  const toNumber = (value: any): number => {
+  const toNumber = (value: unknown): number => {
     const num = typeof value === 'string' ? parseFloat(value) : Number(value)
     return isNaN(num) ? 0 : num
   }
@@ -133,7 +121,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
   // 数据透视转换：将费用列表转换为表格数据
   const transformToTableData = (expenseList: Expense[]) => {
     // 按公司分组
-    const companyMap = new Map<string, any>()
+    const companyMap = new Map<string, Record<string, any>>()
 
     expenseList.forEach(expense => {
       const companyName = expense.companyName
@@ -147,8 +135,8 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       const company = companyMap.get(companyName)!
 
       // 遍历所有费用类型
-      Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
-        const amount = toNumber((expense as any)[key])
+      Object.entries(FEE_TYPE_MAP).forEach(([key]) => {
+        const amount = toNumber((expense as Record<string, any>)[key])
         if (amount > 0) {
           company[key] = (company[key] || 0) + amount
           company.totalAmount += amount
@@ -156,8 +144,8 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       })
 
       // 遍历所有提成类型
-      Object.entries(COMMISSION_TYPE_MAP).forEach(([key, label]) => {
-        const amount = toNumber((expense as any)[key])
+      Object.entries(COMMISSION_TYPE_MAP).forEach(([key]) => {
+        const amount = toNumber((expense as Record<string, any>)[key])
         if (amount > 0) {
           company[key] = (company[key] || 0) + amount
           // 提成不计入总费用
@@ -194,7 +182,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
   }
 
   // 生成表格列定义
-  const generateTableColumns = (tableData: any[]) => {
+  const generateTableColumns = () => {
     // 基础列
     const columns = [
       {
@@ -210,7 +198,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
     ]
 
     // 手动构建费用类型列，在特定位置插入业务类型列
-    const feeColumns: any[] = []
+    const feeColumns: Array<Record<string, unknown>> = []
 
     Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
       // 在代理费前插入代理费业务类型列
@@ -278,8 +266,8 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
   }
 
   // 计算合计行
-  const calculateSummaryRow = (tableData: any[]) => {
-    const summary: any = {
+  const calculateSummaryRow = (tableData: Array<Record<string, any>>) => {
+    const summary: Record<string, any> = {
       companyName: '合计',
       totalAmount: 0,
     }
@@ -304,11 +292,6 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
 
   const formatYearMonth = (yearMonth: string) => {
     return dayjs(yearMonth).format('YYYY年MM月')
-  }
-
-  const calculatePerformanceDeductionTotal = (deductions?: number[]) => {
-    if (!deductions || !Array.isArray(deductions)) return 0
-    return deductions.reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0)
   }
 
   const getStatusTag = () => {
@@ -476,6 +459,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
             </Text>
           </Descriptions.Item>
           <Descriptions.Item label="银行卡/微信">
+            {/* cspell:disable-next-line */}
             {formatCurrency(detail.bankCardOrWechat)}
           </Descriptions.Item>
           <Descriptions.Item label="已发现金">{formatCurrency(detail.cashPaid)}</Descriptions.Item>
@@ -518,7 +502,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
             (() => {
               const tableData = transformToTableData(expenses)
               const summaryRow = calculateSummaryRow(tableData)
-              const columns = generateTableColumns(tableData)
+              const columns = generateTableColumns()
               const dataWithSummary = [...tableData, summaryRow]
 
               return (
@@ -530,7 +514,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
                   scroll={{ x: 'max-content' }}
                   size="small"
                   bordered
-                  rowClassName={(record, index) =>
+                  rowClassName={(_, index) =>
                     index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
                   }
                 />
@@ -618,7 +602,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
               (() => {
                 const tableData = transformToTableData(expenses)
                 const summaryRow = calculateSummaryRow(tableData)
-                const columns = generateTableColumns(tableData)
+                const columns = generateTableColumns()
                 const dataWithSummary = [...tableData, summaryRow]
 
                 return (
@@ -633,7 +617,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
                     }}
                     size="middle"
                     bordered
-                    rowClassName={(record, index) =>
+                    rowClassName={(_, index) =>
                       index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
                     }
                     sticky

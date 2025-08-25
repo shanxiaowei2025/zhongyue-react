@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, Button, Space, Breadcrumb, Divider, Alert, message, Spin } from 'antd'
+import { Card, Button, Space, Breadcrumb, Divider, Alert, Spin } from 'antd'
 import { showValidationError, showSuccess, showError } from '../../utils/messageHelper'
 import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
-import type { CreateContractDto } from '../../types/contract'
 import ProductServiceAgreement, {
   type ProductServiceAgreementRef,
 } from '../../components/contracts/ProductServiceAgreement'

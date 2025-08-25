@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
+import dayjs from 'dayjs'
 import {
   Table,
   Button,
@@ -8,18 +9,15 @@ import {
   Select,
   Switch,
   Space,
-  message,
   Tag,
   Popconfirm,
   Cascader,
 } from 'antd'
 import type { TablePaginationConfig } from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons'
-import { User, Department, ApiResponse, PaginatedResponse } from '../../types'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useUserList, useDepartmentTree, useRoleList, useUserOperations } from '../../hooks/useUser'
 import { useDebouncedValue } from '../../hooks/useDebounce'
-import dayjs from 'dayjs'
 
 // 适配后端API返回的用户数据结构
 interface ApiUser {
@@ -34,22 +32,6 @@ interface ApiUser {
   dept_name?: string
   createdAt: string
   updatedAt: string
-}
-
-interface UserResponse {
-  items: ApiUser[]
-  meta: {
-    total: number
-    page: number
-    limit: number
-  }
-}
-
-interface ApiData<T> {
-  code: number
-  message: string
-  data: T
-  timestamp?: number
 }
 
 // 定义级联选择器选项类型
@@ -115,34 +97,6 @@ const Users = () => {
     return map
   }, [roles])
 
-  // 添加获取部门名称路径的辅助函数
-  const getDepartmentNamePath = (deptId: number | undefined, departments: any[]): string => {
-    const namePath: string[] = []
-
-    const findNamePath = (depts: any[], targetId: number): boolean => {
-      for (const dept of depts) {
-        if (dept.id === targetId) {
-          namePath.push(dept.name)
-          return true
-        }
-        if (dept.children && dept.children.length > 0) {
-          namePath.push(dept.name)
-          if (findNamePath(dept.children, targetId)) {
-            return true
-          }
-          namePath.pop()
-        }
-      }
-      return false
-    }
-
-    if (deptId) {
-      findNamePath(departments, deptId)
-    }
-
-    return namePath.join('/')
-  }
-
   // 添加获取最终部门名称的辅助函数
   const getDepartmentFinalName = (deptId: number | undefined, departments: any[]): string => {
     const findDeptName = (depts: any[], targetId: number): string | null => {
@@ -166,26 +120,6 @@ const Users = () => {
 
     return ''
   }
-
-  // 创建部门ID到名称路径的映射缓存
-  const deptIdToNamePath = useMemo(() => {
-    const map: Record<number, string> = {}
-
-    const buildMap = (depts: any[]) => {
-      depts.forEach(dept => {
-        map[dept.id] = getDepartmentNamePath(dept.id, rawDepartmentTree)
-        if (dept.children && dept.children.length > 0) {
-          buildMap(dept.children)
-        }
-      })
-    }
-
-    if (rawDepartmentTree && rawDepartmentTree.length > 0) {
-      buildMap(rawDepartmentTree)
-    }
-
-    return map
-  }, [rawDepartmentTree])
 
   // 添加获取部门路径的辅助函数
   const getDepartmentPath = (deptId: number | undefined, departments: any[]): number[] => {

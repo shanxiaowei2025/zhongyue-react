@@ -36,7 +36,6 @@ import { mutate } from 'swr'
 import NotificationDetail from '../../components/NotificationDetail'
 
 const { Title, Text, Paragraph } = Typography
-const { TabPane } = Tabs
 
 const NotificationsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all')

@@ -1,18 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Buffer } from 'buffer'
-import {
-  Card,
-  Button,
-  Space,
-  Breadcrumb,
-  Alert,
-  Spin,
-  Divider,
-  Typography,
-  message,
-  Modal,
-  Input,
-} from 'antd'
+import { Card, Button, Space, Breadcrumb, Alert, Spin, Divider, message, Modal, Input } from 'antd'
 
 // 将Buffer添加到全局变量中
 window.Buffer = Buffer
@@ -34,8 +22,6 @@ import AgencyAccountingAgreementView from '../../components/contracts/AgencyAcco
 import SingleServiceAgreementView from '../../components/contracts/SingleServiceAgreementView'
 import ContractPDFDocument from '../../components/contracts/ContractPDFDocument'
 import styles from './ContractDetail.module.css'
-
-const { Title, Text } = Typography
 
 // 加载图片为base64
 const loadImageAsBase64 = async (url: string): Promise<string> => {

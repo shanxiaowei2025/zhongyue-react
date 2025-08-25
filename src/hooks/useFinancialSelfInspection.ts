@@ -23,7 +23,6 @@ import type {
   RejectDto,
   ReviewerApprovalDto,
   ReviewerRejectDto,
-  FinancialSelfInspection,
 } from '../types/financialSelfInspection'
 
 // SWR键生成函数

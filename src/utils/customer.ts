@@ -1,5 +1,4 @@
 import type { Customer, ImageType } from '../types'
-import { buildImageUrl } from './upload'
 
 // 处理客户表单中的图片数据
 export const processCustomerImages = (formData: any): Partial<Customer> => {
@@ -106,12 +105,4 @@ function extractFileNameFromUrl(url: string): string {
     console.error('提取文件名错误:', e)
     return ''
   }
-}
-
-// 处理图片值，确保返回适当的格式
-function processImageValue(value: any): string {
-  if (value && typeof value === 'object' && 'url' in value) {
-    return value.url
-  }
-  return value as string
 }

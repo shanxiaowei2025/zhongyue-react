@@ -8,34 +8,22 @@ import {
   Button,
   Tabs,
   InputNumber,
-  Upload,
   message,
-  Space,
   Tag,
   Checkbox,
   AutoComplete,
   Spin,
-  Tooltip,
 } from 'antd'
-import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons'
+import { SearchOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import DateRangePicker from '../../components/DateRangePicker'
 import { useExpenseDetail } from '../../hooks/useExpense'
-import {
-  Expense,
-  ExpenseFormData,
-  CreateExpenseDto,
-  UpdateExpenseDto,
-  FileItem,
-  ExpenseStatus,
-} from '../../types/expense'
+import { Expense, ExpenseFormData, ExpenseStatus } from '../../types/expense'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
-import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import { useBranchOffices } from '../../hooks/useDepartments'
-import { BUSINESS_STATUS_MAP } from '../../constants'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import { useDebounce } from '../../hooks/useDebounce'
 import { getContractList } from '../../api/contract'
@@ -50,88 +38,6 @@ const STATUS_LABELS = {
   [ExpenseStatus.Pending]: '未审核',
   [ExpenseStatus.Approved]: '已审核',
   [ExpenseStatus.Rejected]: '已退回',
-}
-
-// 自定义受限的日期选择器组件，只允许修改日期的"日"部分
-interface RestrictedDatePickerProps {
-  value?: Dayjs
-  onChange?: (value: Dayjs | null) => void
-  placeholder?: string
-  isRestricted?: boolean // 是否限制年月编辑
-  style?: React.CSSProperties
-  fieldName?: string // 字段名称，用于显示提示
-  mode?: 'add' | 'edit' // 表单模式
-  hasPermission?: boolean // 用户是否有完全编辑权限
-  hasAutoFillValue?: boolean // 是否有自动填写值
-}
-
-const RestrictedDatePicker: React.FC<RestrictedDatePickerProps> = ({
-  value,
-  onChange,
-  placeholder,
-  isRestricted = false,
-  style,
-  fieldName = '日期',
-  mode = 'add',
-  hasPermission = true,
-  hasAutoFillValue = false,
-}) => {
-  // 计算最终是否受限
-  // 创建模式：只有自动填写的字段才受限
-  // 编辑模式：如果用户没有完全编辑权限，则所有开始日期字段都受限
-  const finalIsRestricted = mode === 'add' ? hasAutoFillValue : !hasPermission || hasAutoFillValue
-
-  // 如果是受限模式且有值，则只允许选择同年的月份
-  const disabledDate = (current: Dayjs) => {
-    if (!finalIsRestricted || !value) {
-      return false
-    }
-
-    // 只允许选择相同年份的月份
-    return current.year() !== value.year()
-  }
-
-  // 生成提示信息
-  const getTooltipTitle = () => {
-    if (mode === 'add' && hasAutoFillValue) {
-      return `该${fieldName}已根据历史数据自动填写，年份不可修改，不可清空`
-    }
-    if (mode === 'edit' && !hasPermission) {
-      return `您没有完全编辑权限，该${fieldName}的年份不可修改，不可清空`
-    }
-    if (mode === 'edit' && hasAutoFillValue) {
-      return `该${fieldName}已根据历史数据自动填写，年份不可修改，不可清空`
-    }
-    return `该${fieldName}年份不可修改，不可清空`
-  }
-
-  const datePicker = (
-    <DatePicker
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      style={style}
-      disabledDate={disabledDate}
-      // 使用月份选择器
-      picker="month"
-      showToday={false}
-      // 如果是受限模式，则不允许清空
-      allowClear={!finalIsRestricted}
-      // 月份选择器的格式
-      format="YYYY-MM"
-    />
-  )
-
-  // 如果是受限模式，包装工具提示
-  if (finalIsRestricted) {
-    return (
-      <Tooltip title={getTooltipTitle()} placement="top">
-        {datePicker}
-      </Tooltip>
-    )
-  }
-
-  return datePicker
 }
 
 interface ExpenseFormProps {
@@ -192,7 +98,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 使用formMountedRef跟踪表单是否已挂载和初始化
   const formMountedRef = useRef(false)
   const formInitializedRef = useRef(false)
-  const [prevFormValues, setPrevFormValues] = useState<Record<string, any>>({})
 
   const { createExpense, updateExpense } = useExpenseDetail(mode === 'edit' ? expense?.id : null)
 
@@ -232,15 +137,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 定义防抖延迟时间（毫秒）
   const DEBOUNCE_DELAY = 200
 
-  // 使用本地状态缓存最近的费用值，减少从表单获取值的频率
-  const [feeFieldsCache, setFeeFieldsCache] = useState<Record<string, any>>({})
-
   // 添加状态跟踪代理日期的时长
   const [agencyDurationYears, setAgencyDurationYears] = useState<number>(0)
 
   // 自动填写开始日期相关状态
   const [autoFillDates, setAutoFillDates] = useState<Record<string, string | null>>({})
-  const [loadingAutoFill, setLoadingAutoFill] = useState(false)
 
   // 检查用户是否有完全编辑日期的权限（管理员、超级管理员、费用审核员）
   const hasFullDateEditPermission = () => {
@@ -272,11 +173,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const calculateTotalFeeSync = () => {
     try {
       // 从表单获取所有费用字段的当前值
-      const values: Record<string, any> = {}
+      const values: Record<string, unknown> = {}
 
       // 获取每个字段的当前值
       for (const field of feeFields) {
-        const currentValue = form.getFieldValue(field as any) || 0
+        const currentValue = form.getFieldValue(field as keyof FormData) || 0
         values[field] = currentValue
       }
 
@@ -310,7 +211,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       if (!companyName && !unifiedSocialCreditCode) return
 
       try {
-        setLoadingAutoFill(true)
         const params: { companyName?: string; unifiedSocialCreditCode?: string } = {}
 
         if (companyName) params.companyName = companyName
@@ -323,7 +223,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           setAutoFillDates(dates)
 
           // 自动填写有值的日期字段
-          const fieldsToUpdate: Record<string, any> = {}
+          const fieldsToUpdate: Record<string, Dayjs> = {}
 
           if (dates.agencyStartDate) {
             fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
@@ -356,7 +256,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 静默处理错误，不显示错误消息
         console.warn('获取最大日期失败:', error)
       } finally {
-        setLoadingAutoFill(false)
+        // 完成处理
       }
     },
     800 // 800ms 防抖延迟
@@ -366,27 +266,18 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const calculateFees = useDebounce(
     () => {
       if (!visible || !formMountedRef.current || !formInitializedRef.current) {
-        console.log('计算费用被跳过:', {
-          visible,
-          formMounted: formMountedRef.current,
-          formInitialized: formInitializedRef.current,
-        })
         return
       }
 
       try {
-        console.log('开始计算费用...')
-
         // 从表单获取所有费用字段的当前值
-        const values: Record<string, any> = {}
+        const values: Record<string, unknown> = {}
 
         // 获取每个字段的当前值
         for (const field of feeFields) {
-          const currentValue = form.getFieldValue(field as any) || 0
+          const currentValue = form.getFieldValue(field as keyof FormData) || 0
           values[field] = currentValue
         }
-
-        console.log('当前费用字段值:', values)
 
         // 计算总费用
         let total = 0
@@ -401,7 +292,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 更新总费用
         const currentTotal = form.getFieldValue('totalFee')
         if (currentTotal !== total) {
-          console.log('更新总费用:', currentTotal, '->', total)
           form.setFieldValue('totalFee', total)
         }
 
@@ -431,13 +321,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         })
 
         // 使用批量状态更新避免循环引用
-        console.log('更新标签页费用:', {
-          new: newTabFeeSums,
-        })
 
         // 使用setTimeout将状态更新推迟到下一个事件循环，避免循环引用
         setTimeout(() => {
-          setFeeFieldsCache(values)
           setTabFeeSums(newTabFeeSums)
         }, 0)
       } catch (error) {
@@ -485,12 +371,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       const yearsDiff = endDate.diff(startDate, 'year', true).toFixed(2)
       const years = parseFloat(yearsDiff)
 
-      console.log('代理时长计算：', {
-        startDate: startDate.format('YYYY-MM'),
-        endDate: endDate.format('YYYY-MM'),
-        years,
-      })
-
       setAgencyDurationYears(years)
     } else {
       setAgencyDurationYears(0)
@@ -500,7 +380,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   // 统一监听所有费用字段变化
   useEffect(() => {
     if (formInitializedRef.current) {
-      console.log('费用字段发生变化，触发计算')
       calculateFees()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -533,16 +412,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         housingFundStartDate: undefined,
         housingFundEndDate: undefined,
       })
-
-      // 更新费用缓存，确保计算时公积金费用为0 - 使用setTimeout避免循环引用
-      setTimeout(() => {
-        setFeeFieldsCache(prev => ({
-          ...prev,
-          housingFundAgencyFee: 0,
-        }))
-      }, 0)
-
-      console.log('公积金选项已关闭，已清空相关字段')
     }
   }, [hasHousingFund, form])
 
@@ -567,7 +436,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 初始化表单数据
       if (mode === 'edit' && expense) {
         // 克隆对象以避免修改原始数据
-        const formData: any = { ...expense }
+        const formData: Record<string, unknown> = { ...expense }
 
         // 将日期字符串转换为 Dayjs 实例
         ;[
@@ -587,8 +456,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           'statisticalStartDate',
           'statisticalEndDate',
         ].forEach(dateField => {
-          if (formData[dateField]) {
-            formData[dateField] = dayjs(formData[dateField])
+          const dateValue = formData[dateField]
+          if (dateValue && typeof dateValue === 'string') {
+            formData[dateField] = dayjs(dateValue)
           }
         })
 
@@ -664,14 +534,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         form.setFieldsValue(formData)
 
         // 初始化费用字段缓存
-        const initialFeeValues: Record<string, any> = {}
+        const initialFeeValues: Record<string, number> = {}
         feeFields.forEach(field => {
-          initialFeeValues[field] = formData[field] || 0
+          initialFeeValues[field] = (formData[field] as number) || 0
         })
-        // 使用setTimeout避免循环引用
-        setTimeout(() => {
-          setFeeFieldsCache(initialFeeValues)
-        }, 0)
 
         // 初始化标签页费用合计
         const initialTabFeeSums: Record<string, number> = {
@@ -703,11 +569,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formInitializedRef.current = true
 
         // 标记表单已初始化，费用计算将通过useEffect触发
-        console.log('编辑模式：表单初始化完成', {
-          formInitialized: formInitializedRef.current,
-          visible,
-          initialTabFeeSums,
-        })
       } else {
         // 添加模式，设置默认值
         const today = dayjs()
@@ -719,21 +580,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           chargeMethod: [], // 确保chargeMethod是数组格式
           salesperson: defaultSalesperson, // 设置业务员默认值
         })
-        setPrevFormValues({
-          chargeDate: today,
-          totalFee: 0,
-          salesperson: defaultSalesperson,
-        })
-
-        // 初始化费用字段缓存为0
-        const initialFeeValues: Record<string, any> = {}
-        feeFields.forEach(field => {
-          initialFeeValues[field] = 0
-        })
-        // 使用setTimeout避免循环引用
-        setTimeout(() => {
-          setFeeFieldsCache(initialFeeValues)
-        }, 0)
 
         // 新建模式下重置所有标签页费用为0 - 使用setTimeout避免循环引用
         setTimeout(() => {
@@ -755,7 +601,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formInitializedRef.current = true
 
         // 标记表单已初始化，费用计算将通过useEffect触发
-        console.log('新建模式：表单初始化完成')
       }
 
       // 设置默认选项卡
@@ -774,7 +619,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 处理表单值变化，用于自动填写开始日期
   const handleFormValuesChange = useCallback(
-    (changedValues: any, allValues: any) => {
+    (changedValues: Partial<FormData>, allValues: FormData) => {
       // 只有在创建模式下才自动填写
       if (mode !== 'add') return
 
@@ -804,18 +649,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     proofOfCharge: [],
   })
 
-  // 上传合同图片的处理函数
-  const handleContractUpload = (info: any) => {
-    console.log('合同上传:', info)
-    // 此处逻辑已替换为MultiFileUpload组件内部处理
-  }
-
-  // 上传收费凭证的处理函数
-  const handleProofUpload = (info: any) => {
-    console.log('收据凭证上传:', info)
-    // 此处逻辑已替换为MultiFileUpload组件内部处理
-  }
-
   // 提交表单
   const handleSubmit = async (keepOpen: boolean = false) => {
     try {
@@ -826,7 +659,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       const values = await form.validateFields()
 
       // 深拷贝，避免修改原始值
-      const formattedValues = { ...values } as any
+      const formattedValues = { ...values } as Record<string, unknown>
 
       // 格式化日期字段为ISO字符串
       // 精确日期字段（保持用户选择的完整日期）
@@ -900,7 +733,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formattedValues.housingFundAgencyFee = null
         formattedValues.housingFundStartDate = null
         formattedValues.housingFundEndDate = null
-        console.log('公积金选项为false，已将相关字段设置为null')
       }
 
       // 处理tags模式的Select字段，确保它们的值处理正确
@@ -932,12 +764,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         if (Array.isArray(formattedValues.contractImage)) {
           // 兼容旧的数组格式
           formattedValues.contractImage = formattedValues.contractImage.map(
-            (item: any) => item.fileName
+            (item: { fileName: string }) => item.fileName
           )
         } else {
           // 新的对象格式: {"1752163820899_476": {"fileName": "1_1752163821041.jpg", "url": "..."}}
           formattedValues.contractImage = Object.values(formattedValues.contractImage).map(
-            (item: any) => item.fileName
+            (item: { fileName: string }) => item.fileName
           )
         }
       } else if (
@@ -953,12 +785,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         if (Array.isArray(formattedValues.proofOfCharge)) {
           // 兼容旧的数组格式
           formattedValues.proofOfCharge = formattedValues.proofOfCharge.map(
-            (item: any) => item.fileName
+            (item: { fileName: string }) => item.fileName
           )
         } else {
           // 新的对象格式: {"1752163820899_476": {"fileName": "1_1752163821041.jpg", "url": "..."}}
           formattedValues.proofOfCharge = Object.values(formattedValues.proofOfCharge).map(
-            (item: any) => item.fileName
+            (item: { fileName: string }) => item.fileName
           )
         }
       } else if (
@@ -976,20 +808,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         // 如果是字符串，尝试解析JSON
         try {
           formattedValues.relatedContract = JSON.parse(formattedValues.relatedContract)
-        } catch (e) {
+        } catch {
           formattedValues.relatedContract = []
         }
       }
-
-      console.log('提交格式化后的表单数据:', formattedValues)
-      console.log('合同图片转换后:', formattedValues.contractImage)
-      console.log('收据凭证转换后:', formattedValues.proofOfCharge)
 
       let createdExpense: Expense | null = null
 
       if (mode === 'add') {
         const response = await createExpense(formattedValues)
-        message.success((response as any)?.message || '费用创建成功')
+        message.success((response as { message?: string })?.message || '费用创建成功')
 
         // 保存创建的费用数据，用于发送通知
         if (response && typeof response === 'object' && 'data' in response) {
@@ -1033,7 +861,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         if (uploadedFiles.contractImage && uploadedFiles.contractImage.length > 0) {
           for (const fileName of uploadedFiles.contractImage) {
             await deleteFile(fileName)
-            console.log('已删除未保存的合同图片:', fileName)
           }
         }
 
@@ -1041,7 +868,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         if (uploadedFiles.proofOfCharge && uploadedFiles.proofOfCharge.length > 0) {
           for (const fileName of uploadedFiles.proofOfCharge) {
             await deleteFile(fileName)
-            console.log('已删除未保存的收费凭证:', fileName)
           }
         }
       } catch (error) {
@@ -1051,7 +877,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
     // 重置自动填写状态
     setAutoFillDates({})
-    setLoadingAutoFill(false)
 
     form.resetFields()
     onCancel()
@@ -1124,7 +949,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   }
 
   // 添加关联合同
-  const handleAddRelatedContract = (value: string, option: any) => {
+  const handleAddRelatedContract = (value: string, option: { id: number }) => {
     if (!value || !option || !option.id) return
 
     // 检查是否已存在
@@ -1172,7 +997,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     >
       {visible && ( // 只有在modal可见时才渲染表单，避免React警告
         <>
-          <Form form={form} layout="vertical" onValuesChange={handleFormValuesChange}>
+          <Form<FormData> form={form} layout="vertical" onValuesChange={handleFormValuesChange}>
             {/* 固定在顶部的状态栏 */}
             <div
               style={{
@@ -1460,7 +1285,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   dependencies={['agencyFee', 'contractImage']}
                   rules={[
                     ({ getFieldValue }) => ({
-                      validator(_, value) {
+                      validator(_, _value) {
                         const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
                         const contractImage = getFieldValue('contractImage')
 

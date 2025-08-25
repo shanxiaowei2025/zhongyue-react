@@ -23,18 +23,12 @@ import {
   InfoCircleOutlined,
   DownloadOutlined,
   FileSearchOutlined,
-  UploadOutlined,
   CloseOutlined,
   MessageOutlined,
 } from '@ant-design/icons'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
-import {
-  useExpenseList,
-  useExpenseDetail,
-  expenseDetailFetcher,
-  exportExpenseData,
-} from '../../hooks/useExpense'
+import { useExpenseList, expenseDetailFetcher, exportExpenseData } from '../../hooks/useExpense'
 import { usePermission } from '../../hooks/usePermission'
 import { useDebounce } from '../../hooks/useDebounce'
 import { Expense, ExpenseStatus, ExpenseQueryParams } from '../../types/expense'
@@ -157,7 +151,6 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
 ]
 
 const Expenses: React.FC = () => {
-  const navigateRoute = useNavigate()
   const [urlSearchParams, setUrlSearchParams] = useSearchParams()
 
   // 获取权限控制
@@ -170,7 +163,6 @@ const Expenses: React.FC = () => {
   const canAuditExpense = permissionsLoading ? true : expensePermissions?.canAudit
   const canCancelAuditExpense = permissionsLoading ? true : expensePermissions?.canCancelAudit
   const canViewReceipt = permissionsLoading ? true : expensePermissions?.canViewReceipt
-  const canExportExpense = permissionsLoading ? true : expensePermissions?.canExport
 
   // 刷新权限信息
   useEffect(() => {
@@ -277,7 +269,6 @@ const Expenses: React.FC = () => {
     expenses,
     total,
     isLoading: loading,
-    error,
     refreshExpenseList: fetchExpenses,
     removeExpense,
     auditExpense,
@@ -285,7 +276,6 @@ const Expenses: React.FC = () => {
   } = useExpenseList(searchParams)
 
   // 导航
-  const navigate = useNavigate()
 
   // 增加搜索状态跟踪
   const [isSearching, setIsSearching] = useState(false)

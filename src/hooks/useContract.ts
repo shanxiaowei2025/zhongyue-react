@@ -27,7 +27,7 @@ export const getContractListKey = (params: ContractQueryParams) => {
 export const getContractDetailKey = (id?: number | null) => (id ? `/contract/${id}` : null)
 
 // 合同列表数据获取器
-export const contractListFetcher = async ([url, params]: [string, ContractQueryParams]) => {
+export const contractListFetcher = async ([, params]: [string, ContractQueryParams]) => {
   try {
     const response = await getContractList(params)
     console.log('合同列表API响应:', response)

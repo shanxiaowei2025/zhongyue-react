@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Upload, Button, message, Modal, Spin, Image, Space, Popconfirm, Input } from 'antd'
-import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
+import { showValidationError, showSuccess } from '../utils/messageHelper'
 import {
   UploadOutlined,
   DeleteOutlined,

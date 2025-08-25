@@ -1,10 +1,6 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import type {
-  Notification,
-  NotificationStats,
-  WebSocketNotificationData,
-} from '../types/notification'
+import type { NotificationStats, WebSocketNotificationData } from '../types/notification'
 import { getNotificationStats } from '../api/notification'
 
 interface NotificationState {
@@ -34,7 +30,7 @@ const initialState = {
 }
 
 export const useNotificationStore = create<NotificationState>()(
-  immer((set, get) => ({
+  immer(set => ({
     ...initialState,
 
     // 更新通知统计
@@ -58,7 +54,7 @@ export const useNotificationStore = create<NotificationState>()(
     },
 
     // 添加新通知（来自WebSocket）- 仅更新统计，SWR会自动获取新数据
-    addNewNotification: (notification: WebSocketNotificationData) => {
+    addNewNotification: () => {
       set(state => {
         // 更新统计
         state.stats.total += 1

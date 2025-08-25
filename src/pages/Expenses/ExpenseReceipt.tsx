@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Spin, Button, Flex, Radio, AutoComplete, Tag } from 'antd'
+import { Modal, Spin, Button, Radio, AutoComplete, Tag } from 'antd'
 import { useExpenseReceipt, getExpenseReceiptKey, useExpenseDetail } from '../../hooks/useExpense'
 import { DownloadOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -58,7 +58,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
   const [selectedSeal, setSelectedSeal] = useState<SealType>('中岳')
   const [hasRefreshed, setHasRefreshed] = useState(false)
   const [contractImage, setContractImage] = useState<Array<{ fileName: string; url: string }>>([])
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
+  const [, setUploadedFiles] = useState<string[]>([])
 
   // 关联合同搜索状态
   const [contractOptions, setContractOptions] = useState<{ value: string; id: number }[]>([])
@@ -532,7 +532,6 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
 
     // 处理整数部分
     if (parseInt(integerNum, 10) > 0) {
-      let zeroFlag = false
       const intLen = integerNum.length
 
       for (let i = 0; i < intLen; i++) {

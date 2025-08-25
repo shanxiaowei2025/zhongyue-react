@@ -1,5 +1,4 @@
 import useSWR, { mutate } from 'swr'
-import { message } from 'antd'
 import {
   getEnterpriseList,
   getServiceHistory,
@@ -13,9 +12,6 @@ import type {
   ServiceHistoryQueryParams,
   ExpenseContributionQueryParams,
   CustomerQueryParams,
-  Enterprise,
-  ServiceHistory,
-  ExpenseContribution,
 } from '../types/enterpriseService'
 
 // 企业列表请求的SWR键生成函数

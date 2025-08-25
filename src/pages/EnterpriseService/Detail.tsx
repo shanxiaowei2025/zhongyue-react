@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Card,
   Row,
@@ -10,7 +10,6 @@ import {
   Descriptions,
   Spin,
   Tag,
-  message,
   List,
   Space,
   Divider,
@@ -23,12 +22,7 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons'
 import { useServiceHistory, useExpenseContribution } from '../../hooks/useEnterpriseService'
-import type {
-  Enterprise,
-  ServiceHistory,
-  ExpenseRecord,
-  ExpenseContribution,
-} from '../../types/enterpriseService'
+import type { Enterprise, ServiceHistory, ExpenseRecord } from '../../types/enterpriseService'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
@@ -56,7 +50,6 @@ const STATUS_MAPPING: Record<string, { text: string; color: string }> = {
 }
 
 const EnterpriseDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
   const [enterprise, setEnterprise] = useState<Enterprise | null>(null)
@@ -127,10 +120,10 @@ const EnterpriseDetail: React.FC = () => {
   }
 
   // 生成收据链接 - 这里假设有一个收据查看的路由
-  const getReceiptLink = (receiptNo: string) => {
-    // 根据实际业务需求调整链接格式
-    return `/receipts?receiptNo=${receiptNo}`
-  }
+  // const getReceiptLink = (receiptNo: string) => {
+  //   // 根据实际业务需求调整链接格式
+  //   return `/receipts?receiptNo=${receiptNo}`
+  // }
 
   // 处理收据链接点击
   const handleReceiptClick = (receiptNo: string) => {

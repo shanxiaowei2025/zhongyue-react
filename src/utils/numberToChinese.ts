@@ -27,12 +27,9 @@ export function numberToChinese(num: number): string {
   const cnIntLast = '元'
 
   // 最大处理的数字
-  const maxNum = 999999999999999.99
+  const maxNum = Number.MAX_SAFE_INTEGER
 
-  let integerNum: number // 金额整数部分
-  let decimalNum: number // 金额小数部分
   let chineseStr = '' // 输出的中文金额字符串
-  let parts: string[] // 分离金额后用的数组，预定义
 
   if (num >= maxNum) {
     return ''
@@ -47,8 +44,8 @@ export function numberToChinese(num: number): string {
 
   // 转换为字符串
   const money = roundedNum.toFixed(2)
-  parts = money.split('.')
-  integerNum = parseInt(parts[0], 10)
+  const parts = money.split('.')
+  const integerNum = parseInt(parts[0], 10)
 
   // 处理小数部分，只取角分两位
   const decimalStr = parts[1] || '00'

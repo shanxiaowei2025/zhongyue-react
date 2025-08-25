@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Badge, Dropdown, Button, List, Typography, Empty, Spin, Tooltip, Tag } from 'antd'
-import { BellOutlined, CheckOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
-import type { MenuProps } from 'antd'
+import { BellOutlined, CheckOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { useNotificationStore } from '../store/notification'

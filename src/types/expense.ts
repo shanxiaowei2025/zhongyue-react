@@ -1,5 +1,3 @@
-import { User } from '.'
-
 // 文件项类型定义
 export interface FileItem {
   fileName: string

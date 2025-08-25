@@ -1,11 +1,6 @@
 import React from 'react'
 import { Card, Statistic, Row, Col, Progress, Typography } from 'antd'
-import {
-  DollarOutlined,
-  BankOutlined,
-  CheckCircleOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons'
+import { DollarOutlined, CheckCircleOutlined, CalendarOutlined } from '@ant-design/icons'
 import type { MySalaryStatistics as MySalaryStatisticsType } from '../../../types/mySalary'
 
 const { Text } = Typography

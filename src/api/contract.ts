@@ -5,7 +5,6 @@ import type {
   ContractQueryParams,
   CreateContractDto,
   UpdateContractDto,
-  SignContractDto,
   ContractListResponse,
 } from '../types/contract'
 import type { ApiResponse } from '../types'

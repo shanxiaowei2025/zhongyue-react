@@ -6,10 +6,9 @@ import {
   type ColumnDef,
   type ColumnSizingState,
   type ColumnPinningState,
-  type Table,
 } from '@tanstack/react-table'
 import { usePageStates } from '../store/pageStates'
-import type { ResizableTableColumn, ResizableTableProps } from '../types/table'
+import type { ResizableTableColumn } from '../types/table'
 
 interface UseResizableTableOptions<T> {
   columns: ResizableTableColumn<T>[]

@@ -1,5 +1,5 @@
 import request from './request'
-import type { Customer, PaginationParams, PaginatedResponse, ApiResponse } from '../types'
+import type { Customer, PaginationParams, ApiResponse } from '../types'
 
 // 获取客户列表
 export const getCustomerList = (params: PaginationParams) => {
@@ -41,7 +41,7 @@ export const getCustomerById = (id: number) => {
 // 创建客户
 export const createCustomer = (data: Partial<Customer>) => {
   // 移除可能引起错误的createTime和updateTime字段
-  const { createTime, updateTime, ...cleanData } = data
+  const { createTime: _createTime, updateTime: _updateTime, ...cleanData } = data
 
   // 客户数据清理完成
 
@@ -51,7 +51,7 @@ export const createCustomer = (data: Partial<Customer>) => {
 // 更新客户
 export const updateCustomer = (id: number, data: Partial<Customer>) => {
   // 移除可能引起错误的createTime和updateTime字段
-  const { createTime, updateTime, ...cleanData } = data
+  const { createTime: _createTime, updateTime: _updateTime, ...cleanData } = data
 
   // 处理数值字段，确保发送到后端的是数字而不是字符串
   if (typeof cleanData.registeredCapital === 'string') {

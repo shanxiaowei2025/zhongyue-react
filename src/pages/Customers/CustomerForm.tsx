@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Form,
   Input,
@@ -20,7 +20,6 @@ import {
 import type {
   Customer,
   Clan,
-  ClanListItem,
   ImageType,
   ImageTypeWithRemarks,
   PaidInCapitalItem,
@@ -44,7 +43,7 @@ import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
 import { useClanList, useClanDetail } from '../../hooks/useClan'
-import { mutate } from 'swr'
+
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
 import { LOCATION_OPTIONS } from '../../constants/locationOptions'
 import { useAuthStore } from '../../store/auth'
@@ -160,20 +159,6 @@ type FormCustomer = Omit<
   [key: string]: any // 添加索引签名
 }
 
-// API提交时的客户数据类型
-type APICustomer = Omit<
-  FormCustomer,
-  | 'licenseExpiryDate'
-  | 'capitalContributionDeadline'
-  | 'publicBankOpeningDate'
-  | 'generalAccountOpeningDate'
-> & {
-  licenseExpiryDate?: string
-  capitalContributionDeadline?: string
-  publicBankOpeningDate?: string
-  generalAccountOpeningDate?: string
-}
-
 // 处理日期转换: Dayjs => string
 const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
   const result = { ...values }
@@ -186,7 +171,7 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     dayjs.isDayjs(values.licenseExpiryDate) &&
     values.licenseExpiryDate.isValid()
   ) {
-    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    // @ts-expect-error: 类型转换，应该是从Dayjs转为string
     result.licenseExpiryDate = values.licenseExpiryDate.format('YYYY-MM-DD')
   } else if (values.licenseExpiryDate === null) {
     // 如果licenseExpiryDate被明确设置为null，保持为null
@@ -201,7 +186,7 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     dayjs.isDayjs(values.capitalContributionDeadline) &&
     values.capitalContributionDeadline.isValid()
   ) {
-    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    // @ts-expect-error: 类型转换，应该是从Dayjs转为string
     result.capitalContributionDeadline = values.capitalContributionDeadline.format('YYYY-MM-DD')
   } else {
     result.capitalContributionDeadline = null
@@ -212,7 +197,7 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     dayjs.isDayjs(values.publicBankOpeningDate) &&
     values.publicBankOpeningDate.isValid()
   ) {
-    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    // @ts-expect-error: 类型转换，应该是从Dayjs转为string
     result.publicBankOpeningDate = values.publicBankOpeningDate.format('YYYY-MM-DD')
   } else {
     result.publicBankOpeningDate = null
@@ -223,7 +208,7 @@ const convertDatesToString = (values: FormCustomer): Partial<FormCustomer> => {
     dayjs.isDayjs(values.generalAccountOpeningDate) &&
     values.generalAccountOpeningDate.isValid()
   ) {
-    // @ts-ignore: 类型转换，应该是从Dayjs转为string
+    // @ts-expect-error: 类型转换，应该是从Dayjs转为string
     result.generalAccountOpeningDate = values.generalAccountOpeningDate.format('YYYY-MM-DD')
   } else {
     result.generalAccountOpeningDate = null
@@ -331,7 +316,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const [form] = Form.useForm<FormCustomer>()
   const [activeTab, setActiveTab] = useState<string>('basic')
   const [isSaving, setIsSaving] = useState(false)
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
+  const [autoSaveEnabled] = useState(true)
   const [uploadedImages, setUploadedImages] = useState<string[]>([]) // 跟踪已上传的图片文件名
   const [paidInCapitalItems, setPaidInCapitalItems] = useState<PaidInCapitalItem[]>([])
   const [administrativeLicenseItems, setAdministrativeLicenseItems] = useState<
@@ -374,24 +359,22 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
   // 使用Form.useWatch监听licenseNoFixedTerm字段的值变化
   const licenseNoFixedTerm = Form.useWatch('licenseNoFixedTerm', form)
-  // 使用Form.useWatch监听licenseExpiryDate字段的值变化
-  const licenseExpiryDate = Form.useWatch('licenseExpiryDate', form)
 
   // 标记是否已经修复了表单项的状态
   const [fixState, setFixState] = useState(false)
 
-  // 记录重试次数
-  const [retryCount, setRetryCount] = useState(0)
-  const maxRetries = 3
+  // 记录重试次数 - 暂时注释掉，因为当前未使用
+  // const [retryCount, setRetryCount] = useState(0)
+  // const maxRetries = 3
 
-  // 重试逻辑
-  const handleRetry = useCallback(() => {
-    if (retryCount < maxRetries && customer?.id) {
-      setRetryCount(prev => prev + 1)
-      // 触发SWR重新验证，清除缓存并重新获取
-      mutate(`/customer/${customer.id}`, undefined, { revalidate: true })
-    }
-  }, [customer?.id, retryCount, maxRetries])
+  // 重试逻辑 - 暂时注释掉，因为当前未使用
+  // const handleRetry = useCallback(() => {
+  //   if (retryCount < maxRetries && customer?.id) {
+  //     setRetryCount(prev => prev + 1)
+  //     // 触发SWR重新验证，清除缓存并重新获取
+  //     mutate(`/customer/${customer.id}`, undefined, { revalidate: true })
+  //   }
+  // }, [customer?.id, retryCount, maxRetries])
 
   useEffect(() => {
     if (customer && mode !== 'add') {
@@ -719,14 +702,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       dataWithImages.actualResponsibles = actualResponsibleItems
 
       // 移除可能引起错误的字段
-      const {
-        createTime,
-        updateTime,
-        licenseNoFixedTerm,
-        actualResponsibleName,
-        actualResponsiblePhone,
-        ...cleanData
-      } = dataWithImages
+      const { ...cleanData } = dataWithImages
 
       if (mode === 'add') {
         // 检查宗族字段是否真的需要处理
@@ -769,7 +745,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       } else if (customer?.id) {
         // 确保日期字段是正确的格式
         if (cleanData.licenseExpiryDate && typeof cleanData.licenseExpiryDate !== 'string') {
-          // @ts-ignore
+          // @ts-expect-error: 类型转换，应该是从Dayjs转为string
           cleanData.licenseExpiryDate = dayjs(cleanData.licenseExpiryDate).format('YYYY-MM-DD')
         }
 
@@ -960,7 +936,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   // 处理图片上传成功 - 修正类型问题
-  const handleFileUploadSuccess = (isAutoSave: boolean) => {
+  const handleFileUploadSuccess = (_isAutoSave: boolean) => {
     if (mode === 'add') {
       // 获取表单中的所有图片字段，提取文件名
       const formValues = form.getFieldsValue()
@@ -1079,22 +1055,22 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     setPaidInCapitalItems(newItems)
   }
 
-  // 处理文件上传
-  const handleFileUpload = (info: any, index: number) => {
-    if (info.file.status === 'done') {
-      // 假设上传成功后文件名或URL在response里
-      const fileName = info.file.response.fileName || info.file.name
-      const fileUrl = info.file.response.url || ''
-      const newItems = [...paidInCapitalItems]
-      // 更新为对象格式存储，使用一个随机键名
-      const randomKey = `img_${Date.now()}`
-      newItems[index].images = {
-        ...newItems[index].images,
-        [randomKey]: { fileName, url: fileUrl },
-      }
-      setPaidInCapitalItems(newItems)
-    }
-  }
+  // 处理文件上传 - 暂时注释掉，因为当前未使用
+  // const handleFileUpload = (info: any, index: number) => {
+  //   if (info.file.status === 'done') {
+  //     // 假设上传成功后文件名或URL在response里
+  //     const fileName = info.file.response.fileName || info.file.name
+  //     const fileUrl = info.file.response.url || ''
+  //     const newItems = [...paidInCapitalItems]
+  //     // 更新为对象格式存储，使用一个随机键名
+  //     const randomKey = `img_${Date.now()}`
+  //     newItems[index].images = {
+  //       ...newItems[index].images,
+  //       [randomKey]: { fileName, url: fileUrl },
+  //     }
+  //     setPaidInCapitalItems(newItems)
+  //   }
+  // }
 
   // 添加行政许可项
   const handleAddAdministrativeLicenseItem = () => {
@@ -1187,10 +1163,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       setSelectedClanId(null)
       form.setFieldValue('clanId', null)
     }
-  }
-
-  const handleClanDropdownVisibleChange = (open: boolean) => {
-    // 下拉框打开时不自动加载，改为滚动加载
   }
 
   // 处理AutoComplete下拉框滚动加载
@@ -1479,7 +1451,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               onSearch={handleClanSearch}
               onSelect={handleClanSelect}
               onChange={handleClanChange}
-              onDropdownVisibleChange={handleClanDropdownVisibleChange}
               options={(() => {
                 const options = clanOptions.map(clan => ({
                   key: clan.id,
@@ -1687,7 +1658,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       if (!dayjsValue.isValid()) {
                         dayjsValue = null
                       }
-                    } catch (e) {
+                    } catch (_e) {
                       console.warn('无效的日期格式:', text)
                       dayjsValue = null
                     }
@@ -1856,7 +1827,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       if (!dayjsValue.isValid()) {
                         dayjsValue = null
                       }
-                    } catch (e) {
+                    } catch (_e) {
                       console.warn('无效的日期格式:', text)
                       dayjsValue = null
                     }
@@ -1895,7 +1866,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       if (!dayjsValue.isValid()) {
                         dayjsValue = null
                       }
-                    } catch (e) {
+                    } catch (_e) {
                       console.warn('无效的日期格式:', text)
                       dayjsValue = null
                     }
@@ -2476,12 +2447,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               } as any)
             : undefined
         }
-        onFinish={values => {
+        onFinish={_values => {
           // 确保在提交之前再次验证日期字段，确保它们被包含在表单提交中
           const formValues = form.getFieldsValue()
 
           // 检查日期字段
-          const licenseExpiryDateValue = formValues.licenseExpiryDate
           const licenseNoFixedTermValue = formValues.licenseNoFixedTerm
 
           // 提交前的表单字段

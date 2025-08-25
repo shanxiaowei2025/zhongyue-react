@@ -1,8 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
 import { Checkbox, Input, DatePicker, message, Select } from 'antd'
 import { showSuccess, showValidationError } from '../../utils/messageHelper'
-import type { CheckboxChangeEvent } from 'antd/es/checkbox'
-import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import type { CreateContractDto } from '../../types/contract'
@@ -37,7 +35,14 @@ export interface SingleServiceAgreementRef {
 
 const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServiceAgreementProps>(
   (
-    { signatory, contractData = {}, onSubmit, onUpdate, isSubmitting = false, mode = 'create' },
+    {
+      signatory,
+      contractData = {},
+      onSubmit,
+      onUpdate,
+      isSubmitting: _isSubmitting = false,
+      mode = 'create',
+    },
     ref
   ) => {
     // 状态管理
@@ -259,10 +264,6 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
     }
 
     const config = getProductSignatoryConfig(signatory)
-
-    if (!config) {
-      return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
-    }
 
     // 处理勾选框状态变化
     const handleCheckboxChange = (itemKey: string, checked: boolean) => {
@@ -682,6 +683,11 @@ const SingleServiceAgreement = forwardRef<SingleServiceAgreementRef, SingleServi
       handleSubmit,
       getFormData,
     }))
+
+    // 如果配置无效，返回错误信息
+    if (!config) {
+      return <div className={styles.errorMessage}>不支持的签署方: {signatory}</div>
+    }
 
     // 渲染带金额输入框的复选框
     const renderCheckboxWithAmount = (itemKey: string, label: string) => {

@@ -1,16 +1,5 @@
 import React, { useState } from 'react'
-import {
-  Card,
-  Descriptions,
-  Button,
-  Form,
-  message,
-  Space,
-  Tag,
-  Collapse,
-  Input,
-  Checkbox,
-} from 'antd'
+import { Card, Descriptions, Button, Form, message, Space, Tag, Input, Checkbox } from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import type {
   AttendanceDeductionRecord,

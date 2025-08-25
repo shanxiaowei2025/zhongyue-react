@@ -94,7 +94,6 @@ const RelatedDataTabs: React.FC<RelatedDataTabsProps> = ({
         <div className="flex-1 overflow-auto">
           <DepositDataTab
             employee={employee}
-            yearMonth={yearMonth}
             depositData={relatedData.deposit || []}
             onUpdate={data => onUpdate('deposit', data)}
           />

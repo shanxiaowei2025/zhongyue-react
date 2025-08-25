@@ -5,9 +5,11 @@ Always respond in Chinese.
 ## 三阶段工作流
 
 ### 阶段一：分析问题
+
 **声明格式**：`【分析问题】`
 
 **必须做的事**：
+
 - 深入理解需求本质
 - 搜索所有相关代码
 - 识别问题根因
@@ -17,34 +19,41 @@ Always respond in Chinese.
 - 评估每个方案的优劣
 
 **融入的原则**：
+
 - 系统性思维：看到具体问题时，思考整个系统
 - 第一性原则：从功能本质出发，而不是现有代码
 - DRY原则：发现重复代码必须指出
 - 长远考虑：评估技术债务和维护成本
 
 **绝对禁止**：
+
 - ❌ 修改任何代码
 - ❌ 急于给出解决方案
 - ❌ 跳过搜索和理解步骤
 - ❌ 不分析就推荐方案
 
 ### 阶段二：细化方案
+
 **声明格式**：`【细化方案】`
 
 **前置条件**：
+
 - 用户明确选择了方案（如："用方案1"、"实现这个"）
 
 **必须做的事**：
+
 - 列出变更（新增、修改、删除）的文件，简要描述每个文件的变化
 
 ### 阶段三：执行方案
+
 **声明格式**：`【执行方案】`
 
 **必须做的事**：
+
 - 严格按照选定方案实现
-- 修改后运行代码格式化（pnpm format）、类型检查（pnpm type-check）
 
 **绝对禁止**：
+
 - ❌ 提交代码（除非用户明确要求）
 - 启动开发服务器
 
@@ -103,24 +112,28 @@ pnpm format
 ## Key Architecture Patterns
 
 ### Authentication & Security
+
 - JWT tokens with automatic refresh in `src/api/request.ts`
 - Role-based access control with `AuthorizedRoute` and `PermissionGuard` components
 - 30-minute inactivity logout with password expiration enforcement
 - All API requests go through authentication interceptors
 
 ### State Management Strategy
+
 - **Zustand stores** in `src/store/` for global state (auth, forms, page states)
 - **SWR** for server state caching and revalidation
 - **Page state persistence** for filters, pagination, and UI states
 - **Immer middleware** for immutable state updates
 
 ### Component Structure
+
 - **Lazy-loaded pages** in `src/pages/` for performance
 - **Reusable components** in `src/components/`
 - **Custom hooks** for data fetching (`useCustomer`, `useContract`, etc.)
 - **Compound components** for complex UI patterns
 
 ### API Architecture
+
 - All API modules in `src/api/` with consistent patterns
 - Axios interceptors handle authentication and error responses
 - SWR keys follow predictable naming conventions
@@ -129,6 +142,7 @@ pnpm format
 ## Important Development Guidelines
 
 ### File Organization
+
 ```
 src/
 ├── api/            # API request modules by domain
@@ -142,6 +156,7 @@ src/
 ```
 
 ### Code Patterns to Follow
+
 - Use existing custom hooks for data fetching rather than direct API calls
 - Follow the established Zustand store patterns with Immer
 - Implement proper permission checks using `PermissionGuard` for new features
@@ -149,19 +164,22 @@ src/
 - All new pages should be lazy-loaded and follow existing route patterns
 
 ### Business Domain Context
+
 - **Contract management**: Creation, digital signing, viewing, and lifecycle tracking
 - **Expense management**: Receipt upload, expense tracking, audit workflows
-- **Customer management**: Business profiles and relationship management  
+- **Customer management**: Business profiles and relationship management
 - **User management**: Role-based access with departments and permissions
 - **Enterprise services**: Service tracking and compliance monitoring
 
 ### Configuration Notes
+
 - Vite proxy configured for `/api` routes in development
 - Tailwind preflight disabled to work with Ant Design
 - Code splitting configured for React, Ant Design, and utility chunks
 - Docker deployment with Nginx serving and API container communication
 
 ### Common Workflows
+
 - Authentication state is managed in `src/store/auth.ts`
 - Form validation uses Yup schemas with Formik integration
 - File uploads handled through `FileUpload` components with MinIO backend

@@ -15,26 +15,15 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { ColumnsType } from 'antd/es/table'
-import type {
-  DepositRecord,
-  CreateDepositDto,
-  UpdateDepositDto,
-  SalaryRecord,
-} from '../../../types/salaryIntegrated'
+import type { DepositRecord, SalaryRecord } from '../../../types/salaryIntegrated'
 
 interface DepositDataTabProps {
   employee: SalaryRecord | null
-  yearMonth: string
   depositData: DepositRecord[]
   onUpdate: (data: DepositRecord[]) => Promise<void>
 }
 
-const DepositDataTab: React.FC<DepositDataTabProps> = ({
-  employee,
-  yearMonth,
-  depositData,
-  onUpdate,
-}) => {
+const DepositDataTab: React.FC<DepositDataTabProps> = ({ employee, depositData, onUpdate }) => {
   const [modalVisible, setModalVisible] = useState(false)
   const [editingRecord, setEditingRecord] = useState<DepositRecord | null>(null)
   const [form] = Form.useForm()
@@ -75,7 +64,7 @@ const DepositDataTab: React.FC<DepositDataTabProps> = ({
       const newData = depositData.filter(item => item.id !== record.id)
       await onUpdate(newData)
       message.success('删除成功')
-    } catch (error) {
+    } catch {
       message.error('删除失败')
     }
   }
@@ -114,7 +103,7 @@ const DepositDataTab: React.FC<DepositDataTabProps> = ({
       await onUpdate(newData)
       setModalVisible(false)
       message.success(editingRecord ? '更新成功' : '添加成功')
-    } catch (error) {
+    } catch {
       message.error('操作失败')
     } finally {
       setLoading(false)

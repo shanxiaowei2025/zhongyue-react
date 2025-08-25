@@ -7,7 +7,6 @@ import {
   Tag,
   Space,
   Spin,
-  Divider,
   List,
   Empty,
   message,
@@ -18,7 +17,6 @@ import {
   ArrowLeftOutlined,
   EditOutlined,
   DownloadOutlined,
-  FileTextOutlined,
   EyeOutlined,
   FileImageOutlined,
   FileOutlined,
@@ -33,7 +31,7 @@ import dayjs from 'dayjs'
 import { useEmployeeDetail } from '../../hooks/useEmployee'
 import { buildImageUrl } from '../../utils/upload'
 import { useAuthStore } from '../../store/auth'
-import type { Employee, ResumeFile } from '../../types/employee'
+import type { ResumeFile } from '../../types/employee'
 
 const { Title, Text } = Typography
 
@@ -246,7 +244,7 @@ const EmployeeDetail: React.FC = () => {
                           target.nextElementSibling?.classList.remove('hidden')
                         }}
                       />
-                      <div className="hidden flex items-center justify-center text-gray-400">
+                      <div className="flex items-center justify-center text-gray-400">
                         {getFileIcon(file.fileName)}
                       </div>
                     </div>

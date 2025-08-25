@@ -28,7 +28,7 @@ export const createClan = (data: { clanName: string; memberList?: string[] }) =>
 
 // 更新宗族
 export const updateClan = (id: number, data: Partial<Clan>) => {
-  const { createTime, updateTime, ...cleanData } = data
+  const { createTime: _createTime, updateTime: _updateTime, ...cleanData } = data
   return request.patch<ApiResponse<Clan>>(`/clan/${id}`, cleanData)
 }
 

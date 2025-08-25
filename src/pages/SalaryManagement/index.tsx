@@ -1,16 +1,14 @@
 import React, { useState } from 'react'
 import { Button, Spin, Tabs, Progress, Modal } from 'antd'
-import type { TabsProps } from 'antd'
+
 import {
   ReloadOutlined,
   CheckCircleOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
   LeftOutlined,
   RightOutlined,
   ExportOutlined,
 } from '@ant-design/icons'
-import dayjs from 'dayjs'
+
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
 import MonthSelector from './components/MonthSelector'
 import SalaryOverview from './components/SalaryOverview'
@@ -166,7 +164,6 @@ const SalaryManagement: React.FC = () => {
           {leftCollapsed ? (
             <CompactEmployeeList
               salaryData={salaryData}
-              loading={loading}
               selectedEmployee={selectedEmployee}
               onSelectEmployee={handleSelectEmployee}
             />
@@ -236,12 +233,7 @@ const SalaryManagement: React.FC = () => {
                   label: '提成详情',
                   children: (
                     <div className="tab-content-container">
-                      <CommissionPanel
-                        employeeName={selectedEmployee?.name || ''}
-                        yearMonth={selectedYearMonth}
-                        data={relatedData.commission}
-                        onUpdate={data => operations.updateRelatedData('commission', data)}
-                      />
+                      <CommissionPanel />
                     </div>
                   ),
                 },

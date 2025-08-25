@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import SignaturePad from 'react-signature-canvas'
-import { Button, Space, message, Typography } from 'antd'
+import { Button, message, Typography } from 'antd'
 import { ClearOutlined, SaveOutlined } from '@ant-design/icons'
 import { uploadFile } from '../../api/upload'
 

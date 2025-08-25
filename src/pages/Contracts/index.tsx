@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Card,
   Table,
   Button,
   Space,
@@ -10,17 +9,12 @@ import {
   DatePicker,
   Tag,
   Modal,
-  message,
   Tooltip,
-  Row,
-  Col,
   Steps,
   Radio,
-  Typography,
 } from 'antd'
 import {
   PlusOutlined,
-  SearchOutlined,
   ReloadOutlined,
   EyeOutlined,
   EditOutlined,
@@ -33,18 +27,8 @@ import { useNavigate } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useContractList } from '../../hooks/useContract'
 import { usePermission } from '../../hooks/usePermission'
-import PermissionGuard from '../../components/PermissionGuard'
 import type { Contract, ContractQueryParams, ContractStatus } from '../../types/contract'
-import {
-  getContractList,
-  getContractById,
-  createContract as createContractApi,
-  updateContract as updateContractApi,
-  deleteContract as deleteContractApi,
-  signContract as signContractApi,
-  generateContractToken,
-} from '../../api/contract'
-import SignatureCanvas from '../../components/contracts/SignatureCanvas'
+
 import { useDebouncedValue } from '../../hooks/useDebounce'
 
 // 添加样式来隔离签署模态框
@@ -268,12 +252,6 @@ const Contracts: React.FC = () => {
     pageSize: 10,
   })
 
-  // 构建查询参数
-  const queryParams: ContractQueryParams = {
-    ...searchParams,
-    ...pagination,
-  }
-
   // 添加防抖搜索参数
   const debouncedSearchParams = useDebouncedValue(searchParams, 500)
 
@@ -290,9 +268,7 @@ const Contracts: React.FC = () => {
     currentPage,
     pageSize,
     isLoading,
-    refreshContractList,
     removeContract,
-    doSignContract,
   } = useContractList(debouncedQueryParams)
 
   // 设置表单初始值
@@ -309,28 +285,6 @@ const Contracts: React.FC = () => {
           : undefined,
     })
   }, [form, searchParams])
-
-  // 搜索处理
-  const handleSearch = () => {
-    const values = form.getFieldsValue()
-
-    // 处理日期范围
-    const newSearchParams = {
-      contractNumber: values.contractNumber || '',
-      partyACompany: values.partyACompany || '',
-      partyACreditCode: values.partyACreditCode || '',
-      contractType: values.contractType || undefined,
-      signatory: values.signatory || undefined,
-      contractStatus: values.contractStatus || undefined,
-      partyASignDateStart: values.partyASignDateRange?.[0]?.format('YYYY-MM-DD') || '',
-      partyASignDateEnd: values.partyASignDateRange?.[1]?.format('YYYY-MM-DD') || '',
-      createTimeStart: values.createTimeRange?.[0]?.format('YYYY-MM-DD') || '',
-      createTimeEnd: values.createTimeRange?.[1]?.format('YYYY-MM-DD') || '',
-    }
-
-    setSearchParams(newSearchParams)
-    setPagination({ page: 1, pageSize: pagination.pageSize })
-  }
 
   // 重置搜索
   const handleReset = () => {
@@ -462,86 +416,6 @@ const Contracts: React.FC = () => {
       okType: 'danger',
       onOk: async () => {
         await removeContract(id)
-      },
-    })
-  }
-
-  // 签署合同
-  const handleSign = (record: Contract) => {
-    let signatureImageUrl = ''
-
-    Modal.confirm({
-      title: '签署合同',
-      icon: null,
-      width: 700,
-      className: 'contract-signature-modal',
-      wrapClassName: 'contract-signature-modal-wrap',
-      mask: true,
-      maskClosable: true,
-      content: (
-        <div className="contract-signature-modal-content bg-white p-4 rounded">
-          <div className="mb-6 text-center">
-            <p className="text-base text-gray-700">
-              您正在签署合同{' '}
-              <span className="font-semibold text-blue-600">
-                {record.contractNumber || `#${record.id}`}
-              </span>
-            </p>
-          </div>
-
-          {/* 使用直接导入的SignatureCanvas组件 */}
-          <div className="contract-signature-area bg-gray-50 p-4 rounded-lg">
-            <SignatureCanvas
-              onSave={(url: string) => {
-                signatureImageUrl = url
-                // 自动点击确认按钮
-                document
-                  .querySelector('.contract-signature-modal .ant-btn-primary')
-                  ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-              }}
-            />
-          </div>
-        </div>
-      ),
-      okText: '确认签署',
-      cancelText: '取消',
-      onOk: async () => {
-        if (!signatureImageUrl) {
-          message.error('请先完成签名')
-          return Promise.reject('未完成签名')
-        }
-
-        try {
-          // 准备更新数据：签章图片 + 自动设置签名日期（如果为空）
-          const currentDate = dayjs().format('YYYY-MM-DD')
-          const updateData: any = {
-            partyAStampImage: signatureImageUrl,
-          }
-
-          // 如果甲方签订日期为空，自动设置为当前日期
-          if (!record.partyASignDate) {
-            updateData.partyASignDate = currentDate
-          }
-
-          // 如果乙方签订日期为空，自动设置为当前日期
-          if (!record.partyBSignDate) {
-            updateData.partyBSignDate = currentDate
-          }
-
-          // 1. 更新合同的签章图片和日期
-          await updateContractApi(record.id, updateData)
-
-          // 2. 签署合同
-          const signature = `${new Date().toISOString()}_${record.id}`
-          await doSignContract(record.id, { signature })
-
-          message.success('合同签署成功')
-          return Promise.resolve()
-        } catch (error) {
-          console.error('签署失败:', error)
-          message.error('签署失败，请重试')
-          return Promise.reject(error)
-        }
       },
     })
   }

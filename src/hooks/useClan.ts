@@ -14,7 +14,7 @@ import type { Clan, ClanQueryParams } from '../types'
 // SWR键生成器
 export const getClanListKey = (params: ClanQueryParams) => {
   const searchStr = Object.entries(params)
-    .filter(([_, v]) => v !== undefined && v !== '')
+    .filter(([, v]) => v !== undefined && v !== '')
     .map(([k, v]) => `${k}=${v}`)
     .join('&')
   return `/clan${searchStr ? `?${searchStr}` : ''}`

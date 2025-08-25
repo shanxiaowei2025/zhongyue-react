@@ -9,7 +9,7 @@ interface ImportExportPanelProps {
   onImport: (type: ImportType, file: File) => Promise<ImportResult>
 }
 
-const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImport }) => {
+const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ onImport }) => {
   const [importModalVisible, setImportModalVisible] = useState(false)
   const [importType, setImportType] = useState<ImportType>('socialInsurance')
 

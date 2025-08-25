@@ -1,9 +1,7 @@
 import React from 'react'
-import { Tag } from 'antd'
-import dayjs from 'dayjs'
 import type { Contract } from '../../types/contract'
 import { numberToChinese } from '../../utils/numberToChinese'
-import { formatText, formatCurrency, formatAnyDate, formatFeeAmount } from '../../utils/formatUtils'
+import { formatText, formatAnyDate, formatFeeAmount } from '../../utils/formatUtils'
 import { getProductSignatoryConfig, getSignatoryStampImage } from '../../config/signatoryConfig'
 import styles from './SingleServiceAgreementView.module.css'
 
@@ -23,63 +21,6 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
 
   if (!config) {
     return <div className={styles.errorMessage}>不支持的签署方: {contractData.signatory}</div>
-  }
-
-  // 获取项目名称
-  const getItemName = (itemKey: string): string => {
-    const itemNameMap: Record<string, string> = {
-      // 工商项目
-      business_establish_limited: '有限责任公司',
-      business_establish_branch: '有限责任公司分支机构',
-      business_establish_individual: '个人独资企业',
-      business_establish_partnership: '合伙企业',
-      business_establish_nonprofit: '民办非企业',
-      business_establish_joint_stock: '股份有限公司',
-      business_establish_self_employed: '个体工商户',
-      business_change_legal_person: '法定代表人',
-      business_change_shareholder: '股东股权',
-      business_change_capital: '注册资金',
-      business_change_name: '公司名称',
-      business_change_scope: '经营范围',
-      business_change_address: '注册地址',
-      business_change_manager: '分公司负责人',
-      business_change_directors: '董事/监事人员',
-      business_cancel_limited: '有限责任公司',
-      business_cancel_branch: '有限责任公司分支机构',
-      business_cancel_individual: '个人独资企业',
-      business_cancel_partnership: '合伙企业',
-      business_cancel_foreign: '外商投资企业',
-      business_cancel_joint_stock: '股份有限公司',
-      business_cancel_self_employed: '个体工商户',
-      business_other_annual_report: '年报公示',
-      business_other_remove_exception: '解除异常',
-      business_other_info_repair: '信息修复',
-      business_other_file_retrieval: '档案调取',
-      business_other_license_annual: '许可证年检',
-      business_material_seal: '备案章',
-      business_material_rubber: '胶皮章',
-      business_material_crystal: '水晶章',
-      business_material_kt_board: 'KT板牌子',
-      business_material_copper: '铜牌',
-      // 银行项目
-      bank_general_account: '一般账户设立',
-      bank_basic_account: '基本账户设立',
-      bank_foreign_account: '外币账户设立',
-      bank_info_change: '信息变更',
-      bank_cancel: '银行账户注销',
-      bank_financing: '融资业务（开通平台手续）',
-      bank_loan: '贷款服务',
-      // 许可业务项目
-      license_food: '食品经营许可证',
-      license_health: '卫生许可证',
-      license_catering: '餐饮许可证',
-      license_transport: '道路运输许可证',
-      license_medical: '二类医疗器械备案',
-      license_other: '其他许可证',
-      license_prepackaged: '预包装食品备案',
-    }
-
-    return itemNameMap[itemKey] || itemKey
   }
 
   // 渲染服务项目标签
@@ -167,7 +108,7 @@ const SingleServiceAgreementView: React.FC<SingleServiceAgreementViewProps> = ({
     return (
       <div className={styles.serviceItemsContainer}>
         {categoryOptions.map(option => {
-          const isSelected = selectedItemsMap.hasOwnProperty(option.key)
+          const isSelected = Object.prototype.hasOwnProperty.call(selectedItemsMap, option.key)
           const item = selectedItemsMap[option.key]
 
           return (

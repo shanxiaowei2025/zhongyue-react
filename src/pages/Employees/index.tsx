@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Button, Card, message, Typography } from 'antd'
+import React, { useEffect, useRef } from 'react'
+import { Button, Card } from 'antd'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { EmployeeSearch } from '../../components/EmployeeSearch'
@@ -8,14 +8,6 @@ import { useEmployeeList, useDeleteEmployee } from '../../hooks/useEmployee'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import { usePageStates } from '../../hooks/usePageStates'
 import type { Employee, QueryEmployeeDto } from '../../types/employee'
-
-const { Title } = Typography
-
-interface PaginationState {
-  current: number
-  pageSize: number
-  total: number
-}
 
 const Employees: React.FC = () => {
   const navigate = useNavigate()
@@ -49,14 +41,13 @@ const Employees: React.FC = () => {
     pageSize,
     ...Object.fromEntries(
       Object.entries(debouncedSearchParams).filter(
-        ([key, value]) => value !== undefined && value !== null && value !== ''
+        ([, value]) => value !== undefined && value !== null && value !== ''
       )
     ),
   }
 
   // 数据获取
-  const { employees, total, isLoading, refreshEmployeeList, removeEmployee } =
-    useEmployeeList(requestParams)
+  const { employees, total, isLoading, removeEmployee } = useEmployeeList(requestParams)
 
   // 删除员工
   const { deleteEmployee } = useDeleteEmployee()
@@ -145,9 +136,6 @@ const Employees: React.FC = () => {
       if (employees.length === 1 && current > 1) {
         const newPage = current - 1
         setCurrentState(newPage)
-      } else {
-        // 刷新当前页数据
-        refreshEmployeeList()
       }
     } catch (error) {
       console.error('删除员工失败:', error)

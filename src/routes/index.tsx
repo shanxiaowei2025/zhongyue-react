@@ -1,5 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { useAuthStore } from '../store/auth'
+import { createBrowserRouter } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import { lazy } from 'react'
 import { AuthorizedRoute } from '../components/AuthorizedRoute'
@@ -43,12 +42,6 @@ const MySalary = lazy(() => import('../pages/MySalary'))
 const DataQuery = lazy(() => import('../pages/DataQuery'))
 const Notifications = lazy(() => import('../pages/Notifications'))
 const NotFound = lazy(() => import('../pages/NotFound'))
-
-// 路由守卫组件
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuthStore()
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
-}
 
 // 路由配置
 const routes: RouteObject[] = [

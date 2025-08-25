@@ -13,29 +13,23 @@ import {
   Card,
   Row,
   Col,
-  Popover,
   Tooltip,
-  Typography,
   Cascader,
+  Typography,
 } from 'antd'
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  SearchOutlined,
   ReloadOutlined,
   TeamOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { Department, DepartmentTreeNode } from '../../types'
 import {
   useDepartments,
-  useDepartmentList,
-  useDepartmentDetail,
   useDepartmentUsers,
   useDepartmentOperations,
-  getDepartmentPath,
 } from '../../hooks/useDepartments'
 import './index.css' // 引入CSS样式文件
 
@@ -303,13 +297,7 @@ const Departments = () => {
     setDepartments(searchResults as unknown as Department[])
   }
 
-  const handleReset = () => {
-    setSearchText('')
-    setSelectedKeys([])
-    setDepartments(treeData as unknown as Department[])
-  }
-
-  const handleTreeSelect = (selectedKeys: React.Key[], info: any) => {
+  const handleTreeSelect = (selectedKeys: React.Key[]) => {
     setSelectedKeys(selectedKeys)
     if (selectedKeys.length > 0) {
       const selectedId = selectedKeys[0] as number

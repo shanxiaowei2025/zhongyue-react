@@ -17,19 +17,7 @@ import type {
   PerformanceCommission,
 } from '../../../api/commission'
 
-interface CommissionPanelProps {
-  employeeName: string
-  yearMonth: string
-  data?: any
-  onUpdate: (data: any) => Promise<any>
-}
-
-const CommissionPanel: React.FC<CommissionPanelProps> = ({
-  employeeName,
-  yearMonth,
-  data,
-  onUpdate,
-}) => {
+const CommissionPanel: React.FC = () => {
   const {
     commissionSummary,
     loading,

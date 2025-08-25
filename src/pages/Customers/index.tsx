@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import {
   Table,
   Button,
@@ -18,7 +17,6 @@ import {
   Upload,
   Form,
   Tooltip,
-  Popover,
   Pagination,
 } from 'antd'
 import ResizableTable from '../../components/ResizableTable'
@@ -27,7 +25,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
-  SearchOutlined,
   LoadingOutlined,
   ReloadOutlined,
   DownloadOutlined,
@@ -40,11 +37,9 @@ import {
   FileImageOutlined,
   FileJpgOutlined,
 } from '@ant-design/icons'
-import type { ColumnsType } from 'antd/es/table'
 import type { Customer, ImageType, ImageTypeWithRemarks } from '../../types'
 import type { ResizableTableColumn } from '../../types/table'
 import type { TabsProps } from 'antd'
-import type { UploadProps } from 'antd'
 import CustomerForm from './CustomerForm'
 import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
 import { useClanDetail } from '../../hooks/useClan'
@@ -224,11 +219,8 @@ export default function Customers() {
   } = useCustomerList(requestParams)
 
   // 使用SWR获取客户详情数据
-  const {
-    customer: customerDetail,
-    loading: isDetailLoading,
-    refreshCustomerDetail: refreshCustomerDetail,
-  } = useCustomerDetail(selectedCustomerId)
+  const { customer: customerDetail, refreshCustomerDetail: refreshCustomerDetail } =
+    useCustomerDetail(selectedCustomerId)
 
   // 当客户详情数据更新时，更新当前客户状态
   useEffect(() => {
@@ -261,10 +253,10 @@ export default function Customers() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const handleSearch = () => {
-    setCurrent(1) // 重置到第一页
-    // SWR会自动触发新请求
-  }
+  // const handleSearch = () => {
+  //   setCurrent(1) // 重置到第一页
+  //   // SWR会自动触发新请求
+  // }
 
   // 当搜索参数变化时，自动重置到第一页（仅当不是初始加载时）
   useEffect(() => {
@@ -316,7 +308,11 @@ export default function Customers() {
     setCurrentCustomer(null)
     setSelectedCustomerId(undefined)
     setDetailType('add')
-    isMobile ? setDrawerVisible(true) : setModalVisible(true)
+    if (isMobile) {
+      setDrawerVisible(true)
+    } else {
+      setModalVisible(true)
+    }
   }
 
   const handleView = (record: Customer) => {
@@ -345,7 +341,11 @@ export default function Customers() {
 
     // 延迟打开对话框，使用 requestAnimationFrame 代替 setTimeout
     requestAnimationFrame(() => {
-      isMobile ? setDrawerVisible(true) : setModalVisible(true)
+      if (isMobile) {
+        setDrawerVisible(true)
+      } else {
+        setModalVisible(true)
+      }
     })
   }
 
@@ -381,7 +381,7 @@ export default function Customers() {
       }
 
       const customer = response.data
-      let deletedCount = 0
+      // let deletedCount = 0
 
       // 提取所有图片文件名准备删除
       const imagesToDelete: string[] = []
@@ -397,26 +397,26 @@ export default function Customers() {
         })
       }
 
-      // 处理字符串形式的图片URL {key: string}
-      const processStringImages = (imagesObj: Record<string, any> | undefined) => {
-        if (!imagesObj) return
+      // 处理字符串形式的图片URL {key: string} - 暂时注释掉，因为当前未使用
+      // const processStringImages = (imagesObj: Record<string, any> | undefined) => {
+      //   if (!imagesObj) return
 
-        Object.values(imagesObj).forEach(item => {
-          if (typeof item === 'string' && item) {
-            // 从URL中提取文件名
-            const urlParts = item.split('/')
-            const fileNameWithParams = urlParts[urlParts.length - 1]
-            const fileName = fileNameWithParams.split('?')[0] // 移除查询参数
+      //   Object.values(imagesObj).forEach(item => {
+      //     if (typeof item === 'string' && item) {
+      //       // 从URL中提取文件名
+      //       const urlParts = item.split('/')
+      //       const fileNameWithParams = urlParts[urlParts.length - 1]
+      //       const fileName = fileNameWithParams.split('?')[0] // 移除查询参数
 
-            if (fileName) {
-              imagesToDelete.push(fileName)
-            }
-          } else if (item && typeof item === 'object' && item.fileName) {
-            // 处理ImageType格式
-            imagesToDelete.push(item.fileName)
-          }
-        })
-      }
+      //       if (fileName) {
+      //       imagesToDelete.push(fileName)
+      //       }
+      //     } else if (item && typeof item === 'object' && item.fileName) {
+      //       // 处理ImageType格式
+      //       imagesToDelete.push(item.fileName)
+      //     }
+      //   })
+      // }
 
       processObjectImages(customer.legalPersonIdImages)
       processObjectImages(customer.businessLicenseImages)
@@ -427,10 +427,7 @@ export default function Customers() {
       // 批量删除图片文件
       for (const fileName of imagesToDelete) {
         try {
-          const success = await deleteFile(fileName)
-          if (success) {
-            deletedCount++
-          }
+          await deleteFile(fileName)
         } catch (error) {
           console.error(`删除图片文件 ${fileName} 失败:`, error)
         }
@@ -510,7 +507,8 @@ export default function Customers() {
 
       // 使用当前搜索和分页参数导出数据
       // 移除分页大小参数，导出所有匹配条件的数据
-      const { pageSize: _, ...exportParams } = requestParams
+      const exportParams = { ...requestParams }
+      delete exportParams.pageSize
       const response = await exportCustomerCSV(exportParams)
 
       message.destroy()
@@ -1436,7 +1434,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   }, [customer.id, retryCount])
 
   // 优化useSWR配置，防止过早或不必要的请求
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading } = useSWR(
     customer?.id ? `/customer/${customer.id}` : null,
     () => (customer?.id ? getCustomerDetail(customer.id) : null),
     {
@@ -1473,7 +1471,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           // 使用 promise 和 requestAnimationFrame 代替 setTimeout
           const delay = (ms: number) =>
             new Promise(resolve => {
-              let startTime = performance.now()
+              const startTime = performance.now()
               const checkTime = () => {
                 const elapsed = performance.now() - startTime
                 if (elapsed >= ms) {
@@ -1577,7 +1575,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         return dayjs.utc(dateString).local().format('YYYY/MM/DD HH:mm')
       }
       return dayjs.utc(dateString).local().format('YYYY/MM/DD')
-    } catch (e) {
+    } catch {
       return dateString || '-'
     }
   }

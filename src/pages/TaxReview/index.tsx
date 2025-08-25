@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Card,
   Table,
@@ -9,13 +9,9 @@ import {
   Row,
   Col,
   DatePicker,
-  Typography,
   Tooltip,
   Modal,
   message,
-  Tag,
-  AutoComplete,
-  Spin,
 } from 'antd'
 import {
   SearchOutlined,
@@ -23,7 +19,6 @@ import {
   PlusOutlined,
   EyeOutlined,
   DownloadOutlined,
-  LoadingOutlined,
 } from '@ant-design/icons'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
@@ -34,7 +29,7 @@ import {
   useTaxVerificationList,
   useTaxVerificationOperations,
 } from '../../hooks/useTaxVerification'
-import { uploadFile } from '../../api/upload'
+
 import type {
   TaxVerification,
   TaxVerificationQueryParams,
@@ -45,9 +40,6 @@ import type { Enterprise } from '../../types/enterpriseService'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import type { ImageType } from '../../types'
 import MultiFileUpload from '../../components/MultiFileUpload'
-
-const { Title } = Typography
-const { RangePicker } = DatePicker
 
 // 智能文本渲染组件
 const EllipsisText: React.FC<{
@@ -103,7 +95,7 @@ const TaxReview: React.FC = () => {
   const debouncedSearchParams = useDebouncedValue(searchParams, 500)
 
   // 使用统一的hook获取数据
-  const { data, pagination, loading, refreshTaxVerificationList } = useTaxVerificationList({
+  const { data, pagination, loading } = useTaxVerificationList({
     ...debouncedSearchParams,
     page: current,
     pageSize: pageSize,
@@ -181,15 +173,15 @@ const TaxReview: React.FC = () => {
     if (pagination.pageSize) setPageSize(pagination.pageSize)
   }
 
-  // 客户选择处理函数
-  const handleCustomerSelect = (enterprise: Enterprise) => {
-    createForm.setFieldsValue({
-      companyName: enterprise.companyName,
-      unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
-      taxBureau: enterprise.taxBureau || '',
-    })
-    message.success('企业信息已自动填入')
-  }
+  // 客户选择处理函数 - 暂时注释掉，因为当前未使用
+  // const handleCustomerSelect = (enterprise: Enterprise) => {
+  //   createForm.setFieldsValue({
+  //     companyName: enterprise.companyName,
+  //     unifiedSocialCreditCode: enterprise.unifiedSocialCreditCode,
+  //     taxBureau: enterprise.taxBureau || '',
+  //   })
+  //   message.success('企业信息已自动填入')
+  // }
 
   // 打开新建弹窗
   const handleOpenCreateModal = () => {

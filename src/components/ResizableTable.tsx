@@ -1,19 +1,15 @@
 import React, { useMemo } from 'react'
-import { Table, Spin } from 'antd'
+import { Spin } from 'antd'
 import { flexRender } from '@tanstack/react-table'
 import { useResizableTable } from '../hooks/useResizableTable'
 import ResizableTableHeader from './ResizableTableHeader'
-import type { ResizableTableProps, ResizableTableColumn } from '../types/table'
+import type { ResizableTableProps } from '../types/table'
 
 export function ResizableTable<T extends Record<string, any>>({
   columns,
   dataSource,
-  rowKey,
   pagination,
   loading = false,
-  scroll,
-  size = 'middle',
-  sticky = false,
   className = '',
   tableKey = 'resizable-table',
 }: ResizableTableProps<T>) {

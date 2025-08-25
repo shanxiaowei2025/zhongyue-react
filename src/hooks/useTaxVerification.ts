@@ -7,11 +7,7 @@ import {
   updateTaxVerification,
   deleteTaxVerification,
 } from '../api/taxVerification'
-import type {
-  TaxVerificationQueryParams,
-  CreateTaxVerificationDto,
-  TaxVerification,
-} from '../types/taxVerification'
+import type { TaxVerificationQueryParams, CreateTaxVerificationDto } from '../types/taxVerification'
 
 // 税务核查列表请求的SWR键生成函数
 const getTaxVerificationListKey = (params?: TaxVerificationQueryParams) => {

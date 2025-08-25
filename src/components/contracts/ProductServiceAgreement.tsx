@@ -1,8 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect, useCallback } from 'react'
-import { Checkbox, Input, DatePicker, message } from 'antd'
+import { Checkbox, Input, DatePicker } from 'antd'
 import { showSuccess, showValidationError } from '../../utils/messageHelper'
-import type { CheckboxProps } from 'antd'
-import { LoadingOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { produce } from 'immer'
 import { useContractDetail } from '../../hooks/useContract'
@@ -42,7 +40,14 @@ const ProductServiceAgreement = forwardRef<
   ProductServiceAgreementProps
 >(
   (
-    { signatory, contractData = {}, onSubmit, onUpdate, isSubmitting = false, mode = 'create' },
+    {
+      signatory,
+      contractData = {},
+      onSubmit,
+      onUpdate,
+
+      mode = 'create',
+    },
     ref
   ) => {
     // 使用store管理表单缓存 (仅创建模式)
@@ -356,10 +361,6 @@ const ProductServiceAgreement = forwardRef<
     // 检查是否是脉信公司的产品服务协议
     const isMaixinProductService =
       signatory === '保定脉信会计服务有限公司' && formData.contractType === '产品服务协议'
-
-    if (!config) {
-      return <div className="error-message">不支持的签署方: {signatory}</div>
-    }
 
     // 处理表单数据变化
     const handleFormChange = useCallback(
@@ -1023,6 +1024,10 @@ const ProductServiceAgreement = forwardRef<
       handleSubmit,
       getFormData,
     }))
+
+    if (!config) {
+      return <div className="error-message">不支持的签署方: {signatory}</div>
+    }
 
     return (
       <div className="product-service-agreement">

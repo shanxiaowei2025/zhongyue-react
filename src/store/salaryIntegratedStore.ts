@@ -326,10 +326,10 @@ export const useSalaryIntegratedActions = () => {
 
 // 计算派生状态的hooks
 export const useSalaryIntegratedComputed = () => {
-  const { salaryData, selectedEmployee, statistics } = useSalaryIntegratedSelectors()
+  const { salaryData } = useSalaryIntegratedSelectors()
 
   // 过滤后的薪资数据
-  const filteredSalaryData = salaryData.filter(item => {
+  const filteredSalaryData = salaryData.filter(() => {
     // 这里可以根据搜索条件进行过滤
     return true
   })

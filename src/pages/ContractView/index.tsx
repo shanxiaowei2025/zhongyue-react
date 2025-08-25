@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Spin, Alert, Button, Typography, message } from 'antd'
+import { Card, Spin, Alert, Button, Typography } from 'antd'
 import { getSignedContractByCode } from '../../api/contract'
 import { buildImageUrl } from '../../utils/upload'
 
 const { Title, Paragraph } = Typography
 
-interface ContractViewProps {}
+type ContractViewProps = object
 
 const ContractView: React.FC<ContractViewProps> = () => {
   const { encryptedCode } = useParams<{ encryptedCode: string }>()

@@ -70,31 +70,6 @@ export const uploadFile = async (file: File): Promise<{ fileName: string; url: s
   }
 }
 
-// 确保URL是相对路径
-function ensureRelativeUrl(url: string): string {
-  if (!url) return ''
-
-  try {
-    // 检查是否为完整的URL（包含http或https协议）
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      // 尝试转换为相对路径
-      const urlObj = new URL(url)
-      // 如果是同域名下的URL，返回路径部分
-      if (urlObj.hostname === window.location.hostname) {
-        return urlObj.pathname
-      }
-      // 其他外部URL，保持完整URL
-      return url
-    }
-    // 如果已经是相对路径，直接返回
-    return url
-  } catch (e) {
-    // URL解析出错，原样返回
-    console.error('URL解析错误:', e, url)
-    return url
-  }
-}
-
 // 删除文件
 export const deleteFile = async (fileName: string): Promise<boolean> => {
   try {

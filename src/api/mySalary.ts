@@ -1,7 +1,6 @@
 import axios from 'axios'
 import type { AxiosResponse } from 'axios'
 import { message } from 'antd'
-import request from './request'
 import type {
   MySalaryRecord,
   MySalaryQueryParams,

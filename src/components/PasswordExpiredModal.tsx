@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Form, Input, Button, message } from 'antd'
+import { Modal, Form, Input, Button } from 'antd'
 import { showValidationError, showSuccess, showWarning } from '../utils/messageHelper'
 import { useAuthStore } from '../store/auth'
 import { changePassword } from '../api/auth'
@@ -40,7 +40,7 @@ const PasswordExpiredModal: React.FC<PasswordExpiredModalProps> = ({ visible }) 
 
         // 所有条件都满足时启用按钮
         setSubmitDisabled(!(hasAllValues && passwordsDifferent && passwordsMatch && validLength))
-      } catch (error) {
+      } catch {
         // 如果出现任何错误，禁用按钮
         setSubmitDisabled(true)
       }

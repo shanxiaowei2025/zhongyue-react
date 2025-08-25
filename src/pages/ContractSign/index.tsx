@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, Spin, Alert, Button, Typography, message, Modal } from 'antd'
-import { getContractImageByToken, validateContractToken } from '../../api/contract'
+import { getContractImageByToken } from '../../api/contract'
 import { buildImageUrl } from '../../utils/upload'
 import SignatureCanvasForward, {
   SignatureCanvasRef,
@@ -98,23 +98,7 @@ const mobileStyles = `
 
 const { Title, Paragraph } = Typography
 
-// 定义API响应类型
-interface ApiResponse<T> {
-  code: number
-  data: T
-  message: string
-  timestamp: number
-}
-
-interface SignatureResponseData {
-  success: boolean
-  message: string
-  contractId: number
-  encryptedCode: string
-  partyACompany: string
-}
-
-interface ContractSignProps {}
+type ContractSignProps = object
 
 const ContractSign: React.FC<ContractSignProps> = () => {
   const { token } = useParams<{ token: string }>()
@@ -126,29 +110,25 @@ const ContractSign: React.FC<ContractSignProps> = () => {
   const [contractId, setContractId] = useState<number | null>(null)
   const [signModalVisible, setSignModalVisible] = useState(false)
   const [signing, setSigning] = useState(false)
-  const [windowWidth, setWindowWidth] = useState(0)
-  const [windowHeight, setWindowHeight] = useState(0)
   const [isLandscape, setIsLandscape] = useState(false)
   const signatureRef = useRef<SignatureCanvasRef | null>(null)
 
-  // 获取窗口尺寸和方向
+  // 获取屏幕方向
   useEffect(() => {
-    const updateWindowDimensions = () => {
-      setWindowWidth(window.innerWidth)
-      setWindowHeight(window.innerHeight)
+    const updateOrientation = () => {
       setIsLandscape(window.innerWidth > window.innerHeight)
     }
 
-    // 初始化窗口尺寸
-    updateWindowDimensions()
+    // 初始化屏幕方向
+    updateOrientation()
 
-    // 监听窗口大小变化
-    window.addEventListener('resize', updateWindowDimensions)
-    window.addEventListener('orientationchange', updateWindowDimensions)
+    // 监听窗口大小变化和屏幕方向变化
+    window.addEventListener('resize', updateOrientation)
+    window.addEventListener('orientationchange', updateOrientation)
 
     return () => {
-      window.removeEventListener('resize', updateWindowDimensions)
-      window.removeEventListener('orientationchange', updateWindowDimensions)
+      window.removeEventListener('resize', updateOrientation)
+      window.removeEventListener('orientationchange', updateOrientation)
     }
   }, [])
 

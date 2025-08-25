@@ -9,12 +9,7 @@ import {
   markAllNotificationsAsRead,
   deleteNotificationRecord,
 } from '../api/notification'
-import type {
-  Notification,
-  NotificationQueryParams,
-  CreateNotificationDto,
-  NotificationListResponse,
-} from '../types/notification'
+import type { NotificationQueryParams, CreateNotificationDto } from '../types/notification'
 
 // SWR Key生成函数
 export const getNotificationListKey = (params: NotificationQueryParams) => {
@@ -26,11 +21,11 @@ export const getNewNotificationsKey = (params: Omit<NotificationQueryParams, 'on
 }
 
 // SWR Fetcher函数
-const notificationListFetcher = ([url, params]: [string, NotificationQueryParams]) => {
+const notificationListFetcher = ([, params]: [string, NotificationQueryParams]) => {
   return getNotificationList(params)
 }
 
-const newNotificationsFetcher = ([url, params]: [
+const newNotificationsFetcher = ([, params]: [
   string,
   Omit<NotificationQueryParams, 'onlyNew'>,
 ]) => {

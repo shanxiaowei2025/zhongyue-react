@@ -1,6 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
 import { Input, DatePicker, Checkbox, message, Select } from 'antd'
-import { showSuccess, showValidationError } from '../../utils/messageHelper'
+import { showSuccess } from '../../utils/messageHelper'
 import dayjs from 'dayjs'
 import { useContractDetail } from '../../hooks/useContract'
 import { useDebouncedValue } from '../../hooks/useDebounce'
@@ -422,6 +422,13 @@ const AgencyAccountingAgreement = forwardRef<
     fetchAgencyDates()
   }
 
+  // 暴露方法给父组件
+  useImperativeHandle(ref, () => ({
+    validateForm,
+    handleSubmit,
+    getFormData,
+  }))
+
   // 计算大写金额
 
   if (!config) {
@@ -821,13 +828,6 @@ const AgencyAccountingAgreement = forwardRef<
 
     return data
   }
-
-  // 暴露方法给父组件
-  useImperativeHandle(ref, () => ({
-    validateForm,
-    handleSubmit,
-    getFormData,
-  }))
 
   return (
     <div className={styles.agencyAccountingAgreement}>

@@ -193,7 +193,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   }
 
   const handleCustomUpload = async (options: any) => {
-    const { file, onSuccess: onUploadSuccess, onError, onProgress } = options
+    const { file, onSuccess: onUploadSuccess, onError } = options
     console.log('handleCustomUpload called:', file.name)
 
     setUploadingCount(prev => prev + 1)

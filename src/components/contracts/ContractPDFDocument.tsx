@@ -584,14 +584,6 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     )
   }
 
-  // 通用空值处理函数
-  const formatEmptyValue = (value?: any) => {
-    if (value === undefined || value === null || value === '' || value === 0) {
-      return '/'
-    }
-    return value
-  }
-
   // 格式化日期
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return '/'
@@ -604,14 +596,6 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     if (!dateString) return '___'
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString
     return `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
-  }
-
-  // 金额格式化
-  const formatCurrency = (amount?: number | string | null) => {
-    if (amount === undefined || amount === null || amount === '' || amount === 0) return '/'
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
-    if (isNaN(numAmount) || !isFinite(numAmount)) return '/'
-    return numAmount.toFixed(2)
   }
 
   // PDF专用的费用格式化函数
@@ -813,8 +797,8 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             }}
             wrap={false}
           >
-            {row.map((option, colIndex) => {
-              const isSelected = selectedItemsMap.hasOwnProperty(option.key)
+            {row.map(option => {
+              const isSelected = Object.prototype.hasOwnProperty.call(selectedItemsMap, option.key)
               const item = selectedItemsMap[option.key]
 
               return (
@@ -922,7 +906,10 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             }}
           >
             {row.map((option, colIndex) => {
-              const isSelected = selectedServiceMap.hasOwnProperty(option.value)
+              const isSelected = Object.prototype.hasOwnProperty.call(
+                selectedServiceMap,
+                option.value
+              )
               return (
                 <View
                   key={colIndex}

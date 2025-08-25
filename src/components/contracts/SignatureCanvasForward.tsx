@@ -1,7 +1,5 @@
-import React, { forwardRef, useRef, useState, useImperativeHandle, useEffect } from 'react'
+import React, { forwardRef, useRef, useImperativeHandle, useEffect } from 'react'
 import SignaturePad from 'react-signature-canvas'
-import { Button, Space } from 'antd'
-import { ClearOutlined } from '@ant-design/icons'
 
 interface SignatureCanvasProps {
   canvasProps?: {
@@ -21,14 +19,12 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
   ({ canvasProps = {} }, ref) => {
     const sigCanvas = useRef<SignaturePad>(null)
     const containerRef = useRef<HTMLDivElement>(null)
-    const [isEmpty, setIsEmpty] = useState(true)
 
     // 向父组件暴露方法
     useImperativeHandle(ref, () => ({
       clear: () => {
         if (sigCanvas.current) {
           sigCanvas.current.clear()
-          setIsEmpty(true)
         }
       },
       isEmpty: () => {
@@ -45,21 +41,6 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
       },
     }))
 
-    // 检查签名是否为空
-    const checkIfEmpty = () => {
-      if (sigCanvas.current) {
-        setIsEmpty(sigCanvas.current.isEmpty())
-      }
-    }
-
-    // 清除签名
-    const handleClear = () => {
-      if (sigCanvas.current) {
-        sigCanvas.current.clear()
-        setIsEmpty(true)
-      }
-    }
-
     // 设置默认尺寸 - 改为获取容器尺寸
     const width = canvasProps.width || 700
     const height = canvasProps.height || 300
@@ -75,7 +56,6 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
           // 等待DOM更新完成
           setTimeout(() => {
             // 获取容器的实际尺寸
-            const containerRect = container.getBoundingClientRect()
             const containerWidth = container.offsetWidth
             const containerHeight = container.offsetHeight
 
@@ -152,7 +132,6 @@ const SignatureCanvasForward = forwardRef<SignatureCanvasRef, SignatureCanvasPro
             },
           }}
           backgroundColor="rgba(255, 255, 255, 1)"
-          onEnd={checkIfEmpty}
           dotSize={1.5}
           minWidth={0.8}
           maxWidth={2.5}

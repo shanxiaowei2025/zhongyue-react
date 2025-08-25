@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import useSWR, { mutate } from 'swr'
 import { message } from 'antd'
 import {
@@ -20,7 +19,6 @@ import {
   UpdateExpenseDto,
   AuditExpenseDto,
   CancelAuditDto,
-  ReceiptViewDto,
 } from '../types/expense'
 
 // 定义获取费用列表的key
@@ -129,7 +127,7 @@ const processResponseData = (data: any): any => {
 }
 
 // 费用列表数据获取函数
-export const expenseListFetcher = async ([url, params]: [string, ExpenseQueryParams]) => {
+export const expenseListFetcher = async ([, params]: [string, ExpenseQueryParams]) => {
   try {
     // 处理请求参数，确保日期范围正确传递
     const queryParams = { ...params }
@@ -383,7 +381,7 @@ export const useExpenseDetail = (id?: number | null) => {
       revalidateOnFocus: false, // 防止焦点切换时自动重新验证
       dedupingInterval: 5000, // 5秒内相同请求只发送一次
       errorRetryCount: 2, // 失败后重试次数
-      onSuccess: data => {
+      onSuccess: () => {
         // 获取费用详情成功
       },
       onError: err => {

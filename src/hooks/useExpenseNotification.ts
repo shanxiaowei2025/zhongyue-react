@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { message } from 'antd'
 import { createNotification } from '../api/notification'
 import { useAuthStore } from '../store/auth'
 import { Expense } from '../types/expense'

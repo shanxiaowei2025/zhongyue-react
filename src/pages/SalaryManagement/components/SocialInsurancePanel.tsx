@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Card, Descriptions, Button, Form, message, Space, Collapse } from 'antd'
+import { Descriptions, Button, Form, message, Space, Collapse } from 'antd'
 import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons'
 import type { SocialInsuranceRecord } from '../../../types/salaryIntegrated'
 import AmountInput from './AmountInput'

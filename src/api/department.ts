@@ -1,5 +1,5 @@
 import request from './request'
-import type { ApiResponse, Department, DepartmentQueryParams, DepartmentTreeNode } from '../types'
+import type { ApiResponse, Department, DepartmentTreeNode } from '../types'
 
 /**
  * 获取部门列表

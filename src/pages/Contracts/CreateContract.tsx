@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, Button, Space, Breadcrumb, Divider, Alert, message } from 'antd'
+import { Card, Button, Space, Breadcrumb, Divider, Alert } from 'antd'
 import { showValidationError, showError, showSuccess } from '../../utils/messageHelper'
 import { ArrowLeftOutlined, HomeOutlined, FileTextOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useContractDetail } from '../../hooks/useContract'
 import { useDebounce } from '../../hooks/useDebounce'
 import { useContractFormStore } from '../../store/contractForm'
-import type { CreateContractDto } from '../../types/contract'
 import ProductServiceAgreement, {
   type ProductServiceAgreementRef,
 } from '../../components/contracts/ProductServiceAgreement'
@@ -34,7 +33,6 @@ const CreateContract: React.FC = () => {
   const location = useLocation()
   const state = location.state as LocationState
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmittingInProgress, setIsSubmittingInProgress] = useState(false)
 
   // 使用重构后的store
   const {
@@ -150,7 +148,7 @@ const CreateContract: React.FC = () => {
 
     // 监听来自MainLayout的缓存清理事件
     const handleClearCacheEvent = (event: CustomEvent) => {
-      const { tabKey, reason } = event.detail || {}
+      const { tabKey } = event.detail || {}
       // 接收到清理缓存事件
 
       // 如果是针对当前页面的清理事件，执行清理
@@ -198,7 +196,6 @@ const CreateContract: React.FC = () => {
   const handleContractSubmit = async () => {
     try {
       setIsSubmitting(true)
-      setIsSubmittingInProgress(true) // 标记提交进行中，暂停所有自动恢复逻辑
       // 开始提交合同
 
       if (contractType === '产品服务协议') {
@@ -249,7 +246,6 @@ const CreateContract: React.FC = () => {
       showError.create()
     } finally {
       setIsSubmitting(false)
-      setIsSubmittingInProgress(false)
       // 合同提交结束
     }
   }
@@ -315,8 +311,7 @@ const CreateContract: React.FC = () => {
     document.addEventListener('formDataRestored', handleDataRestored)
 
     // 监听合同组件的自定义表单变化事件（特别针对DatePicker等Antd组件）
-    const handleContractFormFieldChange = (event: any) => {
-      const { field, value, contractType: eventContractType } = event.detail || {}
+    const handleContractFormFieldChange = () => {
       // 收到合同字段变化事件
       // 触发自动保存
       debouncedSaveFormData()

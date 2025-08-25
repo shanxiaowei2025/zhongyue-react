@@ -1,5 +1,5 @@
 import React from 'react'
-import { Form, Input, Select, Cascader, AutoComplete, Row, Col } from 'antd'
+import { Form, Input, Select, Cascader, AutoComplete } from 'antd'
 import { useDepartments } from '../hooks/useDepartments'
 import type { QueryEmployeeDto } from '../types/employee'
 
@@ -54,7 +54,7 @@ const commissionRatePositionOptions = [
 ]
 
 export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({ searchParams, onSearchChange }) => {
-  const { departments, rawDepartments } = useDepartments()
+  const { departments } = useDepartments()
 
   return (
     <div className="bg-white">

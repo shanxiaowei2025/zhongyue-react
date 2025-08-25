@@ -1,5 +1,5 @@
 import React from 'react'
-import { Badge, Button, Tooltip } from 'antd'
+import { Badge, Tooltip } from 'antd'
 import { CheckCircleOutlined, ClockCircleOutlined } from '@ant-design/icons'
 import type { SalaryRecord } from '../../../types/salaryIntegrated'
 
@@ -7,14 +7,12 @@ interface CompactEmployeeListProps {
   salaryData: SalaryRecord[]
   selectedEmployee: SalaryRecord | null
   onSelectEmployee: (employee: SalaryRecord) => void
-  loading?: boolean
 }
 
 const CompactEmployeeList: React.FC<CompactEmployeeListProps> = ({
   salaryData,
   selectedEmployee,
   onSelectEmployee,
-  loading = false,
 }) => {
   const formatCurrency = (amount: number) =>
     `¥${amount.toLocaleString('zh-CN', {

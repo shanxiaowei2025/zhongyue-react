@@ -64,7 +64,13 @@ export interface UpdateUserParams {
  */
 export const updateUserProfile = (_id: number, data: UpdateUserParams) => {
   // 普通用户使用新接口更新自己的资料
-  return request.put<ApiResponse<any>>('/auth/profile', {
+  return request.put<
+    ApiResponse<{
+      phone?: string
+      idCardNumber?: string
+      avatar?: string
+    }>
+  >('/auth/profile', {
     phone: data.phone,
     idCardNumber: data.idCardNumber,
     avatar: data.avatar,

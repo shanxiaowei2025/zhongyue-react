@@ -13,7 +13,7 @@ declare global {
     }) => void
   }
 }
-import { Layout, Menu, Avatar, Dropdown, Button, Drawer, Badge, Tooltip, message, Tabs } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Button, Drawer, Tooltip, message, Tabs } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   DashboardOutlined,
@@ -180,7 +180,7 @@ const useTabsStore = () => {
           }
         })
         return initialStates
-      } catch (error) {
+      } catch {
         // 恢复模块状态失败，使用默认状态
       }
     }
@@ -222,7 +222,7 @@ const useTabsStore = () => {
 
       try {
         localStorage.setItem('moduleStates', JSON.stringify(statesToSave))
-      } catch (error) {
+      } catch {
         // 保存模块状态失败
       }
 

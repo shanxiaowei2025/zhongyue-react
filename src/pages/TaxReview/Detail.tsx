@@ -1,10 +1,10 @@
 import React from 'react'
-import { Card, Descriptions, Button, Space, Typography, Spin, message, Tag, List } from 'antd'
+import { Card, Descriptions, Button, Space, Typography, Spin, message, List } from 'antd'
 import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { useTaxVerificationDetail } from '../../hooks/useTaxVerification'
-import type { TaxVerification, TaxVerificationAttachment } from '../../types/taxVerification'
+import type { TaxVerificationAttachment } from '../../types/taxVerification'
 
 const { Title } = Typography
 
