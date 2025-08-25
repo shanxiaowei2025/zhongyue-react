@@ -113,6 +113,7 @@ export const getMonthlyExpenseCount = async (salesperson: string): Promise<numbe
       salesperson,
       chargeDateStart: startDate,
       chargeDateEnd: endDateStr,
+      businessType: ['新增', ''], // 只统计新增业务和空业务类型，排除续费
     }
 
     const response = await getExpenseList(params)
