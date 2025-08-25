@@ -201,11 +201,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     }
   }
 
-  // 防抖函数：自动填写开始日期
+  // 防抖函数：获取自动填充日期状态
   const fetchAndFillDates = useDebounce(
     async (companyName?: string, unifiedSocialCreditCode?: string) => {
-      // 只有在创建模式下才自动填写
-      if (mode !== 'add') return
+      // 创建和编辑模式都需要获取自动填充状态（用于权限控制）
 
       // 至少需要一个查询条件
       if (!companyName && !unifiedSocialCreditCode) return
@@ -222,34 +221,37 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           const dates = response.data.dates
           setAutoFillDates(dates)
 
-          // 自动填写有值的日期字段
-          const fieldsToUpdate: Record<string, Dayjs> = {}
+          // 只有在创建模式下才自动填写日期字段
+          if (mode === 'add') {
+            // 自动填写有值的日期字段
+            const fieldsToUpdate: Record<string, Dayjs> = {}
 
-          if (dates.agencyStartDate) {
-            fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
-          }
-          if (dates.accountingSoftwareStartDate) {
-            fieldsToUpdate.accountingSoftwareStartDate = dayjs(dates.accountingSoftwareStartDate)
-          }
-          if (dates.invoiceSoftwareStartDate) {
-            fieldsToUpdate.invoiceSoftwareStartDate = dayjs(dates.invoiceSoftwareStartDate)
-          }
-          if (dates.socialInsuranceStartDate) {
-            fieldsToUpdate.socialInsuranceStartDate = dayjs(dates.socialInsuranceStartDate)
-          }
-          if (dates.housingFundStartDate) {
-            fieldsToUpdate.housingFundStartDate = dayjs(dates.housingFundStartDate)
-          }
-          if (dates.statisticalStartDate) {
-            fieldsToUpdate.statisticalStartDate = dayjs(dates.statisticalStartDate)
-          }
-          if (dates.addressStartDate) {
-            fieldsToUpdate.addressStartDate = dayjs(dates.addressStartDate)
-          }
+            if (dates.agencyStartDate) {
+              fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
+            }
+            if (dates.accountingSoftwareStartDate) {
+              fieldsToUpdate.accountingSoftwareStartDate = dayjs(dates.accountingSoftwareStartDate)
+            }
+            if (dates.invoiceSoftwareStartDate) {
+              fieldsToUpdate.invoiceSoftwareStartDate = dayjs(dates.invoiceSoftwareStartDate)
+            }
+            if (dates.socialInsuranceStartDate) {
+              fieldsToUpdate.socialInsuranceStartDate = dayjs(dates.socialInsuranceStartDate)
+            }
+            if (dates.housingFundStartDate) {
+              fieldsToUpdate.housingFundStartDate = dayjs(dates.housingFundStartDate)
+            }
+            if (dates.statisticalStartDate) {
+              fieldsToUpdate.statisticalStartDate = dayjs(dates.statisticalStartDate)
+            }
+            if (dates.addressStartDate) {
+              fieldsToUpdate.addressStartDate = dayjs(dates.addressStartDate)
+            }
 
-          // 批量更新表单字段
-          if (Object.keys(fieldsToUpdate).length > 0) {
-            form.setFieldsValue(fieldsToUpdate)
+            // 批量更新表单字段
+            if (Object.keys(fieldsToUpdate).length > 0) {
+              form.setFieldsValue(fieldsToUpdate)
+            }
           }
         }
       } catch (error) {
@@ -567,6 +569,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         // 标记表单已初始化
         formInitializedRef.current = true
+
+        // 在编辑模式下也获取自动填充状态，用于权限控制
+        const companyName = formData.companyName as string
+        const unifiedSocialCreditCode = formData.unifiedSocialCreditCode as string
+        if (companyName || unifiedSocialCreditCode) {
+          fetchAndFillDates(companyName, unifiedSocialCreditCode)
+        }
 
         // 标记表单已初始化，费用计算将通过useEffect触发
       } else {

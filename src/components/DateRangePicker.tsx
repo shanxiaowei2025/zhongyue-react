@@ -45,9 +45,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   // 获取表单实例
   const form = Form.useFormInstance()
 
-  // 计算最终是否受限（与原 RestrictedDatePicker 逻辑一致）
-  const finalStartIsRestricted =
-    startMode === 'add' ? startHasAutoFillValue : !startHasPermission || startHasAutoFillValue
+  // 计算最终是否受限
+  // 只有接口返回的自动填充值且用户无权限时才限制，手动输入的值允许编辑
+  const finalStartIsRestricted = startHasAutoFillValue && !startHasPermission
 
   // 开始日期的禁用日期函数
   const disabledStartDate = (current: Dayjs) => {
@@ -56,9 +56,10 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       return true
     }
 
-    // 如果是受限模式，只允许选择相同年份的月份
+    // 如果是受限模式，普通用户完全无法修改接口自动填充的日期值
     if (finalStartIsRestricted && startValue) {
-      return current.year() !== startValue.year()
+      // 禁用所有月份，只允许选择当前已选中的月份
+      return !current.isSame(startValue, 'month')
     }
 
     return false
@@ -75,16 +76,10 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   // 生成开始日期提示信息
   const getStartTooltipTitle = () => {
-    if (startMode === 'add' && startHasAutoFillValue) {
-      return `该${startFieldName}已根据历史数据自动填写，年份不可修改，不可清空`
+    if (finalStartIsRestricted) {
+      return `该${startFieldName}已根据历史数据自动填写，您无管理员权限，无法修改`
     }
-    if (startMode === 'edit' && !startHasPermission) {
-      return `您没有完全编辑权限，该${startFieldName}的年份不可修改，不可清空`
-    }
-    if (startMode === 'edit' && startHasAutoFillValue) {
-      return `该${startFieldName}已根据历史数据自动填写，年份不可修改，不可清空`
-    }
-    return `该${startFieldName}年份不可修改，不可清空`
+    return `该${startFieldName}不可修改`
   }
 
   // 检查日期范围是否小于11个月
