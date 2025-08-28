@@ -247,6 +247,36 @@ export const usePermission = () => {
     return permissionResults
   }, [hasPermission, user, permissions.length])
 
+  // 报表管理相关权限
+  const reportsPermissions = useMemo(() => {
+    // 如果权限列表为空，开启降级模式，默认所有权限为true
+    if (!user || permissions.length === 0) {
+      console.log('权限列表为空，开启降级模式，默认所有报表管理权限为true')
+      return {
+        canViewReports: true,
+        canExportReports: true,
+        canViewAllData: true,
+        canViewByLocation: true,
+        canViewOwnData: true,
+      }
+    }
+
+    // 添加详细的权限调试信息
+    const permissionResults = {
+      canViewReports: hasPermission('reports_view') || true, // 后端已取消权限限制
+      canExportReports: hasPermission('reports_export') || true,
+      canViewAllData: hasPermission('expense_data_view_all'),
+      canViewByLocation: hasPermission('expense_data_view_by_location'),
+      canViewOwnData: hasPermission('expense_data_view_own'),
+    }
+
+    // 输出用户角色和权限调试信息
+    console.log('当前用户角色:', user?.roles)
+    console.log('报表管理权限详情:', permissionResults)
+
+    return permissionResults
+  }, [hasPermission, user, permissions.length])
+
   return {
     permissions,
     loading,
@@ -255,6 +285,7 @@ export const usePermission = () => {
     customerPermissions,
     expensePermissions,
     contractPermissions,
+    reportsPermissions,
     refreshPermissions: fetchPermissions,
   }
 }

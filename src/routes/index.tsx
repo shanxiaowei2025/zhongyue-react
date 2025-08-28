@@ -19,6 +19,14 @@ const Expenses = lazy(() => import('../pages/Expenses'))
 const Contracts = lazy(() => import('../pages/Contracts'))
 const CreateContract = lazy(() => import('../pages/Contracts/CreateContract'))
 const ContractDetail = lazy(() => import('../pages/Contracts/ContractDetail'))
+const Reports = lazy(() => import('../pages/Reports'))
+const AgencyFeeAnalysisDetail = lazy(() => import('../pages/Reports/AgencyFeeAnalysisDetail'))
+const EmployeePerformanceDetail = lazy(() => import('../pages/Reports/EmployeePerformanceDetail'))
+const CustomerChurnDetail = lazy(() => import('../pages/Reports/CustomerChurnDetail'))
+const ServiceExpiryDetail = lazy(() => import('../pages/Reports/ServiceExpiryDetail'))
+const AccountantClientDetail = lazy(() => import('../pages/Reports/AccountantClientDetail'))
+const NewCustomerDetail = lazy(() => import('../pages/Reports/NewCustomerDetail'))
+const CustomerLevelDetail = lazy(() => import('../pages/Reports/CustomerLevelDetail'))
 const EditContract = lazy(() => import('../pages/Contracts/EditContract'))
 const ContractSign = lazy(() => import('../pages/ContractSign'))
 const ContractView = lazy(() => import('../pages/ContractView'))
@@ -120,6 +128,38 @@ const routes: RouteObject[] = [
       {
         path: 'contracts/edit/:id',
         element: <EditContract />,
+      },
+      {
+        path: 'reports',
+        element: <Reports />,
+      },
+      {
+        path: 'reports/agency-fee-analysis',
+        element: <AgencyFeeAnalysisDetail />,
+      },
+      {
+        path: 'reports/employee-performance',
+        element: <EmployeePerformanceDetail />,
+      },
+      {
+        path: 'reports/customer-churn',
+        element: <CustomerChurnDetail />,
+      },
+      {
+        path: 'reports/service-expiry',
+        element: <ServiceExpiryDetail />,
+      },
+      {
+        path: 'reports/accountant-client',
+        element: <AccountantClientDetail />,
+      },
+      {
+        path: 'reports/new-customer',
+        element: <NewCustomerDetail />,
+      },
+      {
+        path: 'reports/customer-level',
+        element: <CustomerLevelDetail />,
       },
       {
         path: 'employees',

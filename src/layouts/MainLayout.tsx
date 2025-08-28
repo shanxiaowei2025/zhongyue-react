@@ -37,6 +37,7 @@ import {
   IdcardOutlined,
   CreditCardOutlined,
   DatabaseOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import { buildImageUrl } from '../utils/upload'
@@ -147,6 +148,12 @@ const MODULE_CONFIG: Record<
     label: '数据查询',
     icon: <DatabaseOutlined />,
     pathPatterns: ['/data-query'],
+  },
+  '/reports': {
+    defaultPath: '/reports',
+    label: '报表管理',
+    icon: <BarChartOutlined />,
+    pathPatterns: ['/reports'],
   },
 }
 
@@ -501,6 +508,11 @@ const MainLayout = () => {
       key: '/contracts',
       icon: <FileTextOutlined />,
       label: '合同管理',
+    },
+    {
+      key: '/reports',
+      icon: <BarChartOutlined />,
+      label: '报表管理',
     },
     // 根据用户角色决定是否显示员工管理菜单
     ...(user?.roles.some(role => ['super_admin', 'admin', '超级管理员', '管理员'].includes(role))
