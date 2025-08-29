@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useMemo } from 'react'
 import {
   Card,
   Table,
@@ -12,10 +12,11 @@ import {
   DatePicker,
 } from 'antd'
 import { ArrowLeftOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useEmployeePerformance } from './hooks/useEmployeePerformance'
 import type { EmployeePerformanceItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
+import type { TableProps } from 'antd'
 import dayjs from 'dayjs'
 
 const { Title } = Typography
@@ -23,13 +24,53 @@ const { Search } = Input
 
 const EmployeePerformanceDetail: React.FC = () => {
   const navigate = useNavigate()
-  const [employeeSearch, setEmployeeSearch] = useState('')
-  const [departmentSearch, setDepartmentSearch] = useState('')
-  const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'))
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [sortField, setSortField] = useState<string | undefined>('totalRevenue')
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC' | undefined>('DESC')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 🚀 简化URL参数解析，统一命名
+  const urlParams = useMemo(() => {
+    const employeeSearch = searchParams.get('employeeSearch') || ''
+    const departmentSearch = searchParams.get('departmentSearch') || ''
+    const selectedMonth = searchParams.get('selectedMonth') || dayjs().format('YYYY-MM')
+    const currentPage = parseInt(searchParams.get('currentPage') || '1', 10)
+    const pageSize = parseInt(searchParams.get('pageSize') || '10', 10)
+    const sortField = searchParams.get('sortField') || ''
+    const sortOrder = (searchParams.get('sortOrder') as 'ASC' | 'DESC') || ''
+
+    return {
+      employeeSearch,
+      departmentSearch,
+      selectedMonth,
+      currentPage,
+      pageSize,
+      sortField,
+      sortOrder,
+    }
+  }, [searchParams])
+
+  const {
+    employeeSearch,
+    departmentSearch,
+    selectedMonth,
+    currentPage,
+    pageSize,
+    sortField,
+    sortOrder,
+  } = urlParams
+
+  // 🚀 极简URL参数更新函数，零映射逻辑
+  const updateUrlParams = (updates: Record<string, string | number>) => {
+    const newParams = new URLSearchParams(searchParams)
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        newParams.set(key, String(value))
+      } else {
+        newParams.delete(key)
+      }
+    })
+
+    setSearchParams(newParams, { replace: true })
+  }
 
   const { data, isLoading } = useEmployeePerformance({
     month: selectedMonth,
@@ -37,93 +78,69 @@ const EmployeePerformanceDetail: React.FC = () => {
     pageSize,
     employeeName: employeeSearch || undefined,
     department: departmentSearch || undefined,
-    sortField,
-    sortOrder,
+    sortField: sortField || 'totalRevenue', // 后端需要默认排序
+    sortOrder: sortOrder || 'DESC',
   })
-
-  // 调试：监控关键状态变化（开发环境）
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('State changed:', {
-        currentPage,
-        pageSize,
-        employeeSearch,
-        departmentSearch,
-        selectedMonth,
-      })
-    }
-  }, [currentPage, pageSize, employeeSearch, departmentSearch, selectedMonth])
-
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Data received:', {
-        total: data?.total,
-        listLength: data?.list?.length,
-        page: data?.page,
-        pageSize: data?.pageSize,
-      })
-    }
-  }, [data])
 
   // 员工搜索条件改变时重置到第一页
   const handleEmployeeSearch = (value: string) => {
-    setEmployeeSearch(value)
-    setCurrentPage(1)
+    updateUrlParams({
+      employeeSearch: value,
+      currentPage: 1,
+    })
   }
 
   // 部门搜索条件改变时重置到第一页
   const handleDepartmentSearch = (value: string) => {
-    setDepartmentSearch(value)
-    setCurrentPage(1)
+    updateUrlParams({
+      departmentSearch: value,
+      currentPage: 1,
+    })
   }
 
   // 月份改变时重置到第一页
   const handleMonthChange = (date: dayjs.Dayjs | null) => {
-    setSelectedMonth(date?.format('YYYY-MM') || dayjs().format('YYYY-MM'))
-    setCurrentPage(1)
+    updateUrlParams({
+      selectedMonth: date?.format('YYYY-MM') || dayjs().format('YYYY-MM'),
+      currentPage: 1,
+    })
   }
 
-  // 处理表格变化（分页、排序）
-  const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Table change:', { pagination, sorter, currentPage, pageSize }) // 调试日志
+  // 🚀 彻底简化：零逻辑状态管理，完全依赖后端
+  const handleTableChange: TableProps<EmployeePerformanceItem>['onChange'] = (
+    pagination,
+    _,
+    sorter
+  ) => {
+    const updates: Record<string, string | number> = {}
+
+    // 分页：直接映射，零判断
+    if (pagination.current !== undefined) {
+      updates.currentPage = pagination.current
     }
-
-    let shouldUpdatePage = false
-
-    // 处理排序变化
-    if (sorter && sorter.field) {
-      // 有排序字段
-      setSortField(sorter.field)
-      setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC')
-      if (pagination.current !== currentPage) {
-        // 排序的同时也可能有分页变化
-        setCurrentPage(pagination.current || 1)
-        shouldUpdatePage = true
-      } else {
-        // 只是排序变化，重置到第一页
-        setCurrentPage(1)
-        shouldUpdatePage = true
+    if (pagination.pageSize !== undefined) {
+      updates.pageSize = pagination.pageSize
+      // 页面大小变化重置页码
+      if (pagination.pageSize !== pageSize) {
+        updates.currentPage = 1
       }
-    } else if (sorter && sorter.order === undefined) {
-      // 取消排序，恢复默认排序
-      setSortField('totalRevenue')
-      setSortOrder('DESC')
-      setCurrentPage(1)
-      shouldUpdatePage = true
     }
 
-    // 处理页面大小变化
-    if (pagination.pageSize && pagination.pageSize !== pageSize) {
-      setPageSize(pagination.pageSize)
-      setCurrentPage(1) // 页面大小变化时重置到第一页
-      shouldUpdatePage = true
+    // 排序：直接映射，零状态判断
+    if (sorter && !Array.isArray(sorter)) {
+      if (sorter.field && sorter.order) {
+        // 有排序：直接设置
+        updates.sortField = sorter.field as string
+        updates.sortOrder = sorter.order === 'ascend' ? 'ASC' : 'DESC'
+      } else {
+        // 取消排序：清空参数让后端返回默认排序
+        updates.sortField = ''
+        updates.sortOrder = ''
+      }
     }
 
-    // 处理纯分页变化（没有排序和页面大小变化）
-    if (!shouldUpdatePage && pagination.current && pagination.current !== currentPage) {
-      setCurrentPage(pagination.current)
-    }
+    // 直接更新，零条件判断
+    updateUrlParams(updates)
   }
 
   const columns: ColumnsType<EmployeePerformanceItem> = [
@@ -156,6 +173,7 @@ const EmployeePerformanceDetail: React.FC = () => {
         <span style={{ color: '#667eea', fontWeight: 500 }}>¥{value.toLocaleString()}</span>
       ),
       sorter: true,
+      // 🚀 移除动态sortOrder，让Table完全自主管理UI状态
     },
     {
       title: '其他业务收入',
@@ -166,6 +184,7 @@ const EmployeePerformanceDetail: React.FC = () => {
         <span style={{ color: '#ffa726', fontWeight: 500 }}>¥{value.toLocaleString()}</span>
       ),
       sorter: true,
+      // 🚀 移除动态sortOrder，让Table完全自主管理UI状态
     },
     {
       title: '续费业务收入',
@@ -176,6 +195,7 @@ const EmployeePerformanceDetail: React.FC = () => {
         <span style={{ color: '#ff6b7a', fontWeight: 500 }}>¥{value.toLocaleString()}</span>
       ),
       sorter: true,
+      // 🚀 移除动态sortOrder，让Table完全自主管理UI状态
     },
     {
       title: '总收入',
@@ -188,7 +208,7 @@ const EmployeePerformanceDetail: React.FC = () => {
         </span>
       ),
       sorter: true,
-      defaultSortOrder: 'descend' as const, // 默认按总收入降序排序
+      // 🚀 移除动态sortOrder，让Table完全自主管理UI状态
     },
     {
       title: '客户数量',
@@ -199,6 +219,7 @@ const EmployeePerformanceDetail: React.FC = () => {
         <span style={{ color: '#722ed1', fontWeight: 500 }}>{value}个</span>
       ),
       sorter: true,
+      // 🚀 移除动态sortOrder，让Table完全自主管理UI状态
     },
   ]
 
@@ -321,6 +342,8 @@ const EmployeePerformanceDetail: React.FC = () => {
           loading={isLoading}
           scroll={{ x: 1000 }}
           sortDirections={['descend', 'ascend']}
+          // 🚀 完全受控：不强制任何排序状态，让Table自主管理UI
+          showSorterTooltip={false}
           pagination={{
             current: currentPage,
             pageSize: pageSize,

@@ -1,38 +1,39 @@
-import React, { useState } from 'react'
-import {
-  Card,
-  Table,
-  Tag,
-  Button,
-  Space,
-  Typography,
-  Row,
-  Col,
-  Statistic,
-  Input,
-  DatePicker,
-  Select,
-} from 'antd'
-import { ArrowLeftOutlined, SearchOutlined, UserDeleteOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import React, { useMemo } from 'react'
+import { Card, Table, Tag, Button, Space, Typography, Row, Col, Statistic, Select } from 'antd'
+import { ArrowLeftOutlined, UserDeleteOutlined } from '@ant-design/icons'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useCustomerChurnStats } from './hooks/useCustomerChurnStats'
 import type { ChurnedCustomerItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 
 const { Title } = Typography
-const { Search } = Input
 const { Option } = Select
 
 const CustomerChurnDetail: React.FC = () => {
   const navigate = useNavigate()
-  const [searchText, setSearchText] = useState('')
-  const [selectedYear, setSelectedYear] = useState(dayjs().year())
-  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [sortField, setSortField] = useState<string | undefined>()
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC' | undefined>()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 从URL参数获取所有状态
+  const urlParams = useMemo(() => {
+    const year = searchParams.get('year')
+    const month = searchParams.get('month')
+    const page = searchParams.get('page')
+    const pageSize = searchParams.get('pageSize')
+    const sortField = searchParams.get('sortField')
+    const sortOrder = searchParams.get('sortOrder')
+
+    return {
+      selectedYear: year ? parseInt(year) : dayjs().year(),
+      selectedMonth: month ? parseInt(month) : undefined,
+      currentPage: page ? parseInt(page) : 1,
+      pageSize: pageSize ? parseInt(pageSize) : 10,
+      sortField: sortField || undefined, // 允许无排序状态
+      sortOrder: (sortOrder as 'ASC' | 'DESC') || undefined, // 允许无排序状态
+    }
+  }, [searchParams])
+
+  const { selectedYear, selectedMonth, currentPage, pageSize, sortField, sortOrder } = urlParams
 
   const { data, isLoading } = useCustomerChurnStats({
     year: selectedYear,
@@ -43,38 +44,116 @@ const CustomerChurnDetail: React.FC = () => {
     sortOrder,
   })
 
-  // 搜索条件改变时重置到第一页
-  const handleSearch = (value: string) => {
-    setSearchText(value)
-    setCurrentPage(1)
+  // 更新URL参数的辅助函数
+  const updateUrlParams = (newParams: {
+    selectedYear?: number
+    selectedMonth?: number | undefined
+    currentPage?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: 'ASC' | 'DESC'
+  }) => {
+    const updatedParams = new URLSearchParams(searchParams)
+
+    // 映射内部状态名到URL参数名
+    const paramMapping = {
+      selectedYear: 'year',
+      selectedMonth: 'month',
+      currentPage: 'page',
+      pageSize: 'pageSize',
+      sortField: 'sortField',
+      sortOrder: 'sortOrder',
+    }
+
+    Object.entries(newParams).forEach(([key, value]) => {
+      const urlKey = paramMapping[key as keyof typeof paramMapping]
+      if (value !== undefined && value !== null) {
+        updatedParams.set(urlKey, value.toString())
+      } else {
+        updatedParams.delete(urlKey)
+      }
+    })
+
+    setSearchParams(updatedParams, { replace: true })
   }
 
   // 处理表格变化（分页、排序）
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    // 优先处理排序
-    if (sorter && sorter.field) {
-      setSortField(sorter.field)
-      setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC')
-      setCurrentPage(1) // 排序时重置到第一页
-      if (pagination.pageSize && pagination.pageSize !== pageSize) {
-        setPageSize(pagination.pageSize)
-      }
-    } else if (sorter && sorter.order === undefined) {
-      // 取消排序
-      setSortField(undefined)
-      setSortOrder(undefined)
-      setCurrentPage(1) // 取消排序时也重置到第一页
-    } else {
-      // 纯分页操作
-      if (pagination.pageSize && pagination.pageSize !== pageSize) {
-        // 页面大小变化时重置到第一页
-        setPageSize(pagination.pageSize)
-        setCurrentPage(1)
-      } else if (pagination.current) {
-        // 只是页码变化时不重置
-        setCurrentPage(pagination.current)
-      }
+  const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Table change:', {
+        pagination,
+        sorter,
+        'sorter.field': sorter?.field,
+        'sorter.order': sorter?.order,
+        'Object.keys(sorter)': Object.keys(sorter || {}),
+        currentPage,
+        pageSize,
+        sortField,
+        sortOrder,
+      }) // 详细调试日志
     }
+
+    // 检测是否是取消排序的情况
+    const isCurrentlySorted = sortField && sortOrder
+    const hasNewSorting = sorter && sorter.field && sorter.order
+    const isCancelingSorting = isCurrentlySorted && !hasNewSorting
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('排序状态分析:', {
+        isCurrentlySorted,
+        hasNewSorting,
+        isCancelingSorting,
+        sorter详情: sorter,
+      })
+    }
+
+    // 处理排序变化
+    if (hasNewSorting) {
+      // 有明确的排序字段和排序方向
+      updateUrlParams({
+        sortField: sorter.field,
+        sortOrder: sorter.order === 'ascend' ? 'ASC' : 'DESC',
+        currentPage: pagination.current || 1, // 排序时使用当前页或重置到第一页
+      })
+    } else if (isCancelingSorting) {
+      // 取消排序：当前有排序但新的sorter没有有效排序
+      if (process.env.NODE_ENV === 'development') {
+        console.log('取消排序:', { sortField, sortOrder })
+      }
+      // 完全移除排序参数，让表格回到无排序状态
+      const updatedParams = new URLSearchParams(searchParams)
+      updatedParams.delete('sortField')
+      updatedParams.delete('sortOrder')
+      updatedParams.set('page', '1') // 取消排序时重置到第一页
+      setSearchParams(updatedParams, { replace: true })
+    } else if (pagination.pageSize && pagination.pageSize !== pageSize) {
+      // 处理页面大小变化
+      updateUrlParams({
+        pageSize: pagination.pageSize,
+        currentPage: 1, // 页面大小变化时重置到第一页
+      })
+    } else if (pagination.current && pagination.current !== currentPage) {
+      // 处理纯分页变化
+      updateUrlParams({
+        currentPage: pagination.current,
+      })
+    }
+  }
+
+  // 处理年份变化
+  const handleYearChange = (year: number) => {
+    updateUrlParams({
+      selectedYear: year,
+      currentPage: 1, // 重置到第一页
+    })
+  }
+
+  // 处理月份变化
+  const handleMonthChange = (month: number | undefined) => {
+    updateUrlParams({
+      selectedMonth: month,
+      currentPage: 1, // 重置到第一页
+    })
   }
 
   const getChurnReasonColor = (reason: string) => {
@@ -113,6 +192,13 @@ const CustomerChurnDetail: React.FC = () => {
       width: 120,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD'),
       sorter: true,
+      // 动态设置排序状态
+      sortOrder:
+        sortField === 'churnDate' && sortOrder
+          ? sortOrder === 'DESC'
+            ? 'descend'
+            : 'ascend'
+          : null,
     },
     {
       title: '流失原因',
@@ -216,12 +302,12 @@ const CustomerChurnDetail: React.FC = () => {
         </Col>
       </Row>
 
-      {/* 筛选和搜索 */}
+      {/* 筛选条件 */}
       <Card style={{ marginBottom: 24, borderRadius: 16 }}>
         <Space size="large" wrap>
           <div>
             <span style={{ marginRight: 8 }}>年份：</span>
-            <Select value={selectedYear} onChange={setSelectedYear} style={{ width: 100 }}>
+            <Select value={selectedYear} onChange={handleYearChange} style={{ width: 100 }}>
               {Array.from({ length: 5 }, (_, i) => {
                 const year = dayjs().year() - i
                 return (
@@ -236,7 +322,7 @@ const CustomerChurnDetail: React.FC = () => {
             <span style={{ marginRight: 8 }}>月份：</span>
             <Select
               value={selectedMonth}
-              onChange={setSelectedMonth}
+              onChange={handleMonthChange}
               style={{ width: 100 }}
               allowClear
               placeholder="全年"
@@ -248,18 +334,6 @@ const CustomerChurnDetail: React.FC = () => {
               ))}
             </Select>
           </div>
-          <Search
-            placeholder="搜索企业名称、信用代码、流失原因"
-            allowClear
-            style={{ width: 300 }}
-            onSearch={handleSearch}
-            onChange={e => {
-              if (!e.target.value) {
-                handleSearch('')
-              }
-            }}
-            prefix={<SearchOutlined />}
-          />
         </Space>
       </Card>
 
@@ -271,13 +345,18 @@ const CustomerChurnDetail: React.FC = () => {
           rowKey="customerId"
           loading={isLoading}
           scroll={{ x: 1200 }}
+          sortDirections={['descend', 'ascend']}
           pagination={{
             current: currentPage,
             pageSize: pageSize,
-            total: data?.summary?.totalChurned || 0,
+            total: data?.total || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: (total, _range) => {
+              const startIndex = (currentPage - 1) * pageSize + 1
+              const endIndex = Math.min(currentPage * pageSize, total)
+              return `第 ${startIndex}-${endIndex} 条，共 ${total} 条`
+            },
             pageSizeOptions: ['10', '20', '50', '100'],
           }}
           onChange={handleTableChange}

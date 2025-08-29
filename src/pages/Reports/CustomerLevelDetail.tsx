@@ -48,16 +48,48 @@ const CustomerLevelDetail: React.FC = () => {
 
   // 处理表格变化（分页、排序）
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Table change:', {
+        pagination,
+        sorter,
+        'sorter.field': sorter?.field,
+        'sorter.order': sorter?.order,
+        'Object.keys(sorter)': Object.keys(sorter || {}),
+        currentPage,
+        pageSize,
+        sortField,
+        sortOrder,
+      }) // 详细调试日志
+    }
+
+    // 检测是否是取消排序的情况
+    const isCurrentlySorted = sortField && sortOrder
+    const hasNewSorting = sorter && sorter.field && sorter.order
+    const isCancelingSorting = isCurrentlySorted && !hasNewSorting
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('排序状态分析:', {
+        isCurrentlySorted,
+        hasNewSorting,
+        isCancelingSorting,
+        sorter详情: sorter,
+      })
+    }
+
     // 优先处理排序
-    if (sorter && sorter.field) {
+    if (hasNewSorting) {
+      // 有明确的排序字段和排序方向
       setSortField(sorter.field)
       setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC')
       setCurrentPage(1) // 排序时重置到第一页
       if (pagination.pageSize && pagination.pageSize !== pageSize) {
         setPageSize(pagination.pageSize)
       }
-    } else if (sorter && sorter.order === undefined) {
-      // 取消排序
+    } else if (isCancelingSorting) {
+      // 取消排序：当前有排序但新的sorter没有有效排序
+      if (process.env.NODE_ENV === 'development') {
+        console.log('取消排序:', { sortField, sortOrder })
+      }
       setSortField(undefined)
       setSortOrder(undefined)
       setCurrentPage(1) // 取消排序时也重置到第一页

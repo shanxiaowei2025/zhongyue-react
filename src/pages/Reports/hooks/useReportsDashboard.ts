@@ -155,7 +155,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
       charts: {
         employeePerformance: employeeData?.list || [],
         accountantDistribution: accountantData?.list || [],
-        churnTrend: [],
+        churnTrend: churnData?.periodStats || [],
         newCustomer: monthlyNewCustomerStats,
         customerLevel: customerLevelData?.distribution || [],
       },

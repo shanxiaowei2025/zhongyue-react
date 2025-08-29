@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useMemo } from 'react'
 import { Card, Table, Button, Space, Typography, Row, Col, Statistic, DatePicker } from 'antd'
 import { ArrowLeftOutlined, CalendarOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useNewCustomerStats } from './hooks/useNewCustomerStats'
 import type { NewCustomerItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
@@ -12,16 +12,91 @@ const { RangePicker } = DatePicker
 
 const NewCustomerDetail: React.FC = () => {
   const navigate = useNavigate()
-  // 互斥筛选：默认使用时间范围筛选，年月筛选为空
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>([
-    dayjs().subtract(6, 'month').startOf('month'),
-    dayjs().endOf('month'),
-  ])
-  const [selectedMonth, setSelectedMonth] = useState<dayjs.Dayjs | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [sortField, setSortField] = useState<string | undefined>('customerId')
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC' | undefined>('DESC')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 从URL参数中解析状态
+  const urlParams = useMemo(() => {
+    const startDate =
+      searchParams.get('startDate') ||
+      dayjs().subtract(6, 'month').startOf('month').format('YYYY-MM-DD')
+    const endDate = searchParams.get('endDate') || dayjs().endOf('month').format('YYYY-MM-DD')
+    const selectedMonth = searchParams.get('selectedMonth') || ''
+    const currentPage = parseInt(searchParams.get('page') || '1', 10)
+    const pageSize = parseInt(searchParams.get('pageSize') || '10', 10)
+    const sortField = searchParams.get('sortField') || 'customerId'
+    const sortOrder = (searchParams.get('sortOrder') as 'ASC' | 'DESC') || 'DESC'
+
+    // 构建日期范围
+    const dateRange: [dayjs.Dayjs, dayjs.Dayjs] | null = selectedMonth
+      ? null
+      : [dayjs(startDate), dayjs(endDate)]
+
+    return {
+      dateRange,
+      selectedMonth: selectedMonth ? dayjs(selectedMonth) : null,
+      currentPage,
+      pageSize,
+      sortField,
+      sortOrder,
+      startDate,
+      endDate,
+    }
+  }, [searchParams])
+
+  const { dateRange, selectedMonth, currentPage, pageSize, sortField, sortOrder } = urlParams
+
+  // 统一的URL参数更新函数
+  const updateUrlParams = (
+    updates: Partial<{
+      dateRange: [dayjs.Dayjs, dayjs.Dayjs] | null
+      selectedMonth: dayjs.Dayjs | null
+      currentPage: number
+      pageSize: number
+      sortField: string
+      sortOrder: 'ASC' | 'DESC'
+    }>
+  ) => {
+    const newParams = new URLSearchParams(searchParams)
+
+    if (updates.dateRange !== undefined) {
+      if (updates.dateRange) {
+        newParams.set('startDate', updates.dateRange[0].format('YYYY-MM-DD'))
+        newParams.set('endDate', updates.dateRange[1].format('YYYY-MM-DD'))
+        newParams.delete('selectedMonth')
+      } else {
+        newParams.delete('startDate')
+        newParams.delete('endDate')
+      }
+    }
+
+    if (updates.selectedMonth !== undefined) {
+      if (updates.selectedMonth) {
+        newParams.set('selectedMonth', updates.selectedMonth.format('YYYY-MM'))
+        newParams.delete('startDate')
+        newParams.delete('endDate')
+      } else {
+        newParams.delete('selectedMonth')
+      }
+    }
+
+    if (updates.currentPage !== undefined) {
+      newParams.set('page', String(updates.currentPage))
+    }
+
+    if (updates.pageSize !== undefined) {
+      newParams.set('pageSize', String(updates.pageSize))
+    }
+
+    if (updates.sortField !== undefined) {
+      newParams.set('sortField', updates.sortField)
+    }
+
+    if (updates.sortOrder !== undefined) {
+      newParams.set('sortOrder', updates.sortOrder)
+    }
+
+    setSearchParams(newParams, { replace: true })
+  }
 
   const { data, isLoading } = useNewCustomerStats({
     // 互斥逻辑：优先使用年月筛选，如果没有则使用日期范围
@@ -46,43 +121,63 @@ const NewCustomerDetail: React.FC = () => {
   // 处理表格变化（分页、排序）
   const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Table change:', { pagination, sorter, currentPage, pageSize }) // 调试日志
+      console.log('Table change:', {
+        pagination,
+        sorter,
+        'sorter.field': sorter?.field,
+        'sorter.order': sorter?.order,
+        'Object.keys(sorter)': Object.keys(sorter || {}),
+        currentPage,
+        pageSize,
+        sortField,
+        sortOrder,
+      }) // 详细调试日志
     }
 
-    let shouldUpdatePage = false
+    // 检测是否是取消排序的情况
+    const isCurrentlySorted = sortField && sortOrder
+    const hasNewSorting = sorter && sorter.field && sorter.order
+    const isCancelingSorting = isCurrentlySorted && !hasNewSorting
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('排序状态分析:', {
+        isCurrentlySorted,
+        hasNewSorting,
+        isCancelingSorting,
+        sorter详情: sorter,
+      })
+    }
 
     // 处理排序变化
-    if (sorter && sorter.field) {
-      // 有排序字段
-      setSortField(sorter.field)
-      setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC')
-      if (pagination.current !== currentPage) {
-        // 排序的同时也可能有分页变化
-        setCurrentPage(pagination.current || 1)
-        shouldUpdatePage = true
-      } else {
-        // 只是排序变化，重置到第一页
-        setCurrentPage(1)
-        shouldUpdatePage = true
+    if (hasNewSorting) {
+      // 有明确的排序字段和排序方向
+      updateUrlParams({
+        sortField: sorter.field,
+        sortOrder: sorter.order === 'ascend' ? 'ASC' : 'DESC',
+        currentPage: pagination.current || 1, // 排序时使用当前页或重置到第一页
+      })
+    } else if (isCancelingSorting) {
+      // 取消排序：当前有排序但新的sorter没有有效排序
+      if (process.env.NODE_ENV === 'development') {
+        console.log('取消排序:', { sortField, sortOrder })
       }
-    } else if (sorter && sorter.order === undefined) {
-      // 取消排序，恢复默认排序
-      setSortField('customerId')
-      setSortOrder('DESC')
-      setCurrentPage(1)
-      shouldUpdatePage = true
-    }
-
-    // 处理页面大小变化
-    if (pagination.pageSize && pagination.pageSize !== pageSize) {
-      setPageSize(pagination.pageSize)
-      setCurrentPage(1) // 页面大小变化时重置到第一页
-      shouldUpdatePage = true
-    }
-
-    // 处理纯分页变化（没有排序和页面大小变化）
-    if (!shouldUpdatePage && pagination.current && pagination.current !== currentPage) {
-      setCurrentPage(pagination.current)
+      // 恢复默认排序
+      updateUrlParams({
+        sortField: 'customerId',
+        sortOrder: 'DESC',
+        currentPage: 1,
+      })
+    } else if (pagination.pageSize && pagination.pageSize !== pageSize) {
+      // 处理页面大小变化
+      updateUrlParams({
+        pageSize: pagination.pageSize,
+        currentPage: 1, // 页面大小变化时重置到第一页
+      })
+    } else if (pagination.current && pagination.current !== currentPage) {
+      // 处理纯分页变化
+      updateUrlParams({
+        currentPage: pagination.current,
+      })
     }
   }
 
@@ -94,7 +189,13 @@ const NewCustomerDetail: React.FC = () => {
       width: 100,
       render: (id: number) => <div style={{ fontWeight: 500, color: '#1890ff' }}>{id}</div>,
       sorter: true,
-      defaultSortOrder: 'descend' as const, // 默认按客户ID降序排序
+      // 动态设置排序状态
+      sortOrder:
+        sortField === 'customerId' && sortOrder
+          ? sortOrder === 'DESC'
+            ? 'descend'
+            : 'ascend'
+          : null,
     },
     {
       title: '企业名称',
@@ -254,12 +355,12 @@ const NewCustomerDetail: React.FC = () => {
             <RangePicker
               value={dateRange}
               onChange={dates => {
-                setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)
                 // 互斥逻辑：选择日期范围时清空年月筛选
-                if (dates) {
-                  setSelectedMonth(null)
-                }
-                setCurrentPage(1)
+                updateUrlParams({
+                  dateRange: dates as [dayjs.Dayjs, dayjs.Dayjs] | null,
+                  selectedMonth: dates ? null : undefined,
+                  currentPage: 1,
+                })
               }}
               format="YYYY-MM-DD"
               allowClear={true}
@@ -270,12 +371,12 @@ const NewCustomerDetail: React.FC = () => {
             <DatePicker
               value={selectedMonth}
               onChange={date => {
-                setSelectedMonth(date)
                 // 互斥逻辑：选择年月筛选时清空日期范围
-                if (date) {
-                  setDateRange(null)
-                }
-                setCurrentPage(1)
+                updateUrlParams({
+                  selectedMonth: date,
+                  dateRange: date ? null : undefined,
+                  currentPage: 1,
+                })
               }}
               picker="month"
               format="YYYY-MM"

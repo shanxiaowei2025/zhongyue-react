@@ -75,6 +75,7 @@ export interface CustomerChurnData {
   page: number
   pageSize: number
   totalPages: number
+  periodStats: CustomerChurnStatsItem[]
   summary: {
     totalChurned: number
     cancelledEnterpriseCount: number

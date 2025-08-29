@@ -32,16 +32,19 @@ const customerChurnStatsFetcher = async ([, params]: [string, UseCustomerChurnSt
 }
 
 export const useCustomerChurnStats = (params: UseCustomerChurnStatsParams = {}) => {
-  const {
-    year = new Date().getFullYear(),
-    month = new Date().getMonth() + 1,
-    page,
-    pageSize,
-    sortField,
-    sortOrder,
-  } = params
+  const { year = new Date().getFullYear(), month, page, pageSize, sortField, sortOrder } = params
 
-  const validParams = { year, month, page, pageSize, sortField, sortOrder }
+  // 清理参数对象，移除undefined值，确保SWR缓存键正确
+  const validParams = Object.fromEntries(
+    Object.entries({
+      year,
+      ...(month !== undefined && { month }),
+      page,
+      pageSize,
+      sortField,
+      sortOrder,
+    }).filter(([_, value]) => value !== undefined)
+  )
 
   const { data, error, isLoading, mutate } = useSWR<CustomerChurnData>(
     getCustomerChurnStatsKey(validParams),
@@ -49,7 +52,7 @@ export const useCustomerChurnStats = (params: UseCustomerChurnStatsParams = {}) 
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      dedupingInterval: 10 * 60 * 1000, // 10分钟内不重复请求
+      dedupingInterval: 1000, // 1秒内不重复请求，确保用户交互响应及时
       errorRetryCount: 2,
     }
   )

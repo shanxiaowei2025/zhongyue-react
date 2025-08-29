@@ -125,9 +125,15 @@ const ChurnTrendChart: React.FC<ChurnTrendChartProps> = ({
       y: {
         beginAtZero: true,
         ticks: {
-          stepSize: 1,
+          // 移除固定stepSize，让Chart.js自动计算合适的刻度间隔
+          // stepSize: 1, // 这会在数据量大时生成过多刻度
+          maxTicksLimit: 10, // 限制最大刻度数量
           callback: function (value: any) {
-            return value + '个'
+            // 确保显示整数刻度
+            if (Number.isInteger(value)) {
+              return value + '个'
+            }
+            return ''
           },
         },
       },
