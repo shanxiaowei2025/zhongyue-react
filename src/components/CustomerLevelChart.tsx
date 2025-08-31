@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react'
-import { Card, Empty, Spin, Button } from 'antd'
-import { EyeOutlined } from '@ant-design/icons'
+import { Card, Empty, Spin } from 'antd'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,31 +8,28 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions,
 } from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { Bar } from 'react-chartjs-2'
-import type { CustomerLevelDistributionItem } from '../types/reports'
+import type { CustomerLevelStatsItem } from '../pages/Reports/types/reports'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels)
 
 interface CustomerLevelChartProps {
-  data: CustomerLevelDistributionItem[]
+  levelStats: CustomerLevelStatsItem[]
   loading?: boolean
   title?: string
-  onViewMore?: () => void
 }
 
 const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
-  data = [],
+  levelStats = [],
   loading = false,
   title = '客户等级分布',
-  onViewMore,
 }) => {
-  // 客户等级排序逻辑
-  const sortedData = useMemo(() => {
-    if (!data || data.length === 0) return []
-
-    return data.sort((a, b) => {
+  // 复用客户等级排序逻辑
+  const sortedLevelStats = useMemo(() => {
+    return levelStats.sort((a, b) => {
       const levelA = a.level
       const levelB = b.level
 
@@ -55,11 +51,11 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
       // 字母等级排在前面，中文等级排在后面
       return isLetterA ? -1 : 1
     })
-  }, [data])
+  }, [levelStats])
 
-  // 处理图表数据
+  // 图表数据配置
   const chartData = useMemo(() => {
-    if (!sortedData || sortedData.length === 0) {
+    if (!sortedLevelStats || sortedLevelStats.length === 0) {
       return null
     }
 
@@ -83,23 +79,26 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
       '#ff5722', // 深橙红色
     ]
 
+    const labels = sortedLevelStats.map(item => item.level)
+    const counts = sortedLevelStats.map(item => item.count)
+
     return {
-      labels: sortedData.map(item => item.level),
+      labels,
       datasets: [
         {
           label: '客户数量',
-          data: sortedData.map(item => item.count),
-          backgroundColor: sortedData.map((_, index) => colors[index % colors.length] + '80'), // 添加透明度
-          borderColor: sortedData.map((_, index) => colors[index % colors.length]),
+          data: counts,
+          backgroundColor: sortedLevelStats.map((_, index) => colors[index % colors.length] + '80'), // 添加透明度
+          borderColor: sortedLevelStats.map((_, index) => colors[index % colors.length]),
           borderWidth: 1,
           borderRadius: 4,
           borderSkipped: false,
         },
       ],
     }
-  }, [sortedData])
+  }, [sortedLevelStats])
 
-  // 图表配置
+  // 图表配置选项
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -114,14 +113,17 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
         callbacks: {
           title: function (context: any) {
             const index = context[0].dataIndex
-            return `${sortedData[index].level}级客户`
+            return `${sortedLevelStats[index].level}级客户`
           },
           label: function (context: any) {
             const index = context.dataIndex
-            const item = sortedData[index]
-            const total = sortedData.reduce((sum, data) => sum + data.count, 0)
-            const percentage = ((item.count / total) * 100).toFixed(1)
-            return [`客户数量: ${item.count}个`, `占比: ${percentage}%`]
+            const stats = sortedLevelStats[index]
+            return [
+              `客户数量: ${stats.count}个`,
+              `占比: ${stats.percentage.toFixed(1)}%`,
+              `总收入: ¥${stats.totalRevenue.toLocaleString()}`,
+              `平均收入: ¥${stats.averageRevenue.toLocaleString()}`,
+            ]
           },
         },
       },
@@ -185,27 +187,12 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
 
   return (
     <Card
-      title={<span style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>🎯 {title}</span>}
-      extra={
-        onViewMore && (
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={onViewMore}
-            style={{
-              color: '#722ed1',
-              fontWeight: 500,
-              padding: 0,
-            }}
-          >
-            查看更多
-          </Button>
-        )
-      }
+      title={<span style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>📊 {title}</span>}
       style={{
         height: 400,
+        marginBottom: 24,
         borderRadius: 20,
-        boxShadow: '0 8px 32px rgba(114, 46, 209, 0.15)',
+        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.15)',
         border: 'none',
         background: '#ffffff',
       }}

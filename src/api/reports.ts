@@ -8,6 +8,7 @@ import type {
   AccountantClientData,
   NewCustomerData,
   ReportsQueryParams,
+  ReportTableMetadata,
 } from '../pages/Reports/types/reports'
 
 // 代理费收费变化分析
@@ -93,4 +94,9 @@ export const getCustomerLevelDistribution = (params: {
   sortOrder?: 'ASC' | 'DESC'
 }): Promise<ApiResponse<any>> => {
   return request.get('/reports/customer-level-distribution', params)
+}
+
+// 获取新增客户统计表格元数据
+export const getNewCustomerStatsMetadata = (): Promise<ApiResponse<ReportTableMetadata>> => {
+  return request.get('/reports/new-customer-stats/metadata')
 }

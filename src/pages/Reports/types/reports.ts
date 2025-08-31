@@ -88,6 +88,8 @@ export interface CustomerChurnData {
 // 服务到期相关类型
 export interface ExpiringCustomerItem {
   customerId: number
+  companyName: string
+  unifiedSocialCreditCode: string
   agencyEndDate: string
 }
 
@@ -158,7 +160,18 @@ export interface NewCustomerData {
 }
 
 // 客户等级分布相关类型
-export interface CustomerLevelDistributionItem {
+
+// 客户记录类型（用于表格显示）
+export interface CustomerLevelItem {
+  customerId: number
+  companyName: string
+  unifiedSocialCreditCode: string
+  contributionAmount: string // API返回字符串格式
+  level: string
+}
+
+// 等级统计类型（用于统计摘要）
+export interface CustomerLevelStatsItem {
   level: string
   count: number
   percentage: number
@@ -166,13 +179,22 @@ export interface CustomerLevelDistributionItem {
   averageRevenue: number
 }
 
+// 原有的分布项类型（向后兼容）
+export interface CustomerLevelDistributionItem extends CustomerLevelStatsItem {}
+
 export interface CustomerLevelDistributionData {
-  distribution: CustomerLevelDistributionItem[]
+  list: CustomerLevelItem[] // 客户列表数据
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  levelStats: CustomerLevelStatsItem[] // 等级统计数据
   summary: {
     totalCustomers: number
     totalRevenue: number
-    averageRevenue: number
   }
+  // 向后兼容字段
+  distribution?: CustomerLevelStatsItem[]
 }
 
 // 仪表盘汇总数据类型
@@ -215,4 +237,24 @@ export interface ReportsQueryParams {
   threshold?: number
   department?: string
   employeeName?: string
+}
+
+// 表格元数据类型
+export interface ReportTableMetadata {
+  sortableFields: string[]
+  defaultSort: {
+    field: string
+    order: 'ASC' | 'DESC'
+  }
+  filterableFields: Array<{
+    field: string
+    type: 'text' | 'select' | 'date' | 'dateRange' | 'month'
+    options?: Array<{ label: string; value: string }>
+  }>
+  pagination: {
+    defaultPageSize: number
+    pageSizeOptions: number[]
+    showSizeChanger: boolean
+    showQuickJumper: boolean
+  }
 }

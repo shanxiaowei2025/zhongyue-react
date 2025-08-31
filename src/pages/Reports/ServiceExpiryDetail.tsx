@@ -1,106 +1,15 @@
-import React, { useState } from 'react'
-import { Card, Table, Tag, Button, Space, Typography, Row, Col, Statistic, Input } from 'antd'
-import {
-  ArrowLeftOutlined,
-  SearchOutlined,
-  ExclamationCircleOutlined,
-  CalendarOutlined,
-} from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
-import { useServiceExpiryStats } from './hooks/useServiceExpiryStats'
-import { useCustomerNames } from './hooks/useCustomerNames'
+import React from 'react'
+import { Tag } from 'antd'
+import { CalendarOutlined } from '@ant-design/icons'
+import { getServiceExpiryStats } from '../../api/reports'
+import AdvancedServerTable from '../../components/AdvancedServerTable'
+import ReportPageLayout from '../../components/ReportPageLayout'
 import type { ExpiringCustomerItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
+import type { SummaryMetric } from '../../types/advancedServerTable'
 import dayjs from 'dayjs'
 
-const { Title } = Typography
-const { Search } = Input
-
 const ServiceExpiryDetail: React.FC = () => {
-  const navigate = useNavigate()
-  const [searchText, setSearchText] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [sortField, setSortField] = useState<string | undefined>()
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC' | undefined>()
-
-  const { data, isLoading } = useServiceExpiryStats({
-    page: currentPage,
-    pageSize,
-    sortField,
-    sortOrder,
-  })
-
-  // 获取客户名称
-  const customerIds = data?.list?.map(item => item.customerId) || []
-  const { getCustomerName, isLoading: customerNamesLoading } = useCustomerNames(customerIds)
-
-  // 搜索条件改变时重置到第一页
-  const handleSearch = (value: string) => {
-    setSearchText(value)
-    setCurrentPage(1)
-  }
-
-  // 处理表格变化（分页、排序）
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Table change:', {
-        pagination,
-        sorter,
-        'sorter.field': sorter?.field,
-        'sorter.order': sorter?.order,
-        'Object.keys(sorter)': Object.keys(sorter || {}),
-        currentPage,
-        pageSize,
-        sortField,
-        sortOrder,
-      }) // 详细调试日志
-    }
-
-    // 检测是否是取消排序的情况
-    const isCurrentlySorted = sortField && sortOrder
-    const hasNewSorting = sorter && sorter.field && sorter.order
-    const isCancelingSorting = isCurrentlySorted && !hasNewSorting
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('排序状态分析:', {
-        isCurrentlySorted,
-        hasNewSorting,
-        isCancelingSorting,
-        sorter详情: sorter,
-      })
-    }
-
-    // 优先处理排序
-    if (hasNewSorting) {
-      // 有明确的排序字段和排序方向
-      setSortField(sorter.field)
-      setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC')
-      setCurrentPage(1) // 排序时重置到第一页
-      if (pagination.pageSize && pagination.pageSize !== pageSize) {
-        setPageSize(pagination.pageSize)
-      }
-    } else if (isCancelingSorting) {
-      // 取消排序：当前有排序但新的sorter没有有效排序
-      if (process.env.NODE_ENV === 'development') {
-        console.log('取消排序:', { sortField, sortOrder })
-      }
-      setSortField(undefined)
-      setSortOrder(undefined)
-      setCurrentPage(1) // 取消排序时也重置到第一页
-    } else {
-      // 纯分页操作
-      if (pagination.pageSize && pagination.pageSize !== pageSize) {
-        // 页面大小变化时重置到第一页
-        setPageSize(pagination.pageSize)
-        setCurrentPage(1)
-      } else if (pagination.current) {
-        // 只是页码变化时不重置
-        setCurrentPage(pagination.current)
-      }
-    }
-  }
-
   // 计算到期天数
   const getDaysOverdue = (endDate: string) => {
     const today = dayjs()
@@ -125,29 +34,24 @@ const ServiceExpiryDetail: React.FC = () => {
     }
   }
 
-  // 统计不同状态的客户数量
-  const statusStats = (data?.list || []).reduce(
-    (acc, item) => {
-      const daysOverdue = getDaysOverdue(item.agencyEndDate)
-      if (daysOverdue > 90) acc.severe++
-      else if (daysOverdue > 30) acc.overdue++
-      else if (daysOverdue > 0) acc.justExpired++
-      else if (daysOverdue > -7) acc.soonExpire++
-      else acc.normal++
-      return acc
-    },
-    { severe: 0, overdue: 0, justExpired: 0, soonExpire: 0, normal: 0 }
-  )
-
   const columns: ColumnsType<ExpiringCustomerItem> = [
     {
-      title: '客户名称',
-      dataIndex: 'customerId',
-      key: 'customerId',
+      title: '企业名称',
+      dataIndex: 'companyName',
+      key: 'companyName',
       width: 200,
       fixed: 'left',
-      render: (id: number) => (
-        <div style={{ fontWeight: 500, color: '#262626' }}>{getCustomerName(id)}</div>
+      render: (text: string) => <div style={{ fontWeight: 500, color: '#262626' }}>{text}</div>,
+    },
+    {
+      title: '统一社会信用代码',
+      dataIndex: 'unifiedSocialCreditCode',
+      key: 'unifiedSocialCreditCode',
+      width: 180,
+      render: (code: string) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+          {code === '无' ? <span style={{ color: '#999' }}>无</span> : code}
+        </span>
       ),
     },
     {
@@ -164,39 +68,6 @@ const ServiceExpiryDetail: React.FC = () => {
       sorter: true,
     },
     {
-      title: '到期状态',
-      key: 'status',
-      width: 120,
-      render: (_, record) => {
-        const status = getExpiryTag(record.agencyEndDate)
-        return <Tag color={status.color}>{status.text}</Tag>
-      },
-      filters: [
-        { text: '严重超期', value: 'severe' },
-        { text: '超期', value: 'overdue' },
-        { text: '刚到期', value: 'justExpired' },
-        { text: '即将到期', value: 'soonExpire' },
-        { text: '正常', value: 'normal' },
-      ],
-      onFilter: (value, record) => {
-        const daysOverdue = getDaysOverdue(record.agencyEndDate)
-        switch (value) {
-          case 'severe':
-            return daysOverdue > 90
-          case 'overdue':
-            return daysOverdue > 30 && daysOverdue <= 90
-          case 'justExpired':
-            return daysOverdue > 0 && daysOverdue <= 30
-          case 'soonExpire':
-            return daysOverdue > -7 && daysOverdue <= 0
-          case 'normal':
-            return daysOverdue <= -7
-          default:
-            return true
-        }
-      },
-    },
-    {
       title: '超期天数',
       key: 'daysOverdue',
       width: 100,
@@ -206,7 +77,6 @@ const ServiceExpiryDetail: React.FC = () => {
           days > 90 ? '#ff4d4f' : days > 30 ? '#fa8c16' : days > 0 ? '#faad14' : '#52c41a'
         return <span style={{ color, fontWeight: 500 }}>{days > 0 ? `+${days}` : days}天</span>
       },
-      sorter: true,
     },
     {
       title: '紧急程度',
@@ -230,148 +100,59 @@ const ServiceExpiryDetail: React.FC = () => {
     },
   ]
 
+  const summaryMetrics: SummaryMetric[] = [
+    {
+      key: 'totalExpiredCustomers',
+      title: '总到期客户',
+      formatter: (value: any, data: any) => {
+        return data.summary?.totalExpiredCustomers || 0
+      },
+      suffix: '个',
+      color: '#ff9800',
+    },
+    {
+      key: 'expiringInMonth',
+      title: '本月到期',
+      formatter: (value: any, data: any) => {
+        return data.summary?.expiringInMonth || 0
+      },
+      suffix: '个',
+      color: '#1890ff',
+    },
+    {
+      key: 'overdue',
+      title: '已逾期',
+      formatter: (value: any, data: any) => {
+        return data.summary?.overdue || 0
+      },
+      suffix: '个',
+      color: '#ff4d4f',
+    },
+  ]
+
   return (
-    <div style={{ padding: '24px', backgroundColor: '#ffffff', minHeight: '100vh' }}>
-      {/* 页面标题 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: 24,
-          background: 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)',
-          padding: '20px 24px',
-          borderRadius: 16,
-          boxShadow: '0 8px 32px rgba(255, 152, 0, 0.25)',
+    <ReportPageLayout
+      title="⏰ 代理服务到期客户详情"
+      backgroundColor="linear-gradient(135deg, #ffa726 0%, #ff9800 100%)"
+      titleColor="#ffffff"
+    >
+      <AdvancedServerTable<ExpiringCustomerItem>
+        endpoint="/reports/service-expiry-stats"
+        columns={columns}
+        rowKey="customerId"
+        summaryMetrics={summaryMetrics}
+        apiFunction={getServiceExpiryStats}
+        tableProps={{
+          scroll: { x: 1000 },
+          size: 'middle' as const,
         }}
-      >
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/reports')}
-          style={{ color: '#ffffff', marginRight: 16 }}
-        >
-          返回
-        </Button>
-        <Title level={2} style={{ margin: 0, color: '#ffffff', fontWeight: 600 }}>
-          ⏰ 代理服务到期客户详情
-        </Title>
-      </div>
-
-      {/* 统计概览 */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-        <Col xs={24} sm={8} md={4}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(255, 77, 79, 0.15)' }}>
-            <Statistic
-              title="严重超期"
-              value={statusStats.severe}
-              suffix="个"
-              valueStyle={{ color: '#ff4d4f', fontSize: 20, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={4}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(250, 140, 22, 0.15)' }}>
-            <Statistic
-              title="超期"
-              value={statusStats.overdue}
-              suffix="个"
-              valueStyle={{ color: '#fa8c16', fontSize: 20, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={4}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(250, 173, 20, 0.15)' }}>
-            <Statistic
-              title="刚到期"
-              value={statusStats.justExpired}
-              suffix="个"
-              valueStyle={{ color: '#faad14', fontSize: 20, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={4}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(24, 144, 255, 0.15)' }}>
-            <Statistic
-              title="即将到期"
-              value={statusStats.soonExpire}
-              suffix="个"
-              valueStyle={{ color: '#1890ff', fontSize: 20, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={4}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(82, 196, 26, 0.15)' }}>
-            <Statistic
-              title="正常"
-              value={statusStats.normal}
-              suffix="个"
-              valueStyle={{ color: '#52c41a', fontSize: 20, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8} md={4}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(255, 152, 0, 0.15)' }}>
-            <Statistic
-              title="总计"
-              value={data?.totalExpiredCustomers || 0}
-              suffix="个"
-              valueStyle={{ color: '#ff9800', fontSize: 20, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 搜索 */}
-      <Card style={{ marginBottom: 24, borderRadius: 16 }}>
-        <Search
-          placeholder="搜索客户名称或ID"
-          allowClear
-          style={{ width: 300 }}
-          onSearch={handleSearch}
-          onChange={e => {
-            if (!e.target.value) {
-              handleSearch('')
-            }
-          }}
-          prefix={<SearchOutlined />}
-        />
-      </Card>
-
-      {/* 数据表格 */}
-      <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)' }}>
-        <Table
-          columns={columns}
-          dataSource={data?.list || []}
-          rowKey="customerId"
-          loading={isLoading || customerNamesLoading}
-          scroll={{ x: 800 }}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: data?.totalExpiredCustomers || 0,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-            pageSizeOptions: ['10', '20', '50', '100'],
-          }}
-          onChange={handleTableChange}
-          size="middle"
-          rowClassName={record => {
-            const daysOverdue = getDaysOverdue(record.agencyEndDate)
-            if (daysOverdue > 90) return 'row-severe'
-            if (daysOverdue > 30) return 'row-overdue'
-            if (daysOverdue > 0) return 'row-expired'
-            return ''
-          }}
-        />
-      </Card>
-
+      />
       <style>{`
         .row-severe { background-color: #fff2f0; }
         .row-overdue { background-color: #fff7e6; }
         .row-expired { background-color: #fffbe6; }
       `}</style>
-    </div>
+    </ReportPageLayout>
   )
 }
 

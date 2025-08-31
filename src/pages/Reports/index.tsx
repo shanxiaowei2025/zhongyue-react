@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import { Row, Col, Space, Typography, Spin, Alert } from 'antd'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../store/auth'
+import { isAdminUser } from '../../utils/permissionUtils'
 import { useReportsDashboard } from './hooks/useReportsDashboard'
 import StatisticCard from './components/StatisticCard'
 import EmployeePerformanceChart from './components/EmployeePerformanceChart'
@@ -18,6 +20,10 @@ const { Title } = Typography
 
 const Reports: React.FC = () => {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+
+  // 检查用户是否为管理员
+  const isAdmin = isAdminUser(user)
 
   // 筛选参数状态
   const [filterParams, setFilterParams] = useState({
@@ -135,14 +141,17 @@ const Reports: React.FC = () => {
 
       {/* 图表行 */}
       <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-        <Col xs={24} lg={12}>
-          <AccountantDistributionChart
-            data={dashboardData.charts.accountantDistribution}
-            loading={isLoading}
-            onViewMore={() => navigate('/reports/accountant-client')}
-          />
-        </Col>
-        <Col xs={24} lg={12}>
+        {/* 记账会计负责客户分布 - 仅管理员可见 */}
+        {isAdmin && (
+          <Col xs={24} lg={12}>
+            <AccountantDistributionChart
+              data={dashboardData.charts.accountantDistribution}
+              loading={isLoading}
+              onViewMore={() => navigate('/reports/accountant-client')}
+            />
+          </Col>
+        )}
+        <Col xs={24} lg={isAdmin ? 12 : 24}>
           <ChurnTrendChart
             data={dashboardData.charts.churnTrend}
             loading={isLoading}

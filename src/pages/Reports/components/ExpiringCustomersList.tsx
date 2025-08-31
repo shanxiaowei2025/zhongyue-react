@@ -3,7 +3,6 @@ import { Card, List, Tag, Empty, Spin, Button } from 'antd'
 import { ExclamationCircleOutlined, EyeOutlined, CalendarOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { ExpiringCustomerItem } from '../types/reports'
-import { useCustomerNames } from '../hooks/useCustomerNames'
 
 interface ExpiringCustomersListProps {
   data: ExpiringCustomerItem[]
@@ -18,9 +17,6 @@ const ExpiringCustomersList: React.FC<ExpiringCustomersListProps> = ({
   title = '到期客户提醒',
   onViewMore,
 }) => {
-  // 获取客户名称
-  const customerIds = data.map(item => item.customerId)
-  const { getCustomerName, isLoading: customerNamesLoading } = useCustomerNames(customerIds)
   // 计算到期天数
   const getDaysOverdue = (endDate: string) => {
     const today = dayjs()
@@ -66,7 +62,7 @@ const ExpiringCustomersList: React.FC<ExpiringCustomersListProps> = ({
         )
       }
     >
-      {loading || customerNamesLoading ? (
+      {loading ? (
         <div
           style={{
             display: 'flex',
@@ -140,8 +136,21 @@ const ExpiringCustomersList: React.FC<ExpiringCustomersListProps> = ({
                             color: isUrgent ? '#ff4d4f' : '#262626',
                           }}
                         >
-                          {getCustomerName(item.customerId)}
+                          {item.companyName}
                         </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: '#8c8c8c',
+                          marginBottom: 4,
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        信用代码:{' '}
+                        {item.unifiedSocialCreditCode === '无'
+                          ? '无'
+                          : item.unifiedSocialCreditCode}
                       </div>
                       <div
                         style={{

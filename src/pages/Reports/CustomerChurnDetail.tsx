@@ -6,8 +6,14 @@ import { useCustomerChurnStats } from './hooks/useCustomerChurnStats'
 import type { ChurnedCustomerItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
+import {
+  BUSINESS_STATUS_MAP,
+  ENTERPRISE_STATUS_MAP,
+  BUSINESS_STATUS_COLOR_MAP,
+  ENTERPRISE_STATUS_COLOR_MAP,
+} from '../../constants'
 
-const { Title } = Typography
+const { Title, Text } = Typography
 const { Option } = Select
 
 const CustomerChurnDetail: React.FC = () => {
@@ -163,13 +169,6 @@ const CustomerChurnDetail: React.FC = () => {
     return 'default'
   }
 
-  const getStatusColor = (status: string) => {
-    if (status.includes('注销')) return 'red'
-    if (status.includes('正常')) return 'green'
-    if (status.includes('吊销')) return 'orange'
-    return 'default'
-  }
-
   const columns: ColumnsType<ChurnedCustomerItem> = [
     {
       title: '企业名称',
@@ -219,14 +218,27 @@ const CustomerChurnDetail: React.FC = () => {
       dataIndex: 'currentEnterpriseStatus',
       key: 'currentEnterpriseStatus',
       width: 100,
-      render: (status: string) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+      render: (status: string) => {
+        const displayText =
+          ENTERPRISE_STATUS_MAP[status as keyof typeof ENTERPRISE_STATUS_MAP] || status
+        const color =
+          ENTERPRISE_STATUS_COLOR_MAP[status as keyof typeof ENTERPRISE_STATUS_COLOR_MAP] ||
+          'default'
+        return <Tag color={color}>{displayText}</Tag>
+      },
     },
     {
       title: '税务状态',
       dataIndex: 'currentBusinessStatus',
       key: 'currentBusinessStatus',
       width: 100,
-      render: (status: string) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+      render: (status: string) => {
+        const displayText =
+          BUSINESS_STATUS_MAP[status as keyof typeof BUSINESS_STATUS_MAP] || status
+        const color =
+          BUSINESS_STATUS_COLOR_MAP[status as keyof typeof BUSINESS_STATUS_COLOR_MAP] || 'default'
+        return <Tag color={color}>{displayText}</Tag>
+      },
     },
   ]
 
@@ -305,6 +317,9 @@ const CustomerChurnDetail: React.FC = () => {
       {/* 筛选条件 */}
       <Card style={{ marginBottom: 24, borderRadius: 16 }}>
         <Space size="large" wrap>
+          <Text style={{ fontSize: '16px', fontWeight: 500, color: '#262626' }}>
+            截止统计时间：
+          </Text>
           <div>
             <span style={{ marginRight: 8 }}>年份：</span>
             <Select value={selectedYear} onChange={handleYearChange} style={{ width: 100 }}>

@@ -1,111 +1,91 @@
-import React, { useState } from 'react'
-import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Typography,
-  Row,
-  Col,
-  Statistic,
-  DatePicker,
-  Input,
-} from 'antd'
-import { ArrowLeftOutlined, SearchOutlined, TrophyOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { TrophyOutlined } from '@ant-design/icons'
+import { getCustomerLevelDistribution } from '../../api/reports'
 import { useCustomerLevelDistribution } from './hooks/useCustomerLevelDistribution'
-import type { CustomerLevelDistributionItem } from './types/reports'
+import AdvancedServerTable from '../../components/AdvancedServerTable'
+import ReportPageLayout from '../../components/ReportPageLayout'
+import CustomerLevelChart from '../../components/CustomerLevelChart'
+import type { CustomerLevelItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
-import dayjs from 'dayjs'
-
-const { Title } = Typography
-const { Search } = Input
+import type { SummaryMetric, FilterConfig } from '../../types/advancedServerTable'
 
 const CustomerLevelDetail: React.FC = () => {
-  const navigate = useNavigate()
-  const [searchText, setSearchText] = useState('')
-  const [selectedYear, setSelectedYear] = useState(dayjs().year())
-  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [sortField, setSortField] = useState<string | undefined>()
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC' | undefined>()
+  const [searchParams] = useSearchParams()
 
-  const { data, isLoading } = useCustomerLevelDistribution({
-    year: selectedYear,
-    month: selectedMonth,
-    page: currentPage,
-    pageSize,
-    sortField,
-    sortOrder,
+  // 从URL参数获取当前筛选条件
+  const currentYear = searchParams.get('year') || new Date().getFullYear().toString()
+  const currentMonth = searchParams.get('month') || null
+
+  // 使用hook获取客户等级数据
+  const { data: levelData } = useCustomerLevelDistribution({
+    year: parseInt(currentYear),
+    month: currentMonth ? parseInt(currentMonth) : undefined,
+    page: 1,
+    pageSize: 1, // 只需要levelStats数据，不需要详细列表
   })
 
-  // 搜索条件改变时重置到第一页
-  const handleSearch = (value: string) => {
-    setSearchText(value)
-    setCurrentPage(1)
-  }
+  // 生成动态选项
+  const [levelOptions, setLevelOptions] = useState<Array<{ label: string; value: string }>>([])
 
-  // 处理表格变化（分页、排序）
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Table change:', {
-        pagination,
-        sorter,
-        'sorter.field': sorter?.field,
-        'sorter.order': sorter?.order,
-        'Object.keys(sorter)': Object.keys(sorter || {}),
-        currentPage,
-        pageSize,
-        sortField,
-        sortOrder,
-      }) // 详细调试日志
-    }
+  // 监听数据变化，更新选项
+  useEffect(() => {
+    if (levelData?.levelStats && levelData.levelStats.length > 0) {
+      const options = levelData.levelStats.map((stat: any) => ({
+        label: `${stat.level} (${stat.count}个)`,
+        value: stat.level,
+      }))
 
-    // 检测是否是取消排序的情况
-    const isCurrentlySorted = sortField && sortOrder
-    const hasNewSorting = sorter && sorter.field && sorter.order
-    const isCancelingSorting = isCurrentlySorted && !hasNewSorting
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('排序状态分析:', {
-        isCurrentlySorted,
-        hasNewSorting,
-        isCancelingSorting,
-        sorter详情: sorter,
-      })
-    }
-
-    // 优先处理排序
-    if (hasNewSorting) {
-      // 有明确的排序字段和排序方向
-      setSortField(sorter.field)
-      setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC')
-      setCurrentPage(1) // 排序时重置到第一页
-      if (pagination.pageSize && pagination.pageSize !== pageSize) {
-        setPageSize(pagination.pageSize)
-      }
-    } else if (isCancelingSorting) {
-      // 取消排序：当前有排序但新的sorter没有有效排序
-      if (process.env.NODE_ENV === 'development') {
-        console.log('取消排序:', { sortField, sortOrder })
-      }
-      setSortField(undefined)
-      setSortOrder(undefined)
-      setCurrentPage(1) // 取消排序时也重置到第一页
+      // 使用排序函数
+      const sortedOptions = sortLevelOptions(options)
+      setLevelOptions(sortedOptions)
     } else {
-      // 纯分页操作
-      if (pagination.pageSize && pagination.pageSize !== pageSize) {
-        // 页面大小变化时重置到第一页
-        setPageSize(pagination.pageSize)
-        setCurrentPage(1)
-      } else if (pagination.current) {
-        // 只是页码变化时不重置
-        setCurrentPage(pagination.current)
-      }
+      // 提供fallback选项
+      setLevelOptions([
+        { label: 'AA', value: 'AA' },
+        { label: 'AB', value: 'AB' },
+        { label: 'AC', value: 'AC' },
+        { label: 'BA', value: 'BA' },
+        { label: 'BB', value: 'BB' },
+        { label: 'BC', value: 'BC' },
+        { label: 'CA', value: 'CA' },
+        { label: 'CB', value: 'CB' },
+        { label: 'CC', value: 'CC' },
+        { label: 'DA', value: 'DA' },
+        { label: 'DB', value: 'DB' },
+        { label: 'DC', value: 'DC' },
+        { label: 'DD', value: 'DD' },
+      ])
     }
+  }, [levelData])
+
+  // 自定义等级排序函数
+  const sortLevelOptions = (options: Array<{ label: string; value: string }>) => {
+    return options.sort((a, b) => {
+      const levelA = a.value
+      const levelB = b.value
+
+      // 正则匹配字母等级格式 (如: AA, AB, BA, CC 等)
+      const letterLevelRegex = /^[A-D][A-D]$/
+      const isLetterA = letterLevelRegex.test(levelA)
+      const isLetterB = letterLevelRegex.test(levelB)
+
+      // 如果都是字母等级，按字典序排序
+      if (isLetterA && isLetterB) {
+        return levelA.localeCompare(levelB)
+      }
+
+      // 如果都是中文等级，保持原顺序
+      if (!isLetterA && !isLetterB) {
+        return 0
+      }
+
+      // 字母等级排在前面，中文等级排在后面
+      return isLetterA ? -1 : 1
+    })
   }
 
+  // 获取等级颜色配置
   const getLevelColor = (level: string) => {
     const colors = {
       A级: '#ff4d4f',
@@ -118,13 +98,32 @@ const CustomerLevelDetail: React.FC = () => {
     return colors[level as keyof typeof colors] || '#722ed1'
   }
 
-  const columns: ColumnsType<CustomerLevelDistributionItem> = [
+  // 表格列配置
+  const columns: ColumnsType<CustomerLevelItem> = [
+    {
+      title: '企业名称',
+      dataIndex: 'companyName',
+      key: 'companyName',
+      width: 200,
+      fixed: 'left',
+      render: (text: string) => <div style={{ fontWeight: 500, color: '#262626' }}>{text}</div>,
+    },
+    {
+      title: '统一社会信用代码',
+      dataIndex: 'unifiedSocialCreditCode',
+      key: 'unifiedSocialCreditCode',
+      width: 180,
+      render: (code: string) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+          {code === '无' ? <span style={{ color: '#999' }}>无</span> : code}
+        </span>
+      ),
+    },
     {
       title: '客户等级',
       dataIndex: 'level',
       key: 'level',
       width: 120,
-      fixed: 'left',
       render: (level: string) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <TrophyOutlined style={{ color: getLevelColor(level), marginRight: 8 }} />
@@ -133,189 +132,110 @@ const CustomerLevelDetail: React.FC = () => {
           </span>
         </div>
       ),
-    },
-    {
-      title: '客户数量',
-      dataIndex: 'count',
-      key: 'count',
-      width: 120,
-      render: (count: number, record) => (
-        <span style={{ color: getLevelColor(record.level), fontWeight: 600, fontSize: 16 }}>
-          {count}个
-        </span>
-      ),
       sorter: true,
     },
     {
-      title: '占比',
-      dataIndex: 'percentage',
-      key: 'percentage',
-      width: 100,
-      render: (percentage: number, record) => (
-        <span style={{ color: getLevelColor(record.level), fontWeight: 500 }}>
-          {percentage.toFixed(1)}%
-        </span>
-      ),
-      sorter: true,
-    },
-    {
-      title: '总收入',
-      dataIndex: 'totalRevenue',
-      key: 'totalRevenue',
+      title: '贡献金额',
+      dataIndex: 'contributionAmount',
+      key: 'contributionAmount',
       width: 140,
-      render: (revenue: number) => (
-        <span style={{ color: '#52c41a', fontWeight: 500 }}>¥{revenue.toLocaleString()}</span>
-      ),
-      sorter: true,
-    },
-    {
-      title: '平均收入',
-      dataIndex: 'averageRevenue',
-      key: 'averageRevenue',
-      width: 140,
-      render: (revenue: number) => (
-        <span style={{ color: '#1890ff', fontWeight: 500 }}>¥{revenue.toLocaleString()}</span>
-      ),
+      render: (amount: string) => {
+        const numAmount = parseFloat(amount) || 0
+        return (
+          <span style={{ color: '#52c41a', fontWeight: 500 }}>¥{numAmount.toLocaleString()}</span>
+        )
+      },
       sorter: true,
     },
   ]
 
+  // 统计指标配置
+  const summaryMetrics: SummaryMetric[] = [
+    {
+      key: 'totalCustomers',
+      title: '客户总数',
+      formatter: (value: any, data: any) => {
+        return data.summary?.totalCustomers || 0
+      },
+      suffix: '个',
+      color: '#722ed1',
+    },
+    {
+      key: 'totalRevenue',
+      title: '总收入',
+      formatter: (value: any, data: any) => {
+        return data.summary?.totalRevenue || 0
+      },
+      prefix: '¥',
+      color: '#52c41a',
+    },
+  ]
+
+  // 筛选器配置
+  const filters: FilterConfig[] = [
+    {
+      key: 'year',
+      type: 'year',
+      label: '年份',
+      defaultValue: new Date().getFullYear(),
+      allowClear: false,
+    },
+    {
+      key: 'month',
+      type: 'select',
+      label: '月份',
+      placeholder: '全年',
+      allowClear: true,
+      options: [
+        { label: '1月', value: 1 },
+        { label: '2月', value: 2 },
+        { label: '3月', value: 3 },
+        { label: '4月', value: 4 },
+        { label: '5月', value: 5 },
+        { label: '6月', value: 6 },
+        { label: '7月', value: 7 },
+        { label: '8月', value: 8 },
+        { label: '9月', value: 9 },
+        { label: '10月', value: 10 },
+        { label: '11月', value: 11 },
+        { label: '12月', value: 12 },
+      ],
+    },
+    {
+      key: 'level',
+      type: 'select',
+      label: '客户等级',
+      placeholder: '全部等级',
+      allowClear: true,
+      options: levelOptions,
+    },
+  ]
+
   return (
-    <div style={{ padding: '24px', backgroundColor: '#ffffff', minHeight: '100vh' }}>
-      {/* 页面标题 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: 24,
-          background: 'linear-gradient(135deg, #722ed1 0%, #531dab 100%)',
-          padding: '20px 24px',
-          borderRadius: 16,
-          boxShadow: '0 8px 32px rgba(114, 46, 209, 0.25)',
+    <ReportPageLayout
+      title="🎯 客户等级分布详情"
+      backgroundColor="linear-gradient(135deg, #722ed1 0%, #531dab 100%)"
+      titleColor="#ffffff"
+    >
+      <AdvancedServerTable<CustomerLevelItem>
+        endpoint="/reports/customer-level-distribution"
+        columns={columns}
+        rowKey="customerId"
+        defaultParams={{
+          year: new Date().getFullYear(),
         }}
-      >
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/reports')}
-          style={{ color: '#ffffff', marginRight: 16 }}
-        >
-          返回
-        </Button>
-        <Title level={2} style={{ margin: 0, color: '#ffffff', fontWeight: 600 }}>
-          🎯 客户等级分布详情
-        </Title>
-      </div>
-
-      {/* 统计概览 */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-        <Col xs={24} sm={6}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(114, 46, 209, 0.15)' }}>
-            <Statistic
-              title="客户总数"
-              value={data?.summary?.totalCustomers || 0}
-              suffix="个"
-              valueStyle={{ color: '#722ed1', fontSize: 24, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(114, 46, 209, 0.15)' }}>
-            <Statistic
-              title="总收入"
-              value={data?.summary?.totalRevenue || 0}
-              prefix="¥"
-              valueStyle={{ color: '#52c41a', fontSize: 24, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(114, 46, 209, 0.15)' }}>
-            <Statistic
-              title="平均收入"
-              value={data?.summary?.averageRevenue || 0}
-              prefix="¥"
-              precision={0}
-              valueStyle={{ color: '#1890ff', fontSize: 24, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(114, 46, 209, 0.15)' }}>
-            <Statistic
-              title="A级客户占比"
-              value={
-                (data?.distribution || []).find(
-                  (item: CustomerLevelDistributionItem) => item.level === 'A级'
-                )?.percentage || 0
-              }
-              suffix="%"
-              precision={1}
-              valueStyle={{ color: '#ff4d4f', fontSize: 24, fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 筛选和搜索 */}
-      <Card style={{ marginBottom: 24, borderRadius: 16 }}>
-        <Space size="large" wrap>
-          <div>
-            <span style={{ marginRight: 8 }}>年份：</span>
-            <DatePicker
-              picker="year"
-              value={dayjs().year(selectedYear)}
-              onChange={date => setSelectedYear(date?.year() || dayjs().year())}
-              allowClear={false}
-            />
-          </div>
-          <div>
-            <span style={{ marginRight: 8 }}>月份：</span>
-            <DatePicker
-              picker="month"
-              value={selectedMonth ? dayjs().month(selectedMonth - 1) : null}
-              onChange={date => setSelectedMonth(date ? date.month() + 1 : undefined)}
-              placeholder="全年"
-              allowClear
-            />
-          </div>
-          <Search
-            placeholder="搜索客户等级"
-            allowClear
-            style={{ width: 200 }}
-            onSearch={handleSearch}
-            onChange={e => {
-              if (!e.target.value) {
-                handleSearch('')
-              }
-            }}
-            prefix={<SearchOutlined />}
-          />
-        </Space>
-      </Card>
-
-      {/* 数据表格 */}
-      <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)' }}>
-        <Table
-          columns={columns}
-          dataSource={data?.distribution || []}
-          rowKey="level"
-          loading={isLoading}
-          scroll={{ x: 800 }}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: data?.summary?.totalCustomers || 0,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-            pageSizeOptions: ['10', '20', '50', '100'],
-          }}
-          onChange={handleTableChange}
-          size="middle"
-        />
-      </Card>
-    </div>
+        summaryMetrics={summaryMetrics}
+        filters={filters}
+        apiFunction={getCustomerLevelDistribution}
+        chartComponent={data => (
+          <CustomerLevelChart levelStats={data.levelStats || []} title="客户等级分布图" />
+        )}
+        tableProps={{
+          scroll: { x: 1000 },
+          size: 'middle' as const,
+        }}
+      />
+    </ReportPageLayout>
   )
 }
 

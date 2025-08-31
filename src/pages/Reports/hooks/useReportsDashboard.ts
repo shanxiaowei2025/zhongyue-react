@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import { useAuthStore } from '../../../store/auth'
+import { isAdminUser } from '../../../utils/permissionUtils'
 import { useAgencyFeeAnalysis } from './useAgencyFeeAnalysis'
 import { useEmployeePerformance } from './useEmployeePerformance'
 import { useCustomerChurnStats } from './useCustomerChurnStats'
@@ -15,6 +17,9 @@ interface UseReportsDashboardParams {
 }
 
 export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
+  const { user } = useAuthStore()
+  const isAdmin = isAdminUser(user)
+
   const {
     month = new Date().toISOString().slice(0, 7), // 默认当前月份 YYYY-MM
     year = new Date().getFullYear(),
@@ -27,7 +32,13 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     isLoading: agencyFeeLoading,
     error: agencyFeeError,
     refresh: refreshAgencyFee,
-  } = useAgencyFeeAnalysis({ threshold, pageSize: 10 })
+  } = useAgencyFeeAnalysis({
+    year, // 添加年份参数，使其响应年月变化
+    threshold,
+    pageSize: 10,
+    sortField: 'decreaseAmount',
+    sortOrder: 'DESC',
+  })
 
   const {
     data: employeeData,
@@ -48,20 +59,29 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     isLoading: expiryLoading,
     error: expiryError,
     refresh: refreshExpiry,
-  } = useServiceExpiryStats()
+  } = useServiceExpiryStats({
+    pageSize: 10,
+    sortField: 'agencyEndDate',
+    sortOrder: 'DESC',
+  })
+
+  // 只有管理员才获取会计负责客户数据
+  const accountantParams = isAdmin
+    ? {
+        page: 1,
+        pageSize: 99999, // 增加pageSize确保获取足够的记账会计数据用于图表展示
+        sortField: 'clientCount',
+        sortOrder: 'DESC' as const,
+        accountantType: 'bookkeepingAccountant', // 只获取记账会计数据
+      }
+    : {}
 
   const {
     data: accountantData,
     isLoading: accountantLoading,
     error: accountantError,
     refresh: refreshAccountant,
-  } = useAccountantClientStats({
-    page: 1,
-    pageSize: 99999, // 增加pageSize确保获取足够的记账会计数据用于图表展示
-    sortField: 'clientCount',
-    sortOrder: 'DESC',
-    accountantType: 'bookkeepingAccountant', // 只获取记账会计数据
-  })
+  } = useAccountantClientStats(accountantParams)
 
   // 计算最近6个月的日期范围
   const sixMonthsAgo = new Date()
@@ -78,7 +98,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
   } = useNewCustomerStats({
     startDate: sixMonthsAgo.toISOString().split('T')[0], // YYYY-MM-DD格式
     endDate: today.toISOString().split('T')[0], // YYYY-MM-DD格式
-    pageSize: 1000, // 获取足够的数据用于图表展示
+    pageSize: 9999999, // 获取足够的数据用于图表展示
     sortField: 'createTime',
     sortOrder: 'DESC',
   })
@@ -109,6 +129,12 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     accountantError ||
     newCustomerError ||
     customerLevelError
+
+  // 调试日志：检查到期客户数据
+  console.log('=== 到期客户数据调试 ===')
+  console.log('expiryData:', expiryData)
+  console.log('expiryData?.totalExpiredCustomers:', expiryData?.totalExpiredCustomers)
+  console.log('expiryData?.total:', expiryData?.total)
 
   // 组合仪表盘数据
   const dashboardData: ReportsDashboardData = useMemo(() => {
@@ -148,20 +174,20 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     return {
       summary: {
         agencyFeeDecreaseCount: agencyFeeData?.total || 0,
-        expiringCustomersCount: expiryData?.totalExpiredCustomers || 0,
+        expiringCustomersCount: expiryData?.totalExpiredCustomers || expiryData?.total || 0,
         churnedCustomersCount: churnData?.summary?.totalChurned || 0,
         totalEmployeeRevenue: employeeData?.summary?.totalRevenue || 0,
       },
       charts: {
         employeePerformance: employeeData?.list || [],
-        accountantDistribution: accountantData?.list || [],
+        accountantDistribution: isAdmin ? accountantData?.list || [] : [],
         churnTrend: churnData?.periodStats || [],
         newCustomer: monthlyNewCustomerStats,
-        customerLevel: customerLevelData?.distribution || [],
+        customerLevel: customerLevelData?.levelStats || customerLevelData?.distribution || [],
       },
       lists: {
-        agencyFeeDecreaseCustomers: agencyFeeData?.list?.slice(0, 5) || [],
-        expiringCustomers: expiryData?.list?.slice(0, 5) || [],
+        agencyFeeDecreaseCustomers: agencyFeeData?.list || [],
+        expiringCustomers: expiryData?.list || [],
       },
     }
   }, [
