@@ -49,6 +49,7 @@ export interface FinancialSelfInspection {
   inspector: string | null // 抽查人
   reviewer: string | null // 复查人
   problem: string | null // 问题
+  problemImageDescription: string | null // 问题图片描述
   solution: string | null // 解决方案
   status: FinancialSelfInspectionStatus // 状态
   rectificationRecords: RectificationRecordItem[] // 整改记录
@@ -93,6 +94,7 @@ export interface CreateFinancialSelfInspectionDto {
   consultantAccountant?: string
   inspector?: string
   problem?: string
+  problemImageDescription?: string
   solution?: string
 }
 

@@ -1,6 +1,17 @@
 import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Button, Typography, Descriptions, Spin, Tag, message, Space, Timeline } from 'antd'
+import {
+  Card,
+  Button,
+  Typography,
+  Descriptions,
+  Spin,
+  Tag,
+  message,
+  Space,
+  Timeline,
+  Image,
+} from 'antd'
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
@@ -10,9 +21,11 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   EyeOutlined,
+  FileImageOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useResponsibleInspectionDetail } from '../../hooks/useFinancialSelfInspection'
+import { buildImageUrl } from '../../utils/upload'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
   RectificationRecordItem,
@@ -287,6 +300,27 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
                 </Text>
               )}
             </div>
+            {data.problemImageDescription && (
+              <div className="mt-4">
+                <div className="mb-2">
+                  <Text type="secondary">
+                    <FileImageOutlined /> 问题图片：
+                  </Text>
+                </div>
+                <Image
+                  src={buildImageUrl(data.problemImageDescription)}
+                  alt="问题图片"
+                  style={{ maxWidth: '400px', maxHeight: '300px' }}
+                  placeholder={
+                    <div className="text-center p-8">
+                      <FileImageOutlined style={{ fontSize: '24px' }} />
+                      <div className="mt-2">加载中...</div>
+                    </div>
+                  }
+                  fallback="/images/image-placeholder.svg"
+                />
+              </div>
+            )}
           </Descriptions.Item>
           <Descriptions.Item label="解决方案">
             <div className="whitespace-pre-wrap">

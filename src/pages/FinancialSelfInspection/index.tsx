@@ -55,7 +55,9 @@ import type {
   ReviewerRejectRecordItem,
 } from '../../types/financialSelfInspection'
 import type { Enterprise } from '../../types/enterpriseService'
+import type { ImageType } from '../../types'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
+import FileUpload from '../../components/FileUpload'
 import { useAuthStore } from '../../store/auth'
 
 const { RangePicker } = DatePicker
@@ -252,6 +254,9 @@ const FinancialSelfInspection: React.FC = () => {
   // 当前操作的记录
   const [currentRecord, setCurrentRecord] = useState<FinancialSelfInspection | null>(null)
 
+  // 问题图片状态
+  const [problemImage, setProblemImage] = useState<ImageType | undefined>(undefined)
+
   // 权限检查函数
   const hasRectificationPermission = () => {
     if (!user?.roles || !Array.isArray(user.roles)) {
@@ -442,6 +447,7 @@ const FinancialSelfInspection: React.FC = () => {
     const inspectorValue = user?.username || ''
     createForm.resetFields()
     createForm.setFieldsValue({ inspector: inspectorValue })
+    setProblemImage(undefined)
     setCreateModalVisible(true)
   }
 
@@ -589,6 +595,7 @@ const FinancialSelfInspection: React.FC = () => {
         consultantAccountant: values.consultantAccountant,
         inspector: values.inspector,
         problem: values.problem,
+        problemImageDescription: problemImage?.fileName,
         solution: values.solution,
       }
 
@@ -1758,6 +1765,15 @@ const FinancialSelfInspection: React.FC = () => {
               placeholder="请详细描述发现的问题..."
               showCount
               maxLength={500}
+            />
+          </Form.Item>
+
+          <Form.Item label="问题图片" name="problemImage">
+            <FileUpload
+              label="问题图片"
+              value={problemImage}
+              onChange={value => setProblemImage(value)}
+              accept=".jpg,.jpeg,.png,.gif,.bmp,.webp"
             />
           </Form.Item>
 
