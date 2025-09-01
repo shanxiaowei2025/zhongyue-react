@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { Row, Col, Space, Typography, Spin, Alert } from 'antd'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
 import { isAdminUser } from '../../utils/permissionUtils'
 import { useReportsDashboard } from './hooks/useReportsDashboard'
@@ -20,10 +20,14 @@ const { Title } = Typography
 
 const Reports: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuthStore()
 
   // 检查用户是否为管理员
   const isAdmin = isAdminUser(user)
+
+  // 检查是否在详情页
+  const isDetailPage = location.pathname !== '/reports'
 
   // 筛选参数状态
   const [filterParams, setFilterParams] = useState({
@@ -56,6 +60,11 @@ const Reports: React.FC = () => {
         />
       </div>
     )
+  }
+
+  // 如果是详情页，只渲染子路由内容
+  if (isDetailPage) {
+    return <Outlet />
   }
 
   return (

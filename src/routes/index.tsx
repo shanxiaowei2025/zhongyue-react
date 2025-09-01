@@ -132,34 +132,36 @@ const routes: RouteObject[] = [
       {
         path: 'reports',
         element: <Reports />,
-      },
-      {
-        path: 'reports/agency-fee-analysis',
-        element: <AgencyFeeAnalysisDetail />,
-      },
-      {
-        path: 'reports/employee-performance',
-        element: <EmployeePerformanceDetail />,
-      },
-      {
-        path: 'reports/customer-churn',
-        element: <CustomerChurnDetail />,
-      },
-      {
-        path: 'reports/service-expiry',
-        element: <ServiceExpiryDetail />,
-      },
-      {
-        path: 'reports/accountant-client',
-        element: <AccountantClientDetail />,
-      },
-      {
-        path: 'reports/new-customer',
-        element: <NewCustomerDetail />,
-      },
-      {
-        path: 'reports/customer-level',
-        element: <CustomerLevelDetail />,
+        children: [
+          {
+            path: 'agency-fee-analysis',
+            element: <AgencyFeeAnalysisDetail />,
+          },
+          {
+            path: 'employee-performance',
+            element: <EmployeePerformanceDetail />,
+          },
+          {
+            path: 'customer-churn',
+            element: <CustomerChurnDetail />,
+          },
+          {
+            path: 'service-expiry',
+            element: <ServiceExpiryDetail />,
+          },
+          {
+            path: 'accountant-client',
+            element: <AccountantClientDetail />,
+          },
+          {
+            path: 'new-customer',
+            element: <NewCustomerDetail />,
+          },
+          {
+            path: 'customer-level',
+            element: <CustomerLevelDetail />,
+          },
+        ],
       },
       {
         path: 'employees',

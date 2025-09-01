@@ -258,6 +258,14 @@ const useTabsStore = () => {
       '/financial-self-inspection/responsible-detail/',
       '/tax-review/',
       '/profile',
+      // 排除报表详情页，让它们不被识别为独立模块
+      '/reports/agency-fee-analysis',
+      '/reports/employee-performance',
+      '/reports/customer-churn',
+      '/reports/service-expiry',
+      '/reports/accountant-client',
+      '/reports/new-customer',
+      '/reports/customer-level',
     ]
 
     // 检查是否是特殊路径
