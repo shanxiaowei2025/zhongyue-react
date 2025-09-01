@@ -93,6 +93,7 @@ export const getMaxAmountProject = (expense: Expense): string => {
 
 /**
  * 获取本月指定业务员的费用单数
+ * 只统计总金额大于等于1000元的费用单
  */
 export const getMonthlyExpenseCount = async (salesperson: string): Promise<number> => {
   try {
@@ -107,17 +108,41 @@ export const getMonthlyExpenseCount = async (salesperson: string): Promise<numbe
     const endDate = new Date(nextYear, nextMonth - 1, 0).getDate()
     const endDateStr = `${year}-${month.toString().padStart(2, '0')}-${endDate.toString().padStart(2, '0')}`
 
-    const params: ExpenseQueryParams = {
-      page: 1,
-      pageSize: 1, // 只需要获取总数，不需要具体数据
-      salesperson,
-      chargeDateStart: startDate,
-      chargeDateEnd: endDateStr,
-      businessType: ['新增', ''], // 只统计新增业务和空业务类型，排除续费
+    // 需要获取所有数据进行前端过滤，分页获取
+    let allExpenses: Expense[] = []
+    let currentPage = 1
+    const pageSize = 100
+    let hasMoreData = true
+
+    while (hasMoreData) {
+      const params: ExpenseQueryParams = {
+        page: currentPage,
+        pageSize,
+        salesperson,
+        chargeDateStart: startDate,
+        chargeDateEnd: endDateStr,
+        businessType: ['新增', ''], // 只统计新增业务和空业务类型，排除续费
+      }
+
+      const response = await getExpenseList(params)
+      const { list, total, currentPage: responsePage } = response.data || {}
+
+      if (list && list.length > 0) {
+        allExpenses = allExpenses.concat(list)
+      }
+
+      // 检查是否还有更多数据
+      hasMoreData = responsePage * pageSize < (total || 0)
+      currentPage++
     }
 
-    const response = await getExpenseList(params)
-    return response.data?.total || 0
+    // 过滤掉总金额小于1000的费用单
+    const validExpenses = allExpenses.filter(expense => {
+      const totalFee = parseFloat(String(expense.totalFee || 0))
+      return totalFee >= 1000
+    })
+
+    return validExpenses.length
   } catch (error) {
     console.error('获取本月费用单数失败:', error)
     return 0
