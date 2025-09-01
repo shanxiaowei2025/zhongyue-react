@@ -54,8 +54,7 @@ const ExpiringCustomersList: React.FC<ExpiringCustomersListProps> = ({
         height: 'calc(100% - 57px)', // 减去标题高度
       }}
       extra={
-        onViewMore &&
-        data.length > 0 && (
+        onViewMore && (
           <Button type="link" size="small" icon={<EyeOutlined />} onClick={onViewMore}>
             查看更多
           </Button>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { DatePicker, Select, Space } from 'antd'
 import { CalendarOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -59,6 +59,11 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     }
   }
 
+  // 使用useMemo确保DatePicker的value稳定
+  const datePickerValue = useMemo(() => {
+    return value.month ? dayjs(value.month) : null
+  }, [value.month])
+
   return (
     <Space>
       <CalendarOutlined style={{ color: '#8c8c8c' }} />
@@ -68,7 +73,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         <DatePicker
           picker="month"
           placeholder="选择月份"
-          value={value.month ? dayjs(value.month) : dayjs()}
+          value={datePickerValue}
           onChange={handleMonthPickerChange}
           allowClear={false}
           style={{ width: 120 }}

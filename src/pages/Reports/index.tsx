@@ -143,7 +143,13 @@ const Reports: React.FC = () => {
           <EmployeePerformanceChart
             data={dashboardData.charts.employeePerformance}
             loading={isLoading}
-            onViewMore={() => navigate('/reports/employee-performance')}
+            onViewMore={() => {
+              const params = new URLSearchParams()
+              if (filterParams.month) {
+                params.set('selectedMonth', filterParams.month)
+              }
+              navigate(`/reports/employee-performance?${params.toString()}`)
+            }}
           />
         </Col>
       </Row>
@@ -164,7 +170,18 @@ const Reports: React.FC = () => {
           <ChurnTrendChart
             data={dashboardData.charts.churnTrend}
             loading={isLoading}
-            onViewMore={() => navigate('/reports/customer-churn')}
+            onViewMore={() => {
+              const params = new URLSearchParams()
+              if (filterParams.year) {
+                params.set('year', filterParams.year.toString())
+              }
+              if (filterParams.month) {
+                // 从 YYYY-MM 格式提取月份数字
+                const monthNum = parseInt(filterParams.month.split('-')[1])
+                params.set('month', monthNum.toString())
+              }
+              navigate(`/reports/customer-churn?${params.toString()}`)
+            }}
           />
         </Col>
       </Row>
@@ -175,14 +192,32 @@ const Reports: React.FC = () => {
           <NewCustomerChart
             data={dashboardData.charts.newCustomer}
             loading={isLoading}
-            onViewMore={() => navigate('/reports/new-customer')}
+            selectedMonth={filterParams.month}
+            onViewMore={() => {
+              const params = new URLSearchParams()
+              if (filterParams.month) {
+                params.set('selectedMonth', filterParams.month)
+              }
+              navigate(`/reports/new-customer?${params.toString()}`)
+            }}
           />
         </Col>
         <Col xs={24} lg={12}>
           <CustomerLevelChart
             data={dashboardData.charts.customerLevel}
             loading={isLoading}
-            onViewMore={() => navigate('/reports/customer-level')}
+            onViewMore={() => {
+              const params = new URLSearchParams()
+              if (filterParams.year) {
+                params.set('year', filterParams.year.toString())
+              }
+              if (filterParams.month) {
+                // 从 YYYY-MM 格式提取月份数字
+                const monthNum = parseInt(filterParams.month.split('-')[1])
+                params.set('month', monthNum.toString())
+              }
+              navigate(`/reports/customer-level?${params.toString()}`)
+            }}
           />
         </Col>
       </Row>
@@ -193,7 +228,13 @@ const Reports: React.FC = () => {
           <AgencyFeeDecreaseList
             data={dashboardData.lists.agencyFeeDecreaseCustomers}
             loading={isLoading}
-            onViewMore={() => navigate('/reports/agency-fee-analysis')}
+            onViewMore={() => {
+              const params = new URLSearchParams()
+              if (filterParams.year) {
+                params.set('year', filterParams.year.toString())
+              }
+              navigate(`/reports/agency-fee-analysis?${params.toString()}`)
+            }}
           />
         </Col>
         <Col xs={24} lg={12}>

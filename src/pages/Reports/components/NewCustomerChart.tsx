@@ -20,6 +20,7 @@ interface NewCustomerChartProps {
   loading?: boolean
   title?: string
   onViewMore?: () => void
+  selectedMonth?: string // 用户选择的月份，格式：YYYY-MM
 }
 
 const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
@@ -27,6 +28,7 @@ const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
   loading = false,
   title = '新增客户统计',
   onViewMore,
+  selectedMonth,
 }) => {
   // 处理图表数据
   const chartData = useMemo(() => {
@@ -34,25 +36,39 @@ const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
       return null
     }
 
-    // 生成最近6个月的月份列表（包含当前月份）
-    const months = []
-    const now = new Date()
+    // 确定6个月范围的结束月份
+    let endMonth: string
 
-    console.log('当前时间:', now.toISOString())
-    console.log('当前年月:', now.getFullYear(), now.getMonth() + 1) // getMonth()返回0-11，所以+1
-
-    // 从5个月前开始，到当前月份结束，共6个月
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      // 使用本地时间格式化，避免时区问题
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const monthStr = `${year}-${month}`
-      months.push(monthStr) // 按时间顺序添加
-      console.log(`i=${i}, date=${date.toISOString()}, monthStr=${monthStr}`)
+    if (selectedMonth) {
+      // 如果传入了选择的月份，使用选择的月份作为结束月份
+      endMonth = selectedMonth
+    } else {
+      // 否则从数据中找到最晚的月份，或使用当前月份
+      const dataMonths = data.map(item => item.month).sort()
+      if (dataMonths.length > 0) {
+        endMonth = dataMonths[dataMonths.length - 1]
+      } else {
+        const now = new Date()
+        endMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      }
     }
 
-    console.log('生成的月份列表:', months)
+    // 基于结束月份生成固定的6个月列表
+    const months = []
+    const end = new Date(`${endMonth}-01`)
+
+    // 从结束月份向前推5个月，生成6个月的列表
+    for (let i = 5; i >= 0; i--) {
+      const current = new Date(end)
+      current.setMonth(current.getMonth() - i)
+      const year = current.getFullYear()
+      const month = String(current.getMonth() + 1).padStart(2, '0')
+      const monthStr = `${year}-${month}`
+      months.push(monthStr)
+    }
+
+    console.log('生成的固定6个月列表:', months)
+    console.log('结束月份:', endMonth)
     console.log(
       'API返回的数据月份:',
       data.map(item => item.month)

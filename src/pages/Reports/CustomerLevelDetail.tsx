@@ -228,7 +228,7 @@ const CustomerLevelDetail: React.FC = () => {
         filters={filters}
         apiFunction={getCustomerLevelDistribution}
         chartComponent={data => (
-          <CustomerLevelChart levelStats={data.levelStats || []} title="客户等级分布图" />
+          <CustomerLevelChart levelStats={(data as any).levelStats || []} title="客户等级分布图" />
         )}
         tableProps={{
           scroll: { x: 1000 },

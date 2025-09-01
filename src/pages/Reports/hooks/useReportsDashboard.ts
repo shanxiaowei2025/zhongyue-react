@@ -83,12 +83,15 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     refresh: refreshAccountant,
   } = useAccountantClientStats(accountantParams)
 
-  // 计算最近6个月的日期范围
-  const sixMonthsAgo = new Date()
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+  // 基于用户选择的月份计算6个月的日期范围
+  const selectedDate = new Date(`${month}-01`) // 将YYYY-MM转换为Date对象
+  const sixMonthsAgo = new Date(selectedDate)
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5) // 向前5个月，加上当前月份共6个月
   sixMonthsAgo.setDate(1) // 设置为月初
 
-  const today = new Date()
+  const endOfSelectedMonth = new Date(selectedDate)
+  endOfSelectedMonth.setMonth(endOfSelectedMonth.getMonth() + 1)
+  endOfSelectedMonth.setDate(0) // 设置为选择月份的最后一天
 
   const {
     data: newCustomerData,
@@ -97,18 +100,24 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     refresh: refreshNewCustomer,
   } = useNewCustomerStats({
     startDate: sixMonthsAgo.toISOString().split('T')[0], // YYYY-MM-DD格式
-    endDate: today.toISOString().split('T')[0], // YYYY-MM-DD格式
+    endDate: endOfSelectedMonth.toISOString().split('T')[0], // YYYY-MM-DD格式
     pageSize: 9999999, // 获取足够的数据用于图表展示
     sortField: 'createTime',
     sortOrder: 'DESC',
   })
+
+  // 从 YYYY-MM 格式提取数字月份
+  const monthNumber = month ? parseInt(month.split('-')[1]) : undefined
 
   const {
     data: customerLevelData,
     isLoading: customerLevelLoading,
     error: customerLevelError,
     refresh: refreshCustomerLevel,
-  } = useCustomerLevelDistribution()
+  } = useCustomerLevelDistribution({
+    year: year,
+    month: monthNumber,
+  })
 
   // 检查是否有任何数据正在加载
   const isLoading =
