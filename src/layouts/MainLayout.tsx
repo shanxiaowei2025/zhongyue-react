@@ -522,6 +522,27 @@ const MainLayout = () => {
       icon: <BarChartOutlined />,
       label: '报表管理',
     },
+    // 根据用户角色决定是否显示凭证管理菜单
+    ...(user?.roles.some(role =>
+      [
+        'super_admin',
+        'admin',
+        'consultantAccountant',
+        'bookkeepingAccountant',
+        '超级管理员',
+        '管理员',
+        '顾问会计',
+        '记账会计',
+      ].includes(role)
+    )
+      ? [
+          {
+            key: '/voucher-management',
+            icon: <FileTextOutlined />,
+            label: '凭证管理',
+          },
+        ]
+      : []),
     // 根据用户角色决定是否显示员工管理菜单
     ...(user?.roles.some(role => ['super_admin', 'admin', '超级管理员', '管理员'].includes(role))
       ? [

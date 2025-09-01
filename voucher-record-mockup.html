@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>凭证存放记录功能效果图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        
+        .mockup-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .mockup-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #262626;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        /* 模态框样式 */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.45);
+            position: relative;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .modal-close {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            width: 22px;
+            height: 22px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #8c8c8c;
+        }
+        
+        /* 标签页 */
+        .tabs {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 0 24px;
+            display: flex;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 12px 16px;
+            color: #8c8c8c;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        
+        .tab.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+        }
+        
+        .tab-content {
+            padding: 24px;
+            min-height: 500px;
+        }
+        
+        /* 凭证记录区域 */
+        .voucher-section {
+            border-top: 1px solid #f0f0f0;
+            margin-top: 20px;
+            padding-top: 20px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 16px;
+            position: relative;
+            padding-left: 8px;
+        }
+        
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 16px;
+            background: #1890ff;
+            border-radius: 2px;
+        }
+        
+        .voucher-card {
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        
+        .voucher-header {
+            padding: 12px 16px;
+            background: white;
+            border-radius: 6px 6px 0 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .year-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .year-select {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 4px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            color: #262626;
+        }
+        
+        .btn:hover {
+            color: #1890ff;
+            border-color: #1890ff;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        .voucher-content {
+            padding: 16px;
+        }
+        
+        /* 年度信息折叠面板 */
+        .collapse {
+            margin-bottom: 16px;
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        .collapse-header {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #595959;
+        }
+        
+        .collapse-content {
+            padding: 12px;
+            background: white;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .form-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .form-label {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        
+        .form-input {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* 月份状态展示 */
+        .months-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .month-item {
+            flex: 1;
+            min-width: 80px;
+            max-width: 90px;
+            padding: 8px 4px;
+            border: 1px solid;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .month-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .month-item.completed {
+            background-color: rgba(82, 196, 26, 0.1);
+            border-color: #52c41a;
+            color: #52c41a;
+        }
+        
+        .month-item.incomplete {
+            background-color: rgba(250, 173, 20, 0.1);
+            border-color: #faad14;
+            color: #faad14;
+        }
+        
+        .month-item.not-required {
+            background-color: rgba(24, 144, 255, 0.1);
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .month-item.not-set {
+            background-color: #f5f5f5;
+            border-color: #d9d9d9;
+            color: #8c8c8c;
+        }
+        
+        .month-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .month-status {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        
+        /* 批量操作区域 */
+        .batch-operations {
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .batch-operations-title {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        
+        .batch-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .batch-btn {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            color: #262626;
+        }
+        
+        .batch-btn.completed { border-color: #52c41a; color: #52c41a; }
+        .batch-btn.incomplete { border-color: #faad14; color: #faad14; }
+        .batch-btn.not-required { border-color: #1890ff; color: #1890ff; }
+        
+        /* 备注区域 */
+        .remarks-section {
+            margin-top: 16px;
+        }
+        
+        .remarks-textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        /* Popover效果 */
+        .popover {
+            position: absolute;
+            top: -120px;
+            left: 0;
+            width: 280px;
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            padding: 12px;
+        }
+        
+        .popover-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #262626;
+        }
+        
+        .status-select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .description-textarea {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            min-height: 60px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        /* 独立页面效果图 */
+        .page-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+        
+        .page-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+        
+        .page-subtitle {
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+        
+        .page-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 20px 24px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 16px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+        
+        .stat-number.completed { color: #52c41a; }
+        .stat-number.incomplete { color: #faad14; }
+        .stat-number.not-required { color: #1890ff; }
+        
+        /* 表格样式 */
+        .table-container {
+            padding: 0 24px 24px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .table th,
+        .table td {
+            padding: 12px 8px;
+            border: 1px solid #f0f0f0;
+            text-align: left;
+        }
+        
+        .table th {
+            background: #fafafa;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .table td {
+            color: #595959;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        
+        .status-dot.completed { background: #52c41a; }
+        .status-dot.incomplete { background: #faad14; }
+        .status-dot.not-required { background: #1890ff; }
+        .status-dot.not-set { background: #d9d9d9; }
+        
+        .progress-bar {
+            width: 60px;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #1890ff;
+            border-radius: 4px;
+        }
+        
+        .mockup-section {
+            margin-bottom: 40px;
+        }
+        
+        .section-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="mockup-container">
+        <h1 class="mockup-title">凭证存放记录功能效果图</h1>
+        
+        <!-- 模态框中的凭证记录 -->
+        <div class="mockup-section">
+            <div class="section-header">1. 客户编辑模态框中的凭证记录（紧凑模式）</div>
+            <div class="modal-overlay">
+                <div class="modal">
+                    <div class="modal-header">
+                        <div class="modal-title">编辑客户</div>
+                        <button class="modal-close">×</button>
+                    </div>
+                    
+                    <div class="tabs">
+                        <div class="tab">基本信息</div>
+                        <div class="tab">实缴资本</div>
+                        <div class="tab">行政许可</div>
+                        <div class="tab">实际负责人</div>
+                        <div class="tab">银行信息</div>
+                        <div class="tab">税务信息</div>
+                        <div class="tab">人员信息</div>
+                        <div class="tab active">档案存放信息</div>
+                        <div class="tab">档案资料</div>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <!-- 现有档案字段 -->
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-item">
+                                    <div class="form-label">印章存放档案编号</div>
+                                    <input class="form-input" value="SEAL001" readonly>
+                                </div>
+                                <div class="form-item">
+                                    <div class="form-label">纸质资料档案编号</div>
+                                    <input class="form-input" value="PAPER001" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 凭证存放记录区域 -->
+                        <div class="voucher-section">
+                            <div class="section-title">凭证存放记录</div>
+                            
+                            <div class="voucher-card">
+                                <div class="voucher-header">
+                                    <div class="year-controls">
+                                        <select class="year-select">
+                                            <option>2024年</option>
+                                            <option>2023年</option>
+                                        </select>
+                                        <button class="btn btn-primary">新增年度</button>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn">详细编辑</button>
+                                        <button class="btn">导出</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="voucher-content">
+                                    <!-- 年度信息折叠面板 -->
+                                    <div class="collapse">
+                                        <div class="collapse-header">
+                                            <span>年度信息</span>
+                                            <span>▼</span>
+                                        </div>
+                                        <div class="collapse-content">
+                                            <div class="form-item">
+                                                <div class="form-label">存放位置</div>
+                                                <input class="form-input" placeholder="请输入存放位置" value="A区1号柜">
+                                            </div>
+                                            <div class="form-item">
+                                                <div class="form-label">经手人</div>
+                                                <input class="form-input" placeholder="请输入经手人" value="张会计">
+                                            </div>
+                                            <div class="form-item">
+                                                <div class="form-label">取走记录</div>
+                                                <input class="form-input" placeholder="请输入取走记录" value="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 月份状态网格 -->
+                                    <div class="months-grid">
+                                        <div class="month-item completed" onclick="showPopover(this)">
+                                            <div class="month-name">1月</div>
+                                            <div class="month-status">已完成</div>
+                                        </div>
+                                        <div class="month-item incomplete">
+                                            <div class="month-name">2月</div>
+                                            <div class="month-status">未完成</div>
+                                        </div>
+                                        <div class="month-item completed">
+                                            <div class="month-name">3月</div>
+                                            <div class="month-status">已完成</div>
+                                        </div>
+                                        <div class="month-item not-required">
+                                            <div class="month-name">4月</div>
+                                            <div class="month-status">无需整理</div>
+                                        </div>
+                                        <div class="month-item incomplete">
+                                            <div class="month-name">5月</div>
+                                            <div class="month-status">未完成</div>
+                                        </div>
+                                        <div class="month-item completed">
+                                            <div class="month-name">6月</div>
+                                            <div class="month-status">已完成</div>
+                                        </div>
+                                        <div class="month-item not-set">
+                                            <div class="month-name">7月</div>
+                                            <div class="month-status">未设置</div>
+                                        </div>
+                                        <div class="month-item not-set">
+                                            <div class="month-name">8月</div>
+                                            <div class="month-status">未设置</div>
+                                        </div>
+                                        <div class="month-item not-set">
+                                            <div class="month-name">9月</div>
+                                            <div class="month-status">未设置</div>
+                                        </div>
+                                        <div class="month-item not-set">
+                                            <div class="month-name">10月</div>
+                                            <div class="month-status">未设置</div>
+                                        </div>
+                                        <div class="month-item not-set">
+                                            <div class="month-name">11月</div>
+                                            <div class="month-status">未设置</div>
+                                        </div>
+                                        <div class="month-item not-set">
+                                            <div class="month-name">12月</div>
+                                            <div class="month-status">未设置</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 批量操作 -->
+                                    <div class="batch-operations">
+                                        <div class="batch-operations-title">快速设置：</div>
+                                        <div class="batch-buttons">
+                                            <button class="batch-btn completed">全部完成</button>
+                                            <button class="batch-btn incomplete">全部未完成</button>
+                                            <button class="batch-btn not-required">全部无需整理</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 通用备注 -->
+                                    <div class="remarks-section">
+                                        <div class="form-label" style="margin-bottom: 8px;">通用备注</div>
+                                        <textarea class="remarks-textarea" placeholder="请输入通用备注信息...">该客户凭证统一存放在A区1号柜，每月月末整理完成。</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 独立凭证管理页面 -->
+        <div class="mockup-section">
+            <div class="section-header">2. 独立凭证进度管理页面</div>
+            <div class="page-container">
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">凭证进度管理</div>
+                        <div class="page-subtitle">管理所有客户的凭证整理进度</div>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn">导出全部进度表</button>
+                        <button class="btn">下载模板</button>
+                    </div>
+                </div>
+                
+                <!-- 统计概览 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">156</div>
+                        <div class="stat-label">总客户数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number completed">89</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number incomplete">45</div>
+                        <div class="stat-label">进行中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number not-required">22</div>
+                        <div class="stat-label">无需整理</div>
+                    </div>
+                </div>
+                
+                <!-- 进度表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>客户名称</th>
+                                <th>记账会计</th>
+                                <th>1月</th>
+                                <th>2月</th>
+                                <th>3月</th>
+                                <th>4月</th>
+                                <th>5月</th>
+                                <th>6月</th>
+                                <th>7月</th>
+                                <th>8月</th>
+                                <th>9月</th>
+                                <th>10月</th>
+                                <th>11月</th>
+                                <th>12月</th>
+                                <th>完成率</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>河北慧安航空服务有限公司</td>
+                                <td>张会计</td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot incomplete"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 75%;"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn" style="font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>保定浩讯钢铁有限公司</td>
+                                <td>李会计</td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot not-required"></span></td>
+                                <td><span class="status-dot not-required"></span></td>
+                                <td><span class="status-dot incomplete"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 42%;"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn" style="font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>重庆大福精钢有限公司</td>
+                                <td>王会计</td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot completed"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td><span class="status-dot not-set"></span></td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%;"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn" style="font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popover编辑效果 -->
+        <div class="mockup-section">
+            <div class="section-header">3. 月份编辑Popover弹窗效果</div>
+            <div style="position: relative; height: 200px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <div class="month-item completed" style="position: relative;">
+                    <div class="month-name">1月</div>
+                    <div class="month-status">已完成</div>
+                    
+                    <!-- Popover -->
+                    <div class="popover">
+                        <div class="popover-title">2024年1月凭证记录</div>
+                        
+                        <div class="form-item" style="margin-bottom: 8px;">
+                            <div class="form-label">整理状态</div>
+                            <select class="status-select">
+                                <option value="completed" selected>✅ 已完成</option>
+                                <option value="incomplete">⚠️ 未整理完成</option>
+                                <option value="not_required">🔵 无需整理</option>
+                                <option value="not_set">⚪ 未设置</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-item" style="margin-bottom: 8px;">
+                            <div class="form-label">说明</div>
+                            <textarea class="description-textarea" placeholder="请输入具体说明...">1月份凭证已全部整理完成，共计156张凭证。</textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="width: 100%;">保存</button>
+                    </div>
+                </div>
+                <div style="position: absolute; top: 20px; left: 20px; color: #8c8c8c; font-size: 14px;">
+                    点击月份卡片显示编辑弹窗
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPopover = null;
+        
+        function showPopover(element) {
+            // 如果已有popover，先移除
+            if (currentPopover) {
+                currentPopover.remove();
+                currentPopover = null;
+            }
+            
+            // 创建popover
+            const popover = document.createElement('div');
+            popover.className = 'popover';
+            popover.innerHTML = `
+                <div class="popover-title">2024年1月凭证记录</div>
+                <div class="form-item" style="margin-bottom: 8px;">
+                    <div class="form-label">整理状态</div>
+                    <select class="status-select">
+                        <option value="completed" selected>✅ 已完成</option>
+                        <option value="incomplete">⚠️ 未整理完成</option>
+                        <option value="not_required">🔵 无需整理</option>
+                        <option value="not_set">⚪ 未设置</option>
+                    </select>
+                </div>
+                <div class="form-item" style="margin-bottom: 8px;">
+                    <div class="form-label">说明</div>
+                    <textarea class="description-textarea" placeholder="请输入具体说明...">1月份凭证已全部整理完成，共计156张凭证。</textarea>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="saveMonth()">保存</button>
+            `;
+            
+            element.appendChild(popover);
+            currentPopover = popover;
+            
+            // 点击外部关闭popover
+            setTimeout(() => {
+                document.addEventListener('click', function closePopover(e) {
+                    if (!element.contains(e.target)) {
+                        if (currentPopover) {
+                            currentPopover.remove();
+                            currentPopover = null;
+                        }
+                        document.removeEventListener('click', closePopover);
+                    }
+                });
+            }, 100);
+        }
+        
+        function saveMonth() {
+            if (currentPopover) {
+                // 模拟保存效果
+                const saveBtn = currentPopover.querySelector('.btn-primary');
+                const originalText = saveBtn.textContent;
+                saveBtn.textContent = '保存中...';
+                saveBtn.disabled = true;
+                
+                setTimeout(() => {
+                    saveBtn.textContent = '已保存';
+                    saveBtn.style.background = '#52c41a';
+                    setTimeout(() => {
+                        if (currentPopover) {
+                            currentPopover.remove();
+                            currentPopover = null;
+                        }
+                    }, 800);
+                }, 1000);
+            }
+        }
+        
+        // 添加交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 折叠面板效果
+            const collapseHeaders = document.querySelectorAll('.collapse-header');
+            collapseHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const arrow = this.querySelector('span:last-child');
+                    
+                    if (content.style.display === 'none') {
+                        content.style.display = 'grid';
+                        arrow.textContent = '▼';
+                        // 添加展开动画
+                        content.style.opacity = '0';
+                        setTimeout(() => {
+                            content.style.opacity = '1';
+                        }, 50);
+                    } else {
+                        content.style.display = 'none';
+                        arrow.textContent = '▶';
+                    }
+                });
+            });
+            
+            // 批量操作按钮效果
+            const batchBtns = document.querySelectorAll('.batch-btn');
+            batchBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const btnText = this.textContent;
+                    let status, statusText;
+                    
+                    if (btnText.includes('完成') && !btnText.includes('未')) {
+                        status = 'completed';
+                        statusText = '已完成';
+                    } else if (btnText.includes('未完成')) {
+                        status = 'incomplete';
+                        statusText = '未完成';
+                    } else {
+                        status = 'not-required';
+                        statusText = '无需整理';
+                    }
+                    
+                    // 模拟批量更新动画
+                    const months = document.querySelectorAll('.month-item');
+                    months.forEach((month, index) => {
+                        setTimeout(() => {
+                            month.className = 'month-item ' + status;
+                            month.querySelector('.month-status').textContent = statusText;
+                            
+                            // 添加更新动画
+                            month.style.transform = 'scale(1.05)';
+                            setTimeout(() => {
+                                month.style.transform = 'scale(1)';
+                            }, 150);
+                        }, index * 80);
+                    });
+                    
+                    // 按钮反馈效果
+                    this.style.background = '#1890ff';
+                    this.style.color = 'white';
+                    this.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                        setTimeout(() => {
+                            this.style.background = 'white';
+                            this.style.color = status === 'completed' ? '#52c41a' :
+                                             status === 'incomplete' ? '#faad14' : '#1890ff';
+                        }, 200);
+                    }, 150);
+                });
+            });
+            
+            // 月份点击切换效果
+            const months = document.querySelectorAll('.month-item');
+            months.forEach(month => {
+                month.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // 如果是示例区域的月份，显示popover
+                    if (this.closest('.mockup-section .section-header')?.textContent.includes('Popover')) {
+                        return;
+                    }
+                    
+                    // 其他月份切换状态
+                    const statuses = ['completed', 'incomplete', 'not-required', 'not-set'];
+                    const statusTexts = ['已完成', '未完成', '无需整理', '未设置'];
+                    const currentClasses = this.className.split(' ');
+                    const currentStatus = currentClasses.find(cls => statuses.includes(cls));
+                    const currentIndex = statuses.indexOf(currentStatus);
+                    const nextIndex = (currentIndex + 1) % statuses.length;
+                    
+                    this.className = 'month-item ' + statuses[nextIndex];
+                    this.querySelector('.month-status').textContent = statusTexts[nextIndex];
+                    
+                    // 添加点击动画
+                    this.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 200);
+                });
+            });
+            
+            // 表格行hover效果
+            const tableRows = document.querySelectorAll('.table tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f5f5f5';
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = 'white';
+                });
+            });
+            
+            // 按钮hover效果增强
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    if (!this.disabled) {
+                        this.style.transform = 'translateY(-1px)';
+                        this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    }
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    if (!this.disabled) {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = 'none';
+                    }
+                });
+            });
+            
+            // 年份选择器变化效果
+            const yearSelect = document.querySelector('.year-select');
+            if (yearSelect) {
+                yearSelect.addEventListener('change', function() {
+                    const voucherContent = document.querySelector('.voucher-content');
+                    voucherContent.style.opacity = '0.5';
+                    
+                    setTimeout(() => {
+                        voucherContent.style.opacity = '1';
+                        
+                        // 模拟加载新年份数据
+                        const months = document.querySelectorAll('.month-item');
+                        months.forEach((month, index) => {
+                            setTimeout(() => {
+                                // 随机设置状态
+                                const statuses = ['completed', 'incomplete', 'not-required', 'not-set'];
+                                const statusTexts = ['已完成', '未完成', '无需整理', '未设置'];
+                                const randomIndex = Math.floor(Math.random() * statuses.length);
+                                
+                                month.className = 'month-item ' + statuses[randomIndex];
+                                month.querySelector('.month-status').textContent = statusTexts[randomIndex];
+                            }, index * 50);
+                        });
+                    }, 500);
+                });
+            }
+            
+            // 统计卡片动画
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, index * 100);
+                }, 100);
+            });
+            
+            // 进度条动画
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                
+                setTimeout(() => {
+                    bar.style.transition = 'width 1s ease';
+                    bar.style.width = width;
+                }, 1000);
+            });
+            
+            // 表格编辑按钮效果
+            const editBtns = document.querySelectorAll('.table .btn');
+            editBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    row.style.backgroundColor = '#e6f7ff';
+                    row.style.transform = 'scale(1.02)';
+                    
+                    setTimeout(() => {
+                        row.style.backgroundColor = 'white';
+                        row.style.transform = 'scale(1)';
+                    }, 1000);
+                });
+            });
+            
+            // 添加页面加载动画
+            const modal = document.querySelector('.modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    modal.style.transition = 'all 0.3s ease';
+                    modal.style.opacity = '1';
+                    modal.style.transform = 'scale(1)';
+                }, 200);
+            }
+            
+            const pageContainer = document.querySelector('.page-container');
+            if (pageContainer) {
+                pageContainer.style.opacity = '0';
+                pageContainer.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    pageContainer.style.transition = 'all 0.5s ease';
+                    pageContainer.style.opacity = '1';
+                    pageContainer.style.transform = 'translateY(0)';
+                }, 300);
+            }
+        });
+    </script>
+</body>
+</html>

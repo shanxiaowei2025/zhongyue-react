@@ -43,6 +43,7 @@ import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
 import { useClanList, useClanDetail } from '../../hooks/useClan'
+import VoucherRecordCompact from '../../components/VoucherRecord/VoucherRecordCompact'
 
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
 import { LOCATION_OPTIONS } from '../../constants/locationOptions'
@@ -2287,6 +2288,32 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               <Input.TextArea rows={3} placeholder="请输入档案存放相关备注信息" />
             )}
           </Form.Item>
+
+          {/* 凭证存放记录 */}
+          {customer?.id && (
+            <div className="col-span-1 md:col-span-2 mt-6">
+              <div className="mb-4">
+                <h3 className="text-base font-medium text-gray-800 mb-2 flex items-center">
+                  <span className="w-1 h-4 bg-blue-500 rounded-sm mr-2"></span>
+                  凭证存放记录
+                </h3>
+                <p className="text-sm text-gray-500">
+                  管理客户的凭证整理进度，支持按年度和月份记录凭证存放状态
+                </p>
+              </div>
+              <VoucherRecordCompact
+                customerId={customer.id}
+                onDetailEdit={yearRecordId => {
+                  // TODO: 打开详细编辑页面或模态框
+                  console.log('详细编辑年度记录:', yearRecordId)
+                }}
+                onExport={(customerId, year) => {
+                  // TODO: 导出凭证记录
+                  console.log('导出凭证记录:', { customerId, year })
+                }}
+              />
+            </div>
+          )}
         </div>
       ),
     },
