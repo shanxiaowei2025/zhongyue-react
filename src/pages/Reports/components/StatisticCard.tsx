@@ -86,7 +86,7 @@ const StatisticCard: React.FC<StatisticCardProps> = ({
         background: '#ffffff',
         overflow: 'hidden',
       }}
-      bodyStyle={{ padding: '24px' }}
+      styles={{ body: { padding: '24px' } }}
       hoverable
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

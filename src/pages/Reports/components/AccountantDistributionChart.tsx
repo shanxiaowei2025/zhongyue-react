@@ -109,7 +109,7 @@ const AccountantDistributionChart: React.FC<AccountantDistributionChartProps> = 
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context: { parsed: { x?: number } }) {
             const value = context.parsed.x || 0
             return `客户数量: ${value}个`
           },
@@ -143,9 +143,9 @@ const AccountantDistributionChart: React.FC<AccountantDistributionChartProps> = 
           // 移除固定stepSize，让Chart.js自动计算合适的刻度间隔
           // stepSize: 1, // 这会在数据量大时生成过多刻度
           maxTicksLimit: 10, // 限制最大刻度数量
-          callback: function (value: any) {
+          callback: function (value: number | string) {
             // 确保显示整数刻度
-            if (Number.isInteger(value)) {
+            if (Number.isInteger(Number(value))) {
               return value + '个'
             }
             return ''
@@ -209,9 +209,11 @@ const AccountantDistributionChart: React.FC<AccountantDistributionChartProps> = 
         border: 'none',
         background: '#ffffff',
       }}
-      bodyStyle={{
-        padding: '24px',
-        height: 'calc(100% - 57px)', // 减去标题高度，与其他图表组件保持一致
+      styles={{
+        body: {
+          padding: '24px',
+          height: 'calc(100% - 57px)', // 减去标题高度，与其他图表组件保持一致
+        },
       }}
     >
       {loading ? (

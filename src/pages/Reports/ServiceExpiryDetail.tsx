@@ -1,5 +1,4 @@
 import React from 'react'
-import { Tag } from 'antd'
 import { CalendarOutlined } from '@ant-design/icons'
 import { getServiceExpiryStats } from '../../api/reports'
 import AdvancedServerTable from '../../components/AdvancedServerTable'
@@ -104,8 +103,8 @@ const ServiceExpiryDetail: React.FC = () => {
     {
       key: 'totalExpiredCustomers',
       title: '总到期客户',
-      formatter: (value: any, data: any) => {
-        return data.summary?.totalExpiredCustomers || 0
+      formatter: (_value: unknown, data: { summary?: { totalExpiredCustomers?: number } }) => {
+        return String(data.summary?.totalExpiredCustomers || 0)
       },
       suffix: '个',
       color: '#ff9800',
@@ -113,8 +112,8 @@ const ServiceExpiryDetail: React.FC = () => {
     {
       key: 'expiringInMonth',
       title: '本月到期',
-      formatter: (value: any, data: any) => {
-        return data.summary?.expiringInMonth || 0
+      formatter: (_value: unknown, data: { summary?: { expiringInMonth?: number } }) => {
+        return String(data.summary?.expiringInMonth || 0)
       },
       suffix: '个',
       color: '#1890ff',
@@ -122,8 +121,8 @@ const ServiceExpiryDetail: React.FC = () => {
     {
       key: 'overdue',
       title: '已逾期',
-      formatter: (value: any, data: any) => {
-        return data.summary?.overdue || 0
+      formatter: (_value: unknown, data: { summary?: { overdue?: number } }) => {
+        return String(data.summary?.overdue || 0)
       },
       suffix: '个',
       color: '#ff4d4f',

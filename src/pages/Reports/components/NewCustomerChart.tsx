@@ -109,7 +109,7 @@ const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
         },
       ],
     }
-  }, [data])
+  }, [data, selectedMonth])
 
   // 图表配置 - 横向柱状图
   const chartOptions = {
@@ -122,8 +122,9 @@ const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
-            return `${context.dataset.label}: ${context.parsed.x}个`
+          label: function (context: unknown) {
+            const ctx = context as { dataset: { label: string }; parsed: { x: number } }
+            return `${ctx.dataset.label}: ${ctx.parsed.x}个`
           },
         },
       },
@@ -138,10 +139,11 @@ const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
           // 移除固定stepSize，让Chart.js自动计算合适的刻度间隔
           // stepSize: 1, // 这会在数据量大时生成过多刻度
           maxTicksLimit: 10, // 限制最大刻度数量
-          callback: function (value: any) {
+          callback: function (value: string | number): string {
             // 确保显示整数刻度
-            if (Number.isInteger(value)) {
-              return value
+            const numValue = Number(value)
+            if (Number.isInteger(numValue)) {
+              return numValue.toString()
             }
             return ''
           },
@@ -181,9 +183,11 @@ const NewCustomerChart: React.FC<NewCustomerChartProps> = ({
         border: 'none',
         background: '#ffffff',
       }}
-      bodyStyle={{
-        padding: '24px',
-        height: 'calc(100% - 57px)', // 减去标题高度
+      styles={{
+        body: {
+          padding: '24px',
+          height: 'calc(100% - 57px)', // 减去标题高度
+        },
       }}
     >
       {loading ? (

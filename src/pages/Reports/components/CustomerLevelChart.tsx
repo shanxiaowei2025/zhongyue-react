@@ -112,11 +112,11 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
       },
       tooltip: {
         callbacks: {
-          title: function (context: any) {
+          title: function (context: Array<{ dataIndex: number }>) {
             const index = context[0].dataIndex
             return `${sortedData[index].level}级客户`
           },
-          label: function (context: any) {
+          label: function (context: { dataIndex: number }) {
             const index = context.dataIndex
             const item = sortedData[index]
             const total = sortedData.reduce((sum, data) => sum + data.count, 0)
@@ -164,7 +164,7 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
           color: '#f0f0f0',
         },
         ticks: {
-          callback: function (value: any) {
+          callback: function (value: number | string) {
             return value + '个'
           },
           font: {
@@ -209,9 +209,11 @@ const CustomerLevelChart: React.FC<CustomerLevelChartProps> = ({
         border: 'none',
         background: '#ffffff',
       }}
-      bodyStyle={{
-        padding: '24px',
-        height: 'calc(100% - 57px)', // 减去标题高度
+      styles={{
+        body: {
+          padding: '24px',
+          height: 'calc(100% - 57px)', // 减去标题高度
+        },
       }}
     >
       {loading ? (

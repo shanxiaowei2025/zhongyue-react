@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import { Row, Col, Space, Typography, Spin, Alert } from 'antd'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
@@ -37,7 +37,7 @@ const Reports: React.FC = () => {
   })
 
   // 获取仪表盘数据
-  const { dashboardData, isLoading, error, refreshAll, rawData } = useReportsDashboard(filterParams)
+  const { dashboardData, isLoading, error, refreshAll } = useReportsDashboard(filterParams)
 
   // 处理日期筛选变化
   const handleDateFilterChange = (value: { month?: string; year?: number }) => {

@@ -207,6 +207,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     accountantData,
     newCustomerData,
     customerLevelData,
+    isAdmin,
   ])
 
   // 刷新所有数据的函数

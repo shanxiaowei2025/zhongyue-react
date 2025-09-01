@@ -51,7 +51,7 @@ const NewCustomerDetail: React.FC = () => {
       newParams.set('selectedMonth', currentMonth)
       setSearchParams(newParams, { replace: true })
     }
-  }, []) // 只在组件挂载时执行一次
+  }, [searchParams, setSearchParams]) // 添加必要的依赖
 
   // 筛选条件更新函数
   const updateFilter = (updates: {
@@ -164,7 +164,12 @@ const NewCustomerDetail: React.FC = () => {
 
   // 概览信息渲染（包含筛选条件）
   const renderSummary = (data: {
-    summary?: Record<string, any>
+    summary?: {
+      totalNewCustomers?: number
+      averageMonthlyGrowth?: number
+      currentMonthCount?: number
+      previousMonthCount?: number
+    }
     list: NewCustomerItem[]
     totalPages: number
   }) => (
@@ -185,7 +190,7 @@ const NewCustomerDetail: React.FC = () => {
           <Card style={{ borderRadius: 16, boxShadow: '0 4px 16px rgba(82, 196, 26, 0.15)' }}>
             <Statistic
               title="月均新增"
-              value={data.summary?.averagePerMonth || 0}
+              value={data.summary?.averageMonthlyGrowth || 0}
               suffix="个"
               precision={1}
               valueStyle={{ color: '#1890ff', fontSize: 24, fontWeight: 700 }}

@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react'
-import { Card, Tag, Button, Space, Typography, Row, Col, Statistic, Input } from 'antd'
+import { Card, Button, Typography, Row, Col, Statistic, Input } from 'antd'
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAccountantClientStats } from './hooks/useAccountantClientStats'
-import type { AccountantClientStatsItem } from './types/reports'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,8 +31,8 @@ const { Search } = Input
 const AccountantClientDetail: React.FC = () => {
   const navigate = useNavigate()
   const [searchText, setSearchText] = useState('')
-  const [sortField, setSortField] = useState<string | undefined>('clientCount')
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC' | undefined>('DESC')
+  const [sortField, _setSortField] = useState<string | undefined>('clientCount')
+  const [sortOrder, _setSortOrder] = useState<'ASC' | 'DESC' | undefined>('DESC')
 
   const { data, isLoading } = useAccountantClientStats({
     page: 1,
@@ -181,7 +180,7 @@ const AccountantClientDetail: React.FC = () => {
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context: { parsed: { x: number } }) {
             return `客户数量: ${context.parsed.x}个`
           },
         },

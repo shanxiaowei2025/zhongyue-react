@@ -26,9 +26,11 @@ const AgencyFeeDecreaseList: React.FC<AgencyFeeDecreaseListProps> = ({
         border: 'none',
         background: '#ffffff',
       }}
-      bodyStyle={{
-        padding: '24px',
-        height: 'calc(100% - 57px)', // 减去标题高度
+      styles={{
+        body: {
+          padding: '24px',
+          height: 'calc(100% - 57px)', // 减去标题高度
+        },
       }}
       extra={
         onViewMore && (

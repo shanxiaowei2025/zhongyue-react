@@ -90,7 +90,8 @@ export const useCustomerNames = (customerIds: number[]) => {
     }
 
     fetchCustomerNames()
-  }, [customerIds.join(',')]) // 依赖于customerIds的字符串表示
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerIds.join(',')]) // 依赖于customerIds的字符串表示，customerNames在useCallback中处理
 
   // 获取客户名称的辅助函数
   const getCustomerName = (customerId: number): string => {

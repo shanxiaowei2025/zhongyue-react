@@ -111,8 +111,8 @@ const AgencyFeeAnalysisDetail: React.FC = () => {
     {
       key: 'affectedCustomers',
       title: '减少客户总数',
-      formatter: (value: any, data: any) => {
-        return data.summary?.affectedCustomers || 0
+      formatter: (_value: unknown, data: { summary?: { affectedCustomers?: number } }) => {
+        return String(data.summary?.affectedCustomers || 0)
       },
       suffix: '个',
       color: '#ff4757',
@@ -120,7 +120,7 @@ const AgencyFeeAnalysisDetail: React.FC = () => {
     {
       key: 'totalDecrease',
       title: '总减少金额',
-      formatter: (value: any, data: any) => {
+      formatter: (_value: unknown, data: { summary?: { totalDecrease?: number } }) => {
         return `¥${(data.summary?.totalDecrease || 0).toLocaleString()}`
       },
       color: '#ff4757',
@@ -128,7 +128,7 @@ const AgencyFeeAnalysisDetail: React.FC = () => {
     {
       key: 'averageDecrease',
       title: '平均减少金额',
-      formatter: (value: any, data: any) => {
+      formatter: (_value: unknown, data: { summary?: { averageDecrease?: number } }) => {
         return `¥${Math.round(data.summary?.averageDecrease || 0).toLocaleString()}`
       },
       color: '#ff4757',

@@ -180,7 +180,7 @@ export interface CustomerLevelStatsItem {
 }
 
 // 原有的分布项类型（向后兼容）
-export interface CustomerLevelDistributionItem extends CustomerLevelStatsItem {}
+export type CustomerLevelDistributionItem = CustomerLevelStatsItem
 
 export interface CustomerLevelDistributionData {
   list: CustomerLevelItem[] // 客户列表数据

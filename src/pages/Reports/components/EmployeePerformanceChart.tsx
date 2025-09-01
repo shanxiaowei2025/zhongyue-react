@@ -86,7 +86,7 @@ const EmployeePerformanceChart: React.FC<EmployeePerformanceChartProps> = ({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context: { dataset: { label?: string }; parsed: { y: number } }) {
             const label = context.dataset.label || ''
             const value = context.parsed.y
             return `${label}: ¥${value.toLocaleString()}`
@@ -105,8 +105,8 @@ const EmployeePerformanceChart: React.FC<EmployeePerformanceChartProps> = ({
         stacked: true,
         beginAtZero: true,
         ticks: {
-          callback: function (value: any) {
-            return '¥' + value.toLocaleString()
+          callback: function (value: number | string) {
+            return '¥' + Number(value).toLocaleString()
           },
         },
       },
@@ -143,9 +143,11 @@ const EmployeePerformanceChart: React.FC<EmployeePerformanceChartProps> = ({
         border: 'none',
         background: '#ffffff',
       }}
-      bodyStyle={{
-        padding: '24px',
-        height: 'calc(100% - 57px)', // 减去标题高度
+      styles={{
+        body: {
+          padding: '24px',
+          height: 'calc(100% - 57px)', // 减去标题高度
+        },
       }}
     >
       {loading ? (

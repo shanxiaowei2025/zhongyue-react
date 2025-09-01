@@ -108,7 +108,7 @@ const ChurnTrendChart: React.FC<ChurnTrendChartProps> = ({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context: { dataset: { label?: string }; parsed: { y: number } }) {
             const label = context.dataset.label || ''
             const value = context.parsed.y
             return `${label}: ${value}个客户`
@@ -128,9 +128,9 @@ const ChurnTrendChart: React.FC<ChurnTrendChartProps> = ({
           // 移除固定stepSize，让Chart.js自动计算合适的刻度间隔
           // stepSize: 1, // 这会在数据量大时生成过多刻度
           maxTicksLimit: 10, // 限制最大刻度数量
-          callback: function (value: any) {
+          callback: function (value: number | string) {
             // 确保显示整数刻度
-            if (Number.isInteger(value)) {
+            if (Number.isInteger(Number(value))) {
               return value + '个'
             }
             return ''
@@ -170,9 +170,11 @@ const ChurnTrendChart: React.FC<ChurnTrendChartProps> = ({
         border: 'none',
         background: '#ffffff',
       }}
-      bodyStyle={{
-        padding: '24px',
-        height: 'calc(100% - 57px)', // 减去标题高度
+      styles={{
+        body: {
+          padding: '24px',
+          height: 'calc(100% - 57px)', // 减去标题高度
+        },
       }}
     >
       {loading ? (

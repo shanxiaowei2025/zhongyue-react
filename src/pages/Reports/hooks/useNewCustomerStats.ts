@@ -1,6 +1,5 @@
 import useSWR from 'swr'
 import { getNewCustomerStats } from '../../../api/reports'
-import type { NewCustomerData } from '../types/reports'
 
 interface UseNewCustomerStatsParams {
   year?: number

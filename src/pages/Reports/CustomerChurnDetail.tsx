@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react'
 import { Card, Table, Tag, Button, Space, Typography, Row, Col, Statistic, Select } from 'antd'
-import { ArrowLeftOutlined, UserDeleteOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useCustomerChurnStats } from './hooks/useCustomerChurnStats'
 import type { ChurnedCustomerItem } from './types/reports'
-import type { ColumnsType } from 'antd/es/table'
+import type { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
 import {
   BUSINESS_STATUS_MAP,
@@ -84,13 +84,17 @@ const CustomerChurnDetail: React.FC = () => {
   }
 
   // 处理表格变化（分页、排序）
-  const handleTableChange = (pagination: any, _filters: any, sorter: any) => {
+  const handleTableChange: TableProps<ChurnedCustomerItem>['onChange'] = (
+    pagination,
+    _filters,
+    sorter
+  ) => {
     if (process.env.NODE_ENV === 'development') {
       console.log('Table change:', {
         pagination,
         sorter,
-        'sorter.field': sorter?.field,
-        'sorter.order': sorter?.order,
+        'sorter.field': !Array.isArray(sorter) ? sorter?.field : sorter?.[0]?.field,
+        'sorter.order': !Array.isArray(sorter) ? sorter?.order : sorter?.[0]?.order,
         'Object.keys(sorter)': Object.keys(sorter || {}),
         currentPage,
         pageSize,
@@ -101,7 +105,8 @@ const CustomerChurnDetail: React.FC = () => {
 
     // 检测是否是取消排序的情况
     const isCurrentlySorted = sortField && sortOrder
-    const hasNewSorting = sorter && sorter.field && sorter.order
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter
+    const hasNewSorting = currentSorter && currentSorter.field && currentSorter.order
     const isCancelingSorting = isCurrentlySorted && !hasNewSorting
 
     if (process.env.NODE_ENV === 'development') {
@@ -114,11 +119,11 @@ const CustomerChurnDetail: React.FC = () => {
     }
 
     // 处理排序变化
-    if (hasNewSorting) {
+    if (hasNewSorting && currentSorter) {
       // 有明确的排序字段和排序方向
       updateUrlParams({
-        sortField: sorter.field,
-        sortOrder: sorter.order === 'ascend' ? 'ASC' : 'DESC',
+        sortField: currentSorter.field as string,
+        sortOrder: currentSorter.order === 'ascend' ? 'ASC' : 'DESC',
         currentPage: pagination.current || 1, // 排序时使用当前页或重置到第一页
       })
     } else if (isCancelingSorting) {

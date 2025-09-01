@@ -7,7 +7,7 @@ import type {
   ServiceExpiryData,
   AccountantClientData,
   NewCustomerData,
-  ReportsQueryParams,
+  CustomerLevelDistributionData,
   ReportTableMetadata,
 } from '../pages/Reports/types/reports'
 
@@ -92,7 +92,7 @@ export const getCustomerLevelDistribution = (params: {
   pageSize?: number
   sortField?: string
   sortOrder?: 'ASC' | 'DESC'
-}): Promise<ApiResponse<any>> => {
+}): Promise<ApiResponse<CustomerLevelDistributionData>> => {
   return request.get('/reports/customer-level-distribution', params)
 }
 

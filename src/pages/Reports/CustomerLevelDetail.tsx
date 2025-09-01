@@ -6,7 +6,11 @@ import { useCustomerLevelDistribution } from './hooks/useCustomerLevelDistributi
 import AdvancedServerTable from '../../components/AdvancedServerTable'
 import ReportPageLayout from '../../components/ReportPageLayout'
 import CustomerLevelChart from '../../components/CustomerLevelChart'
-import type { CustomerLevelItem } from './types/reports'
+import type {
+  CustomerLevelItem,
+  CustomerLevelStatsItem,
+  CustomerLevelDistributionData,
+} from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
 import type { SummaryMetric, FilterConfig } from '../../types/advancedServerTable'
 
@@ -31,7 +35,7 @@ const CustomerLevelDetail: React.FC = () => {
   // 监听数据变化，更新选项
   useEffect(() => {
     if (levelData?.levelStats && levelData.levelStats.length > 0) {
-      const options = levelData.levelStats.map((stat: any) => ({
+      const options = levelData.levelStats.map((stat: CustomerLevelStatsItem) => ({
         label: `${stat.level} (${stat.count}个)`,
         value: stat.level,
       }))
@@ -154,8 +158,8 @@ const CustomerLevelDetail: React.FC = () => {
     {
       key: 'totalCustomers',
       title: '客户总数',
-      formatter: (value: any, data: any) => {
-        return data.summary?.totalCustomers || 0
+      formatter: (_value: unknown, data: CustomerLevelDistributionData) => {
+        return String(data.summary?.totalCustomers || 0)
       },
       suffix: '个',
       color: '#722ed1',
@@ -163,8 +167,8 @@ const CustomerLevelDetail: React.FC = () => {
     {
       key: 'totalRevenue',
       title: '总收入',
-      formatter: (value: any, data: any) => {
-        return data.summary?.totalRevenue || 0
+      formatter: (_value: unknown, data: CustomerLevelDistributionData) => {
+        return String(data.summary?.totalRevenue || 0)
       },
       prefix: '¥',
       color: '#52c41a',
@@ -228,7 +232,10 @@ const CustomerLevelDetail: React.FC = () => {
         filters={filters}
         apiFunction={getCustomerLevelDistribution}
         chartComponent={data => (
-          <CustomerLevelChart levelStats={(data as any).levelStats || []} title="客户等级分布图" />
+          <CustomerLevelChart
+            levelStats={(data as CustomerLevelDistributionData).levelStats || []}
+            title="客户等级分布图"
+          />
         )}
         tableProps={{
           scroll: { x: 1000 },
