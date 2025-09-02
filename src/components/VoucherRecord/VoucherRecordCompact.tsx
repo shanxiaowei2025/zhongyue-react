@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Card, Select, Button, Collapse, Form, Input, Space, Spin, Empty, message } from 'antd'
+import React, { useState, useEffect, useRef } from 'react'
+import { Card, Select, Button, DatePicker, Form, Input, Space, Spin, Empty, message } from 'antd'
 import { PlusOutlined, ExportOutlined, EditOutlined } from '@ant-design/icons'
 import { useCustomerVoucherRecords, useVoucherRecordActions } from '../../hooks/useVoucherRecord'
 import { useVoucherPermission } from '../../hooks/useVoucherPermission'
@@ -10,38 +10,47 @@ import {
   getStatusDisplay,
   getMonthName,
   calculateCompletionRate,
-  isValidYear,
 } from '../../utils/voucherRecord'
 import type { VoucherRecordYear, CreateVoucherRecordYearDto } from '../../types/voucherRecord'
+import dayjs from 'dayjs'
 
 const { TextArea } = Input
-const { Panel } = Collapse
 
 interface VoucherRecordCompactProps {
   customerId: number
-  onDetailEdit?: (yearRecordId: number) => void
   onExport?: (customerId: number, year?: number) => void
+  exportLoading?: boolean
 }
 
 const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
   customerId,
-  onDetailEdit,
   onExport,
+  exportLoading = false,
 }) => {
-  const [form] = Form.useForm()
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
   const [currentRecord, setCurrentRecord] = useState<VoucherRecordYear | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const isMountedRef = useRef(true)
+
+  // 使用useState管理表单数据，替代Form实例
+  const [formData, setFormData] = useState({
+    storageLocation: '',
+    handler: '',
+    withdrawalRecord: '',
+    generalRemarks: '',
+  })
 
   const { records, isLoading, mutate } = useCustomerVoucherRecords(customerId)
   const { createYear, updateYear, loading } = useVoucherRecordActions()
   const { canView, canCreate, canEdit, canExport } = useVoucherPermission()
 
-  // 生成年份选项（当前年份前后5年）
-  const currentYear = new Date().getFullYear()
-  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
-    .filter(isValidYear)
-    .map(year => ({ label: `${year}年`, value: year }))
+  // 组件挂载和卸载时管理状态
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   // 当选择年份变化时，更新当前记录
   useEffect(() => {
@@ -50,16 +59,23 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
     setIsCreating(!record)
 
     if (record) {
-      form.setFieldsValue({
+      // 更新表单数据
+      setFormData({
         storageLocation: record.storageLocation || '',
         handler: record.handler || '',
         withdrawalRecord: record.withdrawalRecord || '',
         generalRemarks: record.generalRemarks || '',
       })
     } else {
-      form.resetFields()
+      // 重置表单数据
+      setFormData({
+        storageLocation: '',
+        handler: '',
+        withdrawalRecord: '',
+        generalRemarks: '',
+      })
     }
-  }, [selectedYear, records, form])
+  }, [selectedYear, records])
 
   // 权限检查
   if (!canView) {
@@ -77,14 +93,16 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
     }
 
     try {
-      const values = await form.validateFields()
+      if (!isMountedRef.current) return
+
       const createData: CreateVoucherRecordYearDto = {
         customerId,
         year: selectedYear,
-        ...values,
+        ...formData,
       }
 
       await createYear(createData)
+      if (!isMountedRef.current) return
       await mutate()
     } catch (error) {
       console.error('创建年度记录失败:', error)
@@ -98,16 +116,20 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
     }
 
     try {
-      const values = await form.validateFields()
-      await updateYear(currentRecord.id, values)
+      if (!isMountedRef.current) return
+
+      await updateYear(currentRecord.id, formData)
+      if (!isMountedRef.current) return
       await mutate()
     } catch (error) {
       console.error('更新年度记录失败:', error)
     }
   }
 
-  const handleYearChange = (year: number) => {
-    setSelectedYear(year)
+  const handleYearChange = (date: dayjs.Dayjs | null) => {
+    if (date) {
+      setSelectedYear(date.year())
+    }
   }
 
   const handleMonthUpdate = async () => {
@@ -120,12 +142,6 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
       return
     }
     onExport?.(customerId, selectedYear)
-  }
-
-  const handleDetailEdit = () => {
-    if (currentRecord) {
-      onDetailEdit?.(currentRecord.id)
-    }
   }
 
   if (isLoading) {
@@ -177,7 +193,12 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
                   {currentRecord ? statusDisplay.label : '未设置'}
                 </div>
                 {monthData?.description && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div
+                    className="text-xs text-gray-500 mt-1 truncate"
+                    title={monthData.description}
+                  >
+                    {monthData.description}
+                  </div>
                 )}
               </div>
             </MonthEditPopover>
@@ -192,12 +213,13 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
       {/* 头部控制区 */}
       <div className="flex justify-between items-center mb-4">
         <Space>
-          <Select
-            value={selectedYear}
+          <DatePicker
+            picker="year"
+            value={dayjs(`${selectedYear}-01-01`)}
             onChange={handleYearChange}
-            options={yearOptions}
             style={{ width: 120 }}
             size="small"
+            placeholder="选择年份"
           />
           {isCreating && canCreate && (
             <Button
@@ -213,59 +235,80 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
         </Space>
 
         <Space>
-          {currentRecord && canEdit && (
-            <Button size="small" icon={<EditOutlined />} onClick={handleDetailEdit}>
-              详细编辑
-            </Button>
-          )}
           {canExport && (
-            <Button size="small" icon={<ExportOutlined />} onClick={handleExport}>
+            <Button
+              size="small"
+              icon={<ExportOutlined />}
+              onClick={handleExport}
+              loading={exportLoading}
+            >
               导出
             </Button>
           )}
         </Space>
       </div>
 
-      {/* 年度信息折叠面板 */}
+      {/* 年度信息 */}
       {(currentRecord || isCreating) && (
-        <Collapse
-          size="small"
-          className="mb-4"
-          items={[
-            {
-              key: 'yearInfo',
-              label: '年度信息',
-              children: (
-                <Form form={form} layout="vertical" size="small">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <Form.Item name="storageLocation" label="存放位置">
-                      <Input placeholder="请输入存放位置" disabled={!canEdit && !isCreating} />
-                    </Form.Item>
-                    <Form.Item name="handler" label="经手人">
-                      <Input placeholder="请输入经手人" disabled={!canEdit && !isCreating} />
-                    </Form.Item>
-                    <Form.Item name="withdrawalRecord" label="取走记录">
-                      <Input placeholder="请输入取走记录" disabled={!canEdit && !isCreating} />
-                    </Form.Item>
-                  </div>
+        <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">年度信息</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">存放位置</label>
+              <Input
+                placeholder="请输入存放位置"
+                disabled={!canEdit && !isCreating}
+                value={formData.storageLocation}
+                onChange={e => setFormData(prev => ({ ...prev, storageLocation: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">经手人</label>
+              <Input
+                placeholder="请输入经手人"
+                disabled={!canEdit && !isCreating}
+                value={formData.handler}
+                onChange={e => setFormData(prev => ({ ...prev, handler: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">取走记录</label>
+              <Input
+                placeholder="请输入取走记录"
+                disabled={!canEdit && !isCreating}
+                value={formData.withdrawalRecord}
+                onChange={e => setFormData(prev => ({ ...prev, withdrawalRecord: e.target.value }))}
+              />
+            </div>
+          </div>
 
-                  {(canEdit || isCreating) && (
-                    <div className="flex justify-end mt-3">
-                      <Button
-                        type="primary"
-                        size="small"
-                        loading={loading}
-                        onClick={isCreating ? handleCreateYear : handleUpdateYear}
-                      >
-                        {isCreating ? '创建' : '保存'}
-                      </Button>
-                    </div>
-                  )}
-                </Form>
-              ),
-            },
-          ]}
-        />
+          {/* 通用备注 */}
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-700 mb-1">通用备注</label>
+            <TextArea
+              rows={3}
+              placeholder="请输入通用备注信息..."
+              disabled={!canEdit && !isCreating}
+              value={formData.generalRemarks}
+              onChange={e => {
+                setFormData(prev => ({ ...prev, generalRemarks: e.target.value }))
+              }}
+            />
+          </div>
+
+          {(canEdit || isCreating) && (
+            <div className="flex justify-end mt-3">
+              <Button
+                type="primary"
+                size="small"
+                loading={loading}
+                onClick={isCreating ? handleCreateYear : handleUpdateYear}
+              >
+                {isCreating ? '创建' : '保存'}
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* 月份状态网格 */}
@@ -281,28 +324,6 @@ const VoucherRecordCompact: React.FC<VoucherRecordCompactProps> = ({
             size="small"
             className="mb-4"
           />
-
-          {/* 通用备注 */}
-          <Form form={form} layout="vertical" size="small">
-            <Form.Item name="generalRemarks" label="通用备注">
-              <TextArea
-                rows={3}
-                placeholder="请输入通用备注信息..."
-                disabled={!canEdit}
-                onChange={async e => {
-                  if (canEdit && currentRecord) {
-                    try {
-                      await updateYear(currentRecord.id, {
-                        generalRemarks: e.target.value,
-                      })
-                    } catch (error) {
-                      console.error('更新备注失败:', error)
-                    }
-                  }
-                }}
-              />
-            </Form.Item>
-          </Form>
         </>
       ) : (
         <Empty description={`${selectedYear}年度记录不存在`} image={Empty.PRESENTED_IMAGE_SIMPLE}>

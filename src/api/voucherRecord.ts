@@ -137,7 +137,7 @@ export const voucherRecordBatchApi = {
 export const voucherRecordExportApi = {
   // 导出凭证记录为Excel文件
   async exportToExcel(data: ExportVoucherRecordDto): Promise<Blob> {
-    const response = await request.get<Blob>('/voucher-record/export', data, 'blob')
+    const response = await request.post<Blob>('/voucher-record/export', data, 'blob')
     return response
   },
 }

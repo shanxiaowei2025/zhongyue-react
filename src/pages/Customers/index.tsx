@@ -38,6 +38,7 @@ import {
   FileJpgOutlined,
 } from '@ant-design/icons'
 import type { Customer, ImageType, ImageTypeWithRemarks } from '../../types'
+import type { ExportVoucherRecordDto } from '../../types/voucherRecord'
 import type { ResizableTableColumn } from '../../types/table'
 import type { TabsProps } from 'antd'
 import CustomerForm from './CustomerForm'
@@ -56,6 +57,9 @@ import timezone from 'dayjs/plugin/timezone'
 import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
+import { useVoucherRecordActions } from '../../hooks/useVoucherRecord'
+import { useVoucherPermission } from '../../hooks/useVoucherPermission'
+import VoucherRecordReadOnly from '../../components/VoucherRecord/VoucherRecordReadOnly'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 import useSWR, { mutate } from 'swr'
 import {
@@ -1390,6 +1394,10 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
   const customerClanId = customer?.clanId
   const { clan: customerClan } = useClanDetail(customerClanId)
 
+  // 凭证记录相关hooks
+  const { exportToExcel, loading: exportLoading } = useVoucherRecordActions()
+  const { canExport } = useVoucherPermission()
+
   const [activeTabKey, setActiveTabKey] = useState(
     usePageStates.getState().getState('customerDetailTab') || 'basic'
   )
@@ -2302,25 +2310,63 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       key: 'archive',
       label: '档案存放信息',
       children: (
-        <Descriptions
-          bordered
-          column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
-          size={isMobile ? 'small' : 'default'}
-          className={isMobile ? 'text-sm' : ''}
-        >
-          <Descriptions.Item label="印章存放档案编号">
-            {displayCustomer.sealStorageNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="纸质资料档案编号">
-            {displayCustomer.paperArchiveNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="网银托管存放编号">
-            {displayCustomer.onlineBankingStorageNumber || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="档案存放备注" span={2}>
-            {displayCustomer.archiveStorageRemarks || '-'}
-          </Descriptions.Item>
-        </Descriptions>
+        <div className="space-y-6">
+          <Descriptions
+            bordered
+            column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+            size={isMobile ? 'small' : 'default'}
+            className={isMobile ? 'text-sm' : ''}
+          >
+            <Descriptions.Item label="印章存放档案编号">
+              {displayCustomer.sealStorageNumber || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="纸质资料档案编号">
+              {displayCustomer.paperArchiveNumber || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="网银托管存放编号">
+              {displayCustomer.onlineBankingStorageNumber || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="档案存放备注" span={2}>
+              {displayCustomer.archiveStorageRemarks || '-'}
+            </Descriptions.Item>
+          </Descriptions>
+
+          {/* 凭证存放记录 */}
+          {displayCustomer.id && (
+            <div>
+              <div className="mb-4">
+                <h3 className="text-base font-medium text-gray-800 mb-2 flex items-center">
+                  <span className="w-1 h-4 bg-blue-500 rounded-sm mr-2"></span>
+                  凭证存放记录
+                </h3>
+              </div>
+              <VoucherRecordReadOnly
+                customerId={displayCustomer.id}
+                exportLoading={exportLoading}
+                onExport={async (customerId, year) => {
+                  if (!canExport) {
+                    message.error('您没有导出权限')
+                    return
+                  }
+
+                  try {
+                    const exportData: ExportVoucherRecordDto = {
+                      year: year,
+                      format: 'excel',
+                      includeMonthDetails: true,
+                      customerIds: [customerId],
+                    }
+
+                    await exportToExcel(exportData)
+                  } catch (error) {
+                    console.error('导出失败:', error)
+                    message.error('导出失败，请重试')
+                  }
+                }}
+              />
+            </div>
+          )}
+        </div>
       ),
     },
     {

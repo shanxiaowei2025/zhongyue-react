@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Form,
   Input,
@@ -26,6 +27,7 @@ import type {
   AdministrativeLicenseItem,
   ActualResponsibleItem,
 } from '../../types'
+import type { ExportVoucherRecordDto } from '../../types/voucherRecord'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
 import {
@@ -43,6 +45,8 @@ import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
 import { useClanList, useClanDetail } from '../../hooks/useClan'
+import { useVoucherRecordActions } from '../../hooks/useVoucherRecord'
+import { useVoucherPermission } from '../../hooks/useVoucherPermission'
 import VoucherRecordCompact from '../../components/VoucherRecord/VoucherRecordCompact'
 
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
@@ -315,6 +319,7 @@ const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCu
 
 const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, onCancel }) => {
   const [form] = Form.useForm<FormCustomer>()
+  const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<string>('basic')
   const [isSaving, setIsSaving] = useState(false)
   const [autoSaveEnabled] = useState(true)
@@ -357,6 +362,22 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
   // 获取当前用户信息
   const { user } = useAuthStore()
+
+  // 凭证记录相关hooks
+  const { exportToExcel, loading: exportLoading } = useVoucherRecordActions()
+  const { canExport } = useVoucherPermission()
+
+  // 处理URL参数，自动切换到指定标签页
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && tabParam !== activeTab) {
+      // 验证标签页是否有效
+      const validTabs = ['basic', 'business', 'contact', 'archiveStorage', 'images']
+      if (validTabs.includes(tabParam)) {
+        setActiveTab(tabParam)
+      }
+    }
+  }, [searchParams, activeTab])
 
   // 使用Form.useWatch监听licenseNoFixedTerm字段的值变化
   const licenseNoFixedTerm = Form.useWatch('licenseNoFixedTerm', form)
@@ -2288,7 +2309,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               <Input.TextArea rows={3} placeholder="请输入档案存放相关备注信息" />
             )}
           </Form.Item>
-
           {/* 凭证存放记录 */}
           {customer?.id && (
             <div className="col-span-1 md:col-span-2 mt-6">
@@ -2297,19 +2317,29 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   <span className="w-1 h-4 bg-blue-500 rounded-sm mr-2"></span>
                   凭证存放记录
                 </h3>
-                <p className="text-sm text-gray-500">
-                  管理客户的凭证整理进度，支持按年度和月份记录凭证存放状态
-                </p>
               </div>
               <VoucherRecordCompact
                 customerId={customer.id}
-                onDetailEdit={yearRecordId => {
-                  // TODO: 打开详细编辑页面或模态框
-                  console.log('详细编辑年度记录:', yearRecordId)
-                }}
-                onExport={(customerId, year) => {
-                  // TODO: 导出凭证记录
-                  console.log('导出凭证记录:', { customerId, year })
+                exportLoading={exportLoading}
+                onExport={async (customerId, year) => {
+                  if (!canExport) {
+                    message.error('您没有导出权限')
+                    return
+                  }
+
+                  try {
+                    const exportData: ExportVoucherRecordDto = {
+                      year: year,
+                      format: 'excel',
+                      includeMonthDetails: true,
+                      customerIds: [customerId],
+                    }
+
+                    await exportToExcel(exportData)
+                  } catch (error) {
+                    console.error('导出失败:', error)
+                    message.error('导出失败，请重试')
+                  }
                 }}
               />
             </div>

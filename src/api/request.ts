@@ -184,10 +184,19 @@ const request = {
       return res.data
     })
   },
-  post<T>(url: string, data?: object): Promise<T> {
+  post<T>(url: string, data?: object, responseType?: ResponseType): Promise<T> {
     // 对于FormData，让浏览器自动设置Content-Type（包含boundary）
-    const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : {}
-    return instance.post(url, data, config).then(res => res.data)
+    const config =
+      data instanceof FormData
+        ? { headers: { 'Content-Type': undefined }, responseType }
+        : { responseType }
+    return instance.post(url, data, config).then(res => {
+      // 如果是blob类型，直接返回response.data
+      if (responseType === 'blob') {
+        return res.data as T
+      }
+      return res.data
+    })
   },
   put<T>(url: string, data?: object): Promise<T> {
     return instance.put(url, data).then(res => res.data)

@@ -6,6 +6,7 @@ import type {
   BatchOperationType,
   BatchOperationConfig,
   MonthStatusUpdateDto,
+  MonthData,
 } from '../types/voucherRecord'
 import { VOUCHER_STATUS_MAP } from '../types/voucherRecord'
 
@@ -79,22 +80,26 @@ export const getMonthStatusStats = (months: VoucherRecordMonth[]) => {
     not_set: 0,
   }
 
-  // 初始化12个月，默认为未设置
-  const monthsMap: Record<number, VoucherStatus> = {}
+  // 初始化12个月，默认为未设置（标记为非真实数据）
+  const monthsMap: Record<number, MonthData> = {}
   for (let i = 1; i <= 12; i++) {
-    monthsMap[i] = 'not_set'
+    monthsMap[i] = { status: 'not_set', isRealData: false }
   }
 
-  // 更新实际的月份状态
+  // 更新实际的月份状态（标记为真实数据）
   months.forEach(month => {
     if (month.month >= 1 && month.month <= 12) {
-      monthsMap[month.month] = mapBackendStatusToFrontend(month.status)
+      monthsMap[month.month] = {
+        status: mapBackendStatusToFrontend(month.status),
+        description: month.description,
+        isRealData: true, // 标记为真实数据
+      }
     }
   })
 
   // 统计各状态数量
-  Object.values(monthsMap).forEach(status => {
-    stats[status]++
+  Object.values(monthsMap).forEach(monthData => {
+    stats[monthData.status]++
   })
 
   return {
@@ -108,7 +113,7 @@ export const getMonthStatusStats = (months: VoucherRecordMonth[]) => {
  * 将年度记录转换为表格行数据
  */
 export const convertToTableRow = (yearRecord: VoucherRecordYear): VoucherRecordTableRow => {
-  const { stats, monthsMap, completionRate } = getMonthStatusStats(yearRecord.months || [])
+  const { monthsMap, completionRate } = getMonthStatusStats(yearRecord.months || [])
 
   return {
     customerId: yearRecord.customerId,
@@ -172,7 +177,7 @@ export const generateBatchUpdateData = (
   return targetMonths.map(month => ({
     month,
     status: backendStatus,
-    description: `批量设置为${config.label}`,
+    // 批量操作时不设置description，保留现有的月度说明
   }))
 }
 

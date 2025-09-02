@@ -141,6 +141,13 @@ export interface VoucherRecordPermissions {
   canExport: boolean
 }
 
+// 月份数据接口
+export interface MonthData {
+  status: VoucherStatus
+  description?: string
+  isRealData?: boolean // 标记是否为真实数据（非筛选填充）
+}
+
 // 凭证记录表格行数据（用于独立管理页面）
 export interface VoucherRecordTableRow {
   customerId: number
@@ -150,7 +157,7 @@ export interface VoucherRecordTableRow {
   year: number
   storageLocation?: string
   handler?: string
-  months: Record<number, VoucherStatus> // 月份 -> 状态映射
+  months: Record<number, MonthData> // 月份 -> 状态和描述映射
   completionRate: number
   withdrawalRecord?: string
   generalRemarks?: string
