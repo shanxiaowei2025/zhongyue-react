@@ -1,17 +1,21 @@
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import { Card, Space, Select, Input, DatePicker, InputNumber } from 'antd'
 import { SearchOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import type { FilterBarProps, FilterConfig } from '../types/advancedServerTable'
 
-const { Search } = Input
 const { RangePicker } = DatePicker
 const { Option } = Select
 
 const FilterBar: React.FC<FilterBarProps> = ({ filters, values, onChange }) => {
+  // 添加本地状态来处理输入过程
+  const [inputValues, setInputValues] = useState<Record<string, any>>({})
+  const composingRef = useRef<Record<string, boolean>>({})
+
   const renderFilter = (filter: FilterConfig) => {
     const { key, type, label, placeholder, options, width, allowClear } = filter
     const value = values[key]
+    const inputValue = inputValues[key] !== undefined ? inputValues[key] : value
 
     switch (type) {
       case 'select':
@@ -37,18 +41,49 @@ const FilterBar: React.FC<FilterBarProps> = ({ filters, values, onChange }) => {
       case 'search':
         return (
           <div key={key}>
-            <Search
+            <Input
               placeholder={placeholder || `搜索${label}`}
               allowClear
               style={{ width: width || 300 }}
-              value={value}
-              onSearch={val => onChange(key, val)}
+              value={inputValue}
               onChange={e => {
-                if (!e.target.value) {
-                  onChange(key, '')
+                // 更新本地输入值
+                setInputValues(prev => ({
+                  ...prev,
+                  [key]: e.target.value
+                }))
+                
+                // 如果不在输入法组合状态，才触发外部onChange
+                if (!composingRef.current[key]) {
+                  onChange(key, e.target.value)
+                }
+              }}
+              onCompositionStart={() => {
+                composingRef.current = {
+                  ...composingRef.current,
+                  [key]: true
+                }
+              }}
+              onCompositionEnd={(e: React.CompositionEvent<HTMLInputElement>) => {
+                composingRef.current = {
+                  ...composingRef.current,
+                  [key]: false
+                }
+                // 输入法完成后，更新值
+                onChange(key, e.currentTarget.value)
+              }}
+              onPressEnter={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (!composingRef.current[key]) {
+                  onChange(key, e.currentTarget.value)
                 }
               }}
               prefix={<SearchOutlined />}
+              suffix={
+                <SearchOutlined 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => onChange(key, inputValue)}
+                />
+              }
             />
           </div>
         )

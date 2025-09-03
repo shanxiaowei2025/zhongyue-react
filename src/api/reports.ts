@@ -54,6 +54,7 @@ export const getServiceExpiryStats = (params?: {
   pageSize?: number
   sortField?: string
   sortOrder?: 'ASC' | 'DESC'
+  companyName?: string
 }): Promise<ApiResponse<ServiceExpiryData>> => {
   return request.get('/reports/service-expiry-stats', params)
 }

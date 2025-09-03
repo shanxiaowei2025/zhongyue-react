@@ -7,6 +7,7 @@ interface UseServiceExpiryStatsParams {
   pageSize?: number
   sortField?: string
   sortOrder?: 'ASC' | 'DESC'
+  companyName?: string
 }
 
 // SWR key生成函数
@@ -30,9 +31,9 @@ const serviceExpiryStatsFetcher = async ([, params]: [string, UseServiceExpirySt
 }
 
 export const useServiceExpiryStats = (params: UseServiceExpiryStatsParams = {}) => {
-  const { page, pageSize, sortField, sortOrder } = params
+  const { page, pageSize, sortField, sortOrder, companyName } = params
 
-  const validParams = { page, pageSize, sortField, sortOrder }
+  const validParams = { page, pageSize, sortField, sortOrder, companyName }
 
   const { data, error, isLoading, mutate } = useSWR<ServiceExpiryData>(
     getServiceExpiryStatsKey(validParams),

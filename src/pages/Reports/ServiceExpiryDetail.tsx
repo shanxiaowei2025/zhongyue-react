@@ -5,7 +5,7 @@ import AdvancedServerTable from '../../components/AdvancedServerTable'
 import ReportPageLayout from '../../components/ReportPageLayout'
 import type { ExpiringCustomerItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
-import type { SummaryMetric } from '../../types/advancedServerTable'
+import type { SummaryMetric, FilterConfig } from '../../types/advancedServerTable'
 import dayjs from 'dayjs'
 
 const ServiceExpiryDetail: React.FC = () => {
@@ -99,6 +99,17 @@ const ServiceExpiryDetail: React.FC = () => {
     },
   ]
 
+  // 筛选器配置
+  const filters: FilterConfig[] = [
+    {
+      key: 'companyName',
+      type: 'search',
+      label: '企业名称',
+      placeholder: '请输入企业名称',
+      width: 240,
+    }
+  ]
+
   const summaryMetrics: SummaryMetric[] = [
     {
       key: 'totalExpiredCustomers',
@@ -140,6 +151,7 @@ const ServiceExpiryDetail: React.FC = () => {
         columns={columns}
         rowKey="customerId"
         summaryMetrics={summaryMetrics}
+        filters={filters}
         apiFunction={getServiceExpiryStats}
         tableProps={{
           scroll: { x: 1000 },
