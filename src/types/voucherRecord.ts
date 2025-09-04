@@ -100,6 +100,8 @@ export interface QueryVoucherRecordDto {
   storageLocation?: string
   handler?: string
   status?: string
+  consultantAccountant?: string
+  bookkeepingAccountant?: string
 }
 
 // 导出凭证记录DTO

@@ -99,6 +99,13 @@ const VoucherManagement: React.FC = () => {
       ellipsis: true,
     },
     {
+      title: '顾问会计',
+      dataIndex: 'consultantAccountant',
+      key: 'consultantAccountant',
+      width: 100,
+      render: text => text || '-',
+    },
+    {
       title: '记账会计',
       dataIndex: 'bookkeepingAccountant',
       key: 'bookkeepingAccountant',
@@ -338,6 +345,8 @@ const VoucherManagement: React.FC = () => {
       storageLocation: values.storageLocation || undefined,
       handler: values.handler || undefined,
       status: values.status || undefined,
+      consultantAccountant: values.consultantAccountant || undefined,
+      bookkeepingAccountant: values.bookkeepingAccountant || undefined,
     }))
   }
 
@@ -348,6 +357,11 @@ const VoucherManagement: React.FC = () => {
       page: 1,
       limit: prev.limit,
       year: prev.year,
+      consultantAccountant: undefined,
+      bookkeepingAccountant: undefined,
+      storageLocation: undefined,
+      handler: undefined,
+      status: undefined,
     }))
   }
 
@@ -678,12 +692,50 @@ const VoucherManagement: React.FC = () => {
             </Col>
             <Col>
               <Form.Item name="storageLocation" label="存放位置">
-                <Input placeholder="请输入存放位置" allowClear style={{ width: 160 }} />
+                <Input 
+                  placeholder="请输入存放位置" 
+                  allowClear 
+                  style={{ width: 160 }} 
+                  onChange={(e) => {
+                    setTimeout(() => handleSearch(), 300);
+                  }}
+                />
               </Form.Item>
             </Col>
             <Col>
               <Form.Item name="handler" label="经手人">
-                <Input placeholder="请输入经手人" allowClear style={{ width: 140 }} />
+                <Input 
+                  placeholder="请输入经手人" 
+                  allowClear 
+                  style={{ width: 140 }} 
+                  onChange={(e) => {
+                    setTimeout(() => handleSearch(), 300);
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="consultantAccountant" label="顾问会计">
+                <Input 
+                  placeholder="请输入顾问会计" 
+                  allowClear 
+                  style={{ width: 140 }} 
+                  onChange={(e) => {
+                    setTimeout(() => handleSearch(), 300);
+                  }}
+                />
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="bookkeepingAccountant" label="记账会计">
+                <Input 
+                  placeholder="请输入记账会计" 
+                  allowClear 
+                  style={{ width: 140 }} 
+                  onChange={(e) => {
+                    setTimeout(() => handleSearch(), 300);
+                  }}
+                />
               </Form.Item>
             </Col>
             <Col>
@@ -692,6 +744,7 @@ const VoucherManagement: React.FC = () => {
                   placeholder="请选择状态"
                   allowClear
                   style={{ width: 140 }}
+                  onChange={() => handleSearch()}
                   options={[
                     { label: '已完成', value: '已完成' },
                     { label: '未完成', value: '未完成' },
@@ -703,9 +756,6 @@ const VoucherManagement: React.FC = () => {
             </Col>
             <Col>
               <Space>
-                <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-                  搜索
-                </Button>
                 <Button onClick={handleResetSearch}>重置</Button>
                 <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={isLoading}>
                   刷新
