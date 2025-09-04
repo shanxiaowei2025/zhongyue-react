@@ -342,11 +342,11 @@ const VoucherManagement: React.FC = () => {
     setSearchParams(prev => ({
       ...prev,
       page: 1,
-      storageLocation: values.storageLocation || undefined,
-      handler: values.handler || undefined,
-      status: values.status || undefined,
-      consultantAccountant: values.consultantAccountant || undefined,
-      bookkeepingAccountant: values.bookkeepingAccountant || undefined,
+      storageLocation: values.storageLocation === '-' ? '' : (values.storageLocation || undefined),
+      handler: values.handler === '-' ? '' : (values.handler || undefined),
+      status: values.status === '-' ? '' : (values.status || undefined),
+      consultantAccountant: values.consultantAccountant === '-' ? '' : (values.consultantAccountant || undefined),
+      bookkeepingAccountant: values.bookkeepingAccountant === '-' ? '' : (values.bookkeepingAccountant || undefined),
     }))
   }
 
