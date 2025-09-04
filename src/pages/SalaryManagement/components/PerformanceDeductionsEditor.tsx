@@ -53,12 +53,13 @@ const PerformanceDeductionsEditor: React.FC<PerformanceDeductionsEditorProps> = 
     onChange(updatedValues)
   }
 
+  // 创建数据源，如果是只读模式且值为0，则不包含该项
   const data: DeductionItem[] = DEDUCTION_STANDARDS.map((standard, index) => ({
     key: index,
     standard,
     value: safeValue[index],
     editable: index < 13, // 前13项可编辑，第14项不可编辑
-  }))
+  })).filter(item => !disabled || item.value > 0)
 
   const columns: ColumnsType<DeductionItem> = [
     {

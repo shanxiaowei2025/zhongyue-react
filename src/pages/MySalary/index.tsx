@@ -355,45 +355,6 @@ const MySalary: React.FC = () => {
       align: 'right',
     },
     {
-      title: '银行卡号',
-      dataIndex: 'bankCardNumber',
-      key: 'bankCardNumber',
-      width: 140,
-      ellipsis: true,
-    },
-    {
-      title: '银行卡/微信',
-      dataIndex: 'bankCardOrWechat',
-      key: 'bankCardOrWechat',
-      width: 110,
-      render: (value: string | number) => formatCurrency(value),
-      align: 'right',
-    },
-    {
-      title: '现金发放',
-      dataIndex: 'cashPaid',
-      key: 'cashPaid',
-      width: 100,
-      render: (value: string | number) => formatCurrency(value),
-      align: 'right',
-    },
-    {
-      title: '对公转账',
-      dataIndex: 'corporatePayment',
-      key: 'corporatePayment',
-      width: 100,
-      render: (value: string | number) => formatCurrency(value),
-      align: 'right',
-    },
-    {
-      title: '个税申报',
-      dataIndex: 'taxDeclaration',
-      key: 'taxDeclaration',
-      width: 100,
-      render: (value: string | number) => formatCurrency(value),
-      align: 'right',
-    },
-    {
       title: '确认状态',
       dataIndex: 'isConfirmed',
       key: 'isConfirmed',
@@ -538,7 +499,7 @@ const MySalary: React.FC = () => {
               rowKey="id"
               loading={loading}
               pagination={false}
-              scroll={{ x: 2800, y: 'calc(100vh - 250px)' }}
+              scroll={{ x: 2200, y: 'calc(100vh - 250px)' }}
               size="middle"
               bordered
               locale={{

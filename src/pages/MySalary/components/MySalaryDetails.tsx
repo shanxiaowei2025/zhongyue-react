@@ -356,7 +356,6 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           <Descriptions.Item label="姓名">{detail.name}</Descriptions.Item>
           <Descriptions.Item label="部门">{detail.department}</Descriptions.Item>
           <Descriptions.Item label="员工类型">{detail.type}</Descriptions.Item>
-          <Descriptions.Item label="银行卡号">{detail.bankCardNumber}</Descriptions.Item>
           <Descriptions.Item label="发薪公司">{detail.payrollCompany}</Descriptions.Item>
         </Descriptions>
       </Card>
@@ -457,17 +456,6 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
             <Text strong className="text-green-600 text-lg">
               {formatCurrency(detail.totalPayable)}
             </Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="银行卡/微信">
-            {/* cspell:disable-next-line */}
-            {formatCurrency(detail.bankCardOrWechat)}
-          </Descriptions.Item>
-          <Descriptions.Item label="已发现金">{formatCurrency(detail.cashPaid)}</Descriptions.Item>
-          <Descriptions.Item label="对公">
-            {formatCurrency(detail.corporatePayment)}
-          </Descriptions.Item>
-          <Descriptions.Item label="个税申报">
-            {formatCurrency(detail.taxDeclaration)}
           </Descriptions.Item>
           <Descriptions.Item label="发放状态">
             <Tag color={detail.isPaid ? 'success' : 'warning'}>
