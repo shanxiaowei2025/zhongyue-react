@@ -53,6 +53,8 @@ const commissionRatePositionOptions = [
   { label: '其他', value: '其他' },
 ]
 
+
+
 export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({ searchParams, onSearchChange }) => {
   const { departments } = useDepartments()
 
@@ -190,6 +192,16 @@ export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({ searchParams, on
                   onChange={e =>
                     onSearchChange({ ...searchParams, actualBirthday: e.target.value })
                   }
+                  allowClear
+                  className="w-full"
+                />
+              </Form.Item>
+
+              <Form.Item label="薪资发放公司" className="mb-2">
+                <Input
+                  placeholder="请输入薪资发放公司"
+                  value={searchParams.payrollCompany}
+                  onChange={e => onSearchChange({ ...searchParams, payrollCompany: e.target.value })}
                   allowClear
                   className="w-full"
                 />

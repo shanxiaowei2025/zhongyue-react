@@ -104,6 +104,13 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
             width: 120,
             render: (salary: number) => (salary ? `¥${salary.toLocaleString()}` : '-'),
           },
+          {
+            title: '薪资发放公司',
+            dataIndex: 'payrollCompany',
+            key: 'payrollCompany',
+            width: 120,
+            render: (company: string) => company || '-',
+          },
         ]
       : []),
     {

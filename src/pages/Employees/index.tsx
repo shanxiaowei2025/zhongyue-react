@@ -24,6 +24,7 @@ const Employees: React.FC = () => {
     isResigned: undefined,
     idCardNumber: '',
     actualBirthday: '',
+    payrollCompany: '',
   } as QueryEmployeeDto)
 
   const [current, setCurrentState] = usePageStates('employees_current', 1)
@@ -68,7 +69,8 @@ const Employees: React.FC = () => {
       prevParams.commissionRatePosition !== currentParams.commissionRatePosition ||
       prevParams.isResigned !== currentParams.isResigned ||
       prevParams.idCardNumber !== currentParams.idCardNumber ||
-      prevParams.actualBirthday !== currentParams.actualBirthday
+      prevParams.actualBirthday !== currentParams.actualBirthday ||
+      prevParams.payrollCompany !== currentParams.payrollCompany
 
     if (hasChanged && current !== 1) {
       setCurrentState(1)
@@ -96,6 +98,7 @@ const Employees: React.FC = () => {
       isResigned: undefined,
       idCardNumber: '',
       actualBirthday: '',
+      payrollCompany: '',
     }
     setSearchParamsState(resetSearchParams)
     setCurrentState(1)

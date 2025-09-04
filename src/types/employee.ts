@@ -81,6 +81,7 @@ export interface QueryEmployeeDto {
   isResigned?: boolean
   actualBirthday?: string
   idCardNumber?: string
+  payrollCompany?: string
 }
 
 export interface EmployeeListResponse {
