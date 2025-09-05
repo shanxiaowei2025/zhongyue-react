@@ -17,6 +17,8 @@ import {
   Popconfirm,
   Popover,
   Modal,
+  Tag,
+  Spin,
 } from 'antd'
 import type {
   Customer,
@@ -28,6 +30,7 @@ import type {
   ActualResponsibleItem,
 } from '../../types'
 import type { ExportVoucherRecordDto } from '../../types/voucherRecord'
+import { ExpenseStatus } from '../../types/expense'
 import dayjs, { Dayjs } from 'dayjs'
 import type { TabsProps } from 'antd'
 import {
@@ -36,6 +39,7 @@ import {
   InfoCircleOutlined,
   QuestionCircleOutlined,
   LoadingOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
@@ -48,6 +52,9 @@ import { useClanList, useClanDetail } from '../../hooks/useClan'
 import { useVoucherRecordActions } from '../../hooks/useVoucherRecord'
 import { useVoucherPermission } from '../../hooks/useVoucherPermission'
 import VoucherRecordCompact from '../../components/VoucherRecord/VoucherRecordCompact'
+import { useExpenseList } from '../../hooks/useExpense'
+import { useExpenseDetail } from '../../hooks/useExpense'
+import ExpenseReceipt from '../../pages/Expenses/ExpenseReceipt'
 
 import { BUSINESS_STATUS_MAP, ENTERPRISE_STATUS_MAP } from '../../constants'
 import { LOCATION_OPTIONS } from '../../constants/locationOptions'
@@ -139,6 +146,9 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   bankAccountLicenseImages: 'images',
   otherIdImages: 'images',
   supplementaryImages: 'images',
+
+  // 费用记录标签页
+  expenseRecords: 'expense',
 }
 
 interface CustomerFormProps {
@@ -367,12 +377,36 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const { exportToExcel, loading: exportLoading } = useVoucherRecordActions()
   const { canExport } = useVoucherPermission()
 
+  // 费用记录相关hooks
+  const { expenses, total: expensesTotal, isLoading: expensesLoading } = useExpenseList({
+    page: 1,
+    pageSize: 10,
+    companyName: customer?.companyName,
+  })
+  
+  // 费用详情相关状态和hooks
+  const [expenseDetailVisible, setExpenseDetailVisible] = useState(false)
+  const [currentExpenseId, setCurrentExpenseId] = useState<number | null>(null)
+  const { expense: expenseDetail, isLoading: expenseDetailLoading } = useExpenseDetail(currentExpenseId)
+  
+  // 打开费用详情对话框
+  const handleViewExpense = (id: number) => {
+    setCurrentExpenseId(id)
+    setExpenseDetailVisible(true)
+  }
+  
+  // 关闭费用详情对话框
+  const handleCloseExpenseDetail = () => {
+    setExpenseDetailVisible(false)
+    setCurrentExpenseId(null)
+  }
+
   // 处理URL参数，自动切换到指定标签页
   useEffect(() => {
     const tabParam = searchParams.get('tab')
     if (tabParam && tabParam !== activeTab) {
       // 验证标签页是否有效
-      const validTabs = ['basic', 'business', 'contact', 'archiveStorage', 'images']
+      const validTabs = ['basic', 'business', 'contact', 'archiveStorage', 'images', 'expense']
       if (validTabs.includes(tabParam)) {
         setActiveTab(tabParam)
       }
@@ -2465,6 +2499,113 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               />
             </Form.Item>
           </div>
+        </div>
+      ),
+    },
+    {
+      key: 'expense',
+      label: '费用记录',
+      children: (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h3 className="text-base font-medium text-gray-800 mb-2 flex items-center">
+              <span className="w-1 h-4 bg-blue-500 rounded-sm mr-2"></span>
+              费用记录
+            </h3>
+          </div>
+          {customer && (
+            <Table
+              dataSource={expenses}
+              rowKey="id"
+              loading={expensesLoading}
+              pagination={{
+                total: expensesTotal,
+                pageSize: 10,
+                showSizeChanger: false,
+                showTotal: total => `共 ${total} 条`,
+              }}
+              columns={[
+                {
+                  title: '企业名称',
+                  dataIndex: 'companyName',
+                  key: 'companyName',
+                },
+                {
+                  title: '总计费用',
+                  dataIndex: 'totalFee',
+                  key: 'totalFee',
+                  render: value => `¥${value}`,
+                },
+                {
+                  title: '业务类型',
+                  dataIndex: 'businessType',
+                  key: 'businessType',
+                },
+                {
+                  title: '代理费起止日期',
+                  key: 'agencyDateRange',
+                  render: (_, record) => (
+                    record.agencyStartDate ? 
+                    `${record.agencyStartDate?.split('T')[0] || ''} ~ ${record.agencyEndDate?.split('T')[0] || ''}` : 
+                    '-'
+                  ),
+                },
+                {
+                  title: '收费日期',
+                  dataIndex: 'chargeDate',
+                  key: 'chargeDate',
+                  render: value => value?.split('T')[0] || '-',
+                },
+                {
+                  title: '业务员',
+                  dataIndex: 'salesperson',
+                  key: 'salesperson',
+                },
+                {
+                  title: '审核状态',
+                  dataIndex: 'status',
+                  key: 'status',
+                  render: status => {
+                    const statusMap = {
+                      [ExpenseStatus.Pending]: { text: '待审核', color: '#faad14' },
+                      [ExpenseStatus.Approved]: { text: '已审核', color: '#52c41a' },
+                      [ExpenseStatus.Rejected]: { text: '已退回', color: '#f5222d' },
+                    }
+                    const currentStatus = statusMap[status as ExpenseStatus]
+                    return <Tag color={currentStatus.color}>{currentStatus.text}</Tag>
+                  },
+                },
+                {
+                  title: '操作',
+                  key: 'action',
+                  render: (_, record) => (
+                    <Button 
+                      type="link" 
+                      icon={<SearchOutlined />}
+                      onClick={() => handleViewExpense(record.id)}
+                    >
+                      查看收据
+                    </Button>
+                  ),
+                },
+              ]}
+            />
+          )}
+          {!customer && (
+            <div className="text-center text-gray-500 py-8">
+              请先保存客户信息，才能查看费用记录
+            </div>
+          )}
+          
+          {/* 费用详情对话框 */}
+          {currentExpenseId && (
+            <ExpenseReceipt 
+              visible={expenseDetailVisible} 
+              expenseId={currentExpenseId} 
+              onClose={handleCloseExpenseDetail}
+              previewMode={true}
+            />
+          )}
         </div>
       ),
     },
