@@ -458,7 +458,16 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                           <Form.Item label="全勤奖励" name="fullAttendance">
                             <AmountInput />
                           </Form.Item>
-                          <Form.Item label="补贴合计" name="totalSubsidy">
+                          <Form.Item label="部门负责人补贴" name="departmentHeadSubsidy">
+                            <AmountInput />
+                          </Form.Item>
+                          <Form.Item label="岗位津贴" name="positionAllowance">
+                            <AmountInput />
+                          </Form.Item>
+                          <Form.Item label="油补" name="oilSubsidy">
+                            <AmountInput />
+                          </Form.Item>
+                          <Form.Item label="餐补" name="mealSubsidy">
                             <AmountInput />
                           </Form.Item>
                           <Form.Item label="工龄津贴" name="seniority">
@@ -568,8 +577,17 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                             <Descriptions.Item label="全勤奖励">
                               ¥{formatCurrency(employee.fullAttendance)}
                             </Descriptions.Item>
-                            <Descriptions.Item label="补贴合计">
-                              ¥{formatCurrency(employee.totalSubsidy)}
+                            <Descriptions.Item label="部门负责人补贴">
+                              ¥{formatCurrency(employee.departmentHeadSubsidy)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="岗位津贴">
+                              ¥{formatCurrency(employee.positionAllowance)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="油补">
+                              ¥{formatCurrency(employee.oilSubsidy)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="餐补">
+                              ¥{formatCurrency(employee.mealSubsidy)}
                             </Descriptions.Item>
                             <Descriptions.Item label="工龄津贴">
                               ¥{formatCurrency(employee.seniority)}

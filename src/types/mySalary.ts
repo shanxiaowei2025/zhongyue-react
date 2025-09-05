@@ -14,6 +14,10 @@ export interface MySalaryRecord {
   attendanceRemark?: string
   basicSalaryPayable: string | number
   fullAttendance: string | number
+  departmentHeadSubsidy: string | number
+  positionAllowance: string | number
+  oilSubsidy: string | number
+  mealSubsidy: string | number
   totalSubsidy: string | number
   seniority: string | number
   agencyFeeCommission: string | number

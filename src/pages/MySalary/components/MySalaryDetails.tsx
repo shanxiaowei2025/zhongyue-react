@@ -390,8 +390,17 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
           <Descriptions.Item label="全勤">
             {formatCurrency(detail.fullAttendance)}
           </Descriptions.Item>
-          <Descriptions.Item label="补贴合计">
-            {formatCurrency(detail.totalSubsidy)}
+          <Descriptions.Item label="部门负责人补贴">
+            {formatCurrency(detail.departmentHeadSubsidy)}
+          </Descriptions.Item>
+          <Descriptions.Item label="岗位津贴">
+            {formatCurrency(detail.positionAllowance)}
+          </Descriptions.Item>
+          <Descriptions.Item label="油补">
+            {formatCurrency(detail.oilSubsidy)}
+          </Descriptions.Item>
+          <Descriptions.Item label="餐补">
+            {formatCurrency(detail.mealSubsidy)}
           </Descriptions.Item>
           <Descriptions.Item label="工龄">{formatCurrency(detail.seniority)}</Descriptions.Item>
           <Descriptions.Item label="代理费提成">

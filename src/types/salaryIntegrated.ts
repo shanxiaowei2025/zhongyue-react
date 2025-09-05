@@ -17,6 +17,10 @@ export interface SalaryRecord {
 
   // 奖励补贴
   fullAttendance: number
+  departmentHeadSubsidy: number
+  positionAllowance: number
+  oilSubsidy: number
+  mealSubsidy: number
   totalSubsidy: number
   seniority: number
 
