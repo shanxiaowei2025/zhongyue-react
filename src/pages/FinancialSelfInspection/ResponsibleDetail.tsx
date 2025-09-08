@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Card,
@@ -11,6 +11,9 @@ import {
   Space,
   Timeline,
   Image,
+  Modal,
+  Form,
+  Input,
 } from 'antd'
 import {
   ArrowLeftOutlined,
@@ -22,9 +25,10 @@ import {
   CloseCircleOutlined,
   EyeOutlined,
   FileImageOutlined,
+  EditOutlined,
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { useResponsibleInspectionDetail } from '../../hooks/useFinancialSelfInspection'
+import { useResponsibleInspectionDetail, useFinancialSelfInspectionOperations } from '../../hooks/useFinancialSelfInspection'
 import { buildImageUrl } from '../../utils/upload'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
@@ -33,6 +37,7 @@ import type {
   RejectRecordItem,
   ReviewerApprovalRecordItem,
   ReviewerRejectRecordItem,
+  CommunicationRecordItem,
 } from '../../types/financialSelfInspection'
 
 const { Text } = Typography
@@ -48,9 +53,15 @@ interface TimelineRecord {
 const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [form] = Form.useForm()
+  
+  // 弹窗状态
+  const [communicationModalVisible, setCommunicationModalVisible] = useState<boolean>(false)
+  const [communicationLoading, setCommunicationLoading] = useState<boolean>(false)
 
   // 使用统一的hook获取数据
   const { data, loading, error } = useResponsibleInspectionDetail(id ? Number(id) : null)
+  const { updateCommunicationRecord } = useFinancialSelfInspectionOperations()
 
   // 处理错误
   if (error) {
@@ -60,6 +71,31 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   // 返回列表
   const handleBack = () => {
     navigate('/financial-self-inspection')
+  }
+
+  // 打开沟通记录修改弹窗
+  const openCommunicationModal = () => {
+    form.resetFields()
+    setCommunicationModalVisible(true)
+  }
+
+  // 提交沟通记录修改
+  const handleCommunicationSubmit = async () => {
+    if (!id) return
+    
+    try {
+      const values = await form.validateFields()
+      setCommunicationLoading(true)
+      
+      await updateCommunicationRecord(Number(id), values.result)
+      setCommunicationModalVisible(false)
+      // 刷新页面数据
+      window.location.reload()
+    } catch (error: any) {
+      console.error('沟通记录修改失败:', error)
+    } finally {
+      setCommunicationLoading(false)
+    }
   }
 
   // 渲染状态标签
@@ -117,7 +153,8 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   // 格式化时间
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-'
-    return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss')
+    // 将UTC时间转换为北京时间（UTC+8）
+    return dayjs(dateString).add(8, 'hour').format('YYYY-MM-DD HH:mm:ss')
   }
 
   // 合并所有记录为时间线
@@ -331,6 +368,34 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
               )}
             </div>
           </Descriptions.Item>
+          <Descriptions.Item 
+            label="会计沟通情况"
+          >
+            <div className="whitespace-pre-wrap">
+              {Boolean(data.needAccountantCommunication) ? (
+                <>
+                  <Tag color="#f50" className="mb-2">需要会计沟通</Tag>
+                  <div>
+                    {data.communicationRecords && data.communicationRecords.length > 0 ? (
+                      data.communicationRecords.map((record, index) => (
+                        <div key={index} className="mb-1">
+                          <Text>
+                            {dayjs(record.communicationTime).add(8, 'hour').format('YYYY-MM-DD HH:mm:ss')}: {record.result}
+                          </Text>
+                        </div>
+                      ))
+                    ) : (
+                      <Text type="secondary" italic>
+                        暂无沟通记录
+                      </Text>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <Tag color="#87d068">不需要会计沟通</Tag>
+              )}
+            </div>
+          </Descriptions.Item>
         </Descriptions>
       </Card>
 
@@ -392,6 +457,35 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
           </Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {/* 沟通记录修改弹窗 */}
+      <Modal
+        title="修改沟通记录"
+        open={communicationModalVisible}
+        onOk={handleCommunicationSubmit}
+        onCancel={() => setCommunicationModalVisible(false)}
+        confirmLoading={communicationLoading}
+        width={600}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical" preserve={false} initialValues={{ result: data.communicationResult || '' }}>
+          <Form.Item
+            label="沟通记录"
+            name="result"
+            rules={[
+              { required: true, message: '请输入沟通记录' },
+              { max: 500, message: '沟通记录不能超过500个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请输入与会计沟通的内容..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }

@@ -72,6 +72,17 @@ export const updateRectificationCompletion = async (
   )
 }
 
+// 添加沟通记录
+export const addCommunicationRecord = async (
+  id: number,
+  data: { result: string }
+): Promise<ApiResponse<FinancialSelfInspection>> => {
+  return request.patch(
+    `/enterprise-service/financial-self-inspection/${id}/add-communication-record`,
+    data
+  )
+}
+
 // 审核通过
 export const approvalInspection = async (
   id: number,

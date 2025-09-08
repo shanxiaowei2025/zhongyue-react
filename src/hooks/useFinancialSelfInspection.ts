@@ -14,6 +14,7 @@ import {
   reviewerApprovalInspection,
   reviewerRejectInspection,
   deleteFinancialSelfInspection,
+  addCommunicationRecord,
 } from '../api/financialSelfInspection'
 import type {
   FinancialSelfInspectionQueryParams,
@@ -291,6 +292,40 @@ export const useFinancialSelfInspectionOperations = () => {
     }
   }
 
+  // 添加沟通记录
+  const updateCommunicationRecord = async (id: number, result: string) => {
+    try {
+      const response = await addCommunicationRecord(id, { result })
+      if (response.code === 0) {
+        message.success('沟通记录添加成功')
+        // 清除相关缓存
+        await mutate(
+          key => typeof key === 'string' && key.includes('/financial-self-inspection'),
+          undefined,
+          {
+            revalidate: true,
+          }
+        )
+        return response.data
+      } else {
+        message.error(response.message || '沟通记录添加失败')
+        throw new Error(response.message || '沟通记录添加失败')
+      }
+    } catch (error: any) {
+      console.error('沟通记录添加失败:', error)
+      if (error.response?.data?.message) {
+        if (Array.isArray(error.response.data.message)) {
+          message.error(error.response.data.message.join(', '))
+        } else {
+          message.error(error.response.data.message)
+        }
+      } else if (!error.message.includes('沟通记录添加失败')) {
+        message.error('沟通记录添加失败，请重试')
+      }
+      throw error
+    }
+  }
+
   // 更新整改记录
   const updateRectification = async (id: number, data: RectificationCompletionDto) => {
     try {
@@ -471,5 +506,6 @@ export const useFinancialSelfInspectionOperations = () => {
     reviewerApproveInspection,
     reviewerRejectInspectionData,
     deleteInspection,
+    updateCommunicationRecord,
   }
 }

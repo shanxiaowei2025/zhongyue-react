@@ -28,6 +28,12 @@ export interface ReviewerRejectRecordItem {
   reason: string
 }
 
+// 沟通记录项
+export interface CommunicationRecordItem {
+  result: string
+  communicationTime: string
+}
+
 // 账务自查状态枚举
 export enum FinancialSelfInspectionStatus {
   SUBMITTED = 0, // 待整改
@@ -52,11 +58,14 @@ export interface FinancialSelfInspection {
   problemImageDescription: string | null // 问题图片描述
   solution: string | null // 解决方案
   status: FinancialSelfInspectionStatus // 状态
+  needAccountantCommunication: boolean | number // 是否需要会计沟通
+  communicationResult: string | null // 沟通记录
   rectificationRecords: RectificationRecordItem[] // 整改记录
   approvalRecords: ApprovalRecordItem[] // 审核通过记录
   rejectRecords: RejectRecordItem[] // 审核退回记录
   reviewerApprovalRecords: ReviewerApprovalRecordItem[] // 复查审核通过记录
   reviewerRejectRecords: ReviewerRejectRecordItem[] // 复查审核退回记录
+  communicationRecords: CommunicationRecordItem[] | null // 沟通记录
   createdAt: string // 创建时间
   updatedAt: string // 更新时间
 }
@@ -96,6 +105,7 @@ export interface CreateFinancialSelfInspectionDto {
   problem?: string
   problemImageDescription?: string
   solution?: string
+  needAccountantCommunication?: boolean | number
 }
 
 // 整改完成DTO

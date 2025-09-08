@@ -16,6 +16,7 @@ import {
   message,
   Popconfirm,
   Select,
+  Switch,
 } from 'antd'
 import {
   SearchOutlined,
@@ -219,6 +220,7 @@ const FinancialSelfInspection: React.FC = () => {
     reviewerApproveInspection,
     reviewerRejectInspectionData,
     deleteInspection,
+    updateCommunicationRecord,
   } = useFinancialSelfInspectionOperations()
 
   // 统一loading状态
@@ -234,6 +236,7 @@ const FinancialSelfInspection: React.FC = () => {
   const [reviewerApprovalForm] = Form.useForm()
   const [reviewerRejectForm] = Form.useForm()
   const [createForm] = Form.useForm()
+  const [communicationForm] = Form.useForm()
 
   // 弹窗状态
   const [rectificationModalVisible, setRectificationModalVisible] = useState<boolean>(false)
@@ -242,6 +245,7 @@ const FinancialSelfInspection: React.FC = () => {
   const [reviewerApprovalModalVisible, setReviewerApprovalModalVisible] = useState<boolean>(false)
   const [reviewerRejectModalVisible, setReviewerRejectModalVisible] = useState<boolean>(false)
   const [createModalVisible, setCreateModalVisible] = useState<boolean>(false)
+  const [communicationModalVisible, setCommunicationModalVisible] = useState<boolean>(false)
 
   // 弹窗加载状态
   const [rectificationLoading, setRectificationLoading] = useState<boolean>(false)
@@ -250,6 +254,7 @@ const FinancialSelfInspection: React.FC = () => {
   const [reviewerApprovalLoading, setReviewerApprovalLoading] = useState<boolean>(false)
   const [reviewerRejectLoading, setReviewerRejectLoading] = useState<boolean>(false)
   const [createLoading, setCreateLoading] = useState<boolean>(false)
+  const [communicationLoading, setCommunicationLoading] = useState<boolean>(false)
 
   // 当前操作的记录
   const [currentRecord, setCurrentRecord] = useState<FinancialSelfInspection | null>(null)
@@ -597,8 +602,10 @@ const FinancialSelfInspection: React.FC = () => {
         problem: values.problem,
         problemImageDescription: problemImage?.fileName,
         solution: values.solution,
+        needAccountantCommunication: Boolean(values.needAccountantCommunication),
       }
 
+      console.log('创建自查记录数据:', createData)
       await createInspection(createData)
       setCreateModalVisible(false)
       refreshSubmittedInspections()
@@ -681,6 +688,20 @@ const FinancialSelfInspection: React.FC = () => {
       key: 'problem',
       width: 200,
       render: (text: string | null) => <EllipsisText text={text} maxWidth={180} />,
+    },
+    {
+      title: '会计沟通',
+      dataIndex: 'needAccountantCommunication',
+      key: 'needAccountantCommunication',
+      width: 100,
+      render: (needCommunication: boolean | number) => {
+        const isNeeded = Boolean(needCommunication);
+        return (
+          <Tag color={isNeeded ? '#f50' : '#87d068'}>
+            {isNeeded ? '需要' : '不需要'}
+          </Tag>
+        );
+      },
     },
     {
       title: '创建时间',
@@ -775,6 +796,20 @@ const FinancialSelfInspection: React.FC = () => {
       render: (text: string | null) => <EllipsisText text={text} maxWidth={180} />,
     },
     {
+      title: '会计沟通',
+      dataIndex: 'needAccountantCommunication',
+      key: 'needAccountantCommunication',
+      width: 100,
+      render: (needCommunication: boolean | number) => {
+        const isNeeded = Boolean(needCommunication);
+        return (
+          <Tag color={isNeeded ? '#f50' : '#87d068'}>
+            {isNeeded ? '需要' : '不需要'}
+          </Tag>
+        );
+      },
+    },
+    {
       title: '创建时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -800,15 +835,32 @@ const FinancialSelfInspection: React.FC = () => {
             record.status === FinancialSelfInspectionStatus.INSPECTOR_REJECTED ||
             record.status === FinancialSelfInspectionStatus.REVIEWER_REJECTED) &&
             hasRectificationPermission() && (
-              <Tooltip title="整改">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<EditOutlined />}
-                  style={{ color: '#faad14' }}
-                  onClick={() => openRectificationModal(record)}
-                />
-              </Tooltip>
+              <>
+                <Tooltip title="整改">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EditOutlined />}
+                    style={{ color: '#faad14' }}
+                    onClick={() => openRectificationModal(record)}
+                  />
+                </Tooltip>
+                {Boolean(record.needAccountantCommunication) && (
+                  <Tooltip title="添加沟通记录">
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<PlusOutlined />}
+                      style={{ color: '#1890ff' }}
+                      onClick={() => {
+                        setCurrentRecord(record)
+                        setCommunicationModalVisible(true)
+                        communicationForm.resetFields()
+                      }}
+                    />
+                  </Tooltip>
+                )}
+              </>
             )}
         </Space>
       ),
@@ -838,9 +890,16 @@ const FinancialSelfInspection: React.FC = () => {
       render: (_, record) => renderStatusTag(record),
     },
     {
-      title: '抽查人',
-      dataIndex: 'inspector',
-      key: 'inspector',
+      title: '记账会计',
+      dataIndex: 'bookkeepingAccountant',
+      key: 'bookkeepingAccountant',
+      width: 120,
+      render: (text: string | null) => <EllipsisText text={text} maxWidth={100} />,
+    },
+    {
+      title: '顾问会计',
+      dataIndex: 'consultantAccountant',
+      key: 'consultantAccountant',
       width: 120,
       render: (text: string | null) => <EllipsisText text={text} maxWidth={100} />,
     },
@@ -857,6 +916,20 @@ const FinancialSelfInspection: React.FC = () => {
       key: 'problem',
       width: 200,
       render: (text: string | null) => <EllipsisText text={text} maxWidth={180} />,
+    },
+    {
+      title: '会计沟通',
+      dataIndex: 'needAccountantCommunication',
+      key: 'needAccountantCommunication',
+      width: 100,
+      render: (needCommunication: boolean | number) => {
+        const isNeeded = Boolean(needCommunication);
+        return (
+          <Tag color={isNeeded ? '#f50' : '#87d068'}>
+            {isNeeded ? '需要' : '不需要'}
+          </Tag>
+        );
+      },
     },
     {
       title: '创建时间',
@@ -1768,14 +1841,28 @@ const FinancialSelfInspection: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item label="问题图片" name="problemImage">
-            <FileUpload
-              label="问题图片"
-              value={problemImage}
-              onChange={value => setProblemImage(value)}
-              accept=".jpg,.jpeg,.png,.gif,.bmp,.webp"
-            />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={5}>
+              <Form.Item label="问题图片" name="problemImage">
+                <FileUpload
+                  label="问题图片"
+                  value={problemImage}
+                  onChange={value => setProblemImage(value)}
+                  accept=".jpg,.jpeg,.png,.gif,.bmp,.webp"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={19}>
+              <Form.Item
+                label="是否需要会计沟通"
+                name="needAccountantCommunication"
+                valuePropName="checked"
+                initialValue={false}
+              >
+                <Switch checkedChildren="是" unCheckedChildren="否" />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item
             label="解决方案"
@@ -1788,6 +1875,50 @@ const FinancialSelfInspection: React.FC = () => {
             <Input.TextArea
               rows={3}
               placeholder="请详细描述解决方案..."
+              showCount
+              maxLength={500}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 沟通记录弹窗 */}
+      <Modal
+        title="添加沟通记录"
+        open={communicationModalVisible}
+        onOk={async () => {
+          try {
+            await communicationForm.validateFields()
+            setCommunicationLoading(true)
+
+            const content = communicationForm.getFieldValue('content')
+            
+            await updateCommunicationRecord(currentRecord?.id || 0, content)
+            setCommunicationModalVisible(false)
+            refreshResponsibleInspections()
+          } catch (error: any) {
+            console.error('添加沟通记录失败:', error)
+          } finally {
+            setCommunicationLoading(false)
+          }
+        }}
+        onCancel={() => setCommunicationModalVisible(false)}
+        confirmLoading={communicationLoading}
+        width={600}
+        destroyOnClose
+      >
+        <Form form={communicationForm} layout="vertical" preserve={false}>
+          <Form.Item
+            label="沟通内容"
+            name="content"
+            rules={[
+              { required: true, message: '请输入沟通内容' },
+              { max: 500, message: '沟通内容不能超过500个字符' },
+            ]}
+          >
+            <Input.TextArea
+              rows={4}
+              placeholder="请详细描述沟通内容..."
               showCount
               maxLength={500}
             />

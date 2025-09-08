@@ -22,6 +22,7 @@ import type {
   RejectRecordItem,
   ReviewerApprovalRecordItem,
   ReviewerRejectRecordItem,
+  CommunicationRecordItem,
 } from '../../types/financialSelfInspection'
 
 const { Text } = Typography
@@ -106,7 +107,8 @@ const FinancialSelfInspectionDetail: React.FC = () => {
   // 格式化时间
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-'
-    return dayjs(dateString).format('YYYY-MM-DD HH:mm:ss')
+    // 将UTC时间转换为北京时间（UTC+8）
+    return dayjs(dateString).add(8, 'hour').format('YYYY-MM-DD HH:mm:ss')
   }
 
   // 合并所有记录为时间线
@@ -317,6 +319,32 @@ const FinancialSelfInspectionDetail: React.FC = () => {
                 <Text type="secondary" italic>
                   暂无解决方案
                 </Text>
+              )}
+            </div>
+          </Descriptions.Item>
+          <Descriptions.Item label="会计沟通情况">
+            <div className="whitespace-pre-wrap">
+              {Boolean(data.needAccountantCommunication) ? (
+                <>
+                  <Tag color="#f50" className="mb-2">需要会计沟通</Tag>
+                  <div>
+                    {data.communicationRecords && data.communicationRecords.length > 0 ? (
+                      data.communicationRecords.map((record, index) => (
+                        <div key={index} className="mb-1">
+                          <Text>
+                            {dayjs(record.communicationTime).add(8, 'hour').format('YYYY-MM-DD HH:mm:ss')}: {record.result}
+                          </Text>
+                        </div>
+                      ))
+                    ) : (
+                      <Text type="secondary" italic>
+                        暂无沟通记录
+                      </Text>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <Tag color="#87d068">不需要会计沟通</Tag>
               )}
             </div>
           </Descriptions.Item>
