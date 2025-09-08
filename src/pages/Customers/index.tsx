@@ -70,6 +70,7 @@ import {
   updateCustomerExcel,
 } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
+import ExpenseRecords from './ExpenseRecords'
 
 // 启用 dayjs 插件
 dayjs.extend(utc)
@@ -2425,6 +2426,21 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <h3 className="font-medium mb-2">补充资料文件</h3>
             {renderImages(displayCustomer.supplementaryImages)}
           </div>
+        </div>
+      ),
+    },
+    {
+      key: 'expense',
+      label: '费用记录',
+      children: (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h3 className="text-base font-medium text-gray-800 mb-2 flex items-center">
+              <span className="w-1 h-4 bg-blue-500 rounded-sm mr-2"></span>
+              费用记录
+            </h3>
+          </div>
+          <ExpenseRecords customerId={displayCustomer.id} companyName={displayCustomer.companyName} />
         </div>
       ),
     },
