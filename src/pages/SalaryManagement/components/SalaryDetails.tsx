@@ -7,6 +7,7 @@ import {
   Modal,
   Form,
   Input,
+  Select,
   message,
   Empty,
   Tag,
@@ -36,6 +37,17 @@ interface SalaryDetailsProps {
   yearMonth: string
   onUpdate: (id: number, data: UpdateSalaryDto) => Promise<SalaryRecord>
 }
+
+// 发放公司选项配置
+const payrollCompanyOptions = [
+  { label: '中岳会计', value: '中岳会计' },
+  { label: '雄安分公司', value: '雄安分公司' },
+  { label: '高碑店分公司', value: '高碑店分公司' },
+  { label: '金盾', value: '金盾' },
+  { label: '如你心意', value: '如你心意' },
+  { label: '脉信', value: '脉信' },
+  { label: '鼎兴', value: '鼎兴' },
+]
 
 const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUpdate }) => {
   const [editing, setEditing] = useState(false)
@@ -182,6 +194,19 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
           }
         }
       }
+
+      // 处理赠送代理时长字段
+      if (expense.giftAgencyDuration && expense.giftAgencyDuration.trim()) {
+        if (!company.giftAgencyDuration) {
+          company.giftAgencyDuration = expense.giftAgencyDuration
+        } else if (company.giftAgencyDuration !== expense.giftAgencyDuration) {
+          // 如果有多个不同的赠送代理时长，用逗号分隔
+          const durations = company.giftAgencyDuration.split(',').map((s: string) => s.trim())
+          if (!durations.includes(expense.giftAgencyDuration.trim())) {
+            company.giftAgencyDuration += `, ${expense.giftAgencyDuration.trim()}`
+          }
+        }
+      }
     })
 
     return Array.from(companyMap.values())
@@ -207,12 +232,20 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     const feeColumns: any[] = []
 
     Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
-      // 在代理费前插入代理费业务类型列
+      // 在代理费前插入代理费业务类型列和赠送代理时长列
       if (key === 'agencyFee') {
         feeColumns.push({
           title: '代理费业务类型',
           dataIndex: 'businessType',
           key: 'businessType',
+          width: 150,
+          render: (value: string) => value || '-',
+          align: 'center' as const,
+        })
+        feeColumns.push({
+          title: '赠送代理时长',
+          dataIndex: 'giftAgencyDuration',
+          key: 'giftAgencyDuration',
           width: 150,
           render: (value: string) => value || '-',
           align: 'center' as const,
@@ -292,6 +325,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     // 业务类型字段在合计行中显示为"-"
     summary.businessType = '-'
     summary.socialInsuranceBusinessType = '-'
+    summary.giftAgencyDuration = '-'
 
     return summary
   }
@@ -536,10 +570,20 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                           <Form.Item label="银行卡号" name="bankCardNumber">
                             <Input placeholder="请输入银行卡号" />
                           </Form.Item>
+                          <Form.Item label="发放公司" name="payrollCompany">
+                            <Select
+                              placeholder="请选择发放公司"
+                              allowClear
+                              showSearch
+                              options={payrollCompanyOptions}
+                              filterOption={(input, option) =>
+                                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                              }
+                            />
+                          </Form.Item>
                           <Form.Item label="应发合计" name="totalPayable">
                             <AmountInput disabled />
                           </Form.Item>
-                          <div></div>
                           <Form.Item label="银行卡/微信" name="bankCardOrWechat">
                             <AmountInput />
                           </Form.Item>

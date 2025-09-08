@@ -82,6 +82,7 @@ export interface Expense {
   businessCommissionOwn?: number // 业务提成(自有)
   businessCommissionOutsource?: number // 业务提成(外包)
   agencyCommission?: number // 代理费提成
+  giftAgencyDuration?: string // 赠送代理时长
 }
 
 // 前端表单使用的类型定义，支持文件上传组件
@@ -153,6 +154,7 @@ export interface CreateExpenseDto {
   businessCommissionOwn?: number // 业务提成(自有)
   businessCommissionOutsource?: number // 业务提成(外包)
   agencyCommission?: number // 代理费提成
+  giftAgencyDuration?: string // 赠送代理时长
 }
 
 // 费用更新DTO

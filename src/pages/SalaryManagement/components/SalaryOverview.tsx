@@ -187,6 +187,17 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       ellipsis: true,
     },
     {
+      title: '发放公司',
+      dataIndex: 'payrollCompany',
+      width: 120,
+      ellipsis: true,
+      render: (text) => (
+        <span className="text-gray-700 text-xs">
+          {text || '-'}
+        </span>
+      ),
+    },
+    {
       title: '工资基数',
       dataIndex: 'baseSalary',
       width: 100,
@@ -515,7 +526,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
           loading={loading}
           pagination={false}
           scroll={{
-            x: 2800,
+            x: 2920,
             y: tableScrollY,
           }}
           rowKey="id"
