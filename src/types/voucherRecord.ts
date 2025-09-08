@@ -97,6 +97,7 @@ export interface QueryVoucherRecordDto {
   limit?: number
   customerId?: number
   year?: number
+  companyName?: string
   storageLocation?: string
   handler?: string
   status?: string

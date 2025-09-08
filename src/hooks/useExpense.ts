@@ -164,10 +164,14 @@ export const expenseListFetcher = async ([, params]: [string, ExpenseQueryParams
       // 删除原始createDateRange参数，避免发送不必要的数据
       delete queryParams.createDateRange
     } else {
-      // 确保当createDateRange为undefined或null时，删除可能存在的日期参数
+      // 删除createDateRange参数，但保留直接传入的startDate和endDate
       delete queryParams.createDateRange
-      delete queryParams.startDate
-      delete queryParams.endDate
+
+      // 只有在没有直接传入startDate/endDate时才删除这些参数
+      if (!params.startDate && !params.endDate) {
+        delete queryParams.startDate
+        delete queryParams.endDate
+      }
     }
 
     // 处理审核时间范围

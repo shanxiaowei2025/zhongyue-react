@@ -69,8 +69,8 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       pageSize: 1000,
       salesperson: employee.name,
       status: 1, // 已审核
-      auditDateStart: monthStart,
-      auditDateEnd: monthEnd,
+      startDate: monthStart,
+      endDate: monthEnd,
     }
   }, [employee?.name, yearMonth])
 

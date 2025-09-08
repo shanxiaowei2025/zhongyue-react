@@ -42,7 +42,6 @@ const VoucherManagement: React.FC = () => {
   const [searchParams, setSearchParams] = useState<QueryVoucherRecordDto>({
     page: 1,
     limit: 20,
-    year: new Date().getFullYear(),
   })
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
 
@@ -342,6 +341,7 @@ const VoucherManagement: React.FC = () => {
     setSearchParams(prev => ({
       ...prev,
       page: 1,
+      companyName: values.companyName === '-' ? '' : (values.companyName || undefined),
       storageLocation: values.storageLocation === '-' ? '' : (values.storageLocation || undefined),
       handler: values.handler === '-' ? '' : (values.handler || undefined),
       status: values.status === '-' ? '' : (values.status || undefined),
@@ -356,7 +356,8 @@ const VoucherManagement: React.FC = () => {
     setSearchParams(prev => ({
       page: 1,
       limit: prev.limit,
-      year: prev.year,
+      year: undefined,
+      companyName: undefined,
       consultantAccountant: undefined,
       bookkeepingAccountant: undefined,
       storageLocation: undefined,
@@ -367,14 +368,12 @@ const VoucherManagement: React.FC = () => {
 
   // 处理年份筛选
   const handleYearChange = (date: dayjs.Dayjs | null) => {
-    if (date) {
-      const year = date.year()
-      setSearchParams(prev => ({
-        ...prev,
-        page: 1,
-        year,
-      }))
-    }
+    const year = date ? date.year() : undefined
+    setSearchParams(prev => ({
+      ...prev,
+      page: 1,
+      year,
+    }))
   }
 
   // 处理分页
@@ -683,10 +682,23 @@ const VoucherManagement: React.FC = () => {
               <Form.Item label="年份">
                 <DatePicker
                   picker="year"
-                  value={dayjs(`${searchParams.year}-01-01`)}
+                  value={searchParams.year ? dayjs(`${searchParams.year}-01-01`) : null}
                   onChange={handleYearChange}
                   style={{ width: 120 }}
                   placeholder="选择年份"
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="companyName" label="公司名称">
+                <Input 
+                  placeholder="请输入公司名称" 
+                  allowClear 
+                  style={{ width: 160 }} 
+                  onChange={(e) => {
+                    setTimeout(() => handleSearch(), 300);
+                  }}
                 />
               </Form.Item>
             </Col>
