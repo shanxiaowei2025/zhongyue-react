@@ -33,9 +33,9 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       return null
     }
 
-    // 时间范围：上个月2号到当月1号
-    const monthStart = dayjs(detail.yearMonth).subtract(1, 'month').date(2).format('YYYY-MM-DD')
-    const monthEnd = dayjs(detail.yearMonth).date(1).format('YYYY-MM-DD')
+    // 时间范围：当月2号到下个月1号（包含下个月1号当天）
+    const monthStart = dayjs(detail.yearMonth).date(2).format('YYYY-MM-DD')
+    const monthEnd = dayjs(detail.yearMonth).add(1, 'month').date(2).format('YYYY-MM-DD')
 
     return {
       page: 1,
