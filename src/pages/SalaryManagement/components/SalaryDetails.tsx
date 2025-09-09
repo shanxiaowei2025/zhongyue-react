@@ -61,8 +61,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       return null
     }
 
-    const monthStart = dayjs(yearMonth).startOf('month').format('YYYY-MM-DD')
-    const monthEnd = dayjs(yearMonth).endOf('month').format('YYYY-MM-DD')
+    // 时间范围：上个月2号到当月1号
+    const monthStart = dayjs(yearMonth).subtract(1, 'month').date(2).format('YYYY-MM-DD')
+    const monthEnd = dayjs(yearMonth).date(1).format('YYYY-MM-DD')
 
     return {
       page: 1,
