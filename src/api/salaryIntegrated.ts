@@ -676,16 +676,17 @@ export const integratedApi = {
   },
 
   // 批量获取月度数据（优化：只请求一次薪资列表）
-  async loadMonthlyData(yearMonth: string): Promise<{
+  async loadMonthlyData(yearMonth: string, filters?: SalaryQueryParams): Promise<{
     salaryData: SalaryRecord[]
     statistics: SalaryStatistics
   }> {
     try {
-      // 只请求一次薪资列表数据
+      // 只请求一次薪资列表数据，合并筛选参数
       const salaryResponse = await salaryApi.getSalaryList({
         yearMonth,
         page: 1,
         pageSize: 1000,
+        ...filters,
       })
 
       const salaryData = salaryResponse?.data || []
@@ -834,5 +835,5 @@ export const getSWRKeys = {
     employeeName,
     yearMonth,
   ],
-  monthlyData: (yearMonth: string) => ['monthly-data', yearMonth],
+  monthlyData: (yearMonth: string, filters?: SalaryQueryParams) => ['monthly-data', yearMonth, filters],
 }

@@ -20,11 +20,12 @@ import type {
   UpdateSalaryDto,
   ImportResult,
   ImportType,
+  SalaryQueryParams,
 } from '../types/salaryIntegrated'
 
 // 集成化薪资管理主Hook
 export const useSalaryIntegrated = () => {
-  const { selectedEmployee, selectedYearMonth, salaryData, relatedData, statistics, loading } =
+  const { selectedEmployee, selectedYearMonth, salaryData, relatedData, statistics, loading, searchState } =
     useSalaryIntegratedSelectors()
 
   const {
@@ -34,6 +35,8 @@ export const useSalaryIntegrated = () => {
     setRelatedData,
     setStatistics,
     setLoading,
+    setSearchState,
+    resetSearchState,
     updateSalaryRecord,
     removeSalaryRecord,
     addSalaryRecord,
@@ -42,8 +45,8 @@ export const useSalaryIntegrated = () => {
 
   // 获取月度数据
   const { isLoading: isMonthlyLoading, mutate: mutateMonthly } = useSWR(
-    getSWRKeys.monthlyData(selectedYearMonth),
-    () => integratedApi.loadMonthlyData(selectedYearMonth),
+    getSWRKeys.monthlyData(selectedYearMonth, searchState),
+    () => integratedApi.loadMonthlyData(selectedYearMonth, searchState),
     {
       revalidateOnFocus: false,
       fallbackData: {
@@ -388,6 +391,67 @@ export const useSalaryIntegrated = () => {
         setLoading(false)
       }
     }, [salaryData, batchUpdateSalaryRecords, setStatistics, setLoading]),
+
+    // 设置搜索条件
+    setSearchFilters: useCallback(
+      (filters: SalaryQueryParams) => {
+        setSearchState(filters)
+      },
+      [setSearchState]
+    ),
+
+    // 重置搜索条件
+    resetSearchFilters: useCallback(() => {
+      resetSearchState()
+    }, [resetSearchState]),
+
+    // 搜索员工
+    searchEmployees: useCallback(
+      (keyword: string) => {
+        setSearchState({ ...searchState, name: keyword })
+      },
+      [setSearchState, searchState]
+    ),
+
+    // 按部门筛选
+    filterByDepartment: useCallback(
+      (department: string) => {
+        setSearchState({ ...searchState, department })
+      },
+      [setSearchState, searchState]
+    ),
+
+    // 按发放状态筛选
+    filterByPaidStatus: useCallback(
+      (isPaid?: boolean) => {
+        setSearchState({ ...searchState, isPaid })
+      },
+      [setSearchState, searchState]
+    ),
+
+    // 按确认状态筛选
+    filterByConfirmStatus: useCallback(
+      (isConfirmed?: boolean) => {
+        setSearchState({ ...searchState, isConfirmed })
+      },
+      [setSearchState, searchState]
+    ),
+
+    // 应用筛选
+    applyFilters: useCallback(
+      (params: SalaryQueryParams) => {
+        setSearchState(params)
+      },
+      [setSearchState]
+    ),
+
+    // 重置筛选
+    resetFilters: useCallback(
+      () => {
+        setSearchState({})
+      },
+      [setSearchState]
+    ),
   }
 
   return {

@@ -188,6 +188,99 @@ export interface SalaryQueryParams {
   name?: string
   yearMonth?: string
   type?: string
+  isPaid?: boolean
+  isConfirmed?: boolean
+  
+  // 基本工资范围
+  baseSalaryMin?: number
+  baseSalaryMax?: number
+  
+  // 考勤扣款范围
+  attendanceDeductionMin?: number
+  attendanceDeductionMax?: number
+  
+  // 临时增加范围
+  temporaryIncreaseMin?: number
+  temporaryIncreaseMax?: number
+  
+  // 全勤奖范围
+  fullAttendanceMin?: number
+  fullAttendanceMax?: number
+  
+  // 部门主管补贴范围
+  departmentHeadSubsidyMin?: number
+  departmentHeadSubsidyMax?: number
+  
+  // 职务津贴范围
+  positionAllowanceMin?: number
+  positionAllowanceMax?: number
+  
+  // 油费补贴范围
+  oilSubsidyMin?: number
+  oilSubsidyMax?: number
+  
+  // 餐费补贴范围
+  mealSubsidyMin?: number
+  mealSubsidyMax?: number
+  
+  // 工龄工资范围
+  seniorityMin?: number
+  seniorityMax?: number
+  
+  // 代理费提成范围
+  agencyFeeCommissionMin?: number
+  agencyFeeCommissionMax?: number
+  
+  // 绩效提成范围
+  performanceCommissionMin?: number
+  performanceCommissionMax?: number
+  
+  // 业务提成范围
+  businessCommissionMin?: number
+  businessCommissionMax?: number
+  
+  // 其他扣款范围
+  otherDeductionsMin?: number
+  otherDeductionsMax?: number
+  
+  // 个人保险合计范围
+  personalInsuranceTotalMin?: number
+  personalInsuranceTotalMax?: number
+  
+  // 公司保险合计范围
+  companyInsuranceTotalMin?: number
+  companyInsuranceTotalMax?: number
+  
+  // 押金扣款范围
+  depositDeductionMin?: number
+  depositDeductionMax?: number
+  
+  // 个人所得税范围
+  personalIncomeTaxMin?: number
+  personalIncomeTaxMax?: number
+  
+  // 应付合计范围
+  totalPayableMin?: number
+  totalPayableMax?: number
+  
+  // 银行卡/微信范围
+  bankCardOrWechatMin?: number
+  bankCardOrWechatMax?: number
+  
+  // 现金发放范围
+  cashPaidMin?: number
+  cashPaidMax?: number
+  
+  // 企业代付范围
+  corporatePaymentMin?: number
+  corporatePaymentMax?: number
+  
+  // 税务申报范围
+  taxDeclarationMin?: number
+  taxDeclarationMax?: number
+  
+  // 发放公司筛选
+  payrollCompany?: string
 }
 
 // 创建薪资DTO
@@ -415,12 +508,7 @@ export interface PaginationState {
 }
 
 // 搜索状态类型
-export interface SearchState {
-  department?: string
-  name?: string
-  yearMonth?: string
-  type?: string
-}
+export interface SearchState extends Omit<SalaryQueryParams, 'page' | 'pageSize'> {}
 
 // 集成化状态类型
 export interface IntegratedState {

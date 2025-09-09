@@ -176,6 +176,8 @@ const SalaryManagement: React.FC = () => {
               onRefresh={refreshData}
               statistics={statistics}
               onMarkPaid={handleMarkEmployeePaid}
+              onFilter={operations.applyFilters}
+              onResetFilter={operations.resetFilters}
             />
           )}
         </div>

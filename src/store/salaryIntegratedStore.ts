@@ -120,7 +120,7 @@ export const useSalaryIntegratedStore = create<SalaryIntegratedStore>()(
       // 搜索状态操作
       setSearchState: searchState =>
         set(state => {
-          state.searchState = { ...state.searchState, ...searchState }
+          state.searchState = searchState
         }),
 
       resetSearchState: () =>
