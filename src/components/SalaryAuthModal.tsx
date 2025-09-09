@@ -92,18 +92,18 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
     setLoading(true)
     try {
       const result = await salaryAuthApi.verifySalaryPassword(values.salaryPassword)
-      // 存储token信息 - 根据实际API响应结构
-      const expiresAt = Date.now() + result.data.expiresIn * 1000 // expiresIn是秒数，转换为时间戳
-      setToken({
-        token: result.data.salaryAccessToken,
-        expiresAt: expiresAt,
-      })
+        // 存储token信息 - 根据实际API响应结构
+        const expiresAt = Date.now() + result.data.expiresIn * 1000 // expiresIn是秒数，转换为时间戳
+        setToken({
+          token: result.data.salaryAccessToken,
+          expiresAt: expiresAt,
+        })
 
-      showSuccess.verification()
+        showSuccess.verification()
       // 验证成功，重置错误计数
       setAttemptCount(0)
       attemptCountRef.current = 0
-      onSuccess()
+        onSuccess()
     } catch (error: any) {
       console.error('验证薪资密码失败:', error)
       
