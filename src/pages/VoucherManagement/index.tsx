@@ -41,7 +41,7 @@ const { RangePicker } = DatePicker
 const VoucherManagement: React.FC = () => {
   const [searchParams, setSearchParams] = useState<QueryVoucherRecordDto>({
     page: 1,
-    limit: 20,
+    limit: 10,
   })
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
 
