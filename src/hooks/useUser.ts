@@ -6,6 +6,7 @@ import {
   updateUserById as apiUpdateUser,
   deleteUser as apiDeleteUser,
   searchUsers as apiSearchUsers,
+  resetSalaryPassword as apiResetSalaryPassword,
 } from '../api/user'
 import { getDepartmentTree } from '../api/department'
 import { getRoleList } from '../api/roles'
@@ -184,9 +185,27 @@ export const useUserOperations = () => {
     }
   }
 
+  // 重置薪资密码
+  const resetSalaryPassword = async (userId: number) => {
+    try {
+      const response = await apiResetSalaryPassword(userId)
+      if (response.code === 0) {
+        message.success('重置薪资密码成功')
+        return true
+      } else {
+        throw new Error(response.message || '重置薪资密码失败')
+      }
+    } catch (error: any) {
+      console.error('重置薪资密码失败:', error)
+      message.error(error.message || '重置薪资密码失败')
+      return false
+    }
+  }
+
   return {
     createUser,
     updateUser,
     deleteUser,
+    resetSalaryPassword,
   }
 }

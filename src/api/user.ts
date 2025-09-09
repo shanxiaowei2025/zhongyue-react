@@ -66,3 +66,8 @@ export const updateUserById = (id: number, data: Partial<User>) => {
 export const deleteUser = (id: number) => {
   return request.delete<ApiResponse<any>>(`/users/${id}`)
 }
+
+// 重置用户薪资密码
+export const resetSalaryPassword = (userId: number) => {
+  return request.patch<ApiResponse<any>>(`/auth/salary/reset-password/${userId}`)
+}

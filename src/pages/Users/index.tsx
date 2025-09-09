@@ -15,7 +15,7 @@ import {
 } from 'antd'
 import type { TablePaginationConfig } from 'antd/es/table'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { PlusOutlined, EditOutlined, DeleteOutlined, KeyOutlined } from '@ant-design/icons'
 import { useUserList, useDepartmentTree, useRoleList, useUserOperations } from '../../hooks/useUser'
 import { useDebouncedValue } from '../../hooks/useDebounce'
 
@@ -68,7 +68,7 @@ const Users = () => {
 
   const { departmentTree: rawDepartmentTree } = useDepartmentTree()
   const { roles } = useRoleList()
-  const { createUser, updateUser, deleteUser } = useUserOperations()
+  const { createUser, updateUser, deleteUser, resetSalaryPassword } = useUserOperations()
 
   // 转换部门树为级联选择器格式的函数
   const transformToCascaderOptions = (departments: any[]): CascaderOption[] => {
@@ -174,6 +174,10 @@ const Users = () => {
 
   const handleDelete = async (id: number) => {
     await deleteUser(id)
+  }
+
+  const handleResetSalaryPassword = async (id: number) => {
+    await resetSalaryPassword(id)
   }
 
   const handleCancel = () => {
@@ -319,12 +323,22 @@ const Users = () => {
       title: '操作',
       key: 'action',
       fixed: 'right' as const,
-      width: 180,
+      width: 260,
       render: (_: unknown, record: ApiUser) => (
         <Space>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
+          <Popconfirm
+            title="确定要重置此用户的薪资密码吗?"
+            onConfirm={() => handleResetSalaryPassword(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button type="link" icon={<KeyOutlined />}>
+              重置薪资密码
+            </Button>
+          </Popconfirm>
           <Popconfirm
             title="确定要删除此用户吗?"
             onConfirm={() => handleDelete(record.id)}

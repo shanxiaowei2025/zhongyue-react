@@ -121,6 +121,9 @@ instance.interceptors.response.use(
     // 判断是否是修改密码请求
     const isChangePasswordRequest = requestUrl.includes('change-password')
 
+    // 判断是否是薪资密码验证请求
+    const isSalaryPasswordRequest = requestUrl.includes('/auth/salary/verify')
+
     // 统一错误信息提取：优先使用后端返回的message，其次使用默认错误信息
     const backendMessage = error.response?.data?.message
     const statusCode = error.response?.status
@@ -136,6 +139,9 @@ instance.interceptors.response.use(
         // 修改密码错误，显示后端返回的错误信息
         const errorMessage = backendMessage || '修改密码失败'
         message.error(errorMessage)
+      } else if (isSalaryPasswordRequest) {
+        // 薪资密码验证错误，不清除token，不跳转登录页，让组件自己处理
+        // 这里不显示message，让SalaryAuthModal组件自己处理错误显示
       } else {
         // 其他API的401错误，表示登录已过期
         // 清除token并跳转到登录页

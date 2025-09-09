@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Modal, Form, Input, Button, Alert, Space } from 'antd'
-import { LockOutlined, EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons'
-import { showValidationError, showSuccess, showError } from '../utils/messageHelper'
+import { LockOutlined, EyeTwoTone, EyeInvisibleOutlined } from '@ant-design/icons'
 import { salaryAuthApi } from '../api/salaryAuth'
 import { useSalaryAuthStore } from '../store/salaryAuth'
+import { showSuccess, showError, showValidationError } from '../utils/messageHelper'
+import { useAuthStore } from '../store/auth'
 
 interface SalaryAuthModalProps {
   visible: boolean
@@ -24,7 +25,10 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
   const [loading, setLoading] = useState(false)
   const [hasPassword, setHasPassword] = useState<boolean | null>(null)
   const [checkingStatus, setCheckingStatus] = useState(false)
+  const [attemptCount, setAttemptCount] = useState(0) // 添加错误尝试计数
+  const attemptCountRef = useRef(0) // 使用ref来保持最新值
   const { setToken } = useSalaryAuthStore()
+  const { logout } = useAuthStore()
 
   // 检查用户是否已设置薪资密码
   const checkPasswordStatus = async () => {
@@ -43,10 +47,13 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
   }
 
   // 当弹窗打开时检查密码状态
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
       checkPasswordStatus()
-      // 延迟重置表单，避免form还未渲染完成
+      // 重置错误尝试计数
+      setAttemptCount(0)
+      attemptCountRef.current = 0
+
       setTimeout(() => {
         form.resetFields()
       }, 0)
@@ -85,22 +92,50 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
     setLoading(true)
     try {
       const result = await salaryAuthApi.verifySalaryPassword(values.salaryPassword)
-      if (result.success) {
-        // 存储token信息 - 根据实际API响应结构
-        const expiresAt = Date.now() + result.data.expiresIn * 1000 // expiresIn是秒数，转换为时间戳
-        setToken({
-          token: result.data.salaryAccessToken,
-          expiresAt: expiresAt,
-        })
+      // 存储token信息 - 根据实际API响应结构
+      const expiresAt = Date.now() + result.data.expiresIn * 1000 // expiresIn是秒数，转换为时间戳
+      setToken({
+        token: result.data.salaryAccessToken,
+        expiresAt: expiresAt,
+      })
 
-        showSuccess.verification()
-        onSuccess()
-      } else {
-        showError.verification()
-      }
+      showSuccess.verification()
+      // 验证成功，重置错误计数
+      setAttemptCount(0)
+      attemptCountRef.current = 0
+      onSuccess()
     } catch (error: any) {
       console.error('验证薪资密码失败:', error)
-      // 错误处理由拦截器统一处理
+      
+      // 增加错误计数
+      attemptCountRef.current += 1
+      const newAttemptCount = attemptCountRef.current
+      setAttemptCount(newAttemptCount)
+      
+      if (newAttemptCount >= 3) {
+        // 第三次错误，强制退出登录
+        form.setFields([
+          {
+            name: 'salaryPassword',
+            errors: ['密码错误次数过多，即将退出登录'],
+          },
+        ])
+        setTimeout(() => {
+          logout()
+          window.location.href = '/login'
+        }, 2000)
+      } else {
+        // 还有尝试机会，显示剩余次数
+        const remainingAttempts = 3 - newAttemptCount
+        // 尝试从不同位置获取错误信息
+        const errorMessage = error.response?.data?.message || error.message || '薪资密码错误'
+        form.setFields([
+          {
+            name: 'salaryPassword',
+            errors: [`${errorMessage}，您还有 ${remainingAttempts} 次机会`],
+          },
+        ])
+      }
     } finally {
       setLoading(false)
     }
@@ -171,8 +206,12 @@ const SalaryAuthModal: React.FC<SalaryAuthModalProps> = ({
     <Form form={form} layout="vertical" onFinish={handleVerifyPassword} autoComplete="off">
       <Alert
         message="薪资信息需要验证"
-        description={description}
-        type="warning"
+        description={
+          attemptCount > 0 
+            ? `${description}（已尝试 ${attemptCount} 次，剩余 ${3 - attemptCount} 次机会）`
+            : description
+        }
+        type={attemptCount > 0 ? "error" : "warning"}
         showIcon
         className="mb-4"
       />
