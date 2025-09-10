@@ -242,10 +242,20 @@ export const useSalaryIntegratedStore = create<SalaryIntegratedStore>()(
     })),
     {
       name: 'salary-integrated-store',
+      version: 2,
+      // 迁移旧版本中持久化的筛选条件，升级后不再持久化筛选条件
+      migrate: (persistedState: any, version) => {
+        if (version < 2 && persistedState) {
+          // 删除旧存储中的 searchState，避免刷新后沿用筛选
+          const { searchState, ...rest } = persistedState as any
+          return rest as any
+        }
+        return persistedState as any
+      },
       // 只持久化关键状态，不持久化数据
       partialize: state => ({
         selectedYearMonth: state.selectedYearMonth,
-        searchState: state.searchState,
+        // 不再持久化 searchState，刷新后回到默认“全部数据”
         paginationState: state.paginationState,
       }),
     }

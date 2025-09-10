@@ -65,6 +65,8 @@ export interface Expense {
   otherBusinessFee: number | string
   otherBusinessOutsourcing: string | string[]
   otherBusinessOutsourcingFee: number | string
+  otherBusinessSpecial: string | string[]
+  otherBusinessSpecialFee: number | string
   proofOfCharge: string[]
   totalFee: number | string
   salesperson: string
@@ -81,6 +83,7 @@ export interface Expense {
   receiptNo?: string // 收据编号
   businessCommissionOwn?: number // 业务提成(自有)
   businessCommissionOutsource?: number // 业务提成(外包)
+  specialBusinessCommission?: number // 特殊业务提成
   agencyCommission?: number // 代理费提成
   giftAgencyDuration?: string // 赠送代理时长
 }
@@ -144,6 +147,8 @@ export interface CreateExpenseDto {
   otherBusinessFee?: number | string
   otherBusinessOutsourcing?: string | string[]
   otherBusinessOutsourcingFee?: number | string
+  otherBusinessSpecial?: string | string[]
+  otherBusinessSpecialFee?: number | string
   proofOfCharge?: string[]
   totalFee?: number | string
   salesperson?: string
@@ -153,6 +158,7 @@ export interface CreateExpenseDto {
   internalRemarks?: string
   businessCommissionOwn?: number // 业务提成(自有)
   businessCommissionOutsource?: number // 业务提成(外包)
+  specialBusinessCommission?: number // 特殊业务提成
   agencyCommission?: number // 代理费提成
   giftAgencyDuration?: string // 赠送代理时长
 }
@@ -235,7 +241,38 @@ export interface ReceiptViewDto {
   otherBusinessFee?: number | string
   otherBusinessOutsourcing?: string | string[]
   otherBusinessOutsourcingFee?: number | string
+  otherBusinessSpecial?: string | string[]
+  otherBusinessSpecialFee?: number | string
   receiptRemarks?: string
   contractImage?: string | string[] // 电子合同
   feeItems?: FeeItem[]
+}
+
+// 特殊业务记录类型
+export interface SpecialBusinessRecord {
+  id: number
+  companyName: string
+  salesperson: string
+  chargeDate: string
+  otherBusinessSpecial: string[]
+  otherBusinessSpecialFee: string
+  specialBusinessCommission: string | null
+  totalFee: string
+  businessType: string | null
+  auditor: string | null
+  auditDate: string | null
+}
+
+// 特殊业务列表响应类型
+export interface SpecialBusinessListResponse {
+  data: {
+    data: SpecialBusinessRecord[]
+    total: string
+    page: number
+    pageSize: number
+    totalPages: number
+  }
+  code: number
+  message: string
+  timestamp: number
 }

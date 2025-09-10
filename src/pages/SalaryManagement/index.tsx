@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button, Spin, Tabs, Progress, Modal } from 'antd'
 
 import {
@@ -7,6 +7,7 @@ import {
   LeftOutlined,
   RightOutlined,
   ExportOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons'
 
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
@@ -17,6 +18,7 @@ import SalaryDetails from './components/SalaryDetails'
 import RelatedDataTabs from './components/RelatedDataTabs'
 import ImportExportPanel from './components/ImportExportPanel'
 import CommissionPanel from './components/CommissionPanel'
+import SpecialBusinessModal from './components/SpecialBusinessModal'
 import '../../components/ScrollableTabs.css'
 
 const SalaryManagement: React.FC = () => {
@@ -31,11 +33,17 @@ const SalaryManagement: React.FC = () => {
     refreshData,
   } = useSalaryIntegrated()
 
+  // 页面首次挂载时重置筛选，避免上一次的筛选在再次进入页面后被沿用
+  useEffect(() => {
+    operations.resetFilters()
+  }, [])
+
   const [autoGenerating, setAutoGenerating] = useState(false)
   const [markingAllPaid, setMarkingAllPaid] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
+  const [specialBusinessModalOpen, setSpecialBusinessModalOpen] = useState(false)
 
   const handleMonthChange = (yearMonth: string) => {
     operations.switchMonth(yearMonth)
@@ -134,6 +142,12 @@ const SalaryManagement: React.FC = () => {
             </Button>
             <Button icon={<ExportOutlined />} onClick={handleExportCsv} loading={exporting}>
               导出CSV
+            </Button>
+            <Button
+              icon={<FileTextOutlined />}
+              onClick={() => setSpecialBusinessModalOpen(true)}
+            >
+              特殊业务列表
             </Button>
             <Button
               icon={<CheckCircleOutlined />}
@@ -320,6 +334,12 @@ const SalaryManagement: React.FC = () => {
           <Spin size="large" />
         </div>
       )}
+
+      {/* 特殊业务列表模态框 */}
+      <SpecialBusinessModal
+        open={specialBusinessModalOpen}
+        onCancel={() => setSpecialBusinessModalOpen(false)}
+      />
     </div>
   )
 }

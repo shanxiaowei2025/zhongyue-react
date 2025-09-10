@@ -67,22 +67,32 @@ export const getMaxAmountProject = (expense: Expense): string => {
       return maxProject
 
     case 'otherBusinessFee':
-      // 其他业务（自有）显示具体业务
+      // 其他业务（基础）显示具体业务
       if (expense.otherBusiness) {
         const businesses = Array.isArray(expense.otherBusiness)
           ? expense.otherBusiness
           : [expense.otherBusiness]
-        return `其他业务（自有）（${businesses.join('、')}）`
+        return `其他业务（基础）（${businesses.join('、')}）`
       }
       return maxProject
 
     case 'otherBusinessOutsourcingFee':
-      // 其他业务（外包）显示具体业务
+      // 其他业务显示具体业务
       if (expense.otherBusinessOutsourcing) {
         const businesses = Array.isArray(expense.otherBusinessOutsourcing)
           ? expense.otherBusinessOutsourcing
           : [expense.otherBusinessOutsourcing]
-        return `其他业务（外包）（${businesses.join('、')}）`
+        return `其他业务（${businesses.join('、')}）`
+      }
+      return maxProject
+
+    case 'otherBusinessSpecialFee':
+      // 其他业务(特殊)显示具体业务
+      if (expense.otherBusinessSpecial) {
+        const businesses = Array.isArray(expense.otherBusinessSpecial)
+          ? expense.otherBusinessSpecial
+          : [expense.otherBusinessSpecial]
+        return `其他业务(特殊)（${businesses.join('、')}）`
       }
       return maxProject
 

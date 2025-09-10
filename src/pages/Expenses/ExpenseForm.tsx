@@ -13,8 +13,9 @@ import {
   Checkbox,
   AutoComplete,
   Spin,
+  Tooltip,
 } from 'antd'
-import { SearchOutlined } from '@ant-design/icons'
+import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import DateRangePicker from '../../components/DateRangePicker'
@@ -121,6 +122,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     'administrativeLicenseFee',
     'otherBusinessFee',
     'otherBusinessOutsourcingFee',
+    'otherBusinessSpecialFee',
   ]
 
   // 定义每个标签页包含的费用字段映射
@@ -131,7 +133,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee', 'addressFee'], // 新办执照
     '5': ['changeFee'], // 变更业务
     '6': ['administrativeLicenseFee'], // 行政许可
-    '7': ['otherBusinessFee', 'otherBusinessOutsourcingFee'], // 其他业务
+    '7': ['otherBusinessFee', 'otherBusinessOutsourcingFee', 'otherBusinessSpecialFee'], // 其他业务
   }
 
   // 定义防抖延迟时间（毫秒）
@@ -532,6 +534,16 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           formData.chargeMethod = []
         }
 
+        // 确保多选下拉字段为数组（其他业务：基础/普通/特殊）
+        ;['otherBusiness', 'otherBusinessOutsourcing', 'otherBusinessSpecial'].forEach(field => {
+          const value = formData[field]
+          if (value === undefined || value === null) {
+            formData[field] = []
+          } else if (!Array.isArray(value)) {
+            formData[field] = [value]
+          }
+        })
+
         // 设置表单初始值
         form.setFieldsValue(formData)
 
@@ -744,19 +756,20 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formattedValues.housingFundEndDate = null
       }
 
-      // 处理tags模式的Select字段，确保它们的值处理正确
+      // 处理选择框的字段
       // 对于chargeMethod，如果是数组，取第一个值作为字符串（与之前的处理逻辑一致）
       if (formattedValues.chargeMethod && Array.isArray(formattedValues.chargeMethod)) {
         formattedValues.chargeMethod = formattedValues.chargeMethod[0] || ''
       }
 
-      // 对于其他使用tags模式的字段，保持数组格式
-      // 后端API应该能够处理字符串数组，如果后端需要字符串，可以在这里使用join方法
+      // 其他多选字段保持数组格式
+      // 后端API应该能够处理字符串数组
       ;[
         'changeBusiness',
         'administrativeLicense',
         'otherBusiness',
         'otherBusinessOutsourcing',
+        'otherBusinessSpecial',
         'insuranceTypes',
       ].forEach(field => {
         if (formattedValues[field] && !Array.isArray(formattedValues[field])) {
@@ -2001,33 +2014,23 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           gap: '16px',
                         }}
                       >
-                        <Form.Item name="otherBusiness" label="其他业务（自有）">
+                        <Form.Item name="otherBusiness" label={<span>其他业务（基础）<Tooltip title="该业务提成累积区间比率"><InfoCircleOutlined style={{ marginLeft: 4, color: '#999' }} /></Tooltip></span>}>
                           <Select
-                            placeholder="请选择或输入其他业务"
-                            mode="tags"
+                            placeholder="请选择其他业务"
+                            mode="multiple"
                             style={{ width: '100%' }}
                             options={[
-                              { value: '审计报告', label: '审计报告' },
-                              { value: '评估报告', label: '评估报告' },
-                              { value: '检测报告', label: '检测报告' },
-                              { value: '商标', label: '商标' },
-                              { value: '条形码', label: '条形码' },
-                              { value: '工商异常', label: '工商异常' },
-                              { value: '税务异常', label: '税务异常' },
-                              { value: '银行融资平台', label: '银行融资平台' },
-                              { value: '劳务派遣年检', label: '劳务派遣年检' },
-                              { value: '工商年检', label: '工商年检' },
-                              { value: '补充申报', label: '补充申报' },
-                              { value: '代理企业工商注销', label: '代理企业工商注销' },
-                              { value: '代理企业税务注销', label: '代理企业税务注销' },
-                              { value: '代理企业银行注销', label: '代理企业银行注销' },
-                              { value: '银行开户费', label: '银行开户费' },
-                              { value: '公司转让', label: '公司转让' },
+                              { value: '非代理企业工商注销', label: '非代理企业工商注销' },
+                              { value: '非代理企业税务注销', label: '非代理企业税务注销' },
+                              { value: '非代理企业银行注销', label: '非代理企业银行注销' },
+                              { value: '税务处理逾期/补充申报', label: '税务处理逾期/补充申报' },
+                              { value: '工商年报/工商公示', label: '工商年报/工商公示' },
+                              { value: '补执照', label: '补执照' },
                             ]}
                           />
                         </Form.Item>
 
-                        <Form.Item name="otherBusinessFee" label="其他业务收费（自有）">
+                        <Form.Item name="otherBusinessFee" label="其他业务收费（基础）">
                           <InputNumber
                             placeholder="请输入其他业务收费"
                             style={{ width: '100%' }}
@@ -2041,33 +2044,79 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         {/* 空块用于强制换行 */}
                         <div></div>
 
-                        <Form.Item name="otherBusinessOutsourcing" label="其他业务（外包）">
+                        <Form.Item name="otherBusinessOutsourcing" label={<span>其他业务<Tooltip title="该业务固定提成10%"><InfoCircleOutlined style={{ marginLeft: 4, color: '#999' }} /></Tooltip></span>}>
                           <Select
-                            placeholder="请选择或输入其他业务"
-                            mode="tags"
+                            placeholder="请选择其他业务"
+                            mode="multiple"
                             style={{ width: '100%' }}
                             options={[
-                              { value: '审计报告', label: '审计报告' },
-                              { value: '评估报告', label: '评估报告' },
-                              { value: '检测报告', label: '检测报告' },
-                              { value: '商标', label: '商标' },
-                              { value: '条形码', label: '条形码' },
-                              { value: '工商异常', label: '工商异常' },
-                              { value: '税务异常', label: '税务异常' },
-                              { value: '银行融资平台', label: '银行融资平台' },
-                              { value: '劳务派遣年检', label: '劳务派遣年检' },
-                              { value: '工商年检', label: '工商年检' },
-                              { value: '补充申报', label: '补充申报' },
-                              { value: '非代理企业工商注销', label: '非代理企业工商注销' },
-                              { value: '非代理企业税务注销', label: '非代理企业税务注销' },
-                              { value: '非代理企业银行注销', label: '非代理企业银行注销' },
-                              { value: '银行开户费', label: '银行开户费' },
+                              { value: '代理企业工商注销', label: '代理企业工商注销' },
+                              { value: '代理企业税务注销', label: '代理企业税务注销' },
+                              { value: '代理企业银行注销', label: '代理企业银行注销' },
+                              { value: '代理企业注销', label: '代理企业注销' },
+                              { value: '解除工商异常', label: '解除工商异常' },
+                              { value: '解除税务异常', label: '解除税务异常' },
+                              { value: '代办条形码', label: '代办条形码' },
+                              { value: '劳务派遣证年检', label: '劳务派遣证年检' },
+                              { value: '民非证年检', label: '民非证年检' },
                               { value: '公司转让', label: '公司转让' },
+                              { value: '建设项目环境影响登记表', label: '建设项目环境影响登记表' },
+                              { value: '代办固定污染源排污', label: '代办固定污染源排污' },
+                              { value: '登报', label: '登报' },
+                              { value: '商标注册', label: '商标注册' },
+                              { value: '商标变更', label: '商标变更' },
+                              { value: '商标续展', label: '商标续展' },
+                              { value: '商标过户', label: '商标过户' },
+                              { value: '审计报告', label: '审计报告' },
+                              { value: '检测报告', label: '检测报告' },
+                              { value: '验资报告', label: '验资报告' },
+                              { value: '出版物许可证', label: '出版物许可证' },
+                              { value: '著作权', label: '著作权' },
+                              { value: '版权', label: '版权' },
+                              { value: '建筑资质证书', label: '建筑资质证书' },
+                              { value: '3A信用认证', label: '3A信用认证' },
+                              { value: '质量体系认证（环境、健康、职业）', label: '质量体系认证（环境、健康、职业）' },
+                              { value: '信用修复', label: '信用修复' },
+                              { value: '暂住证', label: '暂住证' },
+                              { value: '贷款业务', label: '贷款业务' },
+                              { value: '金融业务', label: '金融业务' },
+                              { value: '资产评估报告', label: '资产评估报告' },
+                              { value: '区块链', label: '区块链' },
+                              { value: '招标投标代理', label: '招标投标代理' },
+                              { value: '工程审计/预算/决算', label: '工程审计/预算/决算' },
+                              { value: '标书制作', label: '标书制作' },
                             ]}
                           />
                         </Form.Item>
 
-                        <Form.Item name="otherBusinessOutsourcingFee" label="其他业务收费（外包）">
+                        <Form.Item name="otherBusinessOutsourcingFee" label="其他业务收费">
+                          <InputNumber
+                            placeholder="请输入其他业务收费"
+                            style={{ width: '100%' }}
+                            min={0}
+                            precision={2}
+                            addonBefore="¥"
+                            parser={parseNumberInput}
+                          />
+                        </Form.Item>
+
+                        {/* 空块用于强制换行 */}
+                        <div></div>
+
+                        <Form.Item name="otherBusinessSpecial" label={<span>其他业务(特殊)<Tooltip title="该业务视情况而定"><InfoCircleOutlined style={{ marginLeft: 4, color: '#999' }} /></Tooltip></span>}>
+                          <Select
+                            placeholder="请选择其他业务"
+                            mode="multiple"
+                            style={{ width: '100%' }}
+                            options={[
+                              { value: '代办烟草证', label: '代办烟草证' },
+                              { value: '出口退税', label: '出口退税' },
+                              { value: '建筑资质证书', label: '建筑资质证书' },
+                            ]}
+                          />
+                        </Form.Item>
+
+                        <Form.Item name="otherBusinessSpecialFee" label="其他业务收费(特殊)">
                           <InputNumber
                             placeholder="请输入其他业务收费"
                             style={{ width: '100%' }}

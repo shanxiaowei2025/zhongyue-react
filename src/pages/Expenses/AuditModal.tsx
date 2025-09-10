@@ -33,7 +33,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
 
     const items: any[] = []
 
-    // 其他业务（自有）
+    // 其他业务（基础）
     if (
       expense.otherBusiness &&
       Array.isArray(expense.otherBusiness) &&
@@ -41,7 +41,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
     ) {
       items.push({
         key: 'otherBusiness',
-        label: '其他业务（自有）',
+        label: '其他业务（基础）',
         children: expense.otherBusiness.map((item: string, index: number) => (
           <Tag key={index} color="blue">
             {item}
@@ -50,7 +50,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
       })
     }
 
-    // 其他业务收费（自有）
+    // 其他业务收费（基础）
     if (expense.otherBusinessFee !== undefined && expense.otherBusinessFee !== null) {
       const fee =
         typeof expense.otherBusinessFee === 'string'
@@ -58,12 +58,12 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
           : Number(expense.otherBusinessFee || 0)
       items.push({
         key: 'otherBusinessFee',
-        label: '其他业务收费（自有）',
+        label: '其他业务收费（基础）',
         children: `¥${fee.toFixed(2)}`,
       })
     }
 
-    // 其他业务（外包）
+    // 其他业务
     if (
       expense.otherBusinessOutsourcing &&
       Array.isArray(expense.otherBusinessOutsourcing) &&
@@ -71,7 +71,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
     ) {
       items.push({
         key: 'otherBusinessOutsourcing',
-        label: '其他业务（外包）',
+        label: '其他业务',
         children: expense.otherBusinessOutsourcing.map((item: string, index: number) => (
           <Tag key={index} color="orange">
             {item}
@@ -80,7 +80,7 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
       })
     }
 
-    // 其他业务收费（外包）
+    // 其他业务收费
     if (
       expense.otherBusinessOutsourcingFee !== undefined &&
       expense.otherBusinessOutsourcingFee !== null
@@ -91,7 +91,40 @@ const AuditModal: React.FC<AuditModalProps> = ({ visible, expense, onClose, onCo
           : Number(expense.otherBusinessOutsourcingFee || 0)
       items.push({
         key: 'otherBusinessOutsourcingFee',
-        label: '其他业务收费（外包）',
+        label: '其他业务收费',
+        children: `¥${fee.toFixed(2)}`,
+      })
+    }
+
+    // 其他业务(特殊)
+    if (
+      expense.otherBusinessSpecial &&
+      Array.isArray(expense.otherBusinessSpecial) &&
+      expense.otherBusinessSpecial.length > 0
+    ) {
+      items.push({
+        key: 'otherBusinessSpecial',
+        label: '其他业务(特殊)',
+        children: expense.otherBusinessSpecial.map((item: string, index: number) => (
+          <Tag key={index} color="purple">
+            {item}
+          </Tag>
+        )),
+      })
+    }
+
+    // 其他业务收费(特殊)
+    if (
+      expense.otherBusinessSpecialFee !== undefined &&
+      expense.otherBusinessSpecialFee !== null
+    ) {
+      const fee =
+        typeof expense.otherBusinessSpecialFee === 'string'
+          ? parseFloat(expense.otherBusinessSpecialFee || '0')
+          : Number(expense.otherBusinessSpecialFee || 0)
+      items.push({
+        key: 'otherBusinessSpecialFee',
+        label: '其他业务收费(特殊)',
         children: `¥${fee.toFixed(2)}`,
       })
     }

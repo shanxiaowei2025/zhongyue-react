@@ -147,8 +147,11 @@ export const expenseListFetcher = async ([, params]: [string, ExpenseQueryParams
     } else {
       // 确保当dateRange为undefined或null时，删除可能存在的日期参数
       delete queryParams.dateRange
-      delete queryParams.chargeDateStart
-      delete queryParams.chargeDateEnd
+      // 只有在没有直接传入chargeDateStart/chargeDateEnd时才删除这些参数
+      if (!params.chargeDateStart && !params.chargeDateEnd) {
+        delete queryParams.chargeDateStart
+        delete queryParams.chargeDateEnd
+      }
     }
 
     // 处理开据时间范围

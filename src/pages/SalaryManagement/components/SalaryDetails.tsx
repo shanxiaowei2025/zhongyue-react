@@ -61,17 +61,17 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       return null
     }
 
-    // 时间范围：当月2号到下个月1号（包含下个月1号当天）
-    const monthStart = dayjs(yearMonth).date(2).format('YYYY-MM-DD')
-    const monthEnd = dayjs(yearMonth).add(1, 'month').date(2).format('YYYY-MM-DD')
+    // 时间范围：当月1号到当月月底
+    const monthStart = dayjs(yearMonth).startOf('month').format('YYYY-MM-DD')
+    const monthEnd = dayjs(yearMonth).endOf('month').format('YYYY-MM-DD')
 
     return {
       page: 1,
       pageSize: 1000,
       salesperson: employee.name,
       status: 1, // 已审核
-      startDate: monthStart,
-      endDate: monthEnd,
+      chargeDateStart: monthStart,
+      chargeDateEnd: monthEnd,
     }
   }, [employee?.name, yearMonth])
 
@@ -126,14 +126,16 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     statisticalReportFee: '统计局报表费',
     changeFee: '变更收费',
     administrativeLicenseFee: '行政许可收费',
-    otherBusinessFee: '其他业务（自有）',
-    otherBusinessOutsourcingFee: '其他业务（外包）',
+      otherBusinessFee: '其他业务（基础）',
+  otherBusinessOutsourcingFee: '其他业务',
+    otherBusinessSpecialFee: '其他业务(特殊)',
   }
 
   // 提成类型映射
   const COMMISSION_TYPE_MAP = {
-    businessCommissionOwn: '业务提成(自有)',
-    businessCommissionOutsource: '业务提成(外包)',
+    businessCommissionOwn: '其他业务提成(基础)',
+    businessCommissionOutsource: '其他业务提成',
+    specialBusinessCommission: '特殊业务提成',
     agencyCommission: '代理费提成',
   }
 

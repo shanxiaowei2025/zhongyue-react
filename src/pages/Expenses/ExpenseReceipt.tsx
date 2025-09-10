@@ -666,8 +666,9 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       addFeeItem('统计报表费', receipt?.statisticalReportFee)
       addFeeItem('变更费', receipt?.changeFee)
       addFeeItem('行政许可费', receipt?.administrativeLicenseFee)
-      addFeeItem('其他业务费（自有）', receipt?.otherBusinessFee)
-      addFeeItem('其他业务费（外包）', receipt?.otherBusinessOutsourcingFee)
+      addFeeItem('其他业务费（基础）', receipt?.otherBusinessFee)
+      addFeeItem('其他业务费', receipt?.otherBusinessOutsourcingFee)
+      addFeeItem('其他业务费(特殊)', receipt?.otherBusinessSpecialFee)
 
       if (details.length === 0) return '费用明细'
 
