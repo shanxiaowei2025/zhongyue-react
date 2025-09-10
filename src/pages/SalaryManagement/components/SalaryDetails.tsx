@@ -133,8 +133,8 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
 
   // 提成类型映射
   const COMMISSION_TYPE_MAP = {
-    businessCommissionOwn: '其他业务提成(基础)',
-    businessCommissionOutsource: '其他业务提成',
+    businessCommissionOwn: '基础业务提成',
+    businessCommissionOutsource: '外包业务提成',
     specialBusinessCommission: '特殊业务提成',
     agencyCommission: '代理费提成',
   }
