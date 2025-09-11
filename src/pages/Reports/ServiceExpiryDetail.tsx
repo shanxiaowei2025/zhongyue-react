@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { CalendarOutlined } from '@ant-design/icons'
 import { getServiceExpiryStats } from '../../api/reports'
 import AdvancedServerTable from '../../components/AdvancedServerTable'
@@ -7,8 +7,39 @@ import type { ExpiringCustomerItem } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
 import type { SummaryMetric, FilterConfig } from '../../types/advancedServerTable'
 import dayjs from 'dayjs'
+import { useNavigate, useLocation } from 'react-router-dom'
+
+// 用于存储上次访问的报表子页面路径
+const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
 
 const ServiceExpiryDetail: React.FC = () => {
+  // 添加导航钩子
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // 保存当前路径，以便从其他页面返回时能回到这里
+  useEffect(() => {
+    // 保存完整的路径和查询参数
+    const fullPath = location.pathname + location.search
+    localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fullPath)
+  }, [location.pathname, location.search])
+  
+  // 处理返回按钮点击
+  const handleBackClick = () => {
+    // 清除localStorage中保存的路径，这样就不会被重定向回来
+    localStorage.removeItem(LAST_REPORT_SUBPAGE_KEY)
+    // 导航到报表主页，添加force=true参数强制显示主页
+    navigate('/reports?force=true')
+  }
+  
+  // 处理企业名称点击
+  const handleCompanyClick = (customerId: number) => {
+    // 跳转到客户详情页面，添加state参数记录来源页面
+    navigate(`/customers?view=${customerId}`, {
+      state: { from: '/reports/service-expiry' }
+    })
+  }
+
   // 计算到期天数
   const getDaysOverdue = (endDate: string) => {
     const today = dayjs()
@@ -40,7 +71,14 @@ const ServiceExpiryDetail: React.FC = () => {
       key: 'companyName',
       width: 200,
       fixed: 'left',
-      render: (text: string) => <div style={{ fontWeight: 500, color: '#262626' }}>{text}</div>,
+      render: (text: string, record) => (
+        <div 
+          style={{ fontWeight: 500, color: '#1890ff', cursor: 'pointer' }}
+          onClick={() => handleCompanyClick(record.customerId)}
+        >
+          {text}
+        </div>
+      ),
     },
     {
       title: '统一社会信用代码',
@@ -145,6 +183,7 @@ const ServiceExpiryDetail: React.FC = () => {
       title="⏰ 代理服务到期客户详情"
       backgroundColor="linear-gradient(135deg, #ffa726 0%, #ff9800 100%)"
       titleColor="#ffffff"
+      onBack={handleBackClick}
     >
       <AdvancedServerTable<ExpiringCustomerItem>
         endpoint="/reports/service-expiry-stats"

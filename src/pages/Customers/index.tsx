@@ -71,6 +71,7 @@ import {
 } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import ExpenseRecords from './ExpenseRecords'
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom'
 
 // 启用 dayjs 插件
 dayjs.extend(utc)
@@ -133,6 +134,11 @@ const EllipsisText: React.FC<{
 }
 
 export default function Customers() {
+  // 使用 location 和 searchParams 获取URL参数
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+
   // 使用 pageStates 存储来保持状态
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
@@ -144,9 +150,12 @@ export default function Customers() {
   const savedSearchParams = getState('customersSearchParams')
   const savedPagination = getState('customersPagination')
 
+  // 保存来源页面信息
+  const fromPage = location.state?.from
+
   const [current, setCurrent] = useState(savedPagination?.current || 1)
   const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
-  const [searchParams, setSearchParams] = useState(() => {
+  const [searchQueryParams, setSearchQueryParams] = useState(() => {
     const baseParams = {
       keyword: '',
       unifiedSocialCreditCode: '',
@@ -195,7 +204,7 @@ export default function Customers() {
   }, [refreshPermissions])
 
   // 添加防抖搜索参数
-  const debouncedSearchParams = useDebouncedValue(searchParams, 500)
+  const debouncedSearchParams = useDebouncedValue(searchQueryParams, 500)
 
   // 构建请求参数
   const requestParams = {
@@ -237,8 +246,8 @@ export default function Customers() {
 
   // 当搜索参数变化时，保存到 pageStates
   useEffect(() => {
-    setState('customersSearchParams', searchParams)
-  }, [searchParams, setState])
+    setState('customersSearchParams', searchQueryParams)
+  }, [searchQueryParams, setState])
 
   // 当分页参数变化时，保存到 pageStates
   useEffect(() => {
@@ -257,11 +266,65 @@ export default function Customers() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
-
-  // const handleSearch = () => {
-  //   setCurrent(1) // 重置到第一页
-  //   // SWR会自动触发新请求
-  // }
+  
+  // 处理URL参数中的view参数，自动打开客户详情
+  useEffect(() => {
+    const viewParam = searchParams.get('view')
+    if (viewParam) {
+      const customerId = parseInt(viewParam, 10)
+      if (!isNaN(customerId)) {
+        // 先查找客户列表中是否有此客户
+        const customer = customers.find(c => c.id === customerId)
+        
+        if (customer) {
+          // 如果客户列表中有此客户，直接打开详情
+          handleView(customer)
+        } else if (!isLoading) {
+          // 如果客户列表中没有此客户，且列表加载完毕，从API获取客户详情
+          getCustomerById(customerId).then(response => {
+            if (response.code === 0 && response.data) {
+              // 设置当前客户并打开详情
+              setCurrentCustomer(response.data)
+              setDetailType('view')
+              setSelectedCustomerId(customerId)
+              
+              // 打开对话框
+              if (isMobile) {
+                setDrawerVisible(true)
+              } else {
+                setModalVisible(true)
+              }
+              
+              // 清除URL参数
+              const newSearchParams = new URLSearchParams(searchParams)
+              newSearchParams.delete('view')
+              setSearchParams(newSearchParams)
+            } else {
+              message.error('未找到指定客户')
+              // 清除URL参数
+              const newSearchParams = new URLSearchParams(searchParams)
+              newSearchParams.delete('view')
+              setSearchParams(newSearchParams)
+            }
+          }).catch(error => {
+            console.error('获取客户详情失败:', error)
+            message.error('获取客户详情失败')
+            // 清除URL参数
+            const newSearchParams = new URLSearchParams(searchParams)
+            newSearchParams.delete('view')
+            setSearchParams(newSearchParams)
+          })
+        }
+      } else {
+        // 无效的客户ID
+        message.error('无效的客户ID')
+        // 清除URL参数
+        const newSearchParams = new URLSearchParams(searchParams)
+        newSearchParams.delete('view')
+        setSearchParams(newSearchParams)
+      }
+    }
+  }, [customers, isLoading, searchParams, setSearchParams])
 
   // 当搜索参数变化时，自动重置到第一页（仅当不是初始加载时）
   useEffect(() => {
@@ -269,21 +332,21 @@ export default function Customers() {
       setCurrent(1)
     }
   }, [
-    searchParams.keyword,
-    searchParams.unifiedSocialCreditCode,
-    searchParams.consultantAccountant,
-    searchParams.bookkeepingAccountant,
-    searchParams.taxBureau,
-    searchParams.enterpriseType,
-    searchParams.industryCategory,
-    searchParams.enterpriseStatus,
-    searchParams.businessStatus,
-    searchParams.location,
-    searchParams.dateRange,
+    searchQueryParams.keyword,
+    searchQueryParams.unifiedSocialCreditCode,
+    searchQueryParams.consultantAccountant,
+    searchQueryParams.bookkeepingAccountant,
+    searchQueryParams.taxBureau,
+    searchQueryParams.enterpriseType,
+    searchQueryParams.industryCategory,
+    searchQueryParams.enterpriseStatus,
+    searchQueryParams.businessStatus,
+    searchQueryParams.location,
+    searchQueryParams.dateRange,
   ])
 
   const resetSearch = () => {
-    setSearchParams({
+    setSearchQueryParams({
       keyword: '',
       unifiedSocialCreditCode: '',
       customerLevel: '',
@@ -352,6 +415,13 @@ export default function Customers() {
         setModalVisible(true)
       }
     })
+    
+    // 清除URL参数
+    if (searchParams.has('view')) {
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('view')
+      setSearchParams(newSearchParams)
+    }
   }
 
   const handleEdit = (record: Customer) => {
@@ -967,43 +1037,22 @@ export default function Customers() {
 
   // 处理关闭抽屉
   const handleCloseDrawer = () => {
-    if (detailType === 'add' || detailType === 'edit') {
-      // 如果表单引用还存在，应该调用它的取消方法（包含图片清理等操作）
-      const formElement = document.querySelector('.customer-form')
-      if (formElement) {
-        // 模拟点击取消按钮
-        const cancelButton = formElement.querySelector('.customer-form-footer button')
-        if (cancelButton) {
-          ;(cancelButton as HTMLButtonElement).click()
-          return // 点击取消按钮会触发handleCancel，会自动关闭抽屉
-        }
-      }
-      // 如果找不到取消按钮，也要关闭抽屉
-      setDrawerVisible(false)
-    } else {
-      // 如果不是表单模式，直接关闭
-      setDrawerVisible(false)
-    }
+    handleCloseDetail()
   }
 
   // 处理关闭模态框
   const handleCloseModal = () => {
-    if (detailType === 'add' || detailType === 'edit') {
-      // 如果表单引用还存在，应该调用它的取消方法（包含图片清理等操作）
-      const formElement = document.querySelector('.customer-form')
-      if (formElement) {
-        // 模拟点击取消按钮
-        const cancelButton = formElement.querySelector('.customer-form-footer button')
-        if (cancelButton) {
-          ;(cancelButton as HTMLButtonElement).click()
-          return // 点击取消按钮会触发handleCancel，会自动关闭模态框
-        }
-      }
-      // 如果找不到取消按钮，也要关闭模态框
-      setModalVisible(false)
-    } else {
-      // 如果不是表单模式，直接关闭
-      setModalVisible(false)
+    handleCloseDetail()
+  }
+
+  // 处理关闭详情页面
+  const handleCloseDetail = () => {
+    // 关闭弹窗
+    setModalVisible(false)
+    setDrawerVisible(false)
+    
+    // 清理状态
+    if (detailType === 'view') {
       // 延迟清理状态，避免视觉闪烁
       requestAnimationFrame(() => {
         setCurrentCustomer(null)
@@ -1013,6 +1062,63 @@ export default function Customers() {
           mutate(`/customer/${customerDetail.id}`, undefined, { revalidate: false })
         }
       })
+    } else if (detailType === 'add' || detailType === 'edit') {
+      // 如果表单引用还存在，应该调用它的取消方法（包含图片清理等操作）
+      const formElement = document.querySelector('.customer-form')
+      if (formElement) {
+        // 模拟点击取消按钮
+        const cancelButton = formElement.querySelector('.customer-form-footer button')
+        if (cancelButton) {
+          (cancelButton as HTMLButtonElement).click()
+        }
+      }
+    }
+    
+    // 如果有来源页面，则返回到来源页面
+    if (fromPage) {
+      // 检查来源页面是否是报表服务到期客户页面
+      const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
+      // 如果来源是服务到期客户页面，保存该路径到localStorage
+      if (fromPage.includes('reports/service-expiry')) {
+        localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fromPage)
+      }
+      navigate(fromPage)
+    }
+  }
+
+  // 修改所有关闭弹窗的地方，使用handleCloseDetail函数
+  const handleFormCancel = () => {
+    handleCloseDetail()
+  }
+
+  // 修改表单提交后的处理
+  const handleFormSuccess = (isAdd: boolean, customerId?: number) => {
+    // 关闭表单
+    handleCloseDetail()
+
+    // 刷新客户列表
+    refreshCustomers()
+
+    // 显示成功消息
+    message.success(isAdd ? '客户创建成功' : '客户信息更新成功')
+
+    // 如果是新建客户，且需要查看详情，则打开详情页面
+    if (isAdd && customerId) {
+      // 延迟打开详情，确保列表已刷新
+      setTimeout(() => {
+        getCustomerById(customerId).then(response => {
+          if (response.code === 0 && response.data) {
+            setCurrentCustomer(response.data)
+            setDetailType('view')
+            setSelectedCustomerId(customerId)
+            if (isMobile) {
+              setDrawerVisible(true)
+            } else {
+              setModalVisible(true)
+            }
+          }
+        })
+      }, 500)
     }
   }
 
@@ -1038,8 +1144,8 @@ export default function Customers() {
               <Form.Item label="企业名称" className="mb-2">
                 <Input
                   placeholder="请输入企业名称关键词"
-                  value={searchParams.keyword}
-                  onChange={e => setSearchParams({ ...searchParams, keyword: e.target.value })}
+                  value={searchQueryParams.keyword}
+                  onChange={e => setSearchQueryParams({ ...searchQueryParams, keyword: e.target.value })}
                   className="w-full"
                   allowClear
                 />
@@ -1048,9 +1154,9 @@ export default function Customers() {
               <Form.Item label="统一社会信用代码" className="mb-2">
                 <Input
                   placeholder="请输入统一社会信用代码"
-                  value={searchParams.unifiedSocialCreditCode}
+                  value={searchQueryParams.unifiedSocialCreditCode}
                   onChange={e =>
-                    setSearchParams({ ...searchParams, unifiedSocialCreditCode: e.target.value })
+                    setSearchQueryParams({ ...searchQueryParams, unifiedSocialCreditCode: e.target.value })
                   }
                   className="w-full"
                   allowClear
@@ -1060,9 +1166,9 @@ export default function Customers() {
               <Form.Item label="客户分级" className="mb-2">
                 <AutoComplete
                   placeholder="请选择或输入客户分级"
-                  value={searchParams.customerLevel || undefined}
+                  value={searchQueryParams.customerLevel || undefined}
                   onChange={value =>
-                    setSearchParams({ ...searchParams, customerLevel: value || undefined })
+                    setSearchQueryParams({ ...searchQueryParams, customerLevel: value || undefined })
                   }
                   allowClear
                   className="w-full"
@@ -1098,9 +1204,9 @@ export default function Customers() {
               <Form.Item label="顾问会计" className="mb-2">
                 <Input
                   placeholder="请输入顾问会计"
-                  value={searchParams.consultantAccountant}
+                  value={searchQueryParams.consultantAccountant}
                   onChange={e =>
-                    setSearchParams({ ...searchParams, consultantAccountant: e.target.value })
+                    setSearchQueryParams({ ...searchQueryParams, consultantAccountant: e.target.value })
                   }
                   className="w-full"
                   allowClear
@@ -1110,9 +1216,9 @@ export default function Customers() {
               <Form.Item label="记账会计" className="mb-2">
                 <Input
                   placeholder="请输入记账会计"
-                  value={searchParams.bookkeepingAccountant}
+                  value={searchQueryParams.bookkeepingAccountant}
                   onChange={e =>
-                    setSearchParams({ ...searchParams, bookkeepingAccountant: e.target.value })
+                    setSearchQueryParams({ ...searchQueryParams, bookkeepingAccountant: e.target.value })
                   }
                   className="w-full"
                   allowClear
@@ -1122,9 +1228,9 @@ export default function Customers() {
               <Form.Item label="企业类型" className="mb-2">
                 <Select
                   placeholder="请选择企业类型"
-                  value={searchParams.enterpriseType || undefined}
+                  value={searchQueryParams.enterpriseType || undefined}
                   onChange={value =>
-                    setSearchParams({ ...searchParams, enterpriseType: value || '' })
+                    setSearchQueryParams({ ...searchQueryParams, enterpriseType: value || '' })
                   }
                   className="w-full"
                   allowClear
@@ -1143,8 +1249,8 @@ export default function Customers() {
               <Form.Item label="所属分局" className="mb-2">
                 <Input
                   placeholder="请输入所属分局"
-                  value={searchParams.taxBureau}
-                  onChange={e => setSearchParams({ ...searchParams, taxBureau: e.target.value })}
+                  value={searchQueryParams.taxBureau}
+                  onChange={e => setSearchQueryParams({ ...searchQueryParams, taxBureau: e.target.value })}
                   className="w-full"
                   allowClear
                 />
@@ -1153,8 +1259,8 @@ export default function Customers() {
               <Form.Item label="归属地" className="mb-2">
                 <Select
                   placeholder="请选择归属地"
-                  value={searchParams.location || undefined}
-                  onChange={value => setSearchParams({ ...searchParams, location: value })}
+                  value={searchQueryParams.location || undefined}
+                  onChange={value => setSearchQueryParams({ ...searchQueryParams, location: value })}
                   allowClear
                   className="w-full"
                   options={LOCATION_OPTIONS}
@@ -1164,9 +1270,9 @@ export default function Customers() {
               <Form.Item label="行业大类" className="mb-2">
                 <Input
                   placeholder="请输入行业大类"
-                  value={searchParams.industryCategory}
+                  value={searchQueryParams.industryCategory}
                   onChange={e =>
-                    setSearchParams({ ...searchParams, industryCategory: e.target.value })
+                    setSearchQueryParams({ ...searchQueryParams, industryCategory: e.target.value })
                   }
                   className="w-full"
                   allowClear
@@ -1176,8 +1282,8 @@ export default function Customers() {
               <Form.Item label="工商状态" className="mb-2">
                 <Select
                   placeholder="请选择工商状态"
-                  value={searchParams.enterpriseStatus || undefined}
-                  onChange={value => setSearchParams({ ...searchParams, enterpriseStatus: value })}
+                  value={searchQueryParams.enterpriseStatus || undefined}
+                  onChange={value => setSearchQueryParams({ ...searchQueryParams, enterpriseStatus: value })}
                   allowClear
                   className="w-full"
                   options={[
@@ -1193,8 +1299,8 @@ export default function Customers() {
               <Form.Item label="税务状态" className="mb-2">
                 <Select
                   placeholder="请选择税务状态"
-                  value={searchParams.businessStatus || undefined}
-                  onChange={value => setSearchParams({ ...searchParams, businessStatus: value })}
+                  value={searchQueryParams.businessStatus || undefined}
+                  onChange={value => setSearchQueryParams({ ...searchQueryParams, businessStatus: value })}
                   allowClear
                   className="w-full"
                   options={[
@@ -1210,10 +1316,10 @@ export default function Customers() {
               <Form.Item label="创建日期" className="mb-2">
                 <DatePicker.RangePicker
                   placeholder={['开始日期', '结束日期']}
-                  value={searchParams.dateRange}
+                  value={searchQueryParams.dateRange}
                   onChange={dates => {
-                    setSearchParams({
-                      ...searchParams,
+                    setSearchQueryParams({
+                      ...searchQueryParams,
                       dateRange: dates,
                       // 同时更新startDate和endDate以保持兼容性
                       startDate: dates && dates[0] ? dates[0].format('YYYY-MM-DD') : '',
@@ -1303,15 +1409,18 @@ export default function Customers() {
 
       {/* 客户详情抽屉（移动端） */}
       <Drawer
-        title={detailType === 'add' ? '添加客户' : detailType === 'edit' ? '编辑客户' : '客户详情'}
-        width={isMobile ? '100%' : 900}
+        title={
+          detailType === 'add'
+            ? '添加客户'
+            : detailType === 'edit'
+            ? '编辑客户'
+            : `客户详情 - ${currentCustomer?.companyName || ''}`
+        }
+        placement="right"
         onClose={handleCloseDrawer}
         open={drawerVisible}
+        width="100%"
         destroyOnClose
-        styles={{ body: { padding: isMobile ? '12px 8px' : '16px' } }}
-        className="customer-drawer"
-        placement={isMobile ? 'bottom' : 'right'}
-        height={isMobile ? '90%' : undefined}
       >
         {detailType === 'view' ? (
           customerDetail || currentCustomer ? (
@@ -1337,25 +1446,18 @@ export default function Customers() {
 
       {/* 客户详情模态框（桌面端） */}
       <Modal
-        title={detailType === 'add' ? '添加客户' : detailType === 'edit' ? '编辑客户' : '客户详情'}
+        title={
+          detailType === 'add'
+            ? '添加客户'
+            : detailType === 'edit'
+            ? '编辑客户'
+            : `客户详情 - ${currentCustomer?.companyName || ''}`
+        }
         open={modalVisible}
         onCancel={handleCloseModal}
         footer={null}
-        width={isMobile ? '100%' : 1000}
-        style={isMobile ? { top: 10, padding: 0 } : { top: 24, padding: 0 }}
-        styles={
-          isMobile
-            ? { body: { padding: '12px 8px', maxHeight: 'calc(100vh - 100px)', overflow: 'auto' } }
-            : {
-                body: {
-                  padding: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: 'calc(100vh - 120px)',
-                  overflow: 'hidden',
-                },
-              }
-        }
+        width={1200}
+        style={{ top: 20 }}
         destroyOnClose
       >
         {detailType === 'view' ? (

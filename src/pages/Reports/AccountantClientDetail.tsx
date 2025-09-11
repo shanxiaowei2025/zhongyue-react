@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, Button, Typography, Row, Col, Statistic, Input } from 'antd'
 import { ArrowLeftOutlined, SearchOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAccountantClientStats } from './hooks/useAccountantClientStats'
 import {
   Chart as ChartJS,
@@ -28,8 +28,29 @@ ChartJS.register(
 const { Title } = Typography
 const { Search } = Input
 
+// 用于存储上次访问的报表子页面路径
+const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
+
 const AccountantClientDetail: React.FC = () => {
+  // 添加导航钩子
   const navigate = useNavigate()
+  const location = useLocation()
+  
+  // 保存当前路径，以便从其他页面返回时能回到这里
+  useEffect(() => {
+    // 保存完整的路径和查询参数
+    const fullPath = location.pathname + location.search
+    localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fullPath)
+  }, [location.pathname, location.search])
+  
+  // 处理返回按钮点击
+  const handleBackClick = () => {
+    // 清除localStorage中保存的路径，这样就不会被重定向回来
+    localStorage.removeItem(LAST_REPORT_SUBPAGE_KEY)
+    // 导航到报表主页，添加force=true参数强制显示主页
+    navigate('/reports?force=true')
+  }
+
   const [searchText, setSearchText] = useState('')
   const [sortField, _setSortField] = useState<string | undefined>('clientCount')
   const [sortOrder, _setSortOrder] = useState<'ASC' | 'DESC' | undefined>('DESC')
@@ -270,7 +291,7 @@ const AccountantClientDetail: React.FC = () => {
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/reports')}
+          onClick={handleBackClick}
           style={{ color: '#ffffff', marginRight: 16 }}
         >
           返回

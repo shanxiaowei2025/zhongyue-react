@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect } from 'react'
 import { Card, Table, Tag, Button, Space, Typography, Row, Col, Statistic, Select } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { useCustomerChurnStats } from './hooks/useCustomerChurnStats'
 import type { ChurnedCustomerItem } from './types/reports'
 import type { ColumnsType, TableProps } from 'antd/es/table'
@@ -16,9 +16,28 @@ import {
 const { Title, Text } = Typography
 const { Option } = Select
 
+// 用于存储上次访问的报表子页面路径
+const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
+
 const CustomerChurnDetail: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // 保存当前路径，以便从其他页面返回时能回到这里
+  useEffect(() => {
+    // 保存完整的路径和查询参数
+    const fullPath = location.pathname + location.search
+    localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fullPath)
+  }, [location.pathname, location.search])
+  
+  // 处理返回按钮点击
+  const handleBackClick = () => {
+    // 清除localStorage中保存的路径，这样就不会被重定向回来
+    localStorage.removeItem(LAST_REPORT_SUBPAGE_KEY)
+    // 导航到报表主页，添加force=true参数强制显示主页
+    navigate('/reports?force=true')
+  }
 
   // 从URL参数获取所有状态
   const urlParams = useMemo(() => {
@@ -255,7 +274,7 @@ const CustomerChurnDetail: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           marginBottom: 24,
-          background: 'linear-gradient(135deg, #ab47bc 0%, #9c27b0 100%)',
+          background: 'linear-gradient(135deg, #9c27b0 0%, #673ab7 100%)',
           padding: '20px 24px',
           borderRadius: 16,
           boxShadow: '0 8px 32px rgba(156, 39, 176, 0.25)',
@@ -264,7 +283,7 @@ const CustomerChurnDetail: React.FC = () => {
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/reports')}
+          onClick={handleBackClick}
           style={{ color: '#ffffff', marginRight: 16 }}
         >
           返回

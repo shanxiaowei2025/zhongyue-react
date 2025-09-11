@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Row, Col, Space, Typography, Spin, Alert } from 'antd'
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
@@ -17,6 +17,9 @@ import DateRangeFilter from './components/DateRangeFilter'
 import RefreshButton from './components/RefreshButton'
 
 const { Title } = Typography
+
+// 用于存储上次访问的报表子页面路径
+const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
 
 const Reports: React.FC = () => {
   const navigate = useNavigate()
@@ -46,6 +49,36 @@ const Reports: React.FC = () => {
       ...value,
     }))
   }
+
+  // 保存子页面路径
+  useEffect(() => {
+    // 如果当前是子页面，保存路径和查询参数
+    if (isDetailPage) {
+      const fullPath = location.pathname + location.search
+      localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fullPath)
+    }
+  }, [location.pathname, location.search, isDetailPage])
+
+  // 检查是否应该重定向到上次访问的子页面
+  useEffect(() => {
+    // 只在主页/reports时执行重定向
+    if (location.pathname === '/reports') {
+      // 检查URL参数是否包含force=true，如果有则不进行重定向
+      const urlParams = new URLSearchParams(location.search)
+      const forceMain = urlParams.get('force') === 'true'
+      
+      if (forceMain) {
+        // 如果强制显示主页，清除保存的子页面路径
+        localStorage.removeItem(LAST_REPORT_SUBPAGE_KEY)
+        return
+      }
+      
+      const lastSubpage = localStorage.getItem(LAST_REPORT_SUBPAGE_KEY)
+      if (lastSubpage && lastSubpage !== '/reports') {
+        navigate(lastSubpage, { replace: true })
+      }
+    }
+  }, [location.pathname, location.search, navigate])
 
   // 如果有错误，显示错误信息
   if (error) {

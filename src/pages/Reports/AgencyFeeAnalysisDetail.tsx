@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Tag } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { getAgencyFeeAnalysis } from '../../api/reports'
@@ -8,7 +9,29 @@ import type { AgencyFeeDecreaseCustomer } from './types/reports'
 import type { ColumnsType } from 'antd/es/table'
 import type { FilterConfig, SummaryMetric } from '../../types/advancedServerTable'
 
+// 用于存储上次访问的报表子页面路径
+const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
+
 const AgencyFeeAnalysisDetail: React.FC = () => {
+  // 添加导航钩子
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // 保存当前路径，以便从其他页面返回时能回到这里
+  useEffect(() => {
+    // 保存完整的路径和查询参数
+    const fullPath = location.pathname + location.search
+    localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fullPath)
+  }, [location.pathname, location.search])
+  
+  // 处理返回按钮点击
+  const handleBackClick = () => {
+    // 清除localStorage中保存的路径，这样就不会被重定向回来
+    localStorage.removeItem(LAST_REPORT_SUBPAGE_KEY)
+    // 导航到报表主页，添加force=true参数强制显示主页
+    navigate('/reports?force=true')
+  }
+
   const columns: ColumnsType<AgencyFeeDecreaseCustomer> = [
     {
       title: '企业名称',
@@ -142,9 +165,10 @@ const AgencyFeeAnalysisDetail: React.FC = () => {
 
   return (
     <ReportPageLayout
-      title="📉 代理费收费变化分析详情"
-      backgroundColor="linear-gradient(135deg, #ff6b7a 0%, #ff4757 100%)"
+      title="💰 代理费变动分析详情"
+      backgroundColor="linear-gradient(135deg, #1890ff 0%, #096dd9 100%)"
       titleColor="#ffffff"
+      onBack={handleBackClick}
     >
       <AdvancedServerTable<AgencyFeeDecreaseCustomer>
         endpoint="/reports/agency-fee-analysis"

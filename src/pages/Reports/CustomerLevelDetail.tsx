@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import { TrophyOutlined } from '@ant-design/icons'
 import { getCustomerLevelDistribution } from '../../api/reports'
 import { useCustomerLevelDistribution } from './hooks/useCustomerLevelDistribution'
@@ -14,7 +14,29 @@ import type {
 import type { ColumnsType } from 'antd/es/table'
 import type { SummaryMetric, FilterConfig } from '../../types/advancedServerTable'
 
+// 用于存储上次访问的报表子页面路径
+const LAST_REPORT_SUBPAGE_KEY = 'lastReportSubpage'
+
 const CustomerLevelDetail: React.FC = () => {
+  // 添加导航钩子
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // 保存当前路径，以便从其他页面返回时能回到这里
+  useEffect(() => {
+    // 保存完整的路径和查询参数
+    const fullPath = location.pathname + location.search
+    localStorage.setItem(LAST_REPORT_SUBPAGE_KEY, fullPath)
+  }, [location.pathname, location.search])
+  
+  // 处理返回按钮点击
+  const handleBackClick = () => {
+    // 清除localStorage中保存的路径，这样就不会被重定向回来
+    localStorage.removeItem(LAST_REPORT_SUBPAGE_KEY)
+    // 导航到报表主页，添加force=true参数强制显示主页
+    navigate('/reports?force=true')
+  }
+
   const [searchParams] = useSearchParams()
 
   // 从URL参数获取当前筛选条件
@@ -217,9 +239,10 @@ const CustomerLevelDetail: React.FC = () => {
 
   return (
     <ReportPageLayout
-      title="🎯 客户等级分布详情"
-      backgroundColor="linear-gradient(135deg, #722ed1 0%, #531dab 100%)"
+      title="🌟 客户等级分布详情"
+      backgroundColor="linear-gradient(135deg, #1890ff 0%, #096dd9 100%)"
       titleColor="#ffffff"
+      onBack={handleBackClick}
     >
       <AdvancedServerTable<CustomerLevelItem>
         endpoint="/reports/customer-level-distribution"
