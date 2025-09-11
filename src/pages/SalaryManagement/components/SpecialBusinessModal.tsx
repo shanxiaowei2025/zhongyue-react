@@ -75,7 +75,7 @@ const SpecialBusinessModal: React.FC<SpecialBusinessModalProps> = ({
       ellipsis: true,
     },
     {
-      title: '销售员',
+      title: '业务员',
       dataIndex: 'salesperson',
       key: 'salesperson',
       width: 100,
