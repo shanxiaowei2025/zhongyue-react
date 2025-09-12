@@ -9,11 +9,23 @@ export const getCustomerList = (params: PaginationParams) => {
   const queryParams = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
-      // 当值为 "-" 时，设置为空字符串以实现空值查询
-      if (value === '-') {
-        queryParams.append(key, '')
-      } else if (value !== '') {
-        queryParams.append(key, String(value))
+      // 处理数组类型的参数（多选字段）
+      if (Array.isArray(value)) {
+        value.forEach(item => {
+          if (item !== undefined && item !== null && item !== '') {
+            // 当值为 "__EMPTY__" 时，设置为空字符串以实现空值查询
+            const paramValue = item === '__EMPTY__' ? '' : String(item)
+            queryParams.append(key, paramValue)
+          }
+        })
+      } else {
+        // 处理字符串类型的参数
+        // 当值为 "-" 时，设置为空字符串以实现空值查询
+        if (value === '-') {
+          queryParams.append(key, '')
+        } else if (value !== '') {
+          queryParams.append(key, String(value))
+        }
       }
     }
   })
@@ -139,11 +151,23 @@ export const exportCustomerCSV = (params?: Record<string, any>) => {
     const queryParams = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        // 当值为 "-" 时，设置为空字符串以实现空值查询
-        if (value === '-') {
-          queryParams.append(key, '')
-        } else if (value !== '') {
-          queryParams.append(key, String(value))
+        // 处理数组类型的参数（多选字段）
+        if (Array.isArray(value)) {
+          value.forEach(item => {
+            if (item !== undefined && item !== null && item !== '') {
+              // 当值为 "__EMPTY__" 时，设置为空字符串以实现空值查询
+              const paramValue = item === '__EMPTY__' ? '' : String(item)
+              queryParams.append(key, paramValue)
+            }
+          })
+        } else {
+          // 处理字符串类型的参数
+          // 当值为 "-" 时，设置为空字符串以实现空值查询
+          if (value === '-') {
+            queryParams.append(key, '')
+          } else if (value !== '') {
+            queryParams.append(key, String(value))
+          }
         }
       }
     })

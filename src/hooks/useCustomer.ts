@@ -16,11 +16,34 @@ import type { Customer, PaginationParams } from '../types'
  */
 export const getCustomerListKey = (params: PaginationParams) => {
   const { page, pageSize, ...searchParams } = params
-  const searchStr = Object.entries(searchParams)
-    .filter(([, v]) => v !== undefined && v !== '')
-    .map(([k, v]) => `${k}=${v}`)
-    .join('&')
+  
+  // 构建查询参数，正确处理数组类型的多选参数
+  const queryParams = new URLSearchParams()
+  
+  Object.entries(searchParams).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      // 处理数组类型的参数（多选字段）
+      if (Array.isArray(value)) {
+        value.forEach(item => {
+          if (item !== undefined && item !== null && item !== '') {
+            // 当值为 "__EMPTY__" 时，设置为空字符串以实现空值查询
+            const paramValue = item === '__EMPTY__' ? '' : String(item)
+            queryParams.append(key, paramValue)
+          }
+        })
+      } else {
+        // 处理字符串类型的参数
+        // 当值为 "-" 时，设置为空字符串以实现空值查询
+        if (value === '-') {
+          queryParams.append(key, '')
+        } else if (value !== '') {
+          queryParams.append(key, String(value))
+        }
+      }
+    }
+  })
 
+  const searchStr = queryParams.toString()
   return `/customer?page=${page}&pageSize=${pageSize}${searchStr ? `&${searchStr}` : ''}`
 }
 
@@ -38,11 +61,26 @@ export const customerListFetcher = async (url: string) => {
   const page = urlObj.searchParams.get('page') || '1'
   const pageSize = urlObj.searchParams.get('pageSize') || '10'
 
-  // 提取搜索参数
+  // 提取搜索参数，正确处理多选参数
   const searchParams: Record<string, any> = {}
+  
+  // 收集所有参数名和对应的值
+  const paramMap: Record<string, string[]> = {}
   urlObj.searchParams.forEach((value, key) => {
     if (key !== 'page' && key !== 'pageSize') {
-      searchParams[key] = value
+      if (!paramMap[key]) {
+        paramMap[key] = []
+      }
+      paramMap[key].push(value)
+    }
+  })
+
+  // 处理参数：如果某个参数有多个值，则保持为数组；否则转为单值
+  Object.entries(paramMap).forEach(([key, values]) => {
+    if (values.length === 1) {
+      searchParams[key] = values[0]
+    } else {
+      searchParams[key] = values
     }
   })
 

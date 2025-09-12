@@ -159,15 +159,15 @@ export default function Customers() {
     const baseParams = {
       keyword: '',
       unifiedSocialCreditCode: '',
-      customerLevel: '',
-      consultantAccountant: '',
-      bookkeepingAccountant: '',
-      taxBureau: '',
-      enterpriseType: '',
-      industryCategory: '',
-      enterpriseStatus: '',
-      businessStatus: '',
-      location: '',
+      customerLevel: [] as string[],
+      consultantAccountant: [] as string[],
+      bookkeepingAccountant: [] as string[],
+      taxBureau: [] as string[],
+      enterpriseType: [] as string[],
+      industryCategory: [] as string[],
+      enterpriseStatus: [] as string[],
+      businessStatus: [] as string[],
+      location: [] as string[],
       remarks: '',
       startDate: '',
       endDate: '',
@@ -210,10 +210,38 @@ export default function Customers() {
   const requestParams = {
     page: current,
     pageSize,
-    // 排除dateRange字段，只发送后端需要的参数
-    ...Object.fromEntries(
-      Object.entries(debouncedSearchParams).filter(([key]) => key !== 'dateRange')
-    ),
+    // 处理基础字符串字段
+    keyword: debouncedSearchParams.keyword,
+    unifiedSocialCreditCode: debouncedSearchParams.unifiedSocialCreditCode,
+    remarks: debouncedSearchParams.remarks,
+    // 处理多选字段，将数组转换为后端需要的格式，并处理__EMPTY__
+    ...(debouncedSearchParams.customerLevel?.length ? {
+      customerLevel: debouncedSearchParams.customerLevel.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.consultantAccountant?.length ? {
+      consultantAccountant: debouncedSearchParams.consultantAccountant.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.bookkeepingAccountant?.length ? {
+      bookkeepingAccountant: debouncedSearchParams.bookkeepingAccountant.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.taxBureau?.length ? {
+      taxBureau: debouncedSearchParams.taxBureau.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.enterpriseType?.length ? {
+      enterpriseType: debouncedSearchParams.enterpriseType.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.industryCategory?.length ? {
+      industryCategory: debouncedSearchParams.industryCategory.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.enterpriseStatus?.length ? {
+      enterpriseStatus: debouncedSearchParams.enterpriseStatus.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.businessStatus?.length ? {
+      businessStatus: debouncedSearchParams.businessStatus.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
+    ...(debouncedSearchParams.location?.length ? {
+      location: debouncedSearchParams.location.map((val: string) => val === '__EMPTY__' ? '' : val)
+    } : {}),
     // 如果有dateRange，将其转换为startDate和endDate
     ...(debouncedSearchParams.dateRange
       ? {
@@ -334,14 +362,15 @@ export default function Customers() {
   }, [
     searchQueryParams.keyword,
     searchQueryParams.unifiedSocialCreditCode,
-    searchQueryParams.consultantAccountant,
-    searchQueryParams.bookkeepingAccountant,
-    searchQueryParams.taxBureau,
-    searchQueryParams.enterpriseType,
-    searchQueryParams.industryCategory,
-    searchQueryParams.enterpriseStatus,
-    searchQueryParams.businessStatus,
-    searchQueryParams.location,
+    JSON.stringify(searchQueryParams.customerLevel),
+    JSON.stringify(searchQueryParams.consultantAccountant),
+    JSON.stringify(searchQueryParams.bookkeepingAccountant),
+    JSON.stringify(searchQueryParams.taxBureau),
+    JSON.stringify(searchQueryParams.enterpriseType),
+    JSON.stringify(searchQueryParams.industryCategory),
+    JSON.stringify(searchQueryParams.enterpriseStatus),
+    JSON.stringify(searchQueryParams.businessStatus),
+    JSON.stringify(searchQueryParams.location),
     searchQueryParams.dateRange,
   ])
 
@@ -349,15 +378,15 @@ export default function Customers() {
     setSearchQueryParams({
       keyword: '',
       unifiedSocialCreditCode: '',
-      customerLevel: '',
-      consultantAccountant: '',
-      bookkeepingAccountant: '',
-      taxBureau: '',
-      enterpriseType: '',
-      industryCategory: '',
-      enterpriseStatus: '',
-      businessStatus: '',
-      location: '',
+      customerLevel: [],
+      consultantAccountant: [],
+      bookkeepingAccountant: [],
+      taxBureau: [],
+      enterpriseType: [],
+      industryCategory: [],
+      enterpriseStatus: [],
+      businessStatus: [],
+      location: [],
       remarks: '',
       startDate: '',
       endDate: '',
@@ -1164,20 +1193,19 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="客户分级" className="mb-2">
-                <AutoComplete
-                  placeholder="请选择或输入客户分级"
-                  value={searchQueryParams.customerLevel || undefined}
+                <Select
+                  mode="multiple"
+                  placeholder="请选择客户分级"
+                  value={searchQueryParams.customerLevel}
                   onChange={value =>
-                    setSearchQueryParams({ ...searchQueryParams, customerLevel: value || undefined })
+                    setSearchQueryParams({ ...searchQueryParams, customerLevel: value })
                   }
                   allowClear
                   className="w-full"
-                  filterOption={(inputValue, option) =>
-                    option?.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                  }
+                  maxTagCount="responsive"
                   options={[
                     'AA',
-                    'AB',
+                    'AB', 
                     'AC',
                     'AD',
                     'BA',
@@ -1194,46 +1222,52 @@ export default function Customers() {
                     'DD',
                   ].map(level => ({
                     value: level,
-                    label: (
-                      <CustomerLevelDisplay level={level} showPopover={false} maxWidth={100} />
-                    ),
+                    label: level,
                   }))}
                 />
               </Form.Item>
 
               <Form.Item label="顾问会计" className="mb-2">
-                <Input
-                  placeholder="请输入顾问会计"
+                <Select
+                  mode="tags"
+                  placeholder="请输入或选择顾问会计"
                   value={searchQueryParams.consultantAccountant}
-                  onChange={e =>
-                    setSearchQueryParams({ ...searchQueryParams, consultantAccountant: e.target.value })
+                  onChange={value =>
+                    setSearchQueryParams({ ...searchQueryParams, consultantAccountant: value })
                   }
                   className="w-full"
                   allowClear
+                  maxTagCount="responsive"
+                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
               <Form.Item label="记账会计" className="mb-2">
-                <Input
-                  placeholder="请输入记账会计"
+                <Select
+                  mode="tags"
+                  placeholder="请输入或选择记账会计"
                   value={searchQueryParams.bookkeepingAccountant}
-                  onChange={e =>
-                    setSearchQueryParams({ ...searchQueryParams, bookkeepingAccountant: e.target.value })
+                  onChange={value =>
+                    setSearchQueryParams({ ...searchQueryParams, bookkeepingAccountant: value })
                   }
                   className="w-full"
                   allowClear
+                  maxTagCount="responsive"
+                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
               <Form.Item label="企业类型" className="mb-2">
                 <Select
+                  mode="multiple"
                   placeholder="请选择企业类型"
-                  value={searchQueryParams.enterpriseType || undefined}
+                  value={searchQueryParams.enterpriseType}
                   onChange={value =>
-                    setSearchQueryParams({ ...searchQueryParams, enterpriseType: value || '' })
+                    setSearchQueryParams({ ...searchQueryParams, enterpriseType: value })
                   }
                   className="w-full"
                   allowClear
+                  maxTagCount="responsive"
                 >
                   <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
                   <Select.Option value="小规模（个体）">小规模（个体）</Select.Option>
@@ -1242,73 +1276,85 @@ export default function Customers() {
                   <Select.Option value="合作社">合作社</Select.Option>
                   <Select.Option value="民办非企业单位">民办非企业单位</Select.Option>
                   <Select.Option value="其他">其他</Select.Option>
-                  <Select.Option value="-">-</Select.Option>
+                  <Select.Option value="__EMPTY__">-</Select.Option>
                 </Select>
               </Form.Item>
 
               <Form.Item label="所属分局" className="mb-2">
-                <Input
-                  placeholder="请输入所属分局"
+                <Select
+                  mode="tags"
+                  placeholder="请输入或选择所属分局"
                   value={searchQueryParams.taxBureau}
-                  onChange={e => setSearchQueryParams({ ...searchQueryParams, taxBureau: e.target.value })}
+                  onChange={value => setSearchQueryParams({ ...searchQueryParams, taxBureau: value })}
                   className="w-full"
                   allowClear
+                  maxTagCount="responsive"
+                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
               <Form.Item label="归属地" className="mb-2">
                 <Select
+                  mode="multiple"
                   placeholder="请选择归属地"
-                  value={searchQueryParams.location || undefined}
+                  value={searchQueryParams.location}
                   onChange={value => setSearchQueryParams({ ...searchQueryParams, location: value })}
                   allowClear
                   className="w-full"
+                  maxTagCount="responsive"
                   options={LOCATION_OPTIONS}
                 />
               </Form.Item>
 
               <Form.Item label="行业大类" className="mb-2">
-                <Input
-                  placeholder="请输入行业大类"
+                <Select
+                  mode="tags"
+                  placeholder="请输入或选择行业大类"
                   value={searchQueryParams.industryCategory}
-                  onChange={e =>
-                    setSearchQueryParams({ ...searchQueryParams, industryCategory: e.target.value })
+                  onChange={value =>
+                    setSearchQueryParams({ ...searchQueryParams, industryCategory: value })
                   }
                   className="w-full"
                   allowClear
+                  maxTagCount="responsive"
+                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
               <Form.Item label="工商状态" className="mb-2">
                 <Select
+                  mode="multiple"
                   placeholder="请选择工商状态"
-                  value={searchQueryParams.enterpriseStatus || undefined}
+                  value={searchQueryParams.enterpriseStatus}
                   onChange={value => setSearchQueryParams({ ...searchQueryParams, enterpriseStatus: value })}
                   allowClear
                   className="w-full"
+                  maxTagCount="responsive"
                   options={[
                     ...Object.entries(ENTERPRISE_STATUS_MAP).map(([value, label]) => ({
                       value,
                       label,
                     })),
-                    { value: '-', label: '-' },
+                    { value: '__EMPTY__', label: '-' },
                   ]}
                 />
               </Form.Item>
 
               <Form.Item label="税务状态" className="mb-2">
                 <Select
+                  mode="multiple"
                   placeholder="请选择税务状态"
-                  value={searchQueryParams.businessStatus || undefined}
+                  value={searchQueryParams.businessStatus}
                   onChange={value => setSearchQueryParams({ ...searchQueryParams, businessStatus: value })}
                   allowClear
                   className="w-full"
+                  maxTagCount="responsive"
                   options={[
                     ...Object.entries(BUSINESS_STATUS_MAP).map(([value, label]) => ({
                       value,
                       label,
                     })),
-                    { value: '-', label: '-' },
+                    { value: '__EMPTY__', label: '-' },
                   ]}
                 />
               </Form.Item>

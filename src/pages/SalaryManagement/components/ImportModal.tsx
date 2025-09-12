@@ -69,6 +69,41 @@ const ImportModal: React.FC<ImportModalProps> = ({
     },
   }
 
+  // 显示考勤导入特殊提示弹窗
+  const showAttendanceImportAlert = (result: ImportResult) => {
+    if (type !== 'attendance' || !result.name_mismatch_details) {
+      return
+    }
+
+    const { employees_not_recorded, employees_no_attendance } = result.name_mismatch_details
+    const messages: string[] = []
+
+    if (employees_not_recorded && employees_not_recorded.length > 0) {
+      messages.push(`${employees_not_recorded.join('、')}没有录入员工管理`)
+    }
+
+    if (employees_no_attendance && employees_no_attendance.length > 0) {
+      messages.push(`${employees_no_attendance.join('、')}没有考勤信息`)
+    }
+
+    if (messages.length > 0) {
+      Modal.info({
+        title: '导入提示',
+        content: (
+          <div>
+            {messages.map((msg, index) => (
+              <div key={index} style={{ marginBottom: '8px' }}>
+                {msg}
+              </div>
+            ))}
+          </div>
+        ),
+        okText: '确定',
+        width: 500,
+      })
+    }
+  }
+
   const handleImport = async () => {
     if (fileList.length === 0) {
       message.error('请先选择要导入的文件')
@@ -86,6 +121,11 @@ const ImportModal: React.FC<ImportModalProps> = ({
 
       const result = await onImport(file)
       setImportResult(result)
+
+      // 如果是考勤导入且导入成功，显示特殊提示弹窗
+      if (result.success && type === 'attendance') {
+        showAttendanceImportAlert(result)
+      }
 
       // 不自动关闭模态框，让用户手动关闭
     } catch (error) {

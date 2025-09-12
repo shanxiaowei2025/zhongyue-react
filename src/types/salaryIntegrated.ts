@@ -421,10 +421,17 @@ export interface ApiResponse<T> {
 // 导入结果类型
 export interface ImportResult {
   success: boolean
-  successCount: number
+  successCount?: number
+  importedCount?: number
   failedCount: number
   failedRecords?: ImportFailedRecord[]
   message?: string
+  warning?: string
+  // 考勤导入特有的字段
+  name_mismatch_details?: {
+    employees_not_recorded?: string[]
+    employees_no_attendance?: string[]
+  }
 }
 
 // 导入失败记录

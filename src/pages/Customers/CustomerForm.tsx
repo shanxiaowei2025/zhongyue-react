@@ -45,6 +45,7 @@ import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
 import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
 import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
+import AccountantStatsDisplay from '../../components/AccountantStatsDisplay'
 import { safeGetFieldValue, safeSetFieldValue } from '../../utils/formUtils'
 import { deleteFile } from '../../utils/upload'
 import { useCustomerDetail } from '../../hooks/useCustomer'
@@ -1450,15 +1451,81 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             </Select>
           </Form.Item>
 
-          <Form.Item name="consultantAccountant" label="顾问会计">
+          <Form.Item
+            name="consultantAccountant"
+            label={
+              <div className="flex items-center gap-2">
+                <span>顾问会计</span>
+                <Popover
+                  content={<AccountantStatsDisplay accountantType="consultantAccountant" />}
+                  trigger={['click']}
+                  placement="rightTop"
+                  overlayStyle={{ maxWidth: '95vw' }}
+                >
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<QuestionCircleOutlined />}
+                    className="p-0 h-auto"
+                  >
+                    查看统计
+                  </Button>
+                </Popover>
+              </div>
+            }
+          >
             <Input />
           </Form.Item>
 
-          <Form.Item name="bookkeepingAccountant" label="记账会计">
+          <Form.Item
+            name="bookkeepingAccountant"
+            label={
+              <div className="flex items-center gap-2">
+                <span>记账会计</span>
+                <Popover
+                  content={<AccountantStatsDisplay accountantType="bookkeepingAccountant" />}
+                  trigger={['click']}
+                  placement="rightTop"
+                  overlayStyle={{ maxWidth: '95vw' }}
+                >
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<QuestionCircleOutlined />}
+                    className="p-0 h-auto"
+                  >
+                    查看统计
+                  </Button>
+                </Popover>
+              </div>
+            }
+          >
             <Input />
           </Form.Item>
 
-          <Form.Item name="invoiceOfficer" label="开票员">
+          <Form.Item
+            name="invoiceOfficer"
+            label={
+              <div className="flex items-center gap-2">
+                <span>开票员</span>
+                <Popover
+                  content={<AccountantStatsDisplay accountantType="invoiceOfficer" />}
+                  trigger={['click']}
+                  placement="rightTop"
+                  overlayStyle={{ maxWidth: '95vw' }}
+                >
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<QuestionCircleOutlined />}
+                    className="p-0 h-auto"
+                  >
+                    查看统计
+                  </Button>
+                </Popover>
+              </div>
+            }
+          >
             <Input />
           </Form.Item>
 

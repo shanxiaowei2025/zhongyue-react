@@ -125,11 +125,15 @@ export interface PaginationParams {
   keyword?: string
   companyName?: string
   unifiedSocialCreditCode?: string
-  customerLevel?: string
-  enterpriseType?: string
-  taxBureau?: string
-  enterpriseStatus?: string
-  businessStatus?: string
+  customerLevel?: string | string[]
+  enterpriseType?: string | string[]
+  taxBureau?: string | string[]
+  enterpriseStatus?: string | string[]
+  businessStatus?: string | string[]
+  location?: string | string[]
+  consultantAccountant?: string | string[]
+  bookkeepingAccountant?: string | string[]
+  industryCategory?: string | string[]
   startDate?: string
   endDate?: string
 }
