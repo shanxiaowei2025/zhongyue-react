@@ -180,6 +180,7 @@ export interface ExpenseQueryParams {
   status?: ExpenseStatus
   salesperson?: string
   businessType?: string | string[]
+  socialInsuranceBusinessType?: string | string[]
   startDate?: string
   endDate?: string
   dateRange?: any

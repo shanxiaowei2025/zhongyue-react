@@ -721,7 +721,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         formattedValues.giftAgencyDuration = ''
       } else if (!formattedValues.giftAgencyDuration) {
         // 如果显示了但未选择，则默认为"无赠送"
-        formattedValues.giftAgencyDuration = ''
+        formattedValues.giftAgencyDuration = '无赠送'
       }
 
       // 确保 socialInsuranceBusinessType 字段在未选择时为空字符串
@@ -1527,8 +1527,24 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
                         {/* 赠送代理时长字段，仅当代理时长大于等于两年时显示 */}
                         {agencyDurationYears >= 2 && (
-                          <Form.Item name="giftAgencyDuration" label="赠送代理时长">
+                          <Form.Item 
+                            name="giftAgencyDuration" 
+                            label="赠送代理时长"
+                            dependencies={['agencyFee']}
+                            rules={[
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                  if (agencyFee > 0 && !value) {
+                                    return Promise.reject(new Error('代理费有值时，赠送代理时长为必填'))
+                                  }
+                                  return Promise.resolve()
+                                },
+                              }),
+                            ]}
+                          >
                             <Select placeholder="请选择赠送代理时长">
+                              <Select.Option value="无赠送">无赠送</Select.Option>
                               <Select.Option value="两年赠一季度">两年赠一季度</Select.Option>
                               <Select.Option value="两年赠半年">两年赠半年</Select.Option>
                               <Select.Option value="两年赠一年">两年赠一年</Select.Option>

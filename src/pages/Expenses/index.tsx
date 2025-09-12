@@ -49,6 +49,12 @@ const BUSINESS_TYPE_OPTIONS = [
   { label: '续费', value: '续费' },
 ]
 
+// 社保业务类型选项
+const SOCIAL_INSURANCE_BUSINESS_TYPE_OPTIONS = [
+  { label: '新增', value: '新增' },
+  { label: '续费', value: '续费' },
+]
+
 // 状态映射为显示文本
 const STATUS_LABELS = {
   [ExpenseStatus.Pending]: '未审核',
@@ -92,6 +98,14 @@ const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
     dataIndex: 'businessType',
     key: 'businessType',
     width: 120,
+    ellipsis: true,
+    render: (value: string) => value || '-',
+  },
+  {
+    title: '社保代理业务类型',
+    dataIndex: 'socialInsuranceBusinessType',
+    key: 'socialInsuranceBusinessType',
+    width: 140,
     ellipsis: true,
     render: (value: string) => value || '-',
   },
@@ -177,6 +191,7 @@ const Expenses: React.FC = () => {
     status?: ExpenseStatus
     salesperson: string
     businessType?: string
+    socialInsuranceBusinessType?: string
     dateRange?: any // 使用any类型避免typescript错误
     createDateRange?: any // 开据时间范围
     auditDateRange?: any // 审核时间范围
@@ -188,6 +203,7 @@ const Expenses: React.FC = () => {
     status: undefined,
     salesperson: '',
     businessType: undefined,
+    socialInsuranceBusinessType: undefined,
     dateRange: undefined,
     createDateRange: undefined,
     auditDateRange: undefined,
@@ -246,6 +262,7 @@ const Expenses: React.FC = () => {
     status: savedState.status !== undefined ? savedState.status : undefined,
     salesperson: savedState.salesperson || '',
     businessType: savedState.businessType || undefined,
+    socialInsuranceBusinessType: savedState.socialInsuranceBusinessType || undefined,
     dateRange: initialDateRange,
     createDateRange: initialCreateDateRange,
     auditDateRange: initialAuditDateRange,
@@ -290,12 +307,21 @@ const Expenses: React.FC = () => {
       displayBusinessType = '__EMPTY__'
     }
 
+    // 处理社保业务类型：将空字符串转换为"__EMPTY__"以便在界面上显示为"-"
+    let displaySocialInsuranceBusinessType: string | string[] | undefined = searchParams.socialInsuranceBusinessType
+    if (Array.isArray(displaySocialInsuranceBusinessType)) {
+      displaySocialInsuranceBusinessType = displaySocialInsuranceBusinessType.map(type => (type === '' ? '__EMPTY__' : type))
+    } else if (displaySocialInsuranceBusinessType === '') {
+      displaySocialInsuranceBusinessType = '__EMPTY__'
+    }
+
     form.setFieldsValue({
       companyName: searchParams.companyName,
       unifiedSocialCreditCode: searchParams.unifiedSocialCreditCode,
       status: searchParams.status,
       salesperson: searchParams.salesperson,
       businessType: displayBusinessType,
+      socialInsuranceBusinessType: displaySocialInsuranceBusinessType,
       dateRange: searchParams.dateRange,
       createDateRange: searchParams.createDateRange,
       auditDateRange: searchParams.auditDateRange,
@@ -311,6 +337,7 @@ const Expenses: React.FC = () => {
       status: searchParams.status,
       salesperson: searchParams.salesperson,
       businessType: searchParams.businessType,
+      socialInsuranceBusinessType: searchParams.socialInsuranceBusinessType,
       page: searchParams.page,
       pageSize: searchParams.pageSize,
       dateRange: searchParams.dateRange
@@ -345,6 +372,7 @@ const Expenses: React.FC = () => {
     searchParams.status,
     searchParams.salesperson,
     searchParams.businessType,
+    searchParams.socialInsuranceBusinessType,
     searchParams.page,
     searchParams.pageSize,
     searchParams.dateRange,
@@ -367,6 +395,16 @@ const Expenses: React.FC = () => {
       processedBusinessType = ''
     }
 
+    // 处理社保业务类型：将"__EMPTY__"转换为空字符串
+    let processedSocialInsuranceBusinessType = values.socialInsuranceBusinessType
+    if (Array.isArray(processedSocialInsuranceBusinessType)) {
+      // 多选情况：将数组中的"__EMPTY__"替换为空字符串
+      processedSocialInsuranceBusinessType = processedSocialInsuranceBusinessType.map(type => (type === '__EMPTY__' ? '' : type))
+    } else if (processedSocialInsuranceBusinessType === '__EMPTY__') {
+      // 单选情况：将"__EMPTY__"替换为空字符串
+      processedSocialInsuranceBusinessType = ''
+    }
+
     // 处理日期范围
     const params: any = {
       ...searchParams,
@@ -375,6 +413,7 @@ const Expenses: React.FC = () => {
       status: values.status,
       salesperson: values.salesperson,
       businessType: processedBusinessType,
+      socialInsuranceBusinessType: processedSocialInsuranceBusinessType,
       page: 1,
     }
 
@@ -508,6 +547,7 @@ const Expenses: React.FC = () => {
       status: undefined,
       salesperson: '',
       businessType: undefined,
+      socialInsuranceBusinessType: undefined,
       dateRange: undefined,
       createDateRange: undefined,
       auditDateRange: undefined,
@@ -970,6 +1010,23 @@ const Expenses: React.FC = () => {
                 maxTagCount="responsive"
               >
                 {BUSINESS_TYPE_OPTIONS.map(option => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
+                <Select.Option value="__EMPTY__">-</Select.Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item name="socialInsuranceBusinessType" label="社保代理业务类型" className="m-0 w-full">
+              <Select
+                mode="multiple"
+                placeholder="选择社保代理业务类型"
+                allowClear
+                className="w-full"
+                maxTagCount="responsive"
+              >
+                {SOCIAL_INSURANCE_BUSINESS_TYPE_OPTIONS.map(option => (
                   <Select.Option key={option.value} value={option.value}>
                     {option.label}
                   </Select.Option>
