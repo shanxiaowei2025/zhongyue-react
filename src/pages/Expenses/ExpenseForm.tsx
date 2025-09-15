@@ -2101,6 +2101,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '招标投标代理', label: '招标投标代理' },
                               { value: '工程审计/预算/决算', label: '工程审计/预算/决算' },
                               { value: '标书制作', label: '标书制作' },
+                              { value: '定位服务', label: '定位服务' },
+                              { value: '活动费用', label: '活动费用' },
                             ]}
                           />
                         </Form.Item>
