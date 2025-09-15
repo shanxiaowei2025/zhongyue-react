@@ -2042,6 +2042,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '税务处理逾期/补充申报', label: '税务处理逾期/补充申报' },
                               { value: '工商年报/工商公示', label: '工商年报/工商公示' },
                               { value: '补执照', label: '补执照' },
+                              { value: '报表编制', label: '报表编制' },
                             ]}
                           />
                         </Form.Item>
