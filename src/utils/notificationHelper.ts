@@ -16,8 +16,9 @@ const FEE_PROJECT_MAP: Record<string, string> = {
   addressFee: '地址费',
   changeFee: '变更业务',
   administrativeLicenseFee: '行政许可',
-  otherBusinessFee: '其他业务(自有)',
-  otherBusinessOutsourcingFee: '其他业务(外包)',
+  otherBusinessFee: '其他业务收费（基础）',
+  otherBusinessOutsourcingFee: '其他业务收费',
+  otherBusinessSpecialFee: '其他业务收费(特殊)',
   brandFee: '牌子费',
   recordSealFee: '备案章',
   generalSealFee: '一般刻章',
@@ -67,22 +68,22 @@ export const getMaxAmountProject = (expense: Expense): string => {
       return maxProject
 
     case 'otherBusinessFee':
-      // 其他业务（基础）显示具体业务
+      // 其他业务收费（基础）显示具体业务
       if (expense.otherBusiness) {
         const businesses = Array.isArray(expense.otherBusiness)
           ? expense.otherBusiness
           : [expense.otherBusiness]
-        return `其他业务（基础）（${businesses.join('、')}）`
+        return `其他业务收费（基础）（${businesses.join('、')}）`
       }
       return maxProject
 
     case 'otherBusinessOutsourcingFee':
-      // 其他业务显示具体业务
+      // 其他业务收费显示具体业务
       if (expense.otherBusinessOutsourcing) {
         const businesses = Array.isArray(expense.otherBusinessOutsourcing)
           ? expense.otherBusinessOutsourcing
           : [expense.otherBusinessOutsourcing]
-        return `其他业务（${businesses.join('、')}）`
+        return `其他业务收费（${businesses.join('、')}）`
       }
       return maxProject
 

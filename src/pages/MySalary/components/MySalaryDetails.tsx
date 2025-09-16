@@ -108,9 +108,9 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
     statisticalReportFee: '统计局报表费',
     changeFee: '变更收费',
     administrativeLicenseFee: '行政许可收费',
-      otherBusinessFee: '其他业务（基础）',
-  otherBusinessOutsourcingFee: '其他业务',
-    otherBusinessSpecialFee: '其他业务(特殊)',
+      otherBusinessFee: '其他业务收费（基础）',
+    otherBusinessOutsourcingFee: '其他业务收费',
+    otherBusinessSpecialFee: '其他业务收费(特殊)',
   }
 
   // 提成类型映射
