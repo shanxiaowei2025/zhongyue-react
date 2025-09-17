@@ -1961,6 +1961,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '注册资本变更', label: '注册资本变更' },
                               { value: '跨区域变更', label: '跨区域变更' },
                               { value: '法定代表人变更', label: '法定代表人变更' },
+                              { value: '个升企', label: '个升企' },
                             ]}
                           />
                         </Form.Item>
