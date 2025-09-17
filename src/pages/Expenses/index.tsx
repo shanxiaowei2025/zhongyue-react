@@ -770,7 +770,7 @@ const Expenses: React.FC = () => {
       // 关闭加载提示
       message.destroy()
       console.error('导出错误:', error)
-      // 错误处理由拦截器统一处理
+      message.error('导出失败，请联系管理员添加导出权限')
     }
   }
 

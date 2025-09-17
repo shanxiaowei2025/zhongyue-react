@@ -162,7 +162,7 @@ instance.interceptors.response.use(
       }
     } else if (statusCode === 403) {
       // 处理403错误，显示后端返回的错误消息
-      const errorMessage = backendMessage || '权限不足，无法执行此操作'
+      const errorMessage = backendMessage || '导出失败，请联系管理员添加导出权限'
       message.error(errorMessage)
     } else if (statusCode) {
       // 处理其他HTTP错误状态码（400, 500等），统一显示后端返回的错误信息

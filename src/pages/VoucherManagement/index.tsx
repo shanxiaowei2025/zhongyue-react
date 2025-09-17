@@ -387,11 +387,6 @@ const VoucherManagement: React.FC = () => {
 
   // 处理导出
   const handleExport = async () => {
-    if (!canExport) {
-      message.error('您没有导出权限')
-      return
-    }
-
     try {
       const exportData: ExportVoucherRecordDto = {
         year: searchParams.year,

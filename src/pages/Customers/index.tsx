@@ -641,7 +641,7 @@ export default function Customers() {
     } catch (error) {
       message.destroy()
       console.error('导出失败', error)
-      message.error('导出失败，请稍后重试')
+      message.error('导出失败，请联系管理员添加导出权限')
     }
   }
 
@@ -2493,11 +2493,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 customerId={displayCustomer.id}
                 exportLoading={exportLoading}
                 onExport={async (customerId, year) => {
-                  if (!canExport) {
-                    message.error('您没有导出权限')
-                    return
-                  }
-
                   try {
                     const exportData: ExportVoucherRecordDto = {
                       year: year,
@@ -2509,7 +2504,6 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                     await exportToExcel(exportData)
                   } catch (error) {
                     console.error('导出失败:', error)
-                    message.error('导出失败，请重试')
                   }
                 }}
               />

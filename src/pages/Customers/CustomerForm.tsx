@@ -2423,11 +2423,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 customerId={customer.id}
                 exportLoading={exportLoading}
                 onExport={async (customerId, year) => {
-                  if (!canExport) {
-                    message.error('您没有导出权限')
-                    return
-                  }
-
                   try {
                     const exportData: ExportVoucherRecordDto = {
                       year: year,
@@ -2439,7 +2434,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     await exportToExcel(exportData)
                   } catch (error) {
                     console.error('导出失败:', error)
-                    message.error('导出失败，请重试')
                   }
                 }}
               />

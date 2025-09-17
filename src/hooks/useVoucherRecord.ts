@@ -180,7 +180,6 @@ export const useVoucherRecordActions = () => {
 
       message.success('导出成功')
     } catch (error: any) {
-      message.error(error.message || '导出失败')
       throw error
     } finally {
       setLoading(false)
