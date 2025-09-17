@@ -1949,8 +1949,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                       >
                         <Form.Item name="changeBusiness" label="变更业务">
                           <Select
-                            placeholder="请选择或输入变更业务"
-                            mode="tags"
+                            placeholder="请选择变更业务"
+                            mode="multiple"
                             style={{ width: '100%' }}
                             options={[
                               { value: '地址变更', label: '地址变更' },
@@ -1960,6 +1960,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '范围变更', label: '范围变更' },
                               { value: '注册资本变更', label: '注册资本变更' },
                               { value: '跨区域变更', label: '跨区域变更' },
+                              { value: '法定代表人变更', label: '法定代表人变更' },
                             ]}
                           />
                         </Form.Item>
