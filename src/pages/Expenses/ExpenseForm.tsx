@@ -2106,6 +2106,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '标书制作', label: '标书制作' },
                               { value: '定位服务', label: '定位服务' },
                               { value: '活动费用', label: '活动费用' },
+                              { value: '执行标准', label: '执行标准' },
+                              { value: '外包地址', label: '外包地址' },
                             ]}
                           />
                         </Form.Item>
