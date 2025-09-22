@@ -43,8 +43,8 @@ export const useExpenseNotification = () => {
           return
         }
 
-        // 获取本月单数（当前费用已创建，所以计数包含了这一单）
-        const monthlyCount = await getMonthlyExpenseCount(salesperson)
+        // 获取本月单数（基于收费时间所在月份统计，当前费用已创建，所以计数包含了这一单）
+        const monthlyCount = await getMonthlyExpenseCount(salesperson, expense.chargeDate)
 
         // 获取本次项目名称（金额最大的项目）
         const projectName = getMaxAmountProject(expense)

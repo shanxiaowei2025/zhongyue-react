@@ -103,14 +103,15 @@ export const getMaxAmountProject = (expense: Expense): string => {
 }
 
 /**
- * 获取本月指定业务员的费用单数
+ * 获取指定业务员在指定收费月份的费用单数
  * 只统计总金额大于等于1000元的费用单
  */
-export const getMonthlyExpenseCount = async (salesperson: string): Promise<number> => {
+export const getMonthlyExpenseCount = async (salesperson: string, chargeDate?: string): Promise<number> => {
   try {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() + 1
+    // 如果提供了收费时间，使用收费时间所在月份；否则使用当前月份
+    const targetDate = chargeDate ? new Date(chargeDate) : new Date()
+    const year = targetDate.getFullYear()
+    const month = targetDate.getMonth() + 1
     const startDate = `${year}-${month.toString().padStart(2, '0')}-01`
 
     // 计算月末日期
@@ -233,3 +234,25 @@ export const shouldSendCelebrationNotification = (
 
   return true
 }
+
+/**
+ * 修复说明：
+ * 
+ * 问题：通知中出现"第0单"和异常大数字（如"第1129单"）的问题
+ * 
+ * 原因：统计时间基准不一致
+ * - 原来统计单数时使用当前系统时间的月份范围
+ * - 但筛选条件使用的是费用记录的收费时间(chargeDate)
+ * - 当收费时间和创建时间跨月时，会导致统计错误
+ * 
+ * 修复：
+ * - getMonthlyExpenseCount 函数现在接受 chargeDate 参数
+ * - 统计基于收费时间所在月份，确保时间基准一致
+ * - 这样可以准确统计业务员在特定收费月份的单数
+ * 
+ * 场景示例：
+ * - 收费时间：2024-08-29
+ * - 创建时间：2024-09-01  
+ * - 修复前：统计9月份单数，但收费时间在8月，导致计数错误
+ * - 修复后：统计8月份单数，基于收费时间，计数正确
+ */
