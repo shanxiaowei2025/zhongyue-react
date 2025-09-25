@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 筛选器下拉菜单样式 */
+.column-filter-dropdown {
+  z-index: 1050 !important;
+  position: fixed !important;
+}
+
+.column-filter-dropdown .ant-dropdown-menu {
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+  z-index: 1051 !important;
+}
+
+/* 确保筛选器下拉菜单在所有元素之上 */
+.ant-dropdown.column-filter-dropdown {
+  z-index: 1050 !important;
+}
+
+/* 确保筛选器内的输入框可以正常交互 */
+.column-filter-dropdown .ant-input {
+  pointer-events: auto !important;
+  user-select: text !important;
+}
+
+.column-filter-dropdown .ant-checkbox-wrapper {
+  pointer-events: auto !important;
+}
+
+.column-filter-dropdown .ant-btn {
+  pointer-events: auto !important;
+}
+
 /* 修复Ant Design Tabs在flex布局中的滚动问题 */
 .ant-tabs.flex.flex-col {
   display: flex !important;
