@@ -129,6 +129,7 @@ const FinancialSelfInspection: React.FC = () => {
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
+      needAccountantCommunication: undefined,
       ...(savedSubmittedSearchParams || {}),
     })
 
@@ -149,6 +150,7 @@ const FinancialSelfInspection: React.FC = () => {
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
+      needAccountantCommunication: undefined,
       ...(savedResponsibleSearchParams || {}),
     })
 
@@ -169,6 +171,7 @@ const FinancialSelfInspection: React.FC = () => {
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
+      needAccountantCommunication: undefined,
       ...(savedReviewedSearchParams || {}),
     })
 
@@ -348,10 +351,14 @@ const FinancialSelfInspection: React.FC = () => {
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
+      needAccountantCommunication: undefined,
     }
     setSubmittedSearchParams(resetParams)
-    submittedForm.resetFields()
     setSubmittedCurrent(1)
+    // 使用 setTimeout 确保状态更新后再重置表单
+    setTimeout(() => {
+      submittedForm.resetFields()
+    }, 0)
   }
 
   const handleResponsibleSearch = () => setResponsibleCurrent(1)
@@ -359,16 +366,19 @@ const FinancialSelfInspection: React.FC = () => {
     const resetParams = {
       companyName: '',
       unifiedSocialCreditCode: '',
-      inspector: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
+      needAccountantCommunication: undefined,
     }
     setResponsibleSearchParams(resetParams)
-    responsibleForm.resetFields()
     setResponsibleCurrent(1)
+    // 使用 setTimeout 确保状态更新后再重置表单
+    setTimeout(() => {
+      responsibleForm.resetFields()
+    }, 0)
   }
 
   const handleReviewedSearch = () => setReviewedCurrent(1)
@@ -376,16 +386,19 @@ const FinancialSelfInspection: React.FC = () => {
     const resetParams = {
       companyName: '',
       unifiedSocialCreditCode: '',
-      inspector: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
+      needAccountantCommunication: undefined,
     }
     setReviewedSearchParams(resetParams)
-    reviewedForm.resetFields()
     setReviewedCurrent(1)
+    // 使用 setTimeout 确保状态更新后再重置表单
+    setTimeout(() => {
+      reviewedForm.resetFields()
+    }, 0)
   }
 
   // 分页处理函数
@@ -1131,6 +1144,24 @@ const FinancialSelfInspection: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="会计沟通" name="needAccountantCommunication">
+                  <Select
+                    placeholder="请选择是否需要会计沟通"
+                    allowClear
+                    value={submittedSearchParams.needAccountantCommunication}
+                    onChange={value =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        needAccountantCommunication: value,
+                      })
+                    }
+                  >
+                    <Select.Option value={true}>需要</Select.Option>
+                    <Select.Option value={false}>不需要</Select.Option>
+                  </Select>
+                </Form.Item>
+              </Col>
             </Row>
             <Row>
               <Col span={24}>
@@ -1209,20 +1240,6 @@ const FinancialSelfInspection: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={6}>
-                <Form.Item label="抽查人" name="inspector">
-                  <Input
-                    placeholder="请输入抽查人"
-                    value={responsibleSearchParams.inspector}
-                    onChange={e =>
-                      setResponsibleSearchParams({
-                        ...responsibleSearchParams,
-                        inspector: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="记账会计" name="bookkeepingAccountant">
                   <Input
                     placeholder="请输入记账会计"
@@ -1231,6 +1248,20 @@ const FinancialSelfInspection: React.FC = () => {
                       setResponsibleSearchParams({
                         ...responsibleSearchParams,
                         bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="顾问会计" name="consultantAccountant">
+                  <Input
+                    placeholder="请输入顾问会计"
+                    value={responsibleSearchParams.consultantAccountant}
+                    onChange={e =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        consultantAccountant: e.target.value,
                       })
                     }
                   />
@@ -1299,6 +1330,24 @@ const FinancialSelfInspection: React.FC = () => {
                       })
                     }
                   />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="会计沟通" name="needAccountantCommunication">
+                  <Select
+                    placeholder="请选择是否需要会计沟通"
+                    allowClear
+                    value={responsibleSearchParams.needAccountantCommunication}
+                    onChange={value =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        needAccountantCommunication: value,
+                      })
+                    }
+                  >
+                    <Select.Option value={true}>需要</Select.Option>
+                    <Select.Option value={false}>不需要</Select.Option>
+                  </Select>
                 </Form.Item>
               </Col>
             </Row>
@@ -1384,20 +1433,6 @@ const FinancialSelfInspection: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12} md={6}>
-                <Form.Item label="抽查人" name="inspector">
-                  <Input
-                    placeholder="请输入抽查人"
-                    value={reviewedSearchParams.inspector}
-                    onChange={e =>
-                      setReviewedSearchParams({
-                        ...reviewedSearchParams,
-                        inspector: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
                 <Form.Item label="记账会计" name="bookkeepingAccountant">
                   <Input
                     placeholder="请输入记账会计"
@@ -1406,6 +1441,20 @@ const FinancialSelfInspection: React.FC = () => {
                       setReviewedSearchParams({
                         ...reviewedSearchParams,
                         bookkeepingAccountant: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="顾问会计" name="consultantAccountant">
+                  <Input
+                    placeholder="请输入顾问会计"
+                    value={reviewedSearchParams.consultantAccountant}
+                    onChange={e =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        consultantAccountant: e.target.value,
                       })
                     }
                   />
@@ -1474,6 +1523,24 @@ const FinancialSelfInspection: React.FC = () => {
                       })
                     }
                   />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="会计沟通" name="needAccountantCommunication">
+                  <Select
+                    placeholder="请选择是否需要会计沟通"
+                    allowClear
+                    value={reviewedSearchParams.needAccountantCommunication}
+                    onChange={value =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        needAccountantCommunication: value,
+                      })
+                    }
+                  >
+                    <Select.Option value={true}>需要</Select.Option>
+                    <Select.Option value={false}>不需要</Select.Option>
+                  </Select>
                 </Form.Item>
               </Col>
             </Row>

@@ -80,6 +80,7 @@ export interface FinancialSelfInspectionQueryParams {
   status?: FinancialSelfInspectionStatus // 状态
   inspectionDateStart?: string // 抽查日期开始
   inspectionDateEnd?: string // 抽查日期结束
+  needAccountantCommunication?: boolean // 是否需要会计沟通
   page?: number // 页码
   pageSize?: number // 每页数量
   [key: string]: any

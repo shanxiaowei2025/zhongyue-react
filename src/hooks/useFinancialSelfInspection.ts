@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react'
 import useSWR, { mutate } from 'swr'
 import { message } from 'antd'
 import {
@@ -27,26 +28,35 @@ import type {
 } from '../types/financialSelfInspection'
 
 // SWR键生成函数
-const getSubmittedInspectionsKey = (params: FinancialSelfInspectionQueryParams) =>
-  `/financial-self-inspection/my-submitted?${new URLSearchParams(
-    Object.entries(params)
+const getSubmittedInspectionsKey = (params: FinancialSelfInspectionQueryParams) => {
+  // 排除前端筛选字段，不传递给后端
+  const { needAccountantCommunication, ...backendParams } = params
+  return `/financial-self-inspection/my-submitted?${new URLSearchParams(
+    Object.entries(backendParams)
       .filter(([, value]) => value !== null && value !== undefined && value !== '')
       .map(([key, value]) => [key, String(value)])
   ).toString()}`
+}
 
-const getResponsibleInspectionsKey = (params: FinancialSelfInspectionQueryParams) =>
-  `/financial-self-inspection/my-responsible?${new URLSearchParams(
-    Object.entries(params)
+const getResponsibleInspectionsKey = (params: FinancialSelfInspectionQueryParams) => {
+  // 排除前端筛选字段，不传递给后端
+  const { needAccountantCommunication, ...backendParams } = params
+  return `/financial-self-inspection/my-responsible?${new URLSearchParams(
+    Object.entries(backendParams)
       .filter(([, value]) => value !== null && value !== undefined && value !== '')
       .map(([key, value]) => [key, String(value)])
   ).toString()}`
+}
 
-const getReviewedInspectionsKey = (params: FinancialSelfInspectionQueryParams) =>
-  `/financial-self-inspection/my-reviewed?${new URLSearchParams(
-    Object.entries(params)
+const getReviewedInspectionsKey = (params: FinancialSelfInspectionQueryParams) => {
+  // 排除前端筛选字段，不传递给后端
+  const { needAccountantCommunication, ...backendParams } = params
+  return `/financial-self-inspection/my-reviewed?${new URLSearchParams(
+    Object.entries(backendParams)
       .filter(([, value]) => value !== null && value !== undefined && value !== '')
       .map(([key, value]) => [key, String(value)])
   ).toString()}`
+}
 
 const getSubmittedDetailKey = (id: number) => `/financial-self-inspection/my-submitted/${id}`
 const getResponsibleDetailKey = (id: number) => `/financial-self-inspection/my-responsible/${id}`
@@ -151,9 +161,32 @@ export const useSubmittedInspections = (params: FinancialSelfInspectionQueryPara
     await mutate(key)
   }
 
+  // 前端筛选会计沟通字段
+  const filteredData = useMemo(() => {
+    if (!data?.items) return []
+    
+    let items = data.items
+    
+    // 如果设置了会计沟通筛选条件，在前端进行筛选
+    if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
+      const needCommunication = Boolean(params.needAccountantCommunication)
+      items = items.filter(item => Boolean(item.needAccountantCommunication) === needCommunication)
+    }
+    
+    return items
+  }, [data?.items, params.needAccountantCommunication])
+
+  // 重新计算总数
+  const filteredTotal = useMemo(() => {
+    if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
+      return filteredData.length
+    }
+    return data?.total || 0
+  }, [filteredData.length, data?.total, params.needAccountantCommunication])
+
   return {
-    data: data?.items || [],
-    total: data?.total || 0,
+    data: filteredData,
+    total: filteredTotal,
     loading: isLoading,
     error,
     refreshSubmittedInspections,
@@ -174,9 +207,32 @@ export const useResponsibleInspections = (params: FinancialSelfInspectionQueryPa
     await mutate(key)
   }
 
+  // 前端筛选会计沟通字段
+  const filteredData = useMemo(() => {
+    if (!data?.items) return []
+    
+    let items = data.items
+    
+    // 如果设置了会计沟通筛选条件，在前端进行筛选
+    if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
+      const needCommunication = Boolean(params.needAccountantCommunication)
+      items = items.filter(item => Boolean(item.needAccountantCommunication) === needCommunication)
+    }
+    
+    return items
+  }, [data?.items, params.needAccountantCommunication])
+
+  // 重新计算总数
+  const filteredTotal = useMemo(() => {
+    if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
+      return filteredData.length
+    }
+    return data?.total || 0
+  }, [filteredData.length, data?.total, params.needAccountantCommunication])
+
   return {
-    data: data?.items || [],
-    total: data?.total || 0,
+    data: filteredData,
+    total: filteredTotal,
     loading: isLoading,
     error,
     refreshResponsibleInspections,
@@ -197,9 +253,32 @@ export const useReviewedInspections = (params: FinancialSelfInspectionQueryParam
     await mutate(key)
   }
 
+  // 前端筛选会计沟通字段
+  const filteredData = useMemo(() => {
+    if (!data?.items) return []
+    
+    let items = data.items
+    
+    // 如果设置了会计沟通筛选条件，在前端进行筛选
+    if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
+      const needCommunication = Boolean(params.needAccountantCommunication)
+      items = items.filter(item => Boolean(item.needAccountantCommunication) === needCommunication)
+    }
+    
+    return items
+  }, [data?.items, params.needAccountantCommunication])
+
+  // 重新计算总数
+  const filteredTotal = useMemo(() => {
+    if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
+      return filteredData.length
+    }
+    return data?.total || 0
+  }, [filteredData.length, data?.total, params.needAccountantCommunication])
+
   return {
-    data: data?.items || [],
-    total: data?.total || 0,
+    data: filteredData,
+    total: filteredTotal,
     loading: isLoading,
     error,
     refreshReviewedInspections,
