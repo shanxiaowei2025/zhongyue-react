@@ -2045,6 +2045,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '工商年报/工商公示', label: '工商年报/工商公示' },
                               { value: '补执照', label: '补执照' },
                               { value: '报表编制', label: '报表编制' },
+                              { value: '非代理企业行政许可注销', label: '非代理企业行政许可注销' },
                             ]}
                           />
                         </Form.Item>
@@ -2109,6 +2110,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '执行标准', label: '执行标准' },
                               { value: '外包地址', label: '外包地址' },
                               { value: '税务风险报告', label: '税务风险报告' },
+                              { value: '代理企业行政许可注销', label: '代理企业行政许可注销' },
                             ]}
                           />
                         </Form.Item>
