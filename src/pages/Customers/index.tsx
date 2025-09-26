@@ -1321,32 +1321,32 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="顾问会计" className="mb-2">
-                <Select
-                  mode="tags"
-                  placeholder="请输入或选择顾问会计"
-                  value={searchQueryParams.consultantAccountant}
-                  onChange={value =>
-                    setSearchQueryParams({ ...searchQueryParams, consultantAccountant: value })
+                <Input
+                  placeholder="请输入顾问会计"
+                  value={searchQueryParams.consultantAccountant?.[0] || ''}
+                  onChange={e =>
+                    setSearchQueryParams({ 
+                      ...searchQueryParams, 
+                      consultantAccountant: e.target.value ? [e.target.value] : []
+                    })
                   }
                   className="w-full"
                   allowClear
-                  maxTagCount="responsive"
-                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
               <Form.Item label="记账会计" className="mb-2">
-                <Select
-                  mode="tags"
-                  placeholder="请输入或选择记账会计"
-                  value={searchQueryParams.bookkeepingAccountant}
-                  onChange={value =>
-                    setSearchQueryParams({ ...searchQueryParams, bookkeepingAccountant: value })
+                <Input
+                  placeholder="请输入记账会计"
+                  value={searchQueryParams.bookkeepingAccountant?.[0] || ''}
+                  onChange={e =>
+                    setSearchQueryParams({ 
+                      ...searchQueryParams, 
+                      bookkeepingAccountant: e.target.value ? [e.target.value] : []
+                    })
                   }
                   className="w-full"
                   allowClear
-                  maxTagCount="responsive"
-                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
@@ -1374,15 +1374,17 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="所属分局" className="mb-2">
-                <Select
-                  mode="tags"
-                  placeholder="请输入或选择所属分局"
-                  value={searchQueryParams.taxBureau}
-                  onChange={value => setSearchQueryParams({ ...searchQueryParams, taxBureau: value })}
+                <Input
+                  placeholder="请输入所属分局"
+                  value={searchQueryParams.taxBureau?.[0] || ''}
+                  onChange={e =>
+                    setSearchQueryParams({ 
+                      ...searchQueryParams, 
+                      taxBureau: e.target.value ? [e.target.value] : []
+                    })
+                  }
                   className="w-full"
                   allowClear
-                  maxTagCount="responsive"
-                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
@@ -1400,17 +1402,17 @@ export default function Customers() {
               </Form.Item>
 
               <Form.Item label="行业大类" className="mb-2">
-                <Select
-                  mode="tags"
-                  placeholder="请输入或选择行业大类"
-                  value={searchQueryParams.industryCategory}
-                  onChange={value =>
-                    setSearchQueryParams({ ...searchQueryParams, industryCategory: value })
+                <Input
+                  placeholder="请输入行业大类"
+                  value={searchQueryParams.industryCategory?.[0] || ''}
+                  onChange={e =>
+                    setSearchQueryParams({ 
+                      ...searchQueryParams, 
+                      industryCategory: e.target.value ? [e.target.value] : []
+                    })
                   }
                   className="w-full"
                   allowClear
-                  maxTagCount="responsive"
-                  tokenSeparators={[',']}
                 />
               </Form.Item>
 
