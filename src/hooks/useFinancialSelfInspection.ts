@@ -243,20 +243,22 @@ export const useResponsibleInspections = (params: FinancialSelfInspectionQueryPa
 /**
  * 使用我复查的自查记录列表
  */
-export const useReviewedInspections = (params: FinancialSelfInspectionQueryParams) => {
-  const key = getReviewedInspectionsKey(params)
+export const useReviewedInspections = (params: FinancialSelfInspectionQueryParams, enabled: boolean = true) => {
+  const key = enabled ? getReviewedInspectionsKey(params) : null
   const { data, error, isLoading } = useSWR(key, reviewedInspectionsFetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 5000,
   })
 
   const refreshReviewedInspections = async () => {
-    await mutate(key)
+    if (enabled && key) {
+      await mutate(key)
+    }
   }
 
   // 前端筛选会计沟通字段
   const filteredData = useMemo(() => {
-    if (!data?.items) return []
+    if (!enabled || !data?.items) return []
     
     let items = data.items
     
@@ -267,21 +269,22 @@ export const useReviewedInspections = (params: FinancialSelfInspectionQueryParam
     }
     
     return items
-  }, [data?.items, params.needAccountantCommunication])
+  }, [enabled, data?.items, params.needAccountantCommunication])
 
   // 重新计算总数
   const filteredTotal = useMemo(() => {
+    if (!enabled) return 0
     if (params.needAccountantCommunication !== undefined && params.needAccountantCommunication !== null) {
       return filteredData.length
     }
     return data?.total || 0
-  }, [filteredData.length, data?.total, params.needAccountantCommunication])
+  }, [enabled, filteredData.length, data?.total, params.needAccountantCommunication])
 
   return {
     data: filteredData,
     total: filteredTotal,
-    loading: isLoading,
-    error,
+    loading: enabled ? isLoading : false,
+    error: enabled ? error : null,
     refreshReviewedInspections,
   }
 }
@@ -321,16 +324,16 @@ export const useResponsibleInspectionDetail = (id?: number | null) => {
 /**
  * 使用我复查的自查记录详情
  */
-export const useReviewedInspectionDetail = (id?: number | null) => {
-  const key = id ? getReviewedDetailKey(id) : null
+export const useReviewedInspectionDetail = (id?: number | null, enabled: boolean = true) => {
+  const key = (id && enabled) ? getReviewedDetailKey(id) : null
   const { data, error, isLoading } = useSWR(key, reviewedDetailFetcher, {
     revalidateOnFocus: false,
   })
 
   return {
-    data,
-    loading: isLoading,
-    error,
+    data: enabled ? data : null,
+    loading: enabled ? isLoading : false,
+    error: enabled ? error : null,
   }
 }
 

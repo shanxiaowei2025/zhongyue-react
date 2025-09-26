@@ -27,6 +27,7 @@ import dayjs from 'dayjs'
 import { useReviewedInspectionDetail } from '../../hooks/useFinancialSelfInspection'
 import { buildImageUrl } from '../../utils/upload'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
+import { useAuthStore } from '../../store/auth'
 import type {
   RectificationRecordItem,
   ApprovalRecordItem,
@@ -49,18 +50,49 @@ interface TimelineRecord {
 const FinancialSelfInspectionReviewedDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
 
-  // 使用统一的hook获取数据
-  const { data, loading, error } = useReviewedInspectionDetail(id ? Number(id) : null)
+  // 权限检查函数
+  const hasReviewPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+    const allowedRoles = ['admin', 'super_admin', '管理员', '超级管理员']
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
+  const hasPermission = hasReviewPermission()
+
+  // 返回列表
+  const handleBack = () => {
+    navigate('/financial-self-inspection')
+  }
+
+  // 使用统一的hook获取数据，只有有权限时才调用API
+  const { data, loading, error } = useReviewedInspectionDetail(
+    id ? Number(id) : null,
+    hasPermission
+  )
 
   // 处理错误
   if (error) {
     message.error('获取详情失败')
   }
 
-  // 返回列表
-  const handleBack = () => {
-    navigate('/financial-self-inspection')
+  // 权限检查
+  if (!hasPermission) {
+    return (
+      <div className="w-full min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <Text type="secondary">您没有权限访问此页面</Text>
+          <div className="mt-4">
+            <Button type="primary" onClick={handleBack}>
+              返回列表
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // 渲染状态标签

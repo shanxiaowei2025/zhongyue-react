@@ -180,6 +180,32 @@ const FinancialSelfInspection: React.FC = () => {
   const debouncedResponsibleSearchParams = useDebouncedValue(responsibleSearchParams, 500)
   const debouncedReviewedSearchParams = useDebouncedValue(reviewedSearchParams, 500)
 
+  // 权限检查函数
+  const hasRectificationPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+    const allowedRoles = [
+      '记账会计',
+      '顾问会计',           // 添加中文顾问会计角色
+      'admin',
+      'super_admin',
+      '管理员',
+      '超级管理员',
+      'bookkeepingAccountant',
+      'consultantAccountant',  // 添加英文顾问会计角色
+    ]
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
+  const hasReviewPermission = () => {
+    if (!user?.roles || !Array.isArray(user.roles)) {
+      return false
+    }
+    const allowedRoles = ['admin', 'super_admin', '管理员', '超级管理员']
+    return user.roles.some(role => allowedRoles.includes(role))
+  }
+
   // 使用hooks获取数据
   const {
     data: submittedData,
@@ -203,6 +229,8 @@ const FinancialSelfInspection: React.FC = () => {
     ...debouncedResponsibleSearchParams,
   })
 
+  // 只有有复查权限的用户才调用复查数据hook
+  const hasReviewPerm = hasReviewPermission()
   const {
     data: reviewedData,
     total: reviewedTotal,
@@ -212,7 +240,7 @@ const FinancialSelfInspection: React.FC = () => {
     page: reviewedCurrent,
     pageSize: reviewedPageSize,
     ...debouncedReviewedSearchParams,
-  })
+  }, hasReviewPerm) // 传入权限检查结果作为enabled参数
 
   // 获取操作方法
   const {
@@ -264,30 +292,6 @@ const FinancialSelfInspection: React.FC = () => {
 
   // 问题图片状态
   const [problemImage, setProblemImage] = useState<ImageType | undefined>(undefined)
-
-  // 权限检查函数
-  const hasRectificationPermission = () => {
-    if (!user?.roles || !Array.isArray(user.roles)) {
-      return false
-    }
-    const allowedRoles = [
-      '记账会计',
-      'admin',
-      'super_admin',
-      '管理员',
-      '超级管理员',
-      'bookkeepingAccountant',
-    ]
-    return user.roles.some(role => allowedRoles.includes(role))
-  }
-
-  const hasReviewPermission = () => {
-    if (!user?.roles || !Array.isArray(user.roles)) {
-      return false
-    }
-    const allowedRoles = ['admin', 'super_admin', '管理员', '超级管理员']
-    return user.roles.some(role => allowedRoles.includes(role))
-  }
 
   // 渲染状态标签
   const renderStatusTag = (record: FinancialSelfInspection) => {
