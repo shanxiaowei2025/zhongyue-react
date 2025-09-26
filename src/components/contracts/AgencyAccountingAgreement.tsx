@@ -992,9 +992,9 @@ const AgencyAccountingAgreement = forwardRef<
                 }
                 className={styles.datePicker}
                 picker="month"
-                format="YYYY-MM"
+                format="YYYY年MM月"
               />
-              日至
+              至
               <DatePicker
                 placeholder="结束日期"
                 value={formData.entrustmentEndDate ? dayjs(formData.entrustmentEndDate) : null}
@@ -1003,9 +1003,9 @@ const AgencyAccountingAgreement = forwardRef<
                 }
                 className={styles.datePicker}
                 picker="month"
-                format="YYYY-MM"
+                format="YYYY年MM月"
               />
-              日期间内的经济业务进行代理记账。
+              期间内的经济业务进行代理记账。
             </div>
           </div>
 

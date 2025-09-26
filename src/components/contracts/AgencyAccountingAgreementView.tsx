@@ -186,13 +186,13 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.entrustmentText}>
               乙方接受甲方委托，对甲方
               <span className={styles.dateValue}>
-                {entrustmentStartDate ? dayjs(entrustmentStartDate).format('YYYY-MM') : '___'}
+                {entrustmentStartDate ? dayjs(entrustmentStartDate).format('YYYY年MM月') : '___'}
               </span>
-              日至
+              至
               <span className={styles.dateValue}>
-                {entrustmentEndDate ? dayjs(entrustmentEndDate).format('YYYY-MM') : '___'}
+                {entrustmentEndDate ? dayjs(entrustmentEndDate).format('YYYY年MM月') : '___'}
               </span>
-              日期间内的经济业务进行代理记账。
+              期间内的经济业务进行代理记账。
             </div>
           </div>
 
