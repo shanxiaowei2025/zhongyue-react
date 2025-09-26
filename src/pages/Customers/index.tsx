@@ -71,6 +71,7 @@ import {
 } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import ExpenseRecords from './ExpenseRecords'
+import FollowUpRecords from '../../components/FollowUpRecords'
 import { useLocation, useSearchParams, useNavigate } from 'react-router-dom'
 
 // 启用 dayjs 插件
@@ -154,7 +155,7 @@ export default function Customers() {
   const fromPage = location.state?.from
 
   const [current, setCurrent] = useState(savedPagination?.current || 1)
-  const [pageSize, setPageSize] = useState(savedPagination?.pageSize || 10)
+  const pageSize = 10 // 固定每页10条
   const [searchQueryParams, setSearchQueryParams] = useState(() => {
     const baseParams = {
       keyword: '',
@@ -279,8 +280,8 @@ export default function Customers() {
 
   // 当分页参数变化时，保存到 pageStates
   useEffect(() => {
-    setState('customersPagination', { current, pageSize })
-  }, [current, pageSize, setState])
+    setState('customersPagination', { current, pageSize: 10 })
+  }, [current, setState])
 
   // 处理窗口大小变化
   useEffect(() => {
@@ -703,10 +704,8 @@ export default function Customers() {
     try {
       message.loading('正在导出数据，请稍候...', 0)
 
-      // 使用当前搜索和分页参数导出数据
-      // 移除分页大小参数，导出所有匹配条件的数据
-      const exportParams = { ...requestParams }
-      delete exportParams.pageSize
+      // 使用当前搜索参数导出数据，不包含分页限制
+      const { page, pageSize, ...exportParams } = requestParams
       const response = await exportCustomerCSV(exportParams)
 
       message.destroy()
@@ -1526,15 +1525,12 @@ export default function Customers() {
           <Pagination
             total={total}
             current={current}
-            pageSize={pageSize}
-            showSizeChanger={true}
+            pageSize={10}
+            showSizeChanger={false}
             showQuickJumper={true}
             showTotal={total => `共 ${total} 条记录`}
-            onChange={(page, size) => {
+            onChange={(page) => {
               setCurrent(page)
-              if (size !== pageSize) {
-                setPageSize(size)
-              }
             }}
             size={isMobile ? 'small' : 'default'}
             simple={isMobile}
@@ -2677,6 +2673,19 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             </h3>
           </div>
           <ExpenseRecords customerId={displayCustomer.id} companyName={displayCustomer.companyName} />
+        </div>
+      ),
+    },
+    {
+      key: 'followup',
+      label: '跟进记录',
+      children: (
+        <div className="space-y-6">
+          <FollowUpRecords 
+            records={displayCustomer.followUpRecords || []}
+            readonly={true}
+            title="客户跟进记录"
+          />
         </div>
       ),
     },

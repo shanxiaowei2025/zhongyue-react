@@ -36,14 +36,14 @@ const ServerTable = <T extends Record<string, any> = any>({
       current: urlParams.page || 1,
       pageSize: urlParams.pageSize || 10,
       total: data.total || 0,
-      showSizeChanger: true,
+      showSizeChanger: false,
       showQuickJumper: true,
       showTotal: (total: number) => {
         const startIndex = ((urlParams.page || 1) - 1) * (urlParams.pageSize || 10) + 1
         const endIndex = Math.min((urlParams.page || 1) * (urlParams.pageSize || 10), total)
         return `第 ${startIndex}-${endIndex} 条，共 ${total} 条`
       },
-      pageSizeOptions: ['10', '20', '50', '100'],
+
     }
   }, [data, urlParams])
 

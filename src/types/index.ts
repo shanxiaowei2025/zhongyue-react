@@ -212,6 +212,12 @@ export interface ClanPaginatedResponse {
   totalPages: number
 }
 
+// 跟进记录类型
+export interface FollowUpRecord {
+  text: string
+  datetime: string
+}
+
 // 客户相关类型
 export interface Customer {
   id: number
@@ -299,6 +305,7 @@ export interface Customer {
   archiveStorageRemarks?: string // 档案存放备注
   enterpriseStatus?: 'normal' | 'abnormal' | 'cancelled' | 'revoked'
   businessStatus?: 'normal' | 'logged_out' | 'logging_out' | 'lost' | 'waiting_transfer'
+  followUpRecords?: FollowUpRecord[] // 跟进记录
   createTime: string
   updateTime: string
   submitter: string

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   Form,
@@ -28,6 +28,7 @@ import type {
   PaidInCapitalItem,
   AdministrativeLicenseItem,
   ActualResponsibleItem,
+  FollowUpRecord,
 } from '../../types'
 import type { ExportVoucherRecordDto } from '../../types/voucherRecord'
 import { ExpenseStatus } from '../../types/expense'
@@ -53,6 +54,7 @@ import { useClanList, useClanDetail } from '../../hooks/useClan'
 import { useVoucherRecordActions } from '../../hooks/useVoucherRecord'
 import { useVoucherPermission } from '../../hooks/useVoucherPermission'
 import VoucherRecordCompact from '../../components/VoucherRecord/VoucherRecordCompact'
+import FollowUpRecords from '../../components/FollowUpRecords'
 import { useExpenseList } from '../../hooks/useExpense'
 import { useExpenseDetail } from '../../hooks/useExpense'
 import ExpenseReceipt from '../../pages/Expenses/ExpenseReceipt'
@@ -150,6 +152,9 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
 
   // 费用记录标签页
   expenseRecords: 'expense',
+
+  // 跟进记录标签页字段
+  followUpRecords: 'followup',
 }
 
 interface CustomerFormProps {
@@ -340,6 +345,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     AdministrativeLicenseItem[]
   >([])
   const [actualResponsibleItems, setActualResponsibleItems] = useState<ActualResponsibleItem[]>([])
+  const [followUpRecords, setFollowUpRecords] = useState<FollowUpRecord[]>([])
+  const [newFollowUpRecords, setNewFollowUpRecords] = useState<FollowUpRecord[]>([]) // 只存储新添加的跟进记录
+  const isUpdatingFollowUp = useRef(false)
   const customerId = customer?.id ?? 0
   const { createCustomer, updateCustomer } = useCustomerDetail(customerId)
 
@@ -577,6 +585,15 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         }
       }
 
+      // 初始化跟进记录数据 - 避免在更新过程中重置
+      if (!isUpdatingFollowUp.current) {
+        if (customer.followUpRecords && Array.isArray(customer.followUpRecords)) {
+          setFollowUpRecords(customer.followUpRecords)
+        } else {
+          setFollowUpRecords([])
+        }
+      }
+
       // 标记状态已修复
       setFixState(true)
     }
@@ -758,6 +775,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       // 添加实际负责人数据
       dataWithImages.actualResponsibles = actualResponsibleItems
 
+      // 只提交新添加的跟进记录（后端是追加模式）
+      // 如果有新记录才包含此字段，避免发送空数组导致清空
+      if (newFollowUpRecords.length > 0) {
+        dataWithImages.followUpRecords = newFollowUpRecords
+      }
+
       // 移除可能引起错误的字段
       const { ...cleanData } = dataWithImages
 
@@ -792,12 +815,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
           // 创建成功后，清空 uploadedImages 数组但不删除已上传的图片
           setUploadedImages([])
+          
+          // 清空新添加的跟进记录状态
+          setNewFollowUpRecords([])
 
           // 创建成功后直接调用 onCancel 回调，不经过 handleCancel 函数，这样不会触发图片清理
           onCancel?.()
         } else {
           // 自动保存模式只调用 onSuccess
           onSuccess?.(isAutoSave, newCustomer?.id)
+          // 清空新添加的跟进记录状态
+          setNewFollowUpRecords([])
         }
       } else if (customer?.id) {
         // 确保日期字段是正确的格式
@@ -835,6 +863,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           message.success('保存成功')
         }
         onSuccess?.(isAutoSave, customer.id)
+        
+        // 清空新添加的跟进记录状态
+        setNewFollowUpRecords([])
 
         if (!isAutoSave) {
           handleCancel(false)
@@ -2667,6 +2698,31 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
               previewMode={true}
             />
           )}
+        </div>
+      ),
+    },
+    {
+      key: 'followup',
+      label: '跟进记录',
+      children: (
+        <div className="space-y-6">
+          <FollowUpRecords 
+            records={followUpRecords}
+            readonly={mode === 'view'}
+            title="客户跟进记录"
+            onChange={(newRecords: FollowUpRecord[], addedRecords?: FollowUpRecord[]) => {
+              isUpdatingFollowUp.current = true
+              setFollowUpRecords(newRecords)
+              // 如果有新添加的记录，添加到 newFollowUpRecords 中
+              if (addedRecords && addedRecords.length > 0) {
+                setNewFollowUpRecords(prev => [...prev, ...addedRecords])
+              }
+              // 短暂延迟后重置标志，确保不会干扰后续操作
+              setTimeout(() => {
+                isUpdatingFollowUp.current = false
+              }, 1000)
+            }}
+          />
         </div>
       ),
     },
