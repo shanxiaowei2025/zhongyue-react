@@ -298,6 +298,62 @@ export default function Customers() {
   // 处理URL参数中的view参数，自动打开客户详情
   useEffect(() => {
     const viewParam = searchParams.get('view')
+    const editParam = searchParams.get('edit')
+    
+    // 处理从其他页面传来的编辑客户请求
+    if (location.state?.editCustomerId) {
+      const customerId = location.state.editCustomerId
+      const companyName = location.state.companyName || ''
+      
+      // 先查找客户列表中是否有此客户
+      const customer = customers.find(c => c.id === customerId)
+      
+      if (customer) {
+        // 如果客户列表中有此客户，直接打开编辑页面
+        // 内联handleEdit逻辑
+        if (!canEditCustomer) {
+          message.error('您没有编辑客户的权限')
+          return
+        }
+        
+        setCurrentCustomer(customer)
+        setDetailType('edit')
+        setSelectedCustomerId(customer.id)
+        
+        if (isMobile) {
+          setDrawerVisible(true)
+        } else {
+          setModalVisible(true)
+        }
+      } else if (!isLoading) {
+        // 如果客户列表中没有此客户，且列表加载完毕，从API获取客户详情
+        getCustomerById(customerId).then(response => {
+          if (response.code === 0 && response.data) {
+            // 设置当前客户并打开编辑页面
+            setCurrentCustomer(response.data)
+            setDetailType('edit')
+            setSelectedCustomerId(customerId)
+            
+            // 打开对话框
+            if (isMobile) {
+              setDrawerVisible(true)
+            } else {
+              setModalVisible(true)
+            }
+          } else {
+            message.error(`未找到客户: ${companyName}`)
+          }
+        }).catch(error => {
+          console.error('获取客户详情失败:', error)
+          message.error('获取客户详情失败')
+        })
+      }
+      
+      // 清除状态以避免重复触发
+      window.history.replaceState({}, '', location.pathname + location.search)
+      return
+    }
+    
     if (viewParam) {
       const customerId = parseInt(viewParam, 10)
       if (!isNaN(customerId)) {
@@ -306,7 +362,38 @@ export default function Customers() {
         
         if (customer) {
           // 如果客户列表中有此客户，直接打开详情
-          handleView(customer)
+          // 内联handleView逻辑
+          // 先清除可能存在的缓存，关键步骤!
+          mutate(`/customer/${customer.id}`, undefined, { revalidate: false })
+
+          // 只使用基本信息初始化
+          setCurrentCustomer({
+            ...customer,
+            // 确保图片对象初始化为空对象而不是undefined
+            legalPersonIdImages: customer.legalPersonIdImages || {},
+            businessLicenseImages: customer.businessLicenseImages || {},
+            bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
+            otherIdImages: customer.otherIdImages || {},
+            supplementaryImages: customer.supplementaryImages || {},
+          })
+
+          setDetailType('view')
+
+          // 重置selectedCustomerId后再设置新值，确保状态完全刷新
+          setSelectedCustomerId(undefined)
+          // 使用 queueMicrotask 代替 setTimeout 0
+          queueMicrotask(() => {
+            setSelectedCustomerId(customer.id)
+          })
+
+          // 延迟打开对话框，使用 requestAnimationFrame 代替 setTimeout
+          requestAnimationFrame(() => {
+            if (isMobile) {
+              setDrawerVisible(true)
+            } else {
+              setModalVisible(true)
+            }
+          })
         } else if (!isLoading) {
           // 如果客户列表中没有此客户，且列表加载完毕，从API获取客户详情
           getCustomerById(customerId).then(response => {
@@ -352,7 +439,14 @@ export default function Customers() {
         setSearchParams(newSearchParams)
       }
     }
-  }, [customers, isLoading, searchParams, setSearchParams])
+    
+    // 清除URL参数
+    if (searchParams.has('view')) {
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('view')
+      setSearchParams(newSearchParams)
+    }
+  }, [customers, isLoading, searchParams, setSearchParams, location.state, isMobile, canEditCustomer])
 
   // 当搜索参数变化时，自动重置到第一页（仅当不是初始加载时）
   useEffect(() => {

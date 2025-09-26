@@ -1,5 +1,6 @@
 import { getExpenseList } from '../api/expense'
 import { ExpenseQueryParams, Expense } from '../types/expense'
+import { createNotification } from '../api/notification'
 
 /**
  * 费用项目名称映射
@@ -233,6 +234,67 @@ export const shouldSendCelebrationNotification = (
   }
 
   return true
+}
+
+/**
+ * 发送账务自查需要会计沟通的通知
+ * @param companyName 企业名称
+ * @param consultantAccountant 顾问会计名称
+ * @returns Promise<boolean> 是否发送成功
+ */
+export const sendFinancialInspectionNotification = async (
+  companyName: string,
+  consultantAccountant: string
+): Promise<boolean> => {
+  try {
+    await createNotification({
+      title: '账务自查',
+      content: `账务自查${companyName}需要会计沟通，请及时处理。`,
+      type: 'financial_self_inspection',
+      targetUserNames: [consultantAccountant]
+    })
+    console.log(`✅ 已成功发送通知给顾问会计: ${consultantAccountant}，企业: ${companyName}`)
+    return true
+  } catch (error) {
+    console.error('❌ 发送账务自查通知失败:', error)
+    return false
+  }
+}
+
+/**
+ * 批量发送通知（如果需要通知多个会计）
+ * @param companyName 企业名称
+ * @param consultantAccountants 顾问会计名称数组
+ * @returns Promise<number> 成功发送的通知数量
+ */
+export const sendBatchFinancialInspectionNotifications = async (
+  companyName: string,
+  consultantAccountants: string[]
+): Promise<number> => {
+  let successCount = 0
+  
+  for (const accountant of consultantAccountants) {
+    const success = await sendFinancialInspectionNotification(companyName, accountant)
+    if (success) {
+      successCount++
+    }
+  }
+  
+  return successCount
+}
+
+/**
+ * 通知类型显示配置
+ */
+export const getNotificationTypeDisplay = (type: string) => {
+  const typeConfig: Record<string, { color: string; displayText: string }> = {
+    'system': { color: 'blue', displayText: '系统通知' },
+    '客户': { color: 'green', displayText: '客户' },
+    '费用': { color: 'yellow', displayText: '费用' },
+    'financial_self_inspection': { color: 'orange', displayText: '账务自查' },
+  }
+
+  return typeConfig[type] || { color: 'default', displayText: type || '系统' }
 }
 
 /**

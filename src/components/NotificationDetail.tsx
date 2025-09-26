@@ -121,10 +121,16 @@ const NotificationDetail: React.FC<NotificationDetailProps> = ({
                   ? 'green'
                   : notification.type === '费用'
                     ? 'yellow'
-                    : 'blue'
+                    : notification.type === 'financial_self_inspection'
+                      ? 'orange'
+                      : 'blue'
               }
             >
-              {notification.type === 'system' ? '系统通知' : notification.type || '系统'}
+              {notification.type === 'system' 
+                ? '系统通知' 
+                : notification.type === 'financial_self_inspection'
+                  ? '账务自查'
+                  : notification.type || '系统'}
             </Tag>
           </div>
 

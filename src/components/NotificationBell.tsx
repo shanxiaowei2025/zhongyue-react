@@ -169,10 +169,14 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ className }) => {
                             ? 'success'
                             : notification.type === '费用'
                               ? 'warning'
-                              : 'processing'
+                              : notification.type === 'financial_self_inspection'
+                                ? 'orange'
+                                : 'processing'
                         }
                       >
-                        {notification.type || '系统'}
+                        {notification.type === 'financial_self_inspection' 
+                          ? '账务自查' 
+                          : notification.type || '系统'}
                       </Tag>
                       {notification.readStatus === 0 && (
                         <div className="w-2 h-2 bg-blue-500 rounded-full" />

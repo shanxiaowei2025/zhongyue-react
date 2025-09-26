@@ -16,6 +16,7 @@ import {
   Modal,
 } from 'antd'
 import { ExportOutlined, ReloadOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import { useVoucherRecordList, useVoucherRecordActions } from '../../hooks/useVoucherRecord'
 import { useVoucherPermission } from '../../hooks/useVoucherPermission'
 import { voucherRecordBatchApi } from '../../api/voucherRecord'
@@ -39,6 +40,7 @@ const { Search } = Input
 const { RangePicker } = DatePicker
 
 const VoucherManagement: React.FC = () => {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useState<QueryVoucherRecordDto>({
     page: 1,
     limit: 10,
@@ -87,6 +89,18 @@ const VoucherManagement: React.FC = () => {
     notStarted: tableData.filter(row => row.completionRate === 0).length,
   }
 
+  // 处理点击企业名称跳转到编辑客户页面
+  const handleCompanyNameClick = (customerId: number, companyName: string) => {
+    // 跳转到客户管理页面并打开编辑表单
+    navigate('/customers', {
+      state: {
+        from: '/voucher-management',
+        editCustomerId: customerId,
+        companyName: companyName
+      }
+    })
+  }
+
   // 表格列定义
   const columns: ColumnsType<VoucherRecordTableRow> = [
     {
@@ -96,6 +110,30 @@ const VoucherManagement: React.FC = () => {
       width: 350,
       fixed: 'left',
       ellipsis: true,
+      render: (text: string, record: VoucherRecordTableRow) => (
+        <Button
+          type="link"
+          onClick={() => handleCompanyNameClick(record.customerId, text)}
+          className="p-0 h-auto text-left"
+          style={{
+            color: '#1890ff',
+            textDecoration: 'none',
+            display: 'block',
+            width: '100%',
+            textAlign: 'left'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.textDecoration = 'underline'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.textDecoration = 'none'
+          }}
+        >
+          <Tooltip title={`${text}`} placement="topLeft">
+            <span className="block truncate">{text}</span>
+          </Tooltip>
+        </Button>
+      ),
     },
     {
       title: '顾问会计',

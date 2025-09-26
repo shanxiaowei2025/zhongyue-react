@@ -17,6 +17,7 @@ import {
   deleteFinancialSelfInspection,
   addCommunicationRecord,
 } from '../api/financialSelfInspection'
+import { sendFinancialInspectionNotification } from '../utils/notificationHelper'
 import type {
   FinancialSelfInspectionQueryParams,
   CreateFinancialSelfInspectionDto,
@@ -343,6 +344,17 @@ export const useFinancialSelfInspectionOperations = () => {
       const response = await createFinancialSelfInspection(data)
       if (response.code === 0) {
         message.success('创建成功')
+        
+        // 检查是否需要发送通知给顾问会计
+        if (data.needAccountantCommunication && data.consultantAccountant && data.companyName) {
+          // 发送通知给顾问会计（异步执行，不影响主流程）
+          sendFinancialInspectionNotification(data.companyName, data.consultantAccountant)
+            .catch(error => {
+              console.error('发送账务自查通知失败:', error)
+              // 通知发送失败不影响主流程，只记录错误
+            })
+        }
+        
         // 清除相关缓存
         await mutate(
           key => typeof key === 'string' && key.includes('/financial-self-inspection'),

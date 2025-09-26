@@ -231,6 +231,9 @@ const NotificationsPage: React.FC = () => {
         } else if (type === 'system') {
           color = 'blue'
           displayText = '系统'
+        } else if (type === 'financial_self_inspection') {
+          color = 'orange'
+          displayText = '账务自查'
         }
 
         return <Tag color={color}>{displayText}</Tag>
