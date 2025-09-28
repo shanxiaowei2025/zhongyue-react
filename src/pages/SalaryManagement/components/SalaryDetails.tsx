@@ -573,9 +573,9 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                           <Form.Item label="银行卡号" name="bankCardNumber">
                             <Input placeholder="请输入银行卡号" />
                           </Form.Item>
-                          <Form.Item label="发放公司" name="payrollCompany">
+                          <Form.Item label="薪资发放公司" name="payrollCompany">
                             <Select
-                              placeholder="请选择发放公司"
+                              placeholder="请选择薪资发放公司"
                               allowClear
                               showSearch
                               options={payrollCompanyOptions}

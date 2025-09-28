@@ -90,8 +90,8 @@ const SalaryFilters: React.FC<SalaryFiltersProps> = ({ onFilter, onReset, loadin
 
         <Row gutter={16}>
           <Col span={6}>
-            <Form.Item name="payrollCompany" label="发放公司">
-              <Input placeholder="请输入发放公司名称" allowClear />
+            <Form.Item name="payrollCompany" label="薪资发放公司">
+              <Input placeholder="请输入薪资发放公司名称" allowClear />
             </Form.Item>
           </Col>
         </Row>

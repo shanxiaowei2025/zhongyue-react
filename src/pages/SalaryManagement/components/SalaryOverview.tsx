@@ -323,7 +323,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       ellipsis: true,
     },
     {
-      title: createFilterTitle('发放公司', 'payrollCompany'),
+      title: createFilterTitle('薪资发放公司', 'payrollCompany'),
       dataIndex: 'payrollCompany',
       width: 120,
       ellipsis: true,
@@ -517,12 +517,6 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
         </span>
       ),
       align: 'right',
-    },
-    {
-      title: createFilterTitle('银行卡号', 'bankCardNumber'),
-      dataIndex: 'bankCardNumber',
-      width: 140,
-      ellipsis: true,
     },
     {
       title: (
