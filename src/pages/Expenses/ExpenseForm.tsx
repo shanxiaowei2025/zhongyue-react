@@ -2046,6 +2046,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '补执照', label: '补执照' },
                               { value: '报表编制', label: '报表编制' },
                               { value: '非代理企业行政许可注销', label: '非代理企业行政许可注销' },
+                              { value: '银行开户', label: '银行开户' },
+                              { value: '银行变更', label: '银行变更' },
                             ]}
                           />
                         </Form.Item>
