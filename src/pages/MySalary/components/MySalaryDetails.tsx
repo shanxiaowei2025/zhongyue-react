@@ -106,6 +106,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
     generalSealFee: '一般刻章费',
     invoiceSoftwareFee: '开票软件费',
     statisticalReportFee: '统计局报表费',
+    customerDataOrganizationFee: '客户资料整理费',
     changeFee: '变更收费',
     administrativeLicenseFee: '行政许可收费',
       otherBusinessFee: '其他业务收费（基础）',

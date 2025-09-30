@@ -57,6 +57,9 @@ export interface Expense {
   statisticalReportFee: number | string
   statisticalStartDate: string
   statisticalEndDate: string
+  customerDataOrganizationFee: number | string
+  organizationStartDate: string
+  organizationEndDate: string
   changeBusiness: string | string[]
   changeFee: number | string
   administrativeLicense: string | string[]
@@ -139,6 +142,9 @@ export interface CreateExpenseDto {
   statisticalReportFee?: number | string
   statisticalStartDate?: string
   statisticalEndDate?: string
+  customerDataOrganizationFee?: number | string
+  organizationStartDate?: string
+  organizationEndDate?: string
   changeBusiness?: string | string[]
   changeFee?: number | string
   administrativeLicense?: string | string[]
@@ -237,6 +243,7 @@ export interface ReceiptViewDto {
   invoiceSoftwareFee?: number | string
   socialInsuranceAgencyFee?: number | string
   statisticalReportFee?: number | string
+  customerDataOrganizationFee?: number | string
   changeFee?: number | string
   administrativeLicenseFee?: number | string
   otherBusinessFee?: number | string

@@ -65,6 +65,8 @@ interface FormDateFields {
   housingFundEndDate?: Dayjs
   statisticalStartDate?: Dayjs
   statisticalEndDate?: Dayjs
+  organizationStartDate?: Dayjs
+  organizationEndDate?: Dayjs
 }
 
 // 表单数据类型
@@ -122,6 +124,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     'socialInsuranceAgencyFee',
     'housingFundAgencyFee',
     'statisticalReportFee',
+    'customerDataOrganizationFee',
     'changeFee',
     'administrativeLicenseFee',
     'otherBusinessFee',
@@ -133,7 +136,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const tabFeeFieldsMap: Record<string, string[]> = {
     '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee'], // 代理记账
     '2': ['socialInsuranceAgencyFee', 'housingFundAgencyFee'], // 社保代理
-    '3': ['statisticalReportFee'], // 统计报表
+    '3': ['statisticalReportFee', 'customerDataOrganizationFee'], // 统计报表
     '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee', 'addressFee'], // 新办执照
     '5': ['changeFee'], // 变更业务
     '6': ['administrativeLicenseFee'], // 行政许可
@@ -354,6 +357,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const socialInsuranceAgencyFeeValue = Form.useWatch('socialInsuranceAgencyFee', form)
   const housingFundAgencyFeeValue = Form.useWatch('housingFundAgencyFee', form)
   const statisticalReportFeeValue = Form.useWatch('statisticalReportFee', form)
+  const customerDataOrganizationFeeValue = Form.useWatch('customerDataOrganizationFee', form)
   const changeFeeValue = Form.useWatch('changeFee', form)
   const administrativeLicenseFeeValue = Form.useWatch('administrativeLicenseFee', form)
   const otherBusinessFeeValue = Form.useWatch('otherBusinessFee', form)
@@ -403,6 +407,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     socialInsuranceAgencyFeeValue,
     housingFundAgencyFeeValue,
     statisticalReportFeeValue,
+    customerDataOrganizationFeeValue,
     changeFeeValue,
     administrativeLicenseFeeValue,
     otherBusinessFeeValue,
@@ -463,6 +468,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           'housingFundEndDate',
           'statisticalStartDate',
           'statisticalEndDate',
+          'organizationStartDate',
+          'organizationEndDate',
         ].forEach(dateField => {
           const dateValue = formData[dateField]
           if (dateValue && typeof dateValue === 'string') {
@@ -719,6 +726,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         'housingFundEndDate',
         'statisticalStartDate',
         'statisticalEndDate',
+        'organizationStartDate',
+        'organizationEndDate',
       ]
       monthDateFields.forEach(field => {
         if (formattedValues[field] && dayjs.isDayjs(formattedValues[field])) {
@@ -1852,6 +1861,37 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             endFieldName_formField="statisticalEndDate"
                           />
                         </Form.Item>
+
+                        <Form.Item name="customerDataOrganizationFee" label="客户资料整理费">
+                          <InputNumber
+                            placeholder="请输入客户资料整理费"
+                            style={{ width: '100%' }}
+                            min={0}
+                            precision={2}
+                            addonBefore="¥"
+                            parser={parseNumberInput}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="统计日期" style={{ gridColumn: 'span 2' }}>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('organizationStartDate')}
+                            endValue={form.getFieldValue('organizationEndDate')}
+                            onStartChange={value =>
+                              form.setFieldValue('organizationStartDate', value)
+                            }
+                            onEndChange={value => form.setFieldValue('organizationEndDate', value)}
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="整理开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={false}
+                            startFieldName_formField="organizationStartDate"
+                            endFieldName_formField="organizationEndDate"
+                          />
+                        </Form.Item>
                       </div>
                     ),
                   },
@@ -2063,7 +2103,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '非代理企业行政许可注销', label: '非代理企业行政许可注销' },
                               { value: '银行开户', label: '银行开户' },
                               { value: '银行变更', label: '银行变更' },
-                              { value: '公司合作业务', label: '公司合作业务' },
                             ]}
                           />
                         </Form.Item>
@@ -2129,6 +2168,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '外包地址', label: '外包地址' },
                               { value: '税务风险报告', label: '税务风险报告' },
                               { value: '代理企业行政许可注销', label: '代理企业行政许可注销' },
+                              { value: '公司合作业务', label: '公司合作业务' },
                             ]}
                           />
                         </Form.Item>
