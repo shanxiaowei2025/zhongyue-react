@@ -62,6 +62,9 @@ const Departments = () => {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([])
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([])
+  
+  // 添加loading状态
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // 使用hooks获取数据和操作方法
   const { rawDepartments: treeData, isLoading: treeLoading } = useDepartments()
@@ -214,7 +217,13 @@ const Departments = () => {
   }
 
   const handleOk = async () => {
+    // 防止重复提交
+    if (isSubmitting) {
+      return
+    }
+
     try {
+      setIsSubmitting(true)
       const values = await form.validateFields()
 
       // 处理级联选择器的值，取数组的最后一项作为父部门ID
@@ -248,8 +257,11 @@ const Departments = () => {
         await createDepartment(submitData)
       }
       setModalVisible(false)
+      form.resetFields()
     } catch (error: any) {
       console.error('操作失败:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -657,6 +669,7 @@ const Departments = () => {
             open={modalVisible}
             onOk={handleOk}
             onCancel={handleCancel}
+            confirmLoading={isSubmitting}
             width={600}
           >
             <Form

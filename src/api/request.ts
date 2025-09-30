@@ -6,6 +6,22 @@ import type { ApiResponse } from '../types'
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
 // API服务器配置完成
 
+// 添加请求去重缓存
+const pendingRequests = new Map<string, Promise<any>>()
+
+// 生成请求的唯一标识
+const generateRequestKey = (method: string, url: string, data?: any) => {
+  const dataStr = data ? JSON.stringify(data) : ''
+  return `${method.toUpperCase()}_${url}_${dataStr}`
+}
+
+// 清理过期的请求缓存
+const clearRequestCache = (key: string) => {
+  setTimeout(() => {
+    pendingRequests.delete(key)
+  }, 1000) // 1秒后清理缓存
+}
+
 // 创建 axios 实例
 const instance = axios.create({
   baseURL: apiBaseUrl,
@@ -191,6 +207,56 @@ const request = {
     })
   },
   post<T>(url: string, data?: object, responseType?: ResponseType): Promise<T> {
+    // 对于重要的创建/更新接口，添加请求去重机制
+    const criticalEndpoints = [
+      '/expense',        // 费用创建
+      '/employee',       // 员工创建
+      '/customer',       // 客户创建
+      '/user',          // 用户创建
+      '/department',    // 部门创建
+      '/contract'       // 合同创建
+    ]
+    
+    const shouldDedup = criticalEndpoints.some(endpoint => url === endpoint || url.startsWith(endpoint + '/'))
+    
+    if (shouldDedup && data) {
+      const requestKey = generateRequestKey('POST', url, data)
+      
+      // 如果相同的请求正在进行中，返回现有的Promise
+      if (pendingRequests.has(requestKey)) {
+        console.warn(`检测到重复的${url}请求，使用缓存的请求`)
+        return pendingRequests.get(requestKey)!
+      }
+      
+      // 创建新的请求Promise
+      const requestPromise = (async () => {
+        try {
+          // 对于FormData，让浏览器自动设置Content-Type（包含boundary）
+          const config =
+            data instanceof FormData
+              ? { headers: { 'Content-Type': undefined }, responseType }
+              : { responseType }
+          
+          const res = await instance.post(url, data, config)
+          
+          // 如果是blob类型，直接返回response.data
+          if (responseType === 'blob') {
+            return res.data as T
+          }
+          return res.data
+        } finally {
+          // 请求完成后清理缓存
+          clearRequestCache(requestKey)
+        }
+      })()
+      
+      // 将请求Promise存储到缓存中
+      pendingRequests.set(requestKey, requestPromise)
+      
+      return requestPromise
+    }
+    
+    // 对于其他请求，使用原有逻辑
     // 对于FormData，让浏览器自动设置Content-Type（包含boundary）
     const config =
       data instanceof FormData

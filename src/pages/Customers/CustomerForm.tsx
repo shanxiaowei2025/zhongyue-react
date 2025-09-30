@@ -672,6 +672,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       return
     }
 
+    // 防止重复提交
+    if (isSaving) {
+      return
+    }
+
     try {
       // 不在这里调用 validateFields，让表单自己处理验证
       // Form 组件的 onFinish 只会在验证通过后才会被调用
@@ -2791,9 +2796,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         </div>
         <div className="customer-form-footer flex justify-end">
           <Space>
-            <Button onClick={() => handleCancel()}>取消</Button>
+            <Button onClick={() => handleCancel()} disabled={isSaving}>取消</Button>
             {mode !== 'view' && (
-              <Button type="primary" htmlType="submit" loading={isSaving}>
+              <Button type="primary" htmlType="submit" loading={isSaving} disabled={isSaving}>
                 {mode === 'add' ? '创建' : '保存'}
               </Button>
             )}

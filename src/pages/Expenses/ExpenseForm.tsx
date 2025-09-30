@@ -76,6 +76,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 获取当前用户信息
   const { user } = useAuthStore()
+  
+  // 添加提交状态管理
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
   const [tabFeeSums, setTabFeeSums] = useState<Record<string, number>>({
     '1': 0, // 代理记账
     '2': 0, // 社保代理
@@ -672,7 +676,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 提交表单
   const handleSubmit = async (keepOpen: boolean = false) => {
+    // 防止重复提交
+    if (isSubmitting) {
+      return
+    }
+
     try {
+      // 设置提交状态
+      setIsSubmitting(true)
+      
       // 在提交前同步计算一次总费用，确保费用正确
       calculateTotalFeeSync()
 
@@ -871,6 +883,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     } catch (error) {
       console.error('表单提交错误:', error)
       message.error('表单验证失败，请检查输入')
+    } finally {
+      // 重置提交状态
+      setIsSubmitting(false)
     }
   }
 
@@ -2173,10 +2188,15 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
             >
               <div style={{ textAlign: 'right', marginTop: '8px' }}>
                 <div>
-                  <Button onClick={handleCancel} className="mr-2">
+                  <Button onClick={handleCancel} className="mr-2" disabled={isSubmitting}>
                     取消
                   </Button>
-                  <Button type="primary" onClick={() => handleSubmit()}>
+                  <Button 
+                    type="primary" 
+                    onClick={() => handleSubmit()}
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                  >
                     确定
                   </Button>
                 </div>

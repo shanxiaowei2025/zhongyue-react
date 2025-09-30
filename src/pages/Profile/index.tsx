@@ -52,32 +52,36 @@ const Profile = () => {
     }
   }
 
-  const handleUpdateProfile = async (values: Partial<User>) => {
+  const handleUpdateProfile = async (values: { username: string; idCardNumber?: string; phone?: string }) => {
+    // 防止重复提交
+    if (loading) {
+      return
+    }
+
     setLoading(true)
     try {
-      const response = await updateUserProfile(0, {
-        idCardNumber: values.idCardNumber,
-        phone: values.phone || undefined,
-        avatar: userProfile?.avatar || user?.avatar || '',
-      })
+      const response = await updateUserProfile(0, values)
 
       if (response && response.code === 0) {
-        message.success('个人资料更新成功')
-        // 重新获取用户信息
-        fetchUserInfo()
-        // 更新全局状态
+        // 更新成功，更新本地用户信息
         if (user) {
           setUser({
             ...user,
-            idCardNumber: values.idCardNumber || user.idCardNumber,
-            phone: values.phone || user.phone,
+            ...values,
           })
         }
+
+        setUserProfile({
+          ...userProfile,
+          ...values,
+        })
+
+        showSuccess.update()
       } else {
-        throw new Error(response?.message || '更新个人资料失败')
+        throw new Error(response?.message || '更新失败')
       }
     } catch (error: any) {
-      console.error('更新个人资料失败', error)
+      console.error('更新用户资料失败', error)
       // 错误处理由拦截器统一处理
     } finally {
       setLoading(false)
@@ -89,6 +93,11 @@ const Profile = () => {
     newPassword: string
     confirmPassword: string
   }) => {
+    // 防止重复提交
+    if (loading) {
+      return
+    }
+
     if (values.newPassword !== values.confirmPassword) {
       showValidationError.newPasswordMismatch()
       return

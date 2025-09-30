@@ -50,6 +50,9 @@ const Users = () => {
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
+  
+  // 添加提交状态
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // 使用防抖值处理搜索
   const debouncedSearchText = useDebouncedValue(searchText, 500)
@@ -186,7 +189,13 @@ const Users = () => {
   }
 
   const handleOk = async () => {
+    // 防止重复提交
+    if (isSubmitting) {
+      return
+    }
+
     try {
+      setIsSubmitting(true)
       const values = await form.validateFields()
 
       // 处理部门ID，从级联选择器数组中获取最后一个值
@@ -208,6 +217,8 @@ const Users = () => {
       }
     } catch (error) {
       console.error('操作失败:', error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -407,6 +418,7 @@ const Users = () => {
         open={modalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
+        confirmLoading={isSubmitting}
         width={600}
       >
         <Form form={form} layout="vertical">

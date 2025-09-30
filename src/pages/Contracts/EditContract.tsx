@@ -52,6 +52,11 @@ const EditContract: React.FC = () => {
       return
     }
 
+    // 防止重复提交
+    if (isSubmitting) {
+      return
+    }
+
     try {
       setIsSubmitting(true)
 

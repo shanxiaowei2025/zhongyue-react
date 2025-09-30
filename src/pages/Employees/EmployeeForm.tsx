@@ -686,7 +686,7 @@ const EmployeeForm: React.FC = () => {
             <Col span={24}>
               <div className="flex justify-end space-x-4 mt-8">
                 <Button onClick={handleBack}>取消</Button>
-                <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
+                <Button type="primary" htmlType="submit" loading={loading} disabled={loading}>
                   {isEdit ? '更新' : '创建'}
                 </Button>
               </div>

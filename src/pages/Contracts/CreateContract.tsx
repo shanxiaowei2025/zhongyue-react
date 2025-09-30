@@ -194,6 +194,11 @@ const CreateContract: React.FC = () => {
 
   // 处理合同提交 - 通过ref调用
   const handleContractSubmit = async () => {
+    // 防止重复提交
+    if (isSubmitting) {
+      return
+    }
+
     try {
       setIsSubmitting(true)
       // 开始提交合同
