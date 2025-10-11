@@ -165,7 +165,13 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
     e.stopPropagation()
     if (!visible) {
       calculatePosition()
-      setIsUserInteracting(false) // 重置交互状态，允许外部状态同步
+      // 打开筛选框时，清空选择状态，让用户重新选择（替换而不是累加）
+      setSelectedValues([])
+      setSearchText('')
+      setRangeMin(null)
+      setRangeMax(null)
+      setTextFilterValue('')
+      setIsUserInteracting(false)
     } else {
       setIsUserInteracting(false) // 关闭时也重置交互状态
     }

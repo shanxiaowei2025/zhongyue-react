@@ -2614,7 +2614,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
               <div>
                 <div className="mb-1">身份证正面</div>
-                {renderImage(displayCustomer.legalPersonIdImages?.front, '身份证正面')}
+                {renderAttachmentImages(displayCustomer.legalPersonIdImages?.front as Record<string, ImageType> || {}, isMobile)}
               </div>
               <div>
                 <div className="mb-1">身份证反面</div>

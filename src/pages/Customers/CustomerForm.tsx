@@ -2486,16 +2486,17 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           <div>
             <h3 className="font-medium mb-2">法人身份证照片</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Form.Item name={['legalPersonIdImages', 'front']} label="身份证正面">
-                <FileUpload
-                  label="身份证正面"
+              <Form.Item name={['legalPersonIdImages', 'front']}>
+                <MultiFileUpload
+                  title="身份证正面"
                   disabled={mode === 'view'}
-                  value={safeGetFieldValue(form, ['legalPersonIdImages', 'front'])}
+                  value={safeGetFieldValue(form, ['legalPersonIdImages', 'front']) || {}}
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
-                  enableRemarks={true}
+                  accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf"
+                  showUploadArea={true}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">

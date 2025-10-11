@@ -246,7 +246,7 @@ export interface Customer {
   capitalContributionDeadline: string
   paidInCapital: PaidInCapitalItem[]
   legalPersonIdImages: {
-    front?: ImageTypeWithRemarks
+    front?: Record<string, ImageType> // 支持多张图片
     back?: ImageTypeWithRemarks
   }
   otherIdImages: Record<string, ImageType>
