@@ -442,6 +442,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   // }, [customer?.id, retryCount, maxRetries])
 
   // 辅助函数：确保图片数据是正确的单文件格式
+  // 确保图片数据格式为单文件格式（兼容历史数据）
   const ensureSingleFileFormat = (imageData: any): any => {
     if (!imageData || typeof imageData !== 'object') {
       return imageData
@@ -460,7 +461,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       
       // 检查第一个值是否是有效的文件对象
       if (firstFile && typeof firstFile === 'object' && firstFile.url && firstFile.fileName) {
-        console.log('🔄 转换图片格式:', { from: imageData, to: firstFile })
         return firstFile
       }
     }

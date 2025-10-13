@@ -246,8 +246,8 @@ export interface Customer {
   capitalContributionDeadline: string
   paidInCapital: PaidInCapitalItem[]
   legalPersonIdImages: {
-    front?: Record<string, ImageType> // 支持多张图片
-    back?: ImageTypeWithRemarks
+    front?: ImageTypeWithRemarks // 身份证正面（单文件）
+    back?: ImageTypeWithRemarks // 身份证反面（单文件）
   }
   otherIdImages: Record<string, ImageType>
   businessLicenseImages: {
