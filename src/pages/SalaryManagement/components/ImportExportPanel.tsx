@@ -1,17 +1,83 @@
-import React, { useState } from 'react'
-import { Button, Card, message } from 'antd'
-import { ImportOutlined, FileExcelOutlined, DownloadOutlined } from '@ant-design/icons'
-import type { ImportType, ImportResult } from '../../../types/salaryIntegrated'
+import React, { useState, useEffect } from 'react'
+import { Button, Card, message, Tag } from 'antd'
+import {
+  ImportOutlined,
+  FileExcelOutlined,
+  DownloadOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from '@ant-design/icons'
+import type { ImportType, ImportResult, ImportStatusRecord } from '../../../types/salaryIntegrated'
 import ImportModal from './ImportModal'
+import {
+  getImportStatus,
+  shouldDisplayImportStatus,
+  cleanupExpiredImportStatus,
+  recordImportStatus,
+} from '../../../utils/importStatus'
 
 interface ImportExportPanelProps {
   yearMonth: string
   onImport: (type: ImportType, file: File) => Promise<ImportResult>
 }
 
-const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ onImport }) => {
+const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ yearMonth, onImport }) => {
   const [importModalVisible, setImportModalVisible] = useState(false)
   const [importType, setImportType] = useState<ImportType>('socialInsurance')
+  // 导入状态记录 (按类型存储)
+  const [importStatuses, setImportStatuses] = useState<Record<ImportType, ImportStatusRecord | null>>({
+    salary: null,
+    socialInsurance: null,
+    subsidy: null,
+    attendance: null,
+    friendCircle: null,
+    deposit: null,
+  })
+
+  // 加载导入状态
+  useEffect(() => {
+    // 清理过期的导入状态记录
+    cleanupExpiredImportStatus()
+
+    // 计算要显示的数据月份 (当前月-1)
+    const now = new Date()
+    const targetYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    const targetMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+    const targetYearMonth = `${targetYear}-${String(targetMonth).padStart(2, '0')}`
+
+    // 加载所有类型的导入状态
+    const statuses: Record<ImportType, ImportStatusRecord | null> = {
+      salary: null,
+      socialInsurance: getImportStatus('socialInsurance', targetYearMonth),
+      subsidy: getImportStatus('subsidy', targetYearMonth),
+      attendance: getImportStatus('attendance', targetYearMonth),
+      friendCircle: getImportStatus('friendCircle', targetYearMonth),
+      deposit: getImportStatus('deposit', targetYearMonth),
+    }
+
+    setImportStatuses(statuses)
+  }, [])
+
+  // 刷新导入状态
+  const refreshImportStatus = (type: ImportType) => {
+    const now = new Date()
+    const targetYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+    const targetMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+    const targetYearMonth = `${targetYear}-${String(targetMonth).padStart(2, '0')}`
+
+    console.log('[refreshImportStatus] 刷新类型:', type, '目标月份:', targetYearMonth)
+    const status = getImportStatus(type, targetYearMonth)
+    console.log('[refreshImportStatus] 获取到的状态:', status)
+    
+    setImportStatuses(prev => {
+      const newStatuses = {
+        ...prev,
+        [type]: status,
+      }
+      console.log('[refreshImportStatus] 更新后的 importStatuses:', newStatuses)
+      return newStatuses
+    })
+  }
 
   const importTypes: {
     type: ImportType
@@ -70,6 +136,44 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ onImport }) => {
     message.success(`${name}模板下载成功`)
   }
 
+  // 渲染导入状态标签
+  const renderImportStatus = (type: ImportType) => {
+    const status = importStatuses[type]
+    console.log(`[renderImportStatus] ${type}:`, status)
+    
+    if (!status || !shouldDisplayImportStatus(status)) {
+      console.log(`[renderImportStatus] ${type}: 不显示 (status=${!!status}, shouldDisplay=${status ? shouldDisplayImportStatus(status) : false})`)
+      return null
+    }
+
+    const [year, month] = status.yearMonth.split('-')
+    const displayMonth = `${parseInt(month)}月`
+
+    if (status.status === 'success') {
+      return (
+        <Tag
+          icon={<CheckCircleOutlined />}
+          color="success"
+          className="ml-3"
+          style={{ fontSize: '12px' }}
+        >
+          {displayMonth}导入成功
+        </Tag>
+      )
+    } else {
+      return (
+        <Tag
+          icon={<CloseCircleOutlined />}
+          color="error"
+          className="ml-3"
+          style={{ fontSize: '12px' }}
+        >
+          {displayMonth}导入失败
+        </Tag>
+      )
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
       {/* 内容区域 */}
@@ -86,7 +190,10 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ onImport }) => {
                   <div className="flex items-center">
                     <FileExcelOutlined className="text-green-500 mr-3" />
                     <div>
-                      <div className="font-medium">{item.name}</div>
+                      <div className="font-medium flex items-center">
+                        {item.name}
+                        {renderImportStatus(item.type)}
+                      </div>
                       <div className="text-xs text-gray-500">{item.description}</div>
                     </div>
                   </div>
@@ -131,7 +238,85 @@ const ImportExportPanel: React.FC<ImportExportPanelProps> = ({ onImport }) => {
         visible={importModalVisible}
         type={importType}
         onCancel={handleImportModalCancel}
-        onImport={file => onImport(importType, file)}
+        onImport={async file => {
+          // 计算目标月份 (上个月)
+          const now = new Date()
+          const targetYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+          const targetMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+          const targetYearMonth = `${targetYear}-${String(targetMonth).padStart(2, '0')}`
+          
+          try {
+            const result = await onImport(importType, file)
+            
+            console.log('===== 导入状态记录 =====')
+            console.log('导入类型:', importType)
+            console.log('目标月份:', targetYearMonth)
+            console.log('导入结果:', result)
+            
+            // 判断导入是否真正成功：
+            // 1. success 为 true
+            // 2. 没有失败记录（failedCount 为 0 或 undefined，且 failedRecords 为空或 undefined）
+            const hasFailedRecords = 
+              (result.failedCount !== undefined && result.failedCount > 0) ||
+              (result.failedRecords !== undefined && result.failedRecords.length > 0)
+            
+            const isRealSuccess = result.success && !hasFailedRecords
+            
+            console.log('是否有失败记录:', hasFailedRecords)
+            console.log('实际是否成功:', isRealSuccess)
+            
+            // 记录导入状态到 localStorage
+            if (isRealSuccess) {
+              console.log('记录成功状态')
+              recordImportStatus(importType, targetYearMonth, 'success', result.message)
+            } else {
+              console.log('记录失败状态')
+              recordImportStatus(importType, targetYearMonth, 'failure', result.message)
+            }
+            
+            // 立即更新 state，让 UI 实时显示状态（不需要等待关闭弹窗）
+            console.log('立即更新状态到 state')
+            const newStatus = getImportStatus(importType, targetYearMonth)
+            console.log('获取到的新状态:', newStatus)
+            
+            setImportStatuses(prev => {
+              const updated = {
+                ...prev,
+                [importType]: newStatus,
+              }
+              console.log('立即更新后的 importStatuses:', updated)
+              return updated
+            })
+            
+            console.log('========================')
+            
+            return result
+          } catch (error: any) {
+            console.log('===== 导入异常捕获 =====')
+            console.log('导入类型:', importType)
+            console.log('目标月份:', targetYearMonth)
+            console.log('错误信息:', error)
+            
+            // 即使抛出异常，也要更新状态
+            // useSalaryIntegrated 已经记录了失败状态到 localStorage，我们只需要刷新 UI
+            const newStatus = getImportStatus(importType, targetYearMonth)
+            console.log('获取到的异常后状态:', newStatus)
+            
+            setImportStatuses(prev => {
+              const updated = {
+                ...prev,
+                [importType]: newStatus,
+              }
+              console.log('异常后更新的 importStatuses:', updated)
+              return updated
+            })
+            
+            console.log('========================')
+            
+            // 重新抛出错误，让 ImportModal 处理
+            throw error
+          }
+        }}
         title={`导入${importTypes.find(t => t.type === importType)?.name}`}
       />
     </div>

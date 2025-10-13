@@ -22,6 +22,7 @@ import type {
   ImportType,
   SalaryQueryParams,
 } from '../types/salaryIntegrated'
+import { recordImportStatus } from '../utils/importStatus'
 
 // 集成化薪资管理主Hook
 export const useSalaryIntegrated = () => {
@@ -216,6 +217,12 @@ export const useSalaryIntegrated = () => {
     // 导入数据
     importData: useCallback(
       async (type: ImportType, file: File): Promise<ImportResult> => {
+        // 计算导入的数据月份 (当前月-1)
+        const now = new Date()
+        const targetYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+        const targetMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+        const targetYearMonth = `${targetYear}-${String(targetMonth).padStart(2, '0')}`
+
         try {
           setLoading(true)
           message.loading('正在导入数据...', 0)
@@ -223,6 +230,13 @@ export const useSalaryIntegrated = () => {
           const result = await integratedApi.batchImport(type, file)
 
           message.destroy()
+
+          // 记录导入状态
+          if (result.success) {
+            recordImportStatus(type, targetYearMonth, 'success', result.message)
+          } else {
+            recordImportStatus(type, targetYearMonth, 'failure', result.message)
+          }
 
           // 刷新相关数据
           await mutateMonthly()
@@ -233,6 +247,10 @@ export const useSalaryIntegrated = () => {
           return result
         } catch (error: any) {
           message.destroy()
+          
+          // 记录导入失败状态
+          recordImportStatus(type, targetYearMonth, 'failure', error.message || '导入失败')
+          
           // 不在这里显示错误信息，让调用方（ImportModal）处理
           // 但是需要确保错误对象包含后端的错误信息
           throw error

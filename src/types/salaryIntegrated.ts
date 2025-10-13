@@ -480,6 +480,18 @@ export type ImportType =
   | 'deposit'
 export type ExportType = ImportType
 
+// 导入状态记录
+export interface ImportStatusRecord {
+  type: ImportType // 导入数据类型
+  yearMonth: string // 导入的数据月份 (格式: YYYY-MM)
+  status: 'success' | 'failure' // 导入状态
+  importedAt: string // 导入时间
+  message?: string // 状态消息
+}
+
+// 导入状态存储类型 (按月份和类型存储)
+export type ImportStatusStorage = Record<string, ImportStatusRecord>
+
 // 自动生成薪资响应类型
 export interface AutoGenerateSalaryResult {
   success: boolean
