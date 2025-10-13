@@ -441,6 +441,33 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   //   }
   // }, [customer?.id, retryCount, maxRetries])
 
+  // 辅助函数：确保图片数据是正确的单文件格式
+  const ensureSingleFileFormat = (imageData: any): any => {
+    if (!imageData || typeof imageData !== 'object') {
+      return imageData
+    }
+
+    // 如果已经是单文件格式（有url和fileName字段），直接返回
+    if (imageData.url && imageData.fileName) {
+      return imageData
+    }
+
+    // 如果是旧的多文件格式（对象套对象），取第一个文件
+    const keys = Object.keys(imageData)
+    if (keys.length > 0) {
+      const firstKey = keys[0]
+      const firstFile = imageData[firstKey]
+      
+      // 检查第一个值是否是有效的文件对象
+      if (firstFile && typeof firstFile === 'object' && firstFile.url && firstFile.fileName) {
+        console.log('🔄 转换图片格式:', { from: imageData, to: firstFile })
+        return firstFile
+      }
+    }
+
+    return imageData
+  }
+
   useEffect(() => {
     if (customer && mode !== 'add') {
       // Convert string dates to Dayjs objects
@@ -458,6 +485,21 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           : null,
         // 使用 9999-12-31 作为无固定期限的标志
         licenseNoFixedTerm: customer.licenseExpiryDate === '9999-12-31',
+        // 确保身份证图片数据格式正确
+        legalPersonIdImages: customer.legalPersonIdImages ? {
+          front: ensureSingleFileFormat(customer.legalPersonIdImages.front),
+          back: ensureSingleFileFormat(customer.legalPersonIdImages.back),
+        } : undefined,
+        // 确保营业执照图片数据格式正确
+        businessLicenseImages: customer.businessLicenseImages ? {
+          main: ensureSingleFileFormat(customer.businessLicenseImages.main),
+          copy: ensureSingleFileFormat(customer.businessLicenseImages.copy),
+        } : undefined,
+        // 确保开户许可证图片数据格式正确
+        bankAccountLicenseImages: customer.bankAccountLicenseImages ? {
+          basic: ensureSingleFileFormat(customer.bankAccountLicenseImages.basic),
+          general: ensureSingleFileFormat(customer.bankAccountLicenseImages.general),
+        } : undefined,
       }
       form.setFieldsValue(formValues)
 
@@ -2486,17 +2528,16 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           <div>
             <h3 className="font-medium mb-2">法人身份证照片</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Form.Item name={['legalPersonIdImages', 'front']}>
-                <MultiFileUpload
-                  title="身份证正面"
+              <Form.Item name={['legalPersonIdImages', 'front']} label="身份证正面">
+                <FileUpload
+                  label="身份证正面"
                   disabled={mode === 'view'}
-                  value={safeGetFieldValue(form, ['legalPersonIdImages', 'front']) || {}}
+                  value={safeGetFieldValue(form, ['legalPersonIdImages', 'front'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['legalPersonIdImages', 'front'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
-                  accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf"
-                  showUploadArea={true}
+                  enableRemarks={true}
                 />
               </Form.Item>
               <Form.Item name={['legalPersonIdImages', 'back']} label="身份证反面">
