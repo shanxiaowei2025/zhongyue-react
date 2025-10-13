@@ -2054,7 +2054,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '食品经营许可证', label: '食品经营许可证' },
                               { value: '卫生许可证', label: '卫生许可证' },
                               { value: '酒类经营许可证', label: '酒类经营许可证' },
-                              { value: '烟草专卖零售许可证', label: '烟草专卖零售许可证' },
                               { value: '道路运输许可证', label: '道路运输许可证' },
                               { value: '医疗器械经营许可证', label: '医疗器械经营许可证' },
                               { value: '建筑施工许可证', label: '建筑施工许可证' },
