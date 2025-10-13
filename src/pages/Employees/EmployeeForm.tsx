@@ -436,14 +436,49 @@ const EmployeeForm: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <div className="flex items-center mb-4">
-          <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="mr-4">
-            返回
-          </Button>
-          <Title level={2} className="m-0">
-            {isEdit ? '编辑员工' : '新增员工'}
-          </Title>
+      {/* 顶部标题栏 - 添加粘性定位 */}
+      <div
+        className="mb-6 bg-white z-10"
+        style={{
+          position: 'sticky',
+          top: -25,
+          paddingTop: '1rem',
+          paddingBottom: '1rem',
+          marginLeft: '-1.5rem',
+          marginRight: '-1.5rem',
+          marginTop: '-1.5rem',
+          paddingLeft: '1.5rem',
+          paddingRight: '1.5rem',
+          borderBottom: '2px solid #d1d5db', // 加粗边框使其更明显
+          boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.15)', // 增强阴影效果
+        }}
+      >
+        <div className="flex items-center justify-between">
+          {/* 左侧：返回按钮和标题 */}
+          <div className="flex items-center">
+            <Button icon={<ArrowLeftOutlined />} onClick={handleBack} className="mr-4">
+              返回
+            </Button>
+            <Title level={2} className="m-0">
+              {isEdit ? '编辑员工' : '新增员工'}
+            </Title>
+          </div>
+
+          {/* 右侧：操作按钮 */}
+          <div className="flex space-x-4">
+            <Button onClick={handleBack} disabled={loading}>
+              取消
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={() => form.submit()}
+              loading={loading}
+              disabled={loading}
+            >
+              {isEdit ? '更新' : '创建'}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -680,16 +715,6 @@ const EmployeeForm: React.FC = () => {
                   showUploadArea={true}
                 />
               </Form.Item>
-            </Col>
-
-            {/* 提交按钮 */}
-            <Col span={24}>
-              <div className="flex justify-end space-x-4 mt-8">
-                <Button onClick={handleBack}>取消</Button>
-                <Button type="primary" htmlType="submit" loading={loading} disabled={loading}>
-                  {isEdit ? '更新' : '创建'}
-                </Button>
-              </div>
             </Col>
           </Row>
         </Form>

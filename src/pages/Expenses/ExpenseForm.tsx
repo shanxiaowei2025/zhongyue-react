@@ -134,10 +134,10 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 定义每个标签页包含的费用字段映射
   const tabFeeFieldsMap: Record<string, string[]> = {
-    '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee'], // 代理记账
+    '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee', 'addressFee'], // 代理记账
     '2': ['socialInsuranceAgencyFee', 'housingFundAgencyFee'], // 社保代理
     '3': ['statisticalReportFee', 'customerDataOrganizationFee'], // 统计报表
-    '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee', 'addressFee'], // 新办执照
+    '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee'], // 新办执照
     '5': ['changeFee'], // 变更业务
     '6': ['administrativeLicenseFee'], // 行政许可
     '7': ['otherBusinessFee', 'otherBusinessOutsourcingFee', 'otherBusinessSpecialFee'], // 其他业务
@@ -1641,6 +1641,35 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             endFieldName_formField="invoiceSoftwareEndDate"
                           />
                         </Form.Item>
+
+                        <Form.Item name="addressFee" label="地址费">
+                          <InputNumber
+                            placeholder="请输入地址费"
+                            style={{ width: '100%' }}
+                            min={0}
+                            precision={2}
+                            addonBefore="¥"
+                            parser={parseNumberInput}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('addressStartDate')}
+                            endValue={form.getFieldValue('addressEndDate')}
+                            onStartChange={value => form.setFieldValue('addressStartDate', value)}
+                            onEndChange={value => form.setFieldValue('addressEndDate', value)}
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="地址开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.addressStartDate}
+                            startFieldName_formField="addressStartDate"
+                            endFieldName_formField="addressEndDate"
+                          />
+                        </Form.Item>
                       </div>
                     ),
                   },
@@ -1957,35 +1986,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
-                          />
-                        </Form.Item>
-
-                        <Form.Item name="addressFee" label="地址费">
-                          <InputNumber
-                            placeholder="请输入地址费"
-                            style={{ width: '100%' }}
-                            min={0}
-                            precision={2}
-                            addonBefore="¥"
-                            parser={parseNumberInput}
-                          />
-                        </Form.Item>
-
-                        <Form.Item label="地址费日期" style={{ gridColumn: 'span 2' }}>
-                          <DateRangePicker
-                            startValue={form.getFieldValue('addressStartDate')}
-                            endValue={form.getFieldValue('addressEndDate')}
-                            onStartChange={value => form.setFieldValue('addressStartDate', value)}
-                            onEndChange={value => form.setFieldValue('addressEndDate', value)}
-                            startPlaceholder="开始日期"
-                            endPlaceholder="结束日期"
-                            startFieldName="地址开始日期"
-                            style={{ width: '100%' }}
-                            startMode={mode}
-                            startHasPermission={hasFullDateEditPermission()}
-                            startHasAutoFillValue={!!autoFillDates.addressStartDate}
-                            startFieldName_formField="addressStartDate"
-                            endFieldName_formField="addressEndDate"
                           />
                         </Form.Item>
                       </div>
