@@ -128,8 +128,16 @@ const ImportModal: React.FC<ImportModalProps> = ({
       }
 
       // 不自动关闭模态框，让用户手动关闭
-    } catch (error) {
+    } catch (error: any) {
       console.error('导入失败:', error)
+      // 将错误信息显示在导入结果区域
+      const errorMessage = error.backendMessage || error.message || '导入失败，请重试'
+      setImportResult({
+        success: false,
+        message: errorMessage,
+        successCount: 0,
+        failedCount: 0,
+      })
     } finally {
       setImporting(false)
     }
@@ -234,9 +242,15 @@ const ImportModal: React.FC<ImportModalProps> = ({
         {importResult && (
           <div className="mt-4">
             <Alert
-              message={`导入${importResult.success ? '成功' : '完成'}`}
+              message={importResult.success ? '导入成功' : '导入失败'}
               description={<div>{importResult.message && <p>{importResult.message}</p>}</div>}
-              type={importResult.success && importResult.failedCount === 0 ? 'success' : 'warning'}
+              type={
+                importResult.success
+                  ? importResult.failedCount === 0
+                    ? 'success'
+                    : 'warning'
+                  : 'error'
+              }
               showIcon
             />
 

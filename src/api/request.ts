@@ -140,9 +140,17 @@ instance.interceptors.response.use(
     // 判断是否是薪资密码验证请求
     const isSalaryPasswordRequest = requestUrl.includes('/auth/salary/verify')
 
+    // 判断是否是导入数据请求（这些请求的错误信息由调用方处理，不在拦截器中显示）
+    const isImportRequest = requestUrl.includes('/import') || requestUrl.includes('/upload')
+
     // 统一错误信息提取：优先使用后端返回的message，其次使用默认错误信息
     const backendMessage = error.response?.data?.message
     const statusCode = error.response?.status
+
+    // 将后端的错误信息附加到error对象上，方便调用方使用
+    if (backendMessage) {
+      error.backendMessage = backendMessage
+    }
 
     // 处理不同HTTP状态码错误
     if (statusCode === 401) {
@@ -180,6 +188,9 @@ instance.interceptors.response.use(
       // 处理403错误，显示后端返回的错误消息
       const errorMessage = backendMessage || '导出失败，请联系管理员添加导出权限'
       message.error(errorMessage)
+    } else if (statusCode === 400 && isImportRequest) {
+      // 对于导入请求的400错误，不在这里显示错误信息，让调用方处理
+      // 这样可以显示更友好的错误提示
     } else if (statusCode) {
       // 处理其他HTTP错误状态码（400, 500等），统一显示后端返回的错误信息
       const errorMessage = backendMessage || `请求失败 (${statusCode})`

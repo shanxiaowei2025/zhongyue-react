@@ -233,7 +233,8 @@ export const useSalaryIntegrated = () => {
           return result
         } catch (error: any) {
           message.destroy()
-          message.error(`导入失败: ${error.message}`)
+          // 不在这里显示错误信息，让调用方（ImportModal）处理
+          // 但是需要确保错误对象包含后端的错误信息
           throw error
         } finally {
           setLoading(false)
