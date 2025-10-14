@@ -392,6 +392,22 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
 
   // 渲染收据表格的辅助函数
   const renderExpenseTable = (filteredExpenses: Expense[], title: string, expenseType: 'new-or-empty' | 'renewal') => {
+    // 提前计算表格数据，避免在条件渲染中使用 Hook
+    let tableData: Array<Record<string, any>> = []
+    let columnsWithData = new Set<string>()
+    let summaryRow: Record<string, any> = { companyName: '合计' }
+    let columns: Array<Record<string, any>> = []
+    let dataWithSummary: Array<Record<string, any>> = []
+    
+    if (filteredExpenses.length > 0) {
+      const transformResult = transformToTableData(filteredExpenses)
+      tableData = transformResult.tableData
+      columnsWithData = transformResult.columnsWithData
+      summaryRow = calculateSummaryRow(tableData)
+      columns = generateTableColumns(columnsWithData)
+      dataWithSummary = [...tableData, summaryRow]
+    }
+    
     return (
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
@@ -417,27 +433,18 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
         </div>
         <Spin spinning={expenseLoading}>
           {filteredExpenses.length > 0 ? (
-            (() => {
-              const { tableData, columnsWithData } = transformToTableData(filteredExpenses)
-              const summaryRow = calculateSummaryRow(tableData)
-              const columns = generateTableColumns(columnsWithData)
-              const dataWithSummary = [...tableData, summaryRow]
-
-              return (
-                <Table
-                  columns={columns}
-                  dataSource={dataWithSummary}
-                  rowKey="companyName"
-                  pagination={false}
-                  scroll={{ x: 'max-content' }}
-                  size="small"
-                  bordered
-                  rowClassName={(_, index) =>
-                    index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
-                  }
-                />
-              )
-            })()
+            <Table
+              columns={columns}
+              dataSource={dataWithSummary}
+              rowKey="companyName"
+              pagination={false}
+              scroll={{ x: 'max-content' }}
+              size="small"
+              bordered
+              rowClassName={(_, index) =>
+                index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
+              }
+            />
           ) : (
             <div style={{ textAlign: 'center', padding: 50 }}>
               <Empty description={`本月暂无${title}`} image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -727,47 +734,54 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
               // 根据当前选择的类型获取对应的数据
               const currentExpenses = currentExpenseType === 'new-or-empty' ? newOrEmptyExpenses : renewalExpenses
               
+              // 提前计算表格数据，避免在条件渲染中使用 Hook
+              let tableData: Array<Record<string, any>> = []
+              let columnsWithData = new Set<string>()
+              let summaryRow: Record<string, any> = { companyName: '合计' }
+              let columns: Array<Record<string, any>> = []
+              let dataWithSummary: Array<Record<string, any>> = []
+              
               if (currentExpenses.length > 0) {
-                const { tableData, columnsWithData } = transformToTableData(currentExpenses)
-                const summaryRow = calculateSummaryRow(tableData)
-                const columns = generateTableColumns(columnsWithData)
-                const dataWithSummary = [...tableData, summaryRow]
-
-                return (
-                  <Table
-                    columns={columns}
-                    dataSource={dataWithSummary}
-                    rowKey="companyName"
-                    pagination={false}
-                    scroll={{
-                      x: 'max-content',
-                      y: 'calc(100vh - 200px)', // 固定表头，可滚动内容，减少高度预留值
-                    }}
-                    size="middle"
-                    bordered
-                    rowClassName={(_, index) =>
-                      index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
-                    }
-                    sticky
-                  />
-                )
-              } else {
-                return (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: '100%',
-                    }}
-                  >
-                    <Empty 
-                      description={`本月暂无${currentExpenseType === 'new-or-empty' ? '新增' : '续费'}收据`} 
-                      image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                    />
-                  </div>
-                )
+                const transformResult = transformToTableData(currentExpenses)
+                tableData = transformResult.tableData
+                columnsWithData = transformResult.columnsWithData
+                summaryRow = calculateSummaryRow(tableData)
+                columns = generateTableColumns(columnsWithData)
+                dataWithSummary = [...tableData, summaryRow]
               }
+              
+              return currentExpenses.length > 0 ? (
+                <Table
+                  columns={columns}
+                  dataSource={dataWithSummary}
+                  rowKey="companyName"
+                  pagination={false}
+                  scroll={{
+                    x: 'max-content',
+                    y: 'calc(100vh - 200px)', // 固定表头，可滚动内容，减少高度预留值
+                  }}
+                  size="middle"
+                  bordered
+                  rowClassName={(_, index) =>
+                    index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
+                  }
+                  sticky
+                />
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                  }}
+                >
+                  <Empty 
+                    description={`本月暂无${currentExpenseType === 'new-or-empty' ? '新增' : '续费'}收据`} 
+                    image={Empty.PRESENTED_IMAGE_SIMPLE} 
+                  />
+                </div>
+              )
             })()}
           </Spin>
         </div>
