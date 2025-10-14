@@ -54,6 +54,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [fullscreenTable, setFullscreenTable] = useState(false)
+  const [currentExpenseType, setCurrentExpenseType] = useState<'new-or-empty' | 'renewal'>('new-or-empty')
 
   // 构建费用查询参数
   const expenseParams = useMemo(() => {
@@ -82,6 +83,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       pageSize: 10,
     }
   )
+
 
   // 全屏时阻止body滚动
   useEffect(() => {
@@ -144,6 +146,13 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   const transformToTableData = (expenseList: Expense[]) => {
     // 按公司分组
     const companyMap = new Map<string, any>()
+    // 记录哪些列有数据
+    const columnsWithData = new Set<string>()
+    // 必须显示的列
+    const requiredColumns = [
+      'businessCommissionOwn', 'businessCommissionOutsource', 'specialBusinessCommission', 
+      'agencyCommission', 'basicBusinessPerformance', 'outsourcingBusinessPerformance'
+    ]
 
     expenseList.forEach(expense => {
       const companyName = expense.companyName
@@ -162,6 +171,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
         if (amount > 0) {
           company[key] = (company[key] || 0) + amount
           company.totalAmount += amount
+          columnsWithData.add(key) // 记录有数据的列
         }
       })
 
@@ -170,6 +180,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
         const amount = toNumber((expense as any)[key])
         if (amount > 0) {
           company[key] = (company[key] || 0) + amount
+          columnsWithData.add(key) // 记录有数据的列
           // 提成不计入总费用
         }
       })
@@ -178,12 +189,14 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       const basicBusinessPerformance = toNumber(expense.basicBusinessPerformance)
       if (basicBusinessPerformance > 0) {
         company.basicBusinessPerformance = (company.basicBusinessPerformance || 0) + basicBusinessPerformance
+        columnsWithData.add('basicBusinessPerformance') // 记录有数据的列
       }
 
       // 处理外包业务业绩
       const outsourcingBusinessPerformance = toNumber(expense.outsourcingBusinessPerformance)
       if (outsourcingBusinessPerformance > 0) {
         company.outsourcingBusinessPerformance = (company.outsourcingBusinessPerformance || 0) + outsourcingBusinessPerformance
+        columnsWithData.add('outsourcingBusinessPerformance') // 记录有数据的列
       }
 
       // 处理业务类型字段（文本字段，取第一个非空值或合并多个值）
@@ -197,6 +210,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
             company.businessType += `, ${expense.businessType.trim()}`
           }
         }
+        columnsWithData.add('businessType') // 记录有数据的列
       }
 
       if (expense.socialInsuranceBusinessType && expense.socialInsuranceBusinessType.trim()) {
@@ -209,6 +223,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
             company.socialInsuranceBusinessType += `, ${expense.socialInsuranceBusinessType.trim()}`
           }
         }
+        columnsWithData.add('socialInsuranceBusinessType') // 记录有数据的列
       }
 
       // 处理赠送代理时长字段
@@ -222,14 +237,21 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
             company.giftAgencyDuration += `, ${expense.giftAgencyDuration.trim()}`
           }
         }
+        columnsWithData.add('giftAgencyDuration') // 记录有数据的列
       }
     })
 
-    return Array.from(companyMap.values())
+    // 将必须显示的列添加到columnsWithData中
+    requiredColumns.forEach(col => columnsWithData.add(col))
+
+    return { 
+      tableData: Array.from(companyMap.values()),
+      columnsWithData: columnsWithData
+    }
   }
 
   // 生成表格列定义
-  const generateTableColumns = () => {
+  const generateTableColumns = (columnsWithData: Set<string>) => {
     // 基础列
     const columns = [
       {
@@ -248,28 +270,40 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     const feeColumns: any[] = []
 
     Object.entries(FEE_TYPE_MAP).forEach(([key, label]) => {
+      // 如果该列没有数据，则跳过
+      if (!columnsWithData.has(key)) {
+        return
+      }
+      
       // 在代理费前插入代理费业务类型列和赠送代理时长列
       if (key === 'agencyFee') {
-        feeColumns.push({
-          title: '代理费业务类型',
-          dataIndex: 'businessType',
-          key: 'businessType',
-          width: 150,
-          render: (value: string) => value || '-',
-          align: 'center' as const,
-        })
-        feeColumns.push({
-          title: '赠送代理时长',
-          dataIndex: 'giftAgencyDuration',
-          key: 'giftAgencyDuration',
-          width: 150,
-          render: (value: string) => value || '-',
-          align: 'center' as const,
-        })
+        // 只有当businessType列有数据时才添加
+        if (columnsWithData.has('businessType')) {
+          feeColumns.push({
+            title: '代理费业务类型',
+            dataIndex: 'businessType',
+            key: 'businessType',
+            width: 150,
+            render: (value: string) => value || '-',
+            align: 'center' as const,
+          })
+        }
+        
+        // 只有当giftAgencyDuration列有数据时才添加
+        if (columnsWithData.has('giftAgencyDuration')) {
+          feeColumns.push({
+            title: '赠送代理时长',
+            dataIndex: 'giftAgencyDuration',
+            key: 'giftAgencyDuration',
+            width: 150,
+            render: (value: string) => value || '-',
+            align: 'center' as const,
+          })
+        }
       }
 
       // 在社保代理费前插入社保代理业务类型列
-      if (key === 'socialInsuranceAgencyFee') {
+      if (key === 'socialInsuranceAgencyFee' && columnsWithData.has('socialInsuranceBusinessType')) {
         feeColumns.push({
           title: '社保代理业务类型',
           dataIndex: 'socialInsuranceBusinessType',
@@ -303,7 +337,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       align: 'right' as const,
     }
 
-    // 基础业务业绩列
+    // 基础业务业绩列 - 必须显示
     const basicBusinessPerformanceColumn = {
       title: '基础业务业绩',
       dataIndex: 'basicBusinessPerformance',
@@ -313,7 +347,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       align: 'right' as const,
     }
 
-    // 外包业务业绩列
+    // 外包业务业绩列 - 必须显示
     const outsourcingBusinessPerformanceColumn = {
       title: '外包业务业绩',
       dataIndex: 'outsourcingBusinessPerformance',
@@ -323,21 +357,30 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       align: 'right' as const,
     }
 
-    // 提成主列，包含子列
-    const commissionColumn = {
-      title: '提成',
-      key: 'commission',
-      children: Object.entries(COMMISSION_TYPE_MAP).map(([key, label]) => ({
+    // 过滤出有数据的提成列
+    const commissionColumns = Object.entries(COMMISSION_TYPE_MAP)
+      .filter(([key]) => columnsWithData.has(key))
+      .map(([key, label]) => ({
         title: label,
         dataIndex: key,
         key,
         width: 120,
         render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
         align: 'right' as const,
-      })),
+      }))
+
+    // 只有当至少有一个提成列有数据时，才添加提成主列
+    const finalColumns = [...columns, ...feeColumns, totalColumn, basicBusinessPerformanceColumn, outsourcingBusinessPerformanceColumn]
+    
+    if (commissionColumns.length > 0) {
+      finalColumns.push({
+        title: '提成',
+        key: 'commission',
+        children: commissionColumns,
+      })
     }
 
-    return [...columns, ...feeColumns, totalColumn, basicBusinessPerformanceColumn, outsourcingBusinessPerformanceColumn, commissionColumn]
+    return finalColumns
   }
 
   // 计算合计行
@@ -448,6 +491,83 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     setEditing(false)
     form.resetFields()
   }
+
+  // 渲染收据表格的辅助函数
+  const renderExpenseTable = (filteredExpenses: Expense[], title: string, expenseType: 'new-or-empty' | 'renewal') => {
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold text-lg">
+            {employee.name} - {title}
+            <span className="text-sm text-gray-500 ml-2">
+              ({dayjs(yearMonth).format('YYYY年MM月')})
+            </span>
+          </h3>
+          {filteredExpenses.length > 0 && (
+            <Button
+              type="text"
+              icon={<FullscreenOutlined />}
+              onClick={() => {
+                setCurrentExpenseType(expenseType)
+                setFullscreenTable(true)
+              }}
+              title="全屏显示表格"
+            >
+              全屏
+            </Button>
+          )}
+        </div>
+        <Spin spinning={expenseLoading}>
+          {filteredExpenses.length > 0 ? (
+            (() => {
+              const { tableData, columnsWithData } = transformToTableData(filteredExpenses)
+              const summaryRow = calculateSummaryRow(tableData)
+              const columns = generateTableColumns(columnsWithData)
+              const dataWithSummary = [...tableData, summaryRow]
+
+              return (
+                <Table
+                  columns={columns}
+                  dataSource={dataWithSummary}
+                  rowKey="companyName"
+                  pagination={false}
+                  scroll={{ x: 'max-content' }}
+                  size="small"
+                  bordered
+                  rowClassName={(_, index) =>
+                    index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
+                  }
+                />
+              )
+            })()
+          ) : (
+            <div style={{ textAlign: 'center', padding: 50 }}>
+              <Empty description={`本月暂无${title}`} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            </div>
+          )}
+        </Spin>
+      </div>
+    )
+  }
+
+  // 根据业务类型过滤收据
+  const newOrEmptyExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      const businessType = expense.businessType?.trim() || ''
+      const socialInsuranceBusinessType = expense.socialInsuranceBusinessType?.trim() || ''
+      return (businessType === '' || businessType === '-' || businessType === '新增') && 
+             (socialInsuranceBusinessType === '' || socialInsuranceBusinessType === '-' || socialInsuranceBusinessType === '新增')
+    })
+  }, [expenses])
+
+  const renewalExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      const businessType = expense.businessType?.trim() || ''
+      const socialInsuranceBusinessType = expense.socialInsuranceBusinessType?.trim() || ''
+      return (businessType === '续费' && (socialInsuranceBusinessType === '' || socialInsuranceBusinessType === '-' || socialInsuranceBusinessType === '续费')) || 
+             ((businessType === '' || businessType === '-') && socialInsuranceBusinessType === '续费')
+    })
+  }, [expenses])
 
   return (
     <div style={{ height: '100%' }}>
@@ -798,55 +918,22 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
             key: 'related-expenses',
             label: '关联收据',
             children: (
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-lg">
-                    {employee.name} - 关联收据
-                    <span className="text-sm text-gray-500 ml-2">
-                      ({dayjs(yearMonth).format('YYYY年MM月')})
-                    </span>
-                  </h3>
-                  {expenses.length > 0 && (
-                    <Button
-                      type="text"
-                      icon={<FullscreenOutlined />}
-                      onClick={() => setFullscreenTable(true)}
-                      title="全屏显示表格"
-                    >
-                      全屏
-                    </Button>
-                  )}
-                </div>
-                <Spin spinning={expenseLoading}>
-                  {expenses.length > 0 ? (
-                    (() => {
-                      const tableData = transformToTableData(expenses)
-                      const summaryRow = calculateSummaryRow(tableData)
-                      const columns = generateTableColumns()
-                      const dataWithSummary = [...tableData, summaryRow]
-
-                      return (
-                        <Table
-                          columns={columns}
-                          dataSource={dataWithSummary}
-                          rowKey="companyName"
-                          pagination={false}
-                          scroll={{ x: 'max-content' }}
-                          size="small"
-                          bordered
-                          rowClassName={(_, index) =>
-                            index === dataWithSummary.length - 1 ? 'bg-gray-50 font-bold' : ''
-                          }
-                        />
-                      )
-                    })()
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: 50 }}>
-                      <Empty description="本月暂无关联收据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                    </div>
-                  )}
-                </Spin>
-              </div>
+              <Tabs
+                defaultActiveKey="new-or-empty"
+                items={[
+                  {
+                    key: 'new-or-empty',
+                    label: `新增 (${newOrEmptyExpenses.length})`,
+                    children: renderExpenseTable(newOrEmptyExpenses, '新增收据', 'new-or-empty'),
+                  },
+                  {
+                    key: 'renewal',
+                    label: `续费 (${renewalExpenses.length})`,
+                    children: renderExpenseTable(renewalExpenses, '续费收据', 'renewal'),
+                  },
+                ]}
+                size="small"
+              />
             ),
           },
         ]}
@@ -863,7 +950,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
         title={
           <div className="flex justify-between items-center">
             <span>
-              {employee.name} - 关联收据 ({dayjs(yearMonth).format('YYYY年MM月')})
+              {employee.name} - {currentExpenseType === 'new-or-empty' ? '新增收据' : '续费收据'} ({dayjs(yearMonth).format('YYYY年MM月')})
             </span>
             <Button
               type="text"
@@ -916,11 +1003,13 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
           }}
         >
           <Spin spinning={expenseLoading} style={{ height: '100%' }}>
-            {expenses.length > 0 ? (
-              (() => {
-                const tableData = transformToTableData(expenses)
+            {(() => {
+              const currentExpenses = currentExpenseType === 'new-or-empty' ? newOrEmptyExpenses : renewalExpenses
+              
+              if (currentExpenses.length > 0) {
+                const { tableData, columnsWithData } = transformToTableData(currentExpenses)
                 const summaryRow = calculateSummaryRow(tableData)
-                const columns = generateTableColumns()
+                const columns = generateTableColumns(columnsWithData)
                 const dataWithSummary = [...tableData, summaryRow]
 
                 return (
@@ -941,19 +1030,24 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                     sticky
                   />
                 )
-              })()
-            ) : (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                }}
-              >
-                <Empty description="本月暂无关联收据" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-              </div>
-            )}
+              } else {
+                return (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                    }}
+                  >
+                    <Empty 
+                      description={`本月暂无${currentExpenseType === 'new-or-empty' ? '新增' : '续费'}收据`} 
+                      image={Empty.PRESENTED_IMAGE_SIMPLE} 
+                    />
+                  </div>
+                )
+              }
+            })()}
           </Spin>
         </div>
       </Modal>
