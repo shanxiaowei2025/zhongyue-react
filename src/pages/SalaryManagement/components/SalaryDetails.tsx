@@ -143,6 +143,25 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     }
   }, [fullscreenTable])
 
+  // 根据业务类型过滤收据 - 必须在早期返回之前调用
+  const newOrEmptyExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      const businessType = expense.businessType?.trim() || ''
+      const socialInsuranceBusinessType = expense.socialInsuranceBusinessType?.trim() || ''
+      return (businessType === '' || businessType === '-' || businessType === '新增') && 
+             (socialInsuranceBusinessType === '' || socialInsuranceBusinessType === '-' || socialInsuranceBusinessType === '新增')
+    })
+  }, [expenses])
+
+  const renewalExpenses = useMemo(() => {
+    return expenses.filter(expense => {
+      const businessType = expense.businessType?.trim() || ''
+      const socialInsuranceBusinessType = expense.socialInsuranceBusinessType?.trim() || ''
+      return (businessType === '续费' && (socialInsuranceBusinessType === '' || socialInsuranceBusinessType === '-' || socialInsuranceBusinessType === '续费')) || 
+             ((businessType === '' || businessType === '-') && socialInsuranceBusinessType === '续费')
+    })
+  }, [expenses])
+
   // 数据透视转换：将费用列表转换为表格数据
   const transformToTableData = (expenseList: Expense[]) => {
     // 按公司分组
@@ -557,25 +576,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       </div>
     )
   }
-
-  // 根据业务类型过滤收据
-  const newOrEmptyExpenses = useMemo(() => {
-    return expenses.filter(expense => {
-      const businessType = expense.businessType?.trim() || ''
-      const socialInsuranceBusinessType = expense.socialInsuranceBusinessType?.trim() || ''
-      return (businessType === '' || businessType === '-' || businessType === '新增') && 
-             (socialInsuranceBusinessType === '' || socialInsuranceBusinessType === '-' || socialInsuranceBusinessType === '新增')
-    })
-  }, [expenses])
-
-  const renewalExpenses = useMemo(() => {
-    return expenses.filter(expense => {
-      const businessType = expense.businessType?.trim() || ''
-      const socialInsuranceBusinessType = expense.socialInsuranceBusinessType?.trim() || ''
-      return (businessType === '续费' && (socialInsuranceBusinessType === '' || socialInsuranceBusinessType === '-' || socialInsuranceBusinessType === '续费')) || 
-             ((businessType === '' || businessType === '-') && socialInsuranceBusinessType === '续费')
-    })
-  }, [expenses])
 
   return (
     <div style={{ height: '100%' }}>
