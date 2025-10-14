@@ -49,6 +49,50 @@ const payrollCompanyOptions = [
   { label: '鼎兴', value: '鼎兴' },
 ]
 
+// 费用类型映射
+const FEE_TYPE_MAP = {
+  agencyFee: '代理费',
+  addressFee: '地址费',
+  accountingSoftwareFee: '记账软件费',
+  socialInsuranceAgencyFee: '社保代理费',
+  housingFundAgencyFee: '公积金代理费',
+  licenseFee: '行政许可证',
+  brandFee: '牌子费',
+  recordSealFee: '备案章费',
+  generalSealFee: '一般刻章费',
+  invoiceSoftwareFee: '开票软件费',
+  statisticalReportFee: '统计局报表费',
+  customerDataOrganizationFee: '客户资料整理费',
+  changeFee: '变更收费',
+  administrativeLicenseFee: '行政许可收费',
+  otherBusinessFee: '其他业务收费（基础）',
+  otherBusinessOutsourcingFee: '其他业务收费',
+  otherBusinessSpecialFee: '其他业务收费(特殊)',
+}
+
+// 提成类型映射
+const COMMISSION_TYPE_MAP = {
+  businessCommissionOwn: '基础业务提成',
+  businessCommissionOutsource: '外包业务提成',
+  specialBusinessCommission: '特殊业务提成',
+  agencyCommission: '代理费提成',
+}
+
+// 安全的数值转换函数
+const toNumber = (value: any): number => {
+  const num = typeof value === 'string' ? parseFloat(value) : Number(value)
+  return isNaN(num) ? 0 : num
+}
+
+// 格式化货币函数
+const formatCurrency = (value: any): string => {
+  const amount = toNumber(value)
+  return amount.toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
 const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUpdate }) => {
   const [editing, setEditing] = useState(false)
   const [form] = Form.useForm()
@@ -98,49 +142,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       document.body.style.overflow = 'unset'
     }
   }, [fullscreenTable])
-
-  // 安全的数值转换和格式化函数
-  const toNumber = (value: any): number => {
-    const num = typeof value === 'string' ? parseFloat(value) : Number(value)
-    return isNaN(num) ? 0 : num
-  }
-
-  const formatCurrency = (value: any): string => {
-    const amount = toNumber(value)
-    return amount.toLocaleString('zh-CN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  }
-
-  // 费用类型映射
-  const FEE_TYPE_MAP = {
-    agencyFee: '代理费',
-    addressFee: '地址费',
-    accountingSoftwareFee: '记账软件费',
-    socialInsuranceAgencyFee: '社保代理费',
-    housingFundAgencyFee: '公积金代理费',
-    licenseFee: '行政许可证',
-    brandFee: '牌子费',
-    recordSealFee: '备案章费',
-    generalSealFee: '一般刻章费',
-    invoiceSoftwareFee: '开票软件费',
-    statisticalReportFee: '统计局报表费',
-    customerDataOrganizationFee: '客户资料整理费',
-    changeFee: '变更收费',
-    administrativeLicenseFee: '行政许可收费',
-      otherBusinessFee: '其他业务收费（基础）',
-    otherBusinessOutsourcingFee: '其他业务收费',
-    otherBusinessSpecialFee: '其他业务收费(特殊)',
-  }
-
-  // 提成类型映射
-  const COMMISSION_TYPE_MAP = {
-    businessCommissionOwn: '基础业务提成',
-    businessCommissionOutsource: '外包业务提成',
-    specialBusinessCommission: '特殊业务提成',
-    agencyCommission: '代理费提成',
-  }
 
   // 数据透视转换：将费用列表转换为表格数据
   const transformToTableData = (expenseList: Expense[]) => {
