@@ -187,6 +187,7 @@ export interface ExpenseQueryParams {
   salesperson?: string
   businessType?: string | string[]
   socialInsuranceBusinessType?: string | string[]
+  businessInquiry?: string | string[]
   startDate?: string
   endDate?: string
   dateRange?: any

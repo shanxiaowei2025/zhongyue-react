@@ -55,6 +55,92 @@ const SOCIAL_INSURANCE_BUSINESS_TYPE_OPTIONS = [
   { label: '续费', value: '续费' },
 ]
 
+// 业务查询选项
+const BUSINESS_INQUIRY_OPTIONS = [
+  { label: '代理费', value: '代理费' },
+  { label: '记账软件费', value: '记账软件费' },
+  { label: '开票软件费', value: '开票软件费' },
+  { label: '地址费', value: '地址费' },
+  { label: '社保代理费', value: '社保代理费' },
+  { label: '公积金代理费', value: '公积金代理费' },
+  { label: '统计局报表费', value: '统计局报表费' },
+  { label: '客户资料整理费', value: '客户资料整理费' },
+  { label: '办照费用', value: '办照费用' },
+  { label: '牌子费', value: '牌子费' },
+  { label: '备案章费用', value: '备案章费用' },
+  { label: '一般刻章费用', value: '一般刻章费用' },
+  { label: '地址变更', value: '地址变更' },
+  { label: '名称变更', value: '名称变更' },
+  { label: '股东变更', value: '股东变更' },
+  { label: '监事变更', value: '监事变更' },
+  { label: '范围变更', value: '范围变更' },
+  { label: '注册资本变更', value: '注册资本变更' },
+  { label: '跨区域变更', value: '跨区域变更' },
+  { label: '法定代表人变更', value: '法定代表人变更' },
+  { label: '个升企', value: '个升企' },
+  { label: '食品经营许可证', value: '食品经营许可证' },
+  { label: '卫生许可证', value: '卫生许可证' },
+  { label: '酒类经营许可证', value: '酒类经营许可证' },
+  { label: '道路运输许可证', value: '道路运输许可证' },
+  { label: '医疗器械经营许可证', value: '医疗器械经营许可证' },
+  { label: '建筑施工许可证', value: '建筑施工许可证' },
+  { label: '特种行业许可证', value: '特种行业许可证' },
+  { label: '非代理企业工商注销', value: '非代理企业工商注销' },
+  { label: '非代理企业税务注销', value: '非代理企业税务注销' },
+  { label: '非代理企业银行注销', value: '非代理企业银行注销' },
+  { label: '税务处理逾期/补充申报', value: '税务处理逾期/补充申报' },
+  { label: '工商年报/工商公示', value: '工商年报/工商公示' },
+  { label: '补执照', value: '补执照' },
+  { label: '报表编制', value: '报表编制' },
+  { label: '非代理企业行政许可注销', value: '非代理企业行政许可注销' },
+  { label: '银行开户', value: '银行开户' },
+  { label: '银行变更', value: '银行变更' },
+  { label: '代理企业工商注销', value: '代理企业工商注销' },
+  { label: '代理企业税务注销', value: '代理企业税务注销' },
+  { label: '代理企业银行注销', value: '代理企业银行注销' },
+  { label: '代理企业注销', value: '代理企业注销' },
+  { label: '解除工商异常', value: '解除工商异常' },
+  { label: '解除税务异常', value: '解除税务异常' },
+  { label: '代办条形码', value: '代办条形码' },
+  { label: '劳务派遣证年检', value: '劳务派遣证年检' },
+  { label: '民非证年检', value: '民非证年检' },
+  { label: '公司转让', value: '公司转让' },
+  { label: '建设项目环境影响登记表', value: '建设项目环境影响登记表' },
+  { label: '代办固定污染源排污', value: '代办固定污染源排污' },
+  { label: '登报', value: '登报' },
+  { label: '商标注册', value: '商标注册' },
+  { label: '商标变更', value: '商标变更' },
+  { label: '商标续展', value: '商标续展' },
+  { label: '商标过户', value: '商标过户' },
+  { label: '审计报告', value: '审计报告' },
+  { label: '检测报告', value: '检测报告' },
+  { label: '验资报告', value: '验资报告' },
+  { label: '出版物许可证', value: '出版物许可证' },
+  { label: '著作权', value: '著作权' },
+  { label: '版权', value: '版权' },
+  { label: '建筑资质证书', value: '建筑资质证书' },
+  { label: '3A信用认证', value: '3A信用认证' },
+  { label: '质量体系认证（环境、健康、职业）', value: '质量体系认证（环境、健康、职业）' },
+  { label: '信用修复', value: '信用修复' },
+  { label: '暂住证', value: '暂住证' },
+  { label: '贷款业务', value: '贷款业务' },
+  { label: '金融业务', value: '金融业务' },
+  { label: '资产评估报告', value: '资产评估报告' },
+  { label: '区块链', value: '区块链' },
+  { label: '招标投标代理', value: '招标投标代理' },
+  { label: '工程审计/预算/决算', value: '工程审计/预算/决算' },
+  { label: '标书制作', value: '标书制作' },
+  { label: '定位服务', value: '定位服务' },
+  { label: '活动费用', value: '活动费用' },
+  { label: '执行标准', value: '执行标准' },
+  { label: '外包地址', value: '外包地址' },
+  { label: '税务风险报告', value: '税务风险报告' },
+  { label: '代理企业行政许可注销', value: '代理企业行政许可注销' },
+  { label: '公司合作业务', value: '公司合作业务' },
+  { label: '代办烟草证', value: '代办烟草证' },
+  { label: '出口退税', value: '出口退税' },
+]
+
 // 状态映射为显示文本
 const STATUS_LABELS = {
   [ExpenseStatus.Pending]: '未审核',
@@ -192,6 +278,7 @@ const Expenses: React.FC = () => {
     salesperson: string
     businessType?: string
     socialInsuranceBusinessType?: string
+    businessInquiry?: string | string[]
     dateRange?: any // 使用any类型避免typescript错误
     createDateRange?: any // 开据时间范围
     auditDateRange?: any // 审核时间范围
@@ -204,6 +291,7 @@ const Expenses: React.FC = () => {
     salesperson: '',
     businessType: undefined,
     socialInsuranceBusinessType: undefined,
+    businessInquiry: undefined,
     dateRange: undefined,
     createDateRange: undefined,
     auditDateRange: undefined,
@@ -263,6 +351,7 @@ const Expenses: React.FC = () => {
     salesperson: savedState.salesperson || '',
     businessType: savedState.businessType || undefined,
     socialInsuranceBusinessType: savedState.socialInsuranceBusinessType || undefined,
+    businessInquiry: savedState.businessInquiry || undefined,
     dateRange: initialDateRange,
     createDateRange: initialCreateDateRange,
     auditDateRange: initialAuditDateRange,
@@ -322,6 +411,7 @@ const Expenses: React.FC = () => {
       salesperson: searchParams.salesperson,
       businessType: displayBusinessType,
       socialInsuranceBusinessType: displaySocialInsuranceBusinessType,
+      businessInquiry: searchParams.businessInquiry,
       dateRange: searchParams.dateRange,
       createDateRange: searchParams.createDateRange,
       auditDateRange: searchParams.auditDateRange,
@@ -338,6 +428,7 @@ const Expenses: React.FC = () => {
       salesperson: searchParams.salesperson,
       businessType: searchParams.businessType,
       socialInsuranceBusinessType: searchParams.socialInsuranceBusinessType,
+      businessInquiry: searchParams.businessInquiry,
       page: searchParams.page,
       pageSize: searchParams.pageSize,
       dateRange: searchParams.dateRange
@@ -373,6 +464,7 @@ const Expenses: React.FC = () => {
     searchParams.salesperson,
     searchParams.businessType,
     searchParams.socialInsuranceBusinessType,
+    searchParams.businessInquiry,
     searchParams.page,
     searchParams.pageSize,
     searchParams.dateRange,
@@ -414,6 +506,7 @@ const Expenses: React.FC = () => {
       salesperson: values.salesperson,
       businessType: processedBusinessType,
       socialInsuranceBusinessType: processedSocialInsuranceBusinessType,
+      businessInquiry: values.businessInquiry,
       page: 1,
     }
 
@@ -548,6 +641,7 @@ const Expenses: React.FC = () => {
       salesperson: '',
       businessType: undefined,
       socialInsuranceBusinessType: undefined,
+      businessInquiry: undefined,
       dateRange: undefined,
       createDateRange: undefined,
       auditDateRange: undefined,
@@ -1033,6 +1127,22 @@ const Expenses: React.FC = () => {
                 ))}
                 <Select.Option value="__EMPTY__">-</Select.Option>
               </Select>
+            </Form.Item>
+
+            <Form.Item name="businessInquiry" label="业务查询" className="m-0 w-full">
+              <Select
+                mode="multiple"
+                placeholder="请输入业务查询"
+                allowClear
+                className="w-full"
+                maxTagCount="responsive"
+                showSearch
+                optionFilterProp="label"
+                filterOption={(input, option) =>
+                  (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                options={BUSINESS_INQUIRY_OPTIONS}
+              />
             </Form.Item>
 
             <Form.Item name="dateRange" label="收费日期" className="m-0 w-full lg:col-span-2">
