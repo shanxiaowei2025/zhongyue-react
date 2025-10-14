@@ -1129,10 +1129,10 @@ const Expenses: React.FC = () => {
               </Select>
             </Form.Item>
 
-            <Form.Item name="businessInquiry" label="业务查询" className="m-0 w-full">
+            <Form.Item name="businessInquiry" label="业务" className="m-0 w-full">
               <Select
                 mode="multiple"
-                placeholder="请输入业务查询"
+                placeholder="请输入业务"
                 allowClear
                 className="w-full"
                 maxTagCount="responsive"
@@ -1145,7 +1145,7 @@ const Expenses: React.FC = () => {
               />
             </Form.Item>
 
-            <Form.Item name="dateRange" label="收费日期" className="m-0 w-full lg:col-span-2">
+            <Form.Item name="dateRange" label="收费日期" className="m-0 w-full">
               <RangePicker
                 allowClear
                 style={{ width: '100%' }}
@@ -1156,7 +1156,7 @@ const Expenses: React.FC = () => {
               />
             </Form.Item>
 
-            <Form.Item name="createDateRange" label="开据时间" className="m-0 w-full lg:col-span-2">
+            <Form.Item name="createDateRange" label="开据时间" className="m-0 w-full">
               <RangePicker
                 allowClear
                 style={{ width: '100%' }}
@@ -1167,7 +1167,7 @@ const Expenses: React.FC = () => {
               />
             </Form.Item>
 
-            <Form.Item name="auditDateRange" label="审核时间" className="m-0 w-full lg:col-span-2">
+            <Form.Item name="auditDateRange" label="审核时间" className="m-0 w-full">
               <RangePicker
                 allowClear
                 style={{ width: '100%' }}
