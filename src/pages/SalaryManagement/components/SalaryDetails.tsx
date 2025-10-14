@@ -174,6 +174,18 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
         }
       })
 
+      // 处理基础业务业绩
+      const basicBusinessPerformance = toNumber(expense.basicBusinessPerformance)
+      if (basicBusinessPerformance > 0) {
+        company.basicBusinessPerformance = (company.basicBusinessPerformance || 0) + basicBusinessPerformance
+      }
+
+      // 处理外包业务业绩
+      const outsourcingBusinessPerformance = toNumber(expense.outsourcingBusinessPerformance)
+      if (outsourcingBusinessPerformance > 0) {
+        company.outsourcingBusinessPerformance = (company.outsourcingBusinessPerformance || 0) + outsourcingBusinessPerformance
+      }
+
       // 处理业务类型字段（文本字段，取第一个非空值或合并多个值）
       if (expense.businessType && expense.businessType.trim()) {
         if (!company.businessType) {
@@ -291,6 +303,26 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       align: 'right' as const,
     }
 
+    // 基础业务业绩列
+    const basicBusinessPerformanceColumn = {
+      title: '基础业务业绩',
+      dataIndex: 'basicBusinessPerformance',
+      key: 'basicBusinessPerformance',
+      width: 130,
+      render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+      align: 'right' as const,
+    }
+
+    // 外包业务业绩列
+    const outsourcingBusinessPerformanceColumn = {
+      title: '外包业务业绩',
+      dataIndex: 'outsourcingBusinessPerformance',
+      key: 'outsourcingBusinessPerformance',
+      width: 130,
+      render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+      align: 'right' as const,
+    }
+
     // 提成主列，包含子列
     const commissionColumn = {
       title: '提成',
@@ -305,7 +337,7 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       })),
     }
 
-    return [...columns, ...feeColumns, totalColumn, commissionColumn]
+    return [...columns, ...feeColumns, totalColumn, basicBusinessPerformanceColumn, outsourcingBusinessPerformanceColumn, commissionColumn]
   }
 
   // 计算合计行
@@ -325,6 +357,12 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     Object.keys(COMMISSION_TYPE_MAP).forEach(key => {
       summary[key] = tableData.reduce((sum, row) => sum + (row[key] || 0), 0)
     })
+
+    // 计算基础业务业绩合计
+    summary.basicBusinessPerformance = tableData.reduce((sum, row) => sum + (row.basicBusinessPerformance || 0), 0)
+
+    // 计算外包业务业绩合计
+    summary.outsourcingBusinessPerformance = tableData.reduce((sum, row) => sum + (row.outsourcingBusinessPerformance || 0), 0)
 
     // 业务类型字段在合计行中显示为"-"
     summary.businessType = '-'
