@@ -698,6 +698,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 验证表单
       const values = await form.validateFields()
 
+      // 自定义验证：检查代理记账和社保代理的业务类型是否一致
+      const businessType = values.businessType
+      const socialInsuranceBusinessType = values.socialInsuranceBusinessType
+      
+      // 如果两个业务类型都有值，则必须相同
+      if (businessType && socialInsuranceBusinessType && 
+          businessType !== socialInsuranceBusinessType) {
+        message.error('代理记账和社保代理中的业务类型不一致，请修改后再提交')
+        return
+      }
+
       // 深拷贝，避免修改原始值
       const formattedValues = { ...values } as Record<string, unknown>
 
