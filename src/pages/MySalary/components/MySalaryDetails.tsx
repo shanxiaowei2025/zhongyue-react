@@ -145,8 +145,6 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
 
   // 数据透视转换：将费用列表转换为表格数据
   const transformToTableData = (expenseList: Expense[]) => {
-    // 按公司分组
-    const companyMap = new Map<string, Record<string, any>>()
     // 记录哪些列有数据
     const columnsWithData = new Set<string>()
     // 必须显示的列
@@ -155,85 +153,75 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       'agencyCommission', 'basicBusinessPerformance', 'outsourcingBusinessPerformance'
     ]
 
-    expenseList.forEach(expense => {
-      const companyName = expense.companyName
-      if (!companyMap.has(companyName)) {
-        companyMap.set(companyName, {
-          companyName,
-          totalAmount: 0,
-        })
+    // 直接将每个expense转换为表格行，不汇总
+    const tableData = expenseList.map(expense => {
+      const row: any = {
+        companyName: expense.companyName,
+        totalAmount: 0,
       }
-
-      const company = companyMap.get(companyName)!
 
       // 遍历所有费用类型
       Object.entries(FEE_TYPE_MAP).forEach(([key]) => {
-        const amount = toNumber((expense as Record<string, any>)[key])
-        if (amount > 0) {
-          company[key] = (company[key] || 0) + amount
-          company.totalAmount += amount
+        const amount = toNumber((expense as any)[key])
+        
+        if (amount !== 0) {
+          row[key] = amount
+          row.totalAmount += amount
           columnsWithData.add(key) // 记录有数据的列
         }
       })
 
       // 遍历所有提成类型
       Object.entries(COMMISSION_TYPE_MAP).forEach(([key]) => {
-        const amount = toNumber((expense as Record<string, any>)[key])
-        if (amount > 0) {
-          company[key] = (company[key] || 0) + amount
+        const amount = toNumber((expense as any)[key])
+        
+        if (amount !== 0) {
+          row[key] = amount
           columnsWithData.add(key) // 记录有数据的列
           // 提成不计入总费用
         }
       })
-      
+
       // 处理基础业务业绩
-      const basicBusinessPerformance = toNumber((expense as Record<string, any>).basicBusinessPerformance)
-      if (basicBusinessPerformance > 0) {
-        company.basicBusinessPerformance = (company.basicBusinessPerformance || 0) + basicBusinessPerformance
-        columnsWithData.add('basicBusinessPerformance') // 记录有数据的列
-      }
-      
-      // 处理外包业务业绩
-      const outsourcingBusinessPerformance = toNumber((expense as Record<string, any>).outsourcingBusinessPerformance)
-      if (outsourcingBusinessPerformance > 0) {
-        company.outsourcingBusinessPerformance = (company.outsourcingBusinessPerformance || 0) + outsourcingBusinessPerformance
-        columnsWithData.add('outsourcingBusinessPerformance') // 记录有数据的列
+      const basicBusinessPerformance = toNumber(expense.basicBusinessPerformance)
+      if (basicBusinessPerformance !== 0) {
+        row.basicBusinessPerformance = basicBusinessPerformance
+        columnsWithData.add('basicBusinessPerformance')
       }
 
-      // 处理业务类型字段（文本字段，取第一个非空值或合并多个值）
+      // 处理外包业务业绩
+      const outsourcingBusinessPerformance = toNumber(expense.outsourcingBusinessPerformance)
+      if (outsourcingBusinessPerformance !== 0) {
+        row.outsourcingBusinessPerformance = outsourcingBusinessPerformance
+        columnsWithData.add('outsourcingBusinessPerformance')
+      }
+
+      // 处理业务类型字段
       if (expense.businessType && expense.businessType.trim()) {
-        if (!company.businessType) {
-          company.businessType = expense.businessType
-        } else if (company.businessType !== expense.businessType) {
-          // 如果有多个不同的业务类型，用逗号分隔
-          const types = company.businessType.split(',').map((s: string) => s.trim())
-          if (!types.includes(expense.businessType.trim())) {
-            company.businessType += `, ${expense.businessType.trim()}`
-          }
-        }
-        columnsWithData.add('businessType') // 记录有数据的列
+        row.businessType = expense.businessType
+        columnsWithData.add('businessType')
       }
 
       if (expense.socialInsuranceBusinessType && expense.socialInsuranceBusinessType.trim()) {
-        if (!company.socialInsuranceBusinessType) {
-          company.socialInsuranceBusinessType = expense.socialInsuranceBusinessType
-        } else if (company.socialInsuranceBusinessType !== expense.socialInsuranceBusinessType) {
-          // 如果有多个不同的社保业务类型，用逗号分隔
-          const types = company.socialInsuranceBusinessType.split(',').map((s: string) => s.trim())
-          if (!types.includes(expense.socialInsuranceBusinessType.trim())) {
-            company.socialInsuranceBusinessType += `, ${expense.socialInsuranceBusinessType.trim()}`
-          }
-        }
-        columnsWithData.add('socialInsuranceBusinessType') // 记录有数据的列
+        row.socialInsuranceBusinessType = expense.socialInsuranceBusinessType
+        columnsWithData.add('socialInsuranceBusinessType')
       }
+
+      // 处理赠送代理时长字段
+      if (expense.giftAgencyDuration && expense.giftAgencyDuration.trim()) {
+        row.giftAgencyDuration = expense.giftAgencyDuration
+        columnsWithData.add('giftAgencyDuration')
+      }
+
+      return row
     })
 
     // 将必须显示的列添加到columnsWithData中
     requiredColumns.forEach(col => columnsWithData.add(col))
-
+    
     return { 
-      tableData: Array.from(companyMap.values()),
-      columnsWithData: columnsWithData
+      tableData,
+      columnsWithData
     }
   }
 
@@ -262,16 +250,31 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
         return
       }
 
-      // 在代理费前插入代理费业务类型列
-      if (key === 'agencyFee' && columnsWithData.has('businessType')) {
-        feeColumns.push({
-          title: '代理费业务类型',
-          dataIndex: 'businessType',
-          key: 'businessType',
-          width: 150,
-          render: (value: string) => value || '-',
-          align: 'center' as const,
-        })
+      // 在代理费前插入代理费业务类型列和赠送代理时长列
+      if (key === 'agencyFee') {
+        // 只有当businessType列有数据时才添加
+        if (columnsWithData.has('businessType')) {
+          feeColumns.push({
+            title: '代理费业务类型',
+            dataIndex: 'businessType',
+            key: 'businessType',
+            width: 150,
+            render: (value: string) => value || '-',
+            align: 'center' as const,
+          })
+        }
+        
+        // 只有当giftAgencyDuration列有数据时才添加
+        if (columnsWithData.has('giftAgencyDuration')) {
+          feeColumns.push({
+            title: '赠送代理时长',
+            dataIndex: 'giftAgencyDuration',
+            key: 'giftAgencyDuration',
+            width: 150,
+            render: (value: string) => value || '-',
+            align: 'center' as const,
+          })
+        }
       }
 
       // 在社保代理费前插入社保代理业务类型列
@@ -292,7 +295,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
         dataIndex: key,
         key,
         width: 100,
-        render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+        render: (value: number) => (value !== 0 && value !== undefined ? formatCurrency(value) : '-'),
         align: 'right' as const,
       })
     })
@@ -315,7 +318,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       dataIndex: 'basicBusinessPerformance',
       key: 'basicBusinessPerformance',
       width: 130,
-      render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+      render: (value: number) => (value !== 0 && value !== undefined ? formatCurrency(value) : '-'),
       align: 'right' as const,
     }
 
@@ -325,7 +328,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
       dataIndex: 'outsourcingBusinessPerformance',
       key: 'outsourcingBusinessPerformance',
       width: 130,
-      render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+      render: (value: number) => (value !== 0 && value !== undefined ? formatCurrency(value) : '-'),
       align: 'right' as const,
     }
 
@@ -337,7 +340,7 @@ const MySalaryDetails: React.FC<MySalaryDetailsProps> = ({
         dataIndex: key,
         key,
         width: 120,
-        render: (value: number) => (value > 0 ? formatCurrency(value) : '-'),
+        render: (value: number) => (value !== 0 && value !== undefined ? formatCurrency(value) : '-'),
         align: 'right' as const,
       }))
 
