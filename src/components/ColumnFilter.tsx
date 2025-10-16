@@ -37,6 +37,8 @@ export interface ColumnFilterProps {
   formatter?: (value: any) => string
   // 最大显示选项数量
   maxOptions?: number
+  // 是否支持空值查询（默认为false）
+  supportEmptyFilter?: boolean
 }
 
 const ColumnFilter: React.FC<ColumnFilterProps> = ({
@@ -48,6 +50,7 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
   options,
   formatter,
   maxOptions = 100,
+  supportEmptyFilter = false,
 }) => {
   const [visible, setVisible] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -134,23 +137,40 @@ const ColumnFilter: React.FC<ColumnFilterProps> = ({
     }
 
     const uniqueValues = new Map<any, number>()
+    let emptyCount = 0
     
     data.forEach(item => {
       const value = item[dataIndex]
-      if (value !== null && value !== undefined && value !== '') {
+      // 只有在 supportEmptyFilter 为 true 时才统计空值
+      if (supportEmptyFilter && (value === null || value === undefined || value === '')) {
+        emptyCount += 1
+      } else if (value === null || value === undefined || value === '') {
+        // 如果不支持空值查询，则忽略空值
+        return
+      } else {
         uniqueValues.set(value, (uniqueValues.get(value) || 0) + 1)
       }
     })
 
-    return Array.from(uniqueValues.entries())
+    const optionsList = Array.from(uniqueValues.entries())
       .map(([value, count]) => ({
         label: formatter ? formatter(value) : String(value),
         value,
         count,
       }))
       .sort((a, b) => a.label.localeCompare(b.label))
-      .slice(0, maxOptions)
-  }, [data, dataIndex, options, formatter, maxOptions])
+
+    // 只有在 supportEmptyFilter 为 true 且有空值时，才将空值选项添加到列表开头
+    if (supportEmptyFilter && emptyCount > 0) {
+      optionsList.unshift({
+        label: '-',
+        value: '', // 使用空字符串作为空值的标识
+        count: emptyCount,
+      })
+    }
+
+    return optionsList.slice(0, maxOptions)
+  }, [data, dataIndex, options, formatter, maxOptions, supportEmptyFilter])
 
   // 筛选后的选项
   const filteredOptions = useMemo(() => {

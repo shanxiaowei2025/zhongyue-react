@@ -99,7 +99,24 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
             } else {
               // 普通值筛选
               const itemValue = item[dataIndex as keyof SalaryRecord]
-              if (!filterValues.includes(itemValue)) {
+              
+              // 支持空值筛选：检查筛选值中是否包含空字符串
+              const hasEmptyFilter = filterValues.includes('')
+              const isEmptyValue = itemValue === null || itemValue === undefined || itemValue === ''
+              
+              // 如果筛选值中包含空字符串，且当前值为空，则匹配成功
+              if (hasEmptyFilter && isEmptyValue) {
+                continue // 继续检查其他筛选条件
+              }
+              
+              // 如果筛选值中包含空字符串，但当前值不为空，检查是否匹配其他筛选值
+              if (hasEmptyFilter && !isEmptyValue) {
+                const nonEmptyFilters = filterValues.filter(v => v !== '')
+                if (nonEmptyFilters.length === 0 || !nonEmptyFilters.includes(itemValue)) {
+                  return false
+                }
+              } else if (!hasEmptyFilter && !filterValues.includes(itemValue)) {
+                // 如果筛选值中不包含空字符串，使用原有逻辑
                 return false
               }
             }
@@ -171,7 +188,12 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
   }
 
   // 创建带筛选器的列标题
-  const createFilterTitle = (title: string | React.ReactNode, dataIndex: string, type: 'text' | 'select' | 'number' | 'range' = 'select') => {
+  const createFilterTitle = (
+    title: string | React.ReactNode, 
+    dataIndex: string, 
+    type: 'text' | 'select' | 'number' | 'range' = 'select',
+    supportEmptyFilter: boolean = false
+  ) => {
     return (
       <div 
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
@@ -185,6 +207,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
             filteredValue={columnFilters[dataIndex]}
             onFilter={(filteredValue) => handleColumnFilter(dataIndex, filteredValue)}
             maxOptions={50}
+            supportEmptyFilter={supportEmptyFilter}
           />
         </div>
       </div>
@@ -323,7 +346,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       ellipsis: true,
     },
     {
-      title: createFilterTitle('薪资发放公司', 'payrollCompany'),
+      title: createFilterTitle('薪资发放公司', 'payrollCompany', 'select', true),
       dataIndex: 'payrollCompany',
       width: 120,
       ellipsis: true,
