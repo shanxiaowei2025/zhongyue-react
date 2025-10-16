@@ -47,7 +47,6 @@ export interface SalaryRecord {
   payrollCompany?: string
   company?: string
   bankCardOrWechat: number
-  cashPaid: number
   corporatePayment: number
   taxDeclaration: number
 
@@ -267,10 +266,6 @@ export interface SalaryQueryParams {
   bankCardOrWechatMin?: number
   bankCardOrWechatMax?: number
   
-  // 现金发放范围
-  cashPaidMin?: number
-  cashPaidMax?: number
-  
   // 企业代付范围
   corporatePaymentMin?: number
   corporatePaymentMax?: number
@@ -315,7 +310,6 @@ export interface CreateSalaryDto {
   payrollCompany?: string
   company?: string
   bankCardOrWechat?: number
-  cashPaid?: number
   corporatePayment?: number
   taxDeclaration?: number
   yearMonth: string

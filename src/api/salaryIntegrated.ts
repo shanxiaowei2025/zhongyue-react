@@ -175,13 +175,11 @@ export const salaryApi = {
       paidCount: salaryData.filter(
         item =>
           toNumber(item.bankCardOrWechat) > 0 ||
-          toNumber(item.cashPaid) > 0 ||
           toNumber(item.corporatePayment) > 0
       ).length,
       unpaidCount: salaryData.filter(
         item =>
           toNumber(item.bankCardOrWechat) === 0 &&
-          toNumber(item.cashPaid) === 0 &&
           toNumber(item.corporatePayment) === 0
       ).length,
       confirmedCount,

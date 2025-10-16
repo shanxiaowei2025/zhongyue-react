@@ -633,33 +633,6 @@ const SalaryFilters: React.FC<SalaryFiltersProps> = ({ onFilter, onReset, loadin
               </Row>
             </div>
 
-            {/* 现金发放范围 */}
-            <div className="mb-4">
-              <div className="font-medium mb-2">现金发放</div>
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="cashPaidMin" label="最小值">
-                    <InputNumber
-                      placeholder="现金发放最小值"
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="cashPaidMax" label="最大值">
-                    <InputNumber
-                      placeholder="现金发放最大值"
-                      style={{ width: '100%' }}
-                      min={0}
-                      precision={2}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </div>
-
             {/* 企业代付范围 */}
             <div className="mb-4">
               <div className="font-medium mb-2">对公转账</div>

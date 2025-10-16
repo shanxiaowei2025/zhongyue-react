@@ -442,7 +442,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
       bankCardNumber: employee.bankCardNumber,
       payrollCompany: employee.payrollCompany,
       bankCardOrWechat: employee.bankCardOrWechat,
-      cashPaid: employee.cashPaid,
       corporatePayment: employee.corporatePayment,
       taxDeclaration: employee.taxDeclaration,
     })
@@ -730,9 +729,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                           <Form.Item label="银行卡/微信" name="bankCardOrWechat">
                             <AmountInput />
                           </Form.Item>
-                          <Form.Item label="现金发放" name="cashPaid">
-                            <AmountInput />
-                          </Form.Item>
                           <Form.Item label="对公转账" name="corporatePayment">
                             <AmountInput disabled />
                           </Form.Item>
@@ -866,9 +862,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                       <Descriptions column={2} size="small">
                         <Descriptions.Item label="银行卡/微信">
                           ¥{formatCurrency(employee.bankCardOrWechat)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="现金发放">
-                          ¥{formatCurrency(employee.cashPaid)}
                         </Descriptions.Item>
                         <Descriptions.Item label="对公转账">
                           ¥{formatCurrency(employee.corporatePayment)}

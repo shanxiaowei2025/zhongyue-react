@@ -39,7 +39,6 @@ export interface MySalaryRecord {
   company: string
   payrollCompany: string // 新增字段
   bankCardOrWechat: string | number
-  cashPaid: string | number
   corporatePayment: string | number
   taxDeclaration: string | number
   isPaid: boolean
@@ -83,7 +82,6 @@ export interface MySalaryDetail {
   payment: {
     totalPayable: number
     bankCardOrWechat: number
-    cashPaid: number
     corporatePayment: number
   }
   status: {

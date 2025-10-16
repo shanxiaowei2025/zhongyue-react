@@ -48,6 +48,12 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const [tableScrollY, setTableScrollY] = useState<number>(400)
   
+  // 当 salaryData 更新时，清理已经过期的 editedValues
+  useEffect(() => {
+    // 清理所有临时编辑值，让新数据生效
+    setEditedValues({})
+  }, [salaryData])
+  
   // 拖拽调整高度的状态
   const [tableHeight, setTableHeight] = useState<number>(260)
   const [isDragging, setIsDragging] = useState<boolean>(false)
@@ -160,7 +166,6 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       totalPersonalIncomeTax: data.reduce((sum, item) => sum + toNumber(item.personalIncomeTax), 0), // 个税
       totalPayable: data.reduce((sum, item) => sum + toNumber(item.totalPayable), 0), // 应发合计
       totalBankCardOrWechat: data.reduce((sum, item) => sum + toNumber(item.bankCardOrWechat), 0), // 银行卡/微信
-      totalCashPaid: data.reduce((sum, item) => sum + toNumber(item.cashPaid), 0), // 现金发放
       totalCorporatePayment: data.reduce((sum, item) => sum + toNumber(item.corporatePayment), 0), // 对公转账
       totalTaxDeclaration: data.reduce((sum, item) => sum + toNumber(item.taxDeclaration), 0), // 个税申报
     }
@@ -218,7 +223,7 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
   const EditableCell: React.FC<{
     value: number
     recordId: number
-    field: 'bankCardOrWechat' | 'cashPaid'
+    field: 'bankCardOrWechat'
     onSave: (recordId: number, field: string, value: number) => Promise<void>
   }> = React.memo(({ value, recordId, field, onSave }) => {
     const cellKey = `${recordId}-${field}`
@@ -252,18 +257,25 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       }
 
       try {
-        await onSave(recordId, field, inputValue)
         setEditingCell(null)
-        // 保存成功后，更新编辑过的值记录
+        // 先临时保存编辑值，以便在数据刷新前显示
         setEditedValues(prev => ({
           ...prev,
           [cellKey]: inputValue,
         }))
+        await onSave(recordId, field, inputValue)
         message.success('保存成功')
+        // 数据会通过 onRefresh 自动刷新，不需要手动处理
       } catch (error) {
         console.error('保存失败:', error)
         message.error('保存失败')
         setInputValue(displayValue) // 恢复为当前显示值
+        // 移除临时保存的编辑值
+        setEditedValues(prev => {
+          const newValues = { ...prev }
+          delete newValues[cellKey]
+          return newValues
+        })
       }
     }
 
@@ -311,8 +323,8 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
   // 保存编辑的函数
   const handleSaveField = async (recordId: number, field: string, value: number) => {
     await salaryApi.updateSalary(recordId, { [field]: value })
-    // 不触发数据刷新，保持界面稳定
-    message.success('保存成功')
+    // 保存成功后刷新数据，以获取后端计算的对公转账等字段
+    onRefresh()
   }
   const columns: ColumnsType<SalaryRecord> = [
     {
@@ -554,27 +566,6 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
           value={toNumber(value)}
           recordId={record.id}
           field="bankCardOrWechat"
-          onSave={handleSaveField}
-        />
-      ),
-      align: 'right',
-      onCell: () => ({
-        onClick: (e: React.MouseEvent) => e.stopPropagation(),
-      }),
-    },
-    {
-      title: (
-        <span>
-          现金发放 <EditOutlined style={{ fontSize: '12px', color: '#1890ff', opacity: 0.8 }} />
-        </span>
-      ),
-      dataIndex: 'cashPaid',
-      width: 100,
-      render: (value, record) => (
-        <EditableCell
-          value={toNumber(value)}
-          recordId={record.id}
-          field="cashPaid"
           onSave={handleSaveField}
         />
       ),
@@ -916,18 +907,12 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
             </div>
           </div>
 
-          {/* 第四行：发放方式（6个字段） */}
+          {/* 第四行：发放方式（5个字段） */}
           <div className="grid grid-cols-6 gap-2 text-xs">
             <div className="text-center">
               <div className="text-gray-500 mb-1">银行卡/微信</div>
               <div className="font-bold text-blue-600">
                 {formatCurrency(filteredStatistics.totalBankCardOrWechat)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-gray-500 mb-1">现金发放</div>
-              <div className="font-bold text-blue-600">
-                {formatCurrency(filteredStatistics.totalCashPaid)}
               </div>
             </div>
             <div className="text-center">
@@ -946,6 +931,11 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
               <div className="text-gray-500 mb-1">总条目</div>
               <div className="font-bold text-gray-600">
                 {filteredStatistics.employeeCount} 条
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-500 mb-1"></div>
+              <div className="font-bold text-gray-600">
               </div>
             </div>
             <div className="text-center">

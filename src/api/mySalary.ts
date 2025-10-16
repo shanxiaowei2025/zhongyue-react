@@ -167,7 +167,6 @@ export const mySalaryApi = {
       payment: {
         totalPayable: toNumber(salaryRecord.totalPayable),
         bankCardOrWechat: toNumber(salaryRecord.bankCardOrWechat),
-        cashPaid: toNumber(salaryRecord.cashPaid),
         corporatePayment: toNumber(salaryRecord.corporatePayment),
       },
       status: {

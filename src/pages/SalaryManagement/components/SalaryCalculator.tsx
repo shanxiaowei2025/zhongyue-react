@@ -142,9 +142,6 @@ const SalaryCalculator: React.FC<SalaryCalculatorProps> = ({ salary, className }
             <Descriptions.Item label="银行卡/微信">
               ¥{toNumber(salary.bankCardOrWechat).toFixed(2)}
             </Descriptions.Item>
-            <Descriptions.Item label="现金发放">
-              ¥{toNumber(salary.cashPaid).toFixed(2)}
-            </Descriptions.Item>
             <Descriptions.Item label="对公转账">
               ¥{toNumber(salary.corporatePayment).toFixed(2)}
             </Descriptions.Item>
