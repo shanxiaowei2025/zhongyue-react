@@ -109,6 +109,14 @@ export const salaryApi = {
     return response.data
   },
 
+  // 取消确认薪资记录
+  async unconfirmSalary(id: number): Promise<SalaryRecord> {
+    const response = await request.patch<ApiResponse<SalaryRecord>>(`/salary/${id}/confirmed`, {
+      isConfirmed: false,
+    })
+    return response.data
+  },
+
   // 自动生成薪资（固定使用当前月份）
   async autoGenerateSalary(): Promise<AutoGenerateSalaryResult> {
     const currentMonth = new Date().toISOString().slice(0, 7)

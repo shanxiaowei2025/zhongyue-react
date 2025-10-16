@@ -7,6 +7,7 @@ import {
   ClockCircleOutlined,
   QuestionCircleOutlined,
   EditOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons'
 import type { SalaryRecord, SalaryStatistics, SalaryQueryParams } from '../../../types/salaryIntegrated'
 import { salaryApi } from '../../../api/salaryIntegrated'
@@ -609,15 +610,37 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       ),
       key: 'confirmation',
       dataIndex: 'isConfirmed',
-      width: 90,
+      width: 120,
       render: (_, record) => (
-        <Tag
-          icon={record.isConfirmed ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
-          color={record.isConfirmed ? 'success' : 'warning'}
-          className="text-xs"
-        >
-          {record.isConfirmed ? '已确认' : '待确认'}
-        </Tag>
+        <div className="flex flex-col items-center space-y-1">
+          <Tag
+            icon={record.isConfirmed ? <CheckCircleOutlined /> : <ClockCircleOutlined />}
+            color={record.isConfirmed ? 'success' : 'warning'}
+            className="text-xs"
+          >
+            {record.isConfirmed ? '已确认' : '待确认'}
+          </Tag>
+          {record.isConfirmed && (
+            <Tag
+              icon={<CloseCircleOutlined />}
+              color="default"
+              className="text-xs cursor-pointer"
+              onClick={async (e) => {
+                e.stopPropagation()
+                try {
+                  await salaryApi.unconfirmSalary(record.id)
+                  message.success('已取消确认')
+                  onRefresh()
+                } catch (error) {
+                  console.error('取消确认失败:', error)
+                  message.error('取消确认失败')
+                }
+              }}
+            >
+              取消确认
+            </Tag>
+          )}
+        </div>
       ),
       align: 'center',
     },
@@ -653,17 +676,17 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
             {record.isPaid ? '已发放' : '待发放'}
           </Tag>
           {!record.isPaid && onMarkPaid && (
-            <Button
-              type="link"
-              size="small"
-              className="text-xs p-0 h-auto"
+            <Tag
+              icon={<CheckCircleOutlined />}
+              color="green"
+              className="text-xs cursor-pointer"
               onClick={e => {
                 e.stopPropagation()
                 onMarkPaid(record.id)
               }}
             >
               已发放
-            </Button>
+            </Tag>
           )}
         </div>
       ),
