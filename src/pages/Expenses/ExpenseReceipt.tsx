@@ -505,6 +505,10 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
     if (numAmount === 0 || isNaN(numAmount)) return '零元整'
     if (!numAmount) return '零元整'
 
+    // 处理负数
+    const isNegative = numAmount < 0
+    const absAmount = Math.abs(numAmount)
+
     const cnNums = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖']
     const cnIntRadice = ['', '拾', '佰', '仟']
     const cnIntUnits = ['', '万', '亿', '兆']
@@ -518,8 +522,8 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
     let parts
     let zeroCount = 0
 
-    // 转换为字符串
-    const amountStr = numAmount.toString()
+    // 转换为字符串（使用绝对值）
+    const amountStr = absAmount.toString()
 
     if (amountStr.indexOf('.') === -1) {
       integerNum = amountStr
@@ -575,7 +579,8 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
       chineseStr += cnInteger
     }
 
-    return chineseStr
+    // 如果是负数，在前面加上"负"字
+    return isNegative ? `负${chineseStr}` : chineseStr
   }
 
   // 构建款项明细
@@ -604,7 +609,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
                   numValue !== undefined &&
                   numValue !== null &&
                   !isNaN(numValue) &&
-                  numValue > 0
+                  numValue !== 0
                 ) {
                   // 处理日期显示
                   let dateRangeText = '—'
@@ -648,7 +653,7 @@ const ExpenseReceipt: React.FC<ExpenseReceiptProps> = ({
         if (value !== undefined && value !== null) {
           // 确保将任何类型的值转换为数字
           const numValue = typeof value === 'string' ? parseFloat(value) : Number(value)
-          if (!isNaN(numValue) && numValue > 0) {
+          if (!isNaN(numValue) && numValue !== 0) {
             details.push(`${label}: ¥${numValue.toFixed(2)}`)
           }
         }

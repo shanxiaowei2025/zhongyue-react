@@ -172,8 +172,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   }
 
   // 共用的InputNumber解析函数
-  const parseNumberInput = (value: string | number | null | undefined): number => {
+  const parseNumberInput = (value: string | number | null | undefined): number | string => {
     if (value === null || value === undefined || value === '') return 0
+    // 如果是字符串且只包含负号或负号加小数点，保留原样以支持负数输入
+    if (typeof value === 'string' && /^-\.?$/.test(value)) {
+      return value
+    }
     const parsed = typeof value === 'string' ? parseFloat(value) : Number(value)
     return isNaN(parsed) ? 0 : parsed
   }
@@ -1292,7 +1296,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   rules={[
                     ({ getFieldValue }) => ({
                       validator(_, value) {
-                        const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                        const agencyFee = Number(parseNumberInput(getFieldValue('agencyFee')))
                         const relatedContract = getFieldValue('relatedContract') || []
 
                         // 如果代理费有值且大于0
@@ -1343,7 +1347,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   rules={[
                     ({ getFieldValue }) => ({
                       validator(_, _value) {
-                        const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                        const agencyFee = Number(parseNumberInput(getFieldValue('agencyFee')))
                         const contractImage = getFieldValue('contractImage')
 
                         // 如果代理费有值且大于0
@@ -1468,7 +1472,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
-                                const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                const agencyFee = Number(parseNumberInput(getFieldValue('agencyFee')))
                                 if (agencyFee > 0 && !value) {
                                   return Promise.reject(new Error('代理费有值时，业务类型为必填'))
                                 }
@@ -1490,7 +1494,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
-                                const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                const agencyFee = Number(parseNumberInput(getFieldValue('agencyFee')))
                                 if (agencyFee > 0 && !value) {
                                   return Promise.reject(new Error('代理费有值时，代理类型为必填'))
                                 }
@@ -1513,7 +1517,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
-                                const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                const agencyFee = Number(parseNumberInput(getFieldValue('agencyFee')))
                                 if (agencyFee > 0 && !value) {
                                   return Promise.reject(new Error('代理费有值时，合同类型为必填'))
                                 }
@@ -1532,7 +1536,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入代理费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1569,7 +1572,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             rules={[
                               ({ getFieldValue }) => ({
                                 validator(_, value) {
-                                  const agencyFee = parseNumberInput(getFieldValue('agencyFee'))
+                                  const agencyFee = Number(parseNumberInput(getFieldValue('agencyFee')))
                                   if (agencyFee > 0 && !value) {
                                     return Promise.reject(new Error('代理费有值时，赠送代理时长为必填'))
                                   }
@@ -1591,7 +1594,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入记账软件费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1624,7 +1626,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入开票软件费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1657,7 +1658,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入地址费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1705,7 +1705,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                 const socialInsuranceAgencyFee = getFieldValue(
                                   'socialInsuranceAgencyFee'
                                 )
-                                const fee = parseNumberInput(socialInsuranceAgencyFee)
+                                const fee = Number(parseNumberInput(socialInsuranceAgencyFee))
 
                                 // 如果社保代理费有值且大于0，则业务类型必填
                                 if (fee > 0 && (!value || value.trim() === '')) {
@@ -1756,7 +1756,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入社保代理费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1825,7 +1824,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                                   <InputNumber
                                     placeholder="请输入公积金代理费"
                                     style={{ width: '100%' }}
-                                    min={0}
                                     precision={2}
                                     addonBefore="¥"
                                     parser={parseNumberInput}
@@ -1875,7 +1873,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入统计局报表费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1906,7 +1903,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入客户资料整理费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1960,7 +1956,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入办照费用"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1971,7 +1966,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入牌子费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1982,7 +1976,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入备案章费用"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -1993,7 +1986,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入一般刻章费用"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -2036,7 +2028,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入变更收费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -2077,7 +2068,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入行政许可收费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -2121,7 +2111,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入其他业务收费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -2187,7 +2176,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入其他业务收费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
@@ -2214,7 +2202,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                           <InputNumber
                             placeholder="请输入其他业务收费"
                             style={{ width: '100%' }}
-                            min={0}
                             precision={2}
                             addonBefore="¥"
                             parser={parseNumberInput}
