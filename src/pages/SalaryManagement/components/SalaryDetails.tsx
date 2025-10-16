@@ -128,22 +128,6 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
     }
   )
 
-  // 调试：查看保定宏春的原始数据
-  useEffect(() => {
-    const hongchunExpense = expenses?.find(e => e.companyName?.includes('保定宏春'))
-    if (hongchunExpense) {
-      console.log('🔍 保定宏春原始数据:', {
-        id: hongchunExpense.id,
-        companyName: hongchunExpense.companyName,
-        socialInsuranceAgencyFee: hongchunExpense.socialInsuranceAgencyFee,
-        agencyCommission: hongchunExpense.agencyCommission,
-        totalFee: hongchunExpense.totalFee,
-        raw: hongchunExpense
-      })
-    }
-  }, [expenses])
-
-
   // 全屏时阻止body滚动
   useEffect(() => {
     if (fullscreenTable) {
