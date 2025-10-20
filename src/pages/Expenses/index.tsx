@@ -35,6 +35,7 @@ import { Expense, ExpenseStatus, ExpenseQueryParams } from '../../types/expense'
 import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
+import { getAllBusinessOptions } from '../../utils/businessOptions'
 import dayjs from 'dayjs'
 import './expenses.css'
 
@@ -55,8 +56,9 @@ const SOCIAL_INSURANCE_BUSINESS_TYPE_OPTIONS = [
   { label: '续费', value: '续费' },
 ]
 
-// 业务查询选项
-const BUSINESS_INQUIRY_OPTIONS = [
+// 业务查询选项（已废弃，现在使用动态选项 getAllBusinessOptions）
+// 保留这个定义是为了向后兼容，但实际使用时会被动态选项覆盖
+const BUSINESS_INQUIRY_OPTIONS_DEPRECATED = [
   { label: '代理费', value: '代理费' },
   { label: '记账软件费', value: '记账软件费' },
   { label: '开票软件费', value: '开票软件费' },
@@ -264,6 +266,24 @@ const Expenses: React.FC = () => {
   const canAuditExpense = permissionsLoading ? true : expensePermissions?.canAudit
   const canCancelAuditExpense = permissionsLoading ? true : expensePermissions?.canCancelAudit
   const canViewReceipt = permissionsLoading ? true : expensePermissions?.canViewReceipt
+
+  // 动态业务选项（从 localStorage 获取并自动更新）
+  const [businessInquiryOptions, setBusinessInquiryOptions] = useState(() => getAllBusinessOptions())
+
+  // 监听业务选项变化
+  useEffect(() => {
+    const handleBusinessOptionsUpdate = () => {
+      setBusinessInquiryOptions(getAllBusinessOptions())
+    }
+
+    // 监听自定义事件
+    window.addEventListener('businessOptionsUpdated', handleBusinessOptionsUpdate)
+
+    // 清理函数
+    return () => {
+      window.removeEventListener('businessOptionsUpdated', handleBusinessOptionsUpdate)
+    }
+  }, [])
 
   // 刷新权限信息
   useEffect(() => {
@@ -1142,7 +1162,7 @@ const Expenses: React.FC = () => {
                 filterOption={(input, option) =>
                   (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
                 }
-                options={BUSINESS_INQUIRY_OPTIONS}
+                options={businessInquiryOptions}
               />
             </Form.Item>
 
