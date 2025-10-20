@@ -2168,6 +2168,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               { value: '税务风险报告', label: '税务风险报告' },
                               { value: '代理企业行政许可注销', label: '代理企业行政许可注销' },
                               { value: '公司合作业务', label: '公司合作业务' },
+                              { value: '进出口权限申请', label: '进出口权限申请' },
                             ]}
                           />
                         </Form.Item>

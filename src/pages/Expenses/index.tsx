@@ -139,6 +139,7 @@ const BUSINESS_INQUIRY_OPTIONS = [
   { label: '公司合作业务', value: '公司合作业务' },
   { label: '代办烟草证', value: '代办烟草证' },
   { label: '出口退税', value: '出口退税' },
+  { label: '进出口权限申请', value: '进出口权限申请' },
 ]
 
 // 状态映射为显示文本
