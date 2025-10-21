@@ -417,6 +417,12 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   }
 
   const handleEdit = () => {
+    // 已发放的薪资不允许编辑
+    if (employee.isPaid) {
+      message.warning('该员工薪资已发放，不允许修改')
+      return
+    }
+
     form.setFieldsValue({
       temporaryIncrease: employee.temporaryIncrease,
       temporaryIncreaseItem: employee.temporaryIncreaseItem,
@@ -451,6 +457,14 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
   const handleSave = async () => {
     try {
       setLoading(true)
+      
+      // 再次检查是否已发放（防止在编辑过程中状态被改变）
+      if (employee.isPaid) {
+        message.error('该员工薪资已发放，无法保存修改')
+        setEditing(false)
+        return
+      }
+
       const values = await form.validateFields()
 
       // 确保绩效扣除数组是完整的14个数字
@@ -472,8 +486,14 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
 
       setEditing(false)
       message.success('薪资信息已更新')
-    } catch (error) {
+    } catch (error: any) {
       console.error('保存失败:', error)
+      // 处理后端返回的已发放状态错误
+      if (error?.response?.data?.message?.includes('已发放')) {
+        message.error('该薪资已发放，不允许修改')
+      } else {
+        message.error('保存失败，请重试')
+      }
     } finally {
       setLoading(false)
     }
@@ -609,7 +629,12 @@ const SalaryDetails: React.FC<SalaryDetailsProps> = ({ employee, yearMonth, onUp
                         </Button>
                       </>
                     ) : (
-                      <Button icon={<EditOutlined />} onClick={handleEdit}>
+                      <Button 
+                        icon={<EditOutlined />} 
+                        onClick={handleEdit}
+                        disabled={employee.isPaid}
+                        title={employee.isPaid ? '已发放的薪资不允许修改' : '编辑薪资信息'}
+                      >
                         编辑
                       </Button>
                     )}

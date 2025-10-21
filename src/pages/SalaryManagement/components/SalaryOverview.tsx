@@ -226,7 +226,9 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
     recordId: number
     field: 'bankCardOrWechat'
     onSave: (recordId: number, field: string, value: number) => Promise<void>
-  }> = React.memo(({ value, recordId, field, onSave }) => {
+    disabled?: boolean
+    disabledReason?: string
+  }> = React.memo(({ value, recordId, field, onSave, disabled = false, disabledReason }) => {
     const cellKey = `${recordId}-${field}`
     const isEditing = editingCell === cellKey
 
@@ -244,6 +246,12 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
     const handleEdit = async (e: React.MouseEvent) => {
       e.stopPropagation()
       if (isEditing) return
+      
+      // 如果已禁用，显示提示信息
+      if (disabled) {
+        message.warning(disabledReason || '该数据不允许编辑')
+        return
+      }
 
       // 直接切换到新的编辑状态，设置输入值为当前显示值
       setEditingCell(cellKey)
@@ -313,8 +321,13 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
 
     return (
       <div
-        className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+        className={`px-2 py-1 rounded transition-colors ${
+          disabled 
+            ? 'cursor-not-allowed bg-gray-100 text-gray-400' 
+            : 'cursor-pointer hover:bg-blue-50'
+        }`}
         onClick={handleEdit}
+        title={disabled ? disabledReason : '点击编辑'}
       >
         {formatCurrency(toNumber(displayValue))}
       </div>
@@ -323,9 +336,24 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
 
   // 保存编辑的函数
   const handleSaveField = async (recordId: number, field: string, value: number) => {
-    await salaryApi.updateSalary(recordId, { [field]: value })
-    // 保存成功后刷新数据，以获取后端计算的对公转账等字段
-    onRefresh()
+    // 查找该记录，检查是否已发放
+    const record = salaryData.find(r => r.id === recordId)
+    if (record?.isPaid) {
+      message.error('该员工薪资已发放，不允许修改')
+      throw new Error('薪资已发放，不允许修改')
+    }
+    
+    try {
+      await salaryApi.updateSalary(recordId, { [field]: value })
+      // 保存成功后刷新数据，以获取后端计算的对公转账等字段
+      onRefresh()
+    } catch (error: any) {
+      // 处理后端返回的已发放状态错误
+      if (error?.response?.data?.message?.includes('已发放')) {
+        message.error('该薪资已发放，不允许修改')
+      }
+      throw error
+    }
   }
   const columns: ColumnsType<SalaryRecord> = [
     {
@@ -568,6 +596,8 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
           recordId={record.id}
           field="bankCardOrWechat"
           onSave={handleSaveField}
+          disabled={record.isPaid}
+          disabledReason="该员工薪资已发放，不允许修改"
         />
       ),
       align: 'right',
