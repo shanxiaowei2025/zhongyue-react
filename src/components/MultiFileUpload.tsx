@@ -87,10 +87,17 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   // 内部文件状态，用于处理并发上传
   const [internalFiles, setInternalFiles] = useState<Record<string, ImageType>>({})
 
-  // 同步外部value到内部状态
+  // 同步外部value到内部状态（仅在初始化和value从外部变化时）
   useEffect(() => {
-    setInternalFiles(value || {})
-  }, [value])
+    // 使用 JSON.stringify 比较，避免对象引用变化导致的重复更新
+    const currentKeys = Object.keys(internalFiles).sort()
+    const newKeys = Object.keys(value || {}).sort()
+    
+    // 只有当键数量或键名真正变化时才更新
+    if (JSON.stringify(currentKeys) !== JSON.stringify(newKeys)) {
+      setInternalFiles(value || {})
+    }
+  }, [value, internalFiles])
 
   // 清理所有定时器
   useEffect(() => {
@@ -208,19 +215,17 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         console.log('上传成功，生成键名:', newKey, '文件名:', result.fileName)
 
         // 使用内部状态来管理并发上传
-        setInternalFiles(prev => {
-          const newValue = {
-            ...prev,
-            [newKey]: {
-              fileName: result.fileName,
-              url: result.url,
-            },
-          }
-          console.log('更新后的值:', newValue)
-          // 异步通知外部组件
-          setTimeout(() => onChange?.(newValue), 0)
-          return newValue
-        })
+        const newValue = {
+          ...internalFiles,
+          [newKey]: {
+            fileName: result.fileName,
+            url: result.url,
+          },
+        }
+        console.log('更新后的值:', newValue)
+        setInternalFiles(newValue)
+        // 通知外部组件
+        onChange?.(newValue)
 
         onUploadSuccess('上传成功')
         showSuccess.fileUpload(file.name)
@@ -272,13 +277,11 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       }
 
       // 无论删除API是否成功，从表单中移除该文件
-      setInternalFiles(prev => {
-        const newValue = { ...prev }
-        delete newValue[item.key]
-        // 异步通知外部组件
-        setTimeout(() => onChange?.(newValue), 0)
-        return newValue
-      })
+      const newValue = { ...internalFiles }
+      delete newValue[item.key]
+      setInternalFiles(newValue)
+      // 通知外部组件
+      onChange?.(newValue)
 
       // 移除错误记录
       const newImageErrors = { ...imageErrors }

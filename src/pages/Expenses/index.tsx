@@ -36,6 +36,7 @@ import ExpenseForm from './ExpenseForm'
 import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import { getAllBusinessOptions } from '../../utils/businessOptions'
+import { getBusinessOptions } from '../../api/businessOption'
 import dayjs from 'dayjs'
 import './expenses.css'
 
@@ -267,13 +268,59 @@ const Expenses: React.FC = () => {
   const canCancelAuditExpense = permissionsLoading ? true : expensePermissions?.canCancelAudit
   const canViewReceipt = permissionsLoading ? true : expensePermissions?.canViewReceipt
 
-  // 动态业务选项（从 localStorage 获取并自动更新）
-  const [businessInquiryOptions, setBusinessInquiryOptions] = useState(() => getAllBusinessOptions())
+  // 动态业务选项（从数据库获取）
+  const [businessInquiryOptions, setBusinessInquiryOptions] = useState<{ label: string; value: string }[]>([])
 
-  // 监听业务选项变化
+  // 加载所有业务选项（从数据库）
+  const loadAllBusinessOptions = async () => {
+    try {
+      const response = await getBusinessOptions({})
+      if (response.code === 0 && response.data?.list) {
+        // 将数据库选项转换为下拉列表格式
+        const dbOptions = response.data.list.map(opt => ({
+          label: opt.optionValue,
+          value: opt.optionValue
+        }))
+        
+        // 合并localStorage的旧选项（向后兼容）
+        const localStorageOptions = getAllBusinessOptions()
+        
+        // 去重合并
+        const allOptionsMap = new Map<string, { label: string; value: string }>()
+        
+        // 先添加localStorage选项
+        localStorageOptions.forEach(opt => {
+          allOptionsMap.set(opt.value, opt)
+        })
+        
+        // 再添加数据库选项（覆盖重复的）
+        dbOptions.forEach(opt => {
+          allOptionsMap.set(opt.value, opt)
+        })
+        
+        // 转换为数组并排序
+        const mergedOptions = Array.from(allOptionsMap.values()).sort((a, b) => 
+          a.label.localeCompare(b.label)
+        )
+        
+        setBusinessInquiryOptions(mergedOptions)
+      }
+    } catch (error) {
+      console.error('加载业务选项失败:', error)
+      // 失败时使用localStorage作为兜底
+      setBusinessInquiryOptions(getAllBusinessOptions())
+    }
+  }
+
+  // 初始化加载业务选项
+  useEffect(() => {
+    loadAllBusinessOptions()
+  }, [])
+
+  // 监听业务选项变化（支持localStorage方式的兼容）
   useEffect(() => {
     const handleBusinessOptionsUpdate = () => {
-      setBusinessInquiryOptions(getAllBusinessOptions())
+      loadAllBusinessOptions()
     }
 
     // 监听自定义事件

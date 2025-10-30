@@ -2011,7 +2011,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item name="changeBusiness" label="变更业务">
                           <BusinessOptionsManager
                             placeholder="请选择变更业务"
-                            storageKey="expense_change_business_options"
+                            category="change_business"
                             defaultOptions={[
                               { value: '地址变更', label: '地址变更' },
                               { value: '名称变更', label: '名称变更' },
@@ -2052,7 +2052,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item name="administrativeLicense" label="行政许可">
                           <BusinessOptionsManager
                             placeholder="请选择或输入行政许可"
-                            storageKey="expense_administrative_license_options"
+                            category="administrative_license"
                             defaultOptions={[
                               { value: '食品经营许可证', label: '食品经营许可证' },
                               { value: '卫生许可证', label: '卫生许可证' },
@@ -2091,7 +2091,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item name="otherBusiness" label={<span>其他业务（基础）<Tooltip title="该业务提成累积区间比率"><InfoCircleOutlined style={{ marginLeft: 4, color: '#999' }} /></Tooltip></span>}>
                           <BusinessOptionsManager
                             placeholder="请选择其他业务"
-                            storageKey="expense_other_business_basic_options"
+                            category="other_business_basic"
                             defaultOptions={[
                               { value: '非代理企业工商注销', label: '非代理企业工商注销' },
                               { value: '非代理企业税务注销', label: '非代理企业税务注销' },
@@ -2123,7 +2123,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item name="otherBusinessOutsourcing" label={<span>其他业务<Tooltip title="该业务固定提成10%"><InfoCircleOutlined style={{ marginLeft: 4, color: '#999' }} /></Tooltip></span>}>
                           <BusinessOptionsManager
                             placeholder="请选择其他业务"
-                            storageKey="expense_other_business_outsourcing_options"
+                            category="other_business_outsourcing"
                             defaultOptions={[
                               { value: '代理企业工商注销', label: '代理企业工商注销' },
                               { value: '代理企业税务注销', label: '代理企业税务注销' },
@@ -2188,7 +2188,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         <Form.Item name="otherBusinessSpecial" label={<span>其他业务(特殊)<Tooltip title="该业务视情况而定"><InfoCircleOutlined style={{ marginLeft: 4, color: '#999' }} /></Tooltip></span>}>
                           <BusinessOptionsManager
                             placeholder="请选择其他业务"
-                            storageKey="expense_other_business_special_options"
+                            category="other_business_special"
                             defaultOptions={[
                               { value: '代办烟草证', label: '代办烟草证' },
                               { value: '出口退税', label: '出口退税' },

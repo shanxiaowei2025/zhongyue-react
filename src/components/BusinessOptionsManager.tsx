@@ -1,63 +1,78 @@
 import React, { useState, useEffect } from 'react'
 import { Select, Button, Input, Space, message, Modal, List, Popconfirm } from 'antd'
 import { PlusOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
-import { triggerBusinessOptionsUpdate } from '../utils/businessOptions'
 import { useAuthStore } from '../store/auth'
 import { isAdminUser } from '../utils/permissionUtils'
+import {
+  getBusinessOptionsByCategory,
+  createBusinessOption,
+  deleteBusinessOption,
+} from '../api/businessOption'
+import { BusinessOption } from '../types/businessOption'
 
 interface BusinessOptionsManagerProps {
   value?: string[]
   onChange?: (value: string[]) => void
   placeholder?: string
-  storageKey: string // 用于localStorage的唯一键
-  defaultOptions?: { value: string; label: string }[] // 默认选项
+  category: string // 业务类别，如 'change_business', 'administrative_license' 等
+  defaultOptions?: { value: string; label: string }[] // 默认选项（仅用于后端未返回时的兜底）
 }
 
 const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
   value,
   onChange,
   placeholder = '请选择或输入业务',
-  storageKey,
+  category,
   defaultOptions = [],
 }) => {
   // 获取当前用户信息和权限
   const { user } = useAuthStore()
   const isAdmin = isAdminUser(user)
 
-  // 从localStorage加载自定义选项
-  const loadCustomOptions = (): string[] => {
-    try {
-      const stored = localStorage.getItem(storageKey)
-      return stored ? JSON.parse(stored) : []
-    } catch (error) {
-      console.error('加载自定义选项失败:', error)
-      return []
-    }
-  }
-
-  // 保存自定义选项到localStorage
-  const saveCustomOptions = (options: string[]) => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(options))
-      // 触发业务选项更新事件，通知其他组件更新
-      triggerBusinessOptionsUpdate()
-    } catch (error) {
-      console.error('保存自定义选项失败:', error)
-    }
-  }
-
-  const [customOptions, setCustomOptions] = useState<string[]>(loadCustomOptions())
+  const [businessOptions, setBusinessOptions] = useState<BusinessOption[]>([])
+  const [loading, setLoading] = useState(false)
   const [manageModalVisible, setManageModalVisible] = useState(false)
   const [newOptionInput, setNewOptionInput] = useState('')
 
-  // 合并默认选项和自定义选项
+  // 从后端加载业务选项
+  const loadBusinessOptions = async () => {
+    setLoading(true)
+    try {
+      const response = await getBusinessOptionsByCategory(category)
+      if (response.code === 0 && response.data) {
+        // 处理后端返回的数据，确保 isDefault 是布尔类型
+        const normalizedData = response.data.map(option => ({
+          ...option,
+          isDefault: Boolean(option.isDefault), // 将 0/1 转换为 false/true
+        }))
+        setBusinessOptions(normalizedData)
+      } else {
+        // 如果后端没有数据，使用默认选项作为兜底
+        console.warn('后端未返回业务选项，使用默认选项')
+      }
+    } catch (error) {
+      console.error('加载业务选项失败:', error)
+      message.error('加载业务选项失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 组件挂载时加载数据
+  useEffect(() => {
+    loadBusinessOptions()
+  }, [category])
+
+  // 合并默认选项和后端选项
   const allOptions = [
     ...defaultOptions,
-    ...customOptions.map(opt => ({ value: opt, label: opt })),
+    ...businessOptions
+      .filter(opt => !defaultOptions.some(def => def.value === opt.optionValue))
+      .map(opt => ({ value: opt.optionValue, label: opt.optionValue })),
   ]
 
-  // 添加新选项（添加到默认选项和自定义选项的合并列表）
-  const handleAddOption = () => {
+  // 添加新选项
+  const handleAddOption = async () => {
     // 权限检查：只有管理员才能添加业务选项
     if (!isAdmin) {
       message.error('只有管理员才能添加业务选项')
@@ -71,54 +86,64 @@ const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
 
     const trimmedInput = newOptionInput.trim()
 
-    // 检查是否已存在于默认选项
+    // 检查是否已存在
     const existsInDefault = defaultOptions.some(opt => opt.value === trimmedInput)
-    if (existsInDefault) {
-      message.warning('该业务已存在于默认选项中')
-      return
-    }
+    const existsInBackend = businessOptions.some(opt => opt.optionValue === trimmedInput)
 
-    // 检查是否已存在于自定义选项
-    const existsInCustom = customOptions.includes(trimmedInput)
-    if (existsInCustom) {
+    if (existsInDefault || existsInBackend) {
       message.warning('该业务已存在')
       return
     }
 
-    const updatedCustomOptions = [...customOptions, trimmedInput]
-    setCustomOptions(updatedCustomOptions)
-    saveCustomOptions(updatedCustomOptions)
-    setNewOptionInput('')
-    message.success('添加成功')
+    try {
+      const response = await createBusinessOption({
+        category,
+        optionValue: trimmedInput,
+        isDefault: false,
+      })
+
+      if (response.code === 0) {
+        message.success('添加成功')
+        setNewOptionInput('')
+        // 重新加载选项列表
+        await loadBusinessOptions()
+      } else {
+        message.error(response.message || '添加失败')
+      }
+    } catch (error) {
+      console.error('添加业务选项失败:', error)
+      message.error('添加失败')
+    }
   }
 
-  // 删除默认选项
-  const handleDeleteDefaultOption = (optionValue: string) => {
-    // 这个函数现在也可以删除默认选项了
-    message.error('暂不支持删除此业务')
-  }
-
-  // 删除自定义选项
-  const handleDeleteCustomOption = (optionValue: string) => {
+  // 删除选项
+  const handleDeleteOption = async (option: BusinessOption) => {
     // 权限检查：只有管理员才能删除业务选项
     if (!isAdmin) {
       message.error('只有管理员才能删除业务选项')
       return
     }
 
-    const updatedCustomOptions = customOptions.filter(opt => opt !== optionValue)
-    setCustomOptions(updatedCustomOptions)
-    saveCustomOptions(updatedCustomOptions)
-    message.success('删除成功')
-  }
-
-  // 更新localStorage中的自定义选项
-  useEffect(() => {
-    const stored = loadCustomOptions()
-    if (JSON.stringify(stored) !== JSON.stringify(customOptions)) {
-      setCustomOptions(stored)
+    // 不允许删除默认选项
+    if (option.isDefault) {
+      message.error('不能删除默认选项')
+      return
     }
-  }, [storageKey])
+
+    try {
+      const response = await deleteBusinessOption(option.id)
+      if (response.code === 0) {
+        message.success('删除成功')
+        // 重新加载选项列表
+        await loadBusinessOptions()
+      } else {
+        message.error(response.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除业务选项失败:', error)
+      message.error('删除失败')
+    }
+  }
 
   return (
     <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
@@ -129,6 +154,7 @@ const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
         mode="multiple"
         style={{ flex: 1 }}
         options={allOptions}
+        loading={loading}
       />
       {/* 只有管理员才显示管理按钮 */}
       {isAdmin && (
@@ -167,40 +193,42 @@ const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
             </Space.Compact>
           </div>
 
-          {/* 当前业务列表 - 合并默认选项和自定义选项 */}
+          {/* 当前业务列表 */}
           <div>
             <h4 style={{ marginBottom: '8px' }}>当前业务</h4>
             <List
               size="small"
               bordered
-              dataSource={[
-                ...defaultOptions.map(opt => ({ value: opt.value, label: opt.label, isDefault: true })),
-                ...customOptions.map(opt => ({ value: opt, label: opt, isDefault: false })),
-              ]}
+              dataSource={businessOptions}
               renderItem={item => (
                 <List.Item
                   actions={[
                     <Popconfirm
                       title="确定删除该业务吗？"
-                      onConfirm={() =>
-                        item.isDefault
-                          ? handleDeleteDefaultOption(item.value)
-                          : handleDeleteCustomOption(item.value)
-                      }
+                      onConfirm={() => handleDeleteOption(item)}
                       okText="确定"
                       cancelText="取消"
+                      disabled={item.isDefault}
                     >
                       <Button
                         type="link"
                         danger
                         size="small"
                         icon={<DeleteOutlined />}
-                        title="删除"
+                        title={item.isDefault ? '默认选项不能删除' : '删除'}
+                        disabled={item.isDefault}
                       />
                     </Popconfirm>,
                   ]}
                 >
-                  <span>{item.label}</span>
+                  <span>
+                    {item.optionValue}
+                    {item.isDefault && (
+                      <span style={{ marginLeft: 8, color: '#999', fontSize: '12px' }}>
+                        (默认)
+                      </span>
+                    )}
+                  </span>
                 </List.Item>
               )}
               locale={{ emptyText: '暂无业务选项' }}
@@ -214,4 +242,3 @@ const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
 }
 
 export default BusinessOptionsManager
-
