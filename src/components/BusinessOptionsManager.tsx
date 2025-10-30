@@ -9,6 +9,7 @@ import {
   deleteBusinessOption,
 } from '../api/businessOption'
 import { BusinessOption } from '../types/businessOption'
+import { triggerBusinessOptionsUpdate } from '../utils/businessOptions'
 
 interface BusinessOptionsManagerProps {
   value?: string[]
@@ -107,6 +108,8 @@ const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
         setNewOptionInput('')
         // 重新加载选项列表
         await loadBusinessOptions()
+        // 触发全局业务选项更新事件，通知其他组件刷新
+        triggerBusinessOptionsUpdate()
       } else {
         message.error(response.message || '添加失败')
       }
@@ -136,6 +139,8 @@ const BusinessOptionsManager: React.FC<BusinessOptionsManagerProps> = ({
         message.success('删除成功')
         // 重新加载选项列表
         await loadBusinessOptions()
+        // 触发全局业务选项更新事件，通知其他组件刷新
+        triggerBusinessOptionsUpdate()
       } else {
         message.error(response.message || '删除失败')
       }
