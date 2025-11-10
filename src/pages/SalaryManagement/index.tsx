@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Button, Spin, Tabs, Progress, Modal } from 'antd'
 
 import {
@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons'
 
 import { useSalaryIntegrated } from '../../hooks/useSalaryIntegrated'
+import { useAuthStore } from '../../store/auth'
 import MonthSelector from './components/MonthSelector'
 import SalaryOverview from './components/SalaryOverview'
 import CompactEmployeeList from './components/CompactEmployeeList'
@@ -22,6 +23,14 @@ import SpecialBusinessModal from './components/SpecialBusinessModal'
 import '../../components/ScrollableTabs.css'
 
 const SalaryManagement: React.FC = () => {
+  const { user } = useAuthStore()
+  
+  // 判断是否为仅上传权限的角色
+  const isUploadOnlyRole = useMemo(() => {
+    if (!user?.roles) return false
+    const roles = user.roles.map(role => role.toLowerCase())
+    return roles.includes('salary_uploader') || roles.includes('薪资上传员')
+  }, [user])
   const {
     selectedEmployee,
     selectedYearMonth,
@@ -101,6 +110,37 @@ const SalaryManagement: React.FC = () => {
     } finally {
       setExporting(false)
     }
+  }
+
+  // 如果是仅上传权限，只显示导入功能
+  if (isUploadOnlyRole) {
+    return (
+      <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
+        {/* 页头 */}
+        <div className="bg-white border-b shadow-sm pb-6 flex-shrink-0">
+          <div className="px-6">
+            <h1 className="text-xl font-semibold text-gray-900">薪资数据导入</h1>
+          </div>
+        </div>
+
+        {/* 主内容区域 - 只显示导入功能 */}
+        <div className="flex-1 overflow-auto bg-white">
+          <div className="p-6">
+            <ImportExportPanel
+              yearMonth={selectedYearMonth}
+              onImport={operations.importData}
+            />
+          </div>
+        </div>
+
+        {/* 全局加载 */}
+        {loading && (
+          <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50">
+            <Spin size="large" />
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (

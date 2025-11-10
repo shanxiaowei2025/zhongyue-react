@@ -200,7 +200,7 @@ const routes: RouteObject[] = [
         path: 'salary-management',
         element: (
           <AuthorizedRoute
-            requiredRoles={['super_admin', 'salary_admin', '超级管理员', '薪资管理员']}
+            requiredRoles={['super_admin', 'salary_admin', 'salary_uploader', '超级管理员', '薪资管理员', '薪资上传员']}
           >
             <SalaryManagement />
           </AuthorizedRoute>

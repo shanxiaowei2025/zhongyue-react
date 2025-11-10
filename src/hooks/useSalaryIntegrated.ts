@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import { message } from 'antd'
 import {
@@ -14,6 +14,7 @@ import {
   useSalaryIntegratedSelectors,
   useSalaryIntegratedActions,
 } from '../store/salaryIntegratedStore'
+import { useAuthStore } from '../store/auth'
 import type {
   SalaryRecord,
   CreateSalaryDto,
@@ -26,6 +27,7 @@ import { recordImportStatus } from '../utils/importStatus'
 
 // 集成化薪资管理主Hook
 export const useSalaryIntegrated = () => {
+  const { user } = useAuthStore()
   const { selectedEmployee, selectedYearMonth, salaryData, relatedData, statistics, loading, searchState } =
     useSalaryIntegratedSelectors()
 
@@ -44,26 +46,41 @@ export const useSalaryIntegrated = () => {
     batchUpdateSalaryRecords,
   } = useSalaryIntegratedActions()
 
-  // 获取月度数据
+  // 判断是否为仅上传权限的角色
+  const isUploadOnlyRole = useMemo(() => {
+    if (!user?.roles) return false
+    const roles = user.roles.map(role => role.toLowerCase())
+    return roles.includes('salary_uploader') || roles.includes('薪资上传员')
+  }, [user])
+
+  // 空数据，用于上传员角色
+  const emptyMonthlyData = useMemo(() => ({
+    salaryData: [],
+    statistics: {
+      employeeCount: 0,
+      totalPayable: 0,
+      totalSocialInsurance: 0,
+      totalTax: 0,
+      paidCount: 0,
+      unpaidCount: 0,
+      confirmedCount: 0,
+      unconfirmedCount: 0,
+      confirmationRate: 0,
+    },
+  }), [])
+
+  // 获取月度数据 - 如果是上传员角色，不调用API，直接返回空数据
   const { isLoading: isMonthlyLoading, mutate: mutateMonthly } = useSWR(
-    getSWRKeys.monthlyData(selectedYearMonth, searchState),
-    () => integratedApi.loadMonthlyData(selectedYearMonth, searchState),
+    isUploadOnlyRole ? null : getSWRKeys.monthlyData(selectedYearMonth, searchState),
+    () => {
+      if (isUploadOnlyRole) {
+        return Promise.resolve(emptyMonthlyData)
+      }
+      return integratedApi.loadMonthlyData(selectedYearMonth, searchState)
+    },
     {
       revalidateOnFocus: false,
-      fallbackData: {
-        salaryData: [],
-        statistics: {
-          employeeCount: 0,
-          totalPayable: 0,
-          totalSocialInsurance: 0,
-          totalTax: 0,
-          paidCount: 0,
-          unpaidCount: 0,
-          confirmedCount: 0,
-          unconfirmedCount: 0,
-          confirmationRate: 0,
-        },
-      },
+      fallbackData: emptyMonthlyData,
       onSuccess: data => {
         if (data) {
           setSalaryData(data.salaryData)
@@ -238,8 +255,10 @@ export const useSalaryIntegrated = () => {
             recordImportStatus(type, targetYearMonth, 'failure', result.message)
           }
 
-          // 刷新相关数据
-          await mutateMonthly()
+          // 刷新相关数据 - 如果是上传员角色，不刷新薪资列表数据
+          if (!isUploadOnlyRole) {
+            await mutateMonthly()
+          }
           if (selectedEmployee) {
             await mutateRelated()
           }
@@ -258,7 +277,7 @@ export const useSalaryIntegrated = () => {
           setLoading(false)
         }
       },
-      [mutateMonthly, mutateRelated, selectedEmployee, setLoading]
+      [mutateMonthly, mutateRelated, selectedEmployee, setLoading, isUploadOnlyRole]
     ),
 
     // 导出薪资数据为CSV
@@ -315,7 +334,16 @@ export const useSalaryIntegrated = () => {
       try {
         setLoading(true)
 
-        await Promise.all([mutateMonthly(), selectedEmployee ? mutateRelated() : Promise.resolve()])
+        // 如果是上传员角色，不刷新薪资列表数据
+        const promises = []
+        if (!isUploadOnlyRole) {
+          promises.push(mutateMonthly())
+        }
+        if (selectedEmployee) {
+          promises.push(mutateRelated())
+        }
+        
+        await Promise.all(promises)
 
         message.success('数据刷新成功')
       } catch (error: any) {
@@ -323,7 +351,7 @@ export const useSalaryIntegrated = () => {
       } finally {
         setLoading(false)
       }
-    }, [mutateMonthly, mutateRelated, selectedEmployee, setLoading]),
+    }, [mutateMonthly, mutateRelated, selectedEmployee, setLoading, isUploadOnlyRole]),
 
     // 切换月份
     switchMonth: useCallback(

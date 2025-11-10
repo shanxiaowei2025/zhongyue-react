@@ -553,9 +553,9 @@ const MainLayout = () => {
           },
         ]
       : []),
-    // 根据用户角色决定是否显示薪资管理菜单（只有超级管理员和薪资管理员可见）
+    // 根据用户角色决定是否显示薪资管理菜单（超级管理员、薪资管理员和薪资上传员可见）
     ...(user?.roles.some(role =>
-      ['super_admin', 'salary_admin', '超级管理员', '薪资管理员'].includes(role)
+      ['super_admin', 'salary_admin', 'salary_uploader', '超级管理员', '薪资管理员', '薪资上传员'].includes(role)
     )
       ? [
           {
