@@ -77,6 +77,12 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   invoiceOfficer: 'basic',
   enterpriseStatus: 'basic',
   businessStatus: 'basic',
+  customerGroup: 'basic',
+  customerGroupRemark: 'basic',
+  maintenanceAgent: 'basic',
+  maintenanceAgentRemark: 'basic',
+  accountingSoftware: 'basic',
+  accountingSoftwareRemark: 'basic',
   registeredAddress: 'basic',
   location: 'basic',
   businessAddress: 'basic',
@@ -1625,6 +1631,40 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+
+          <Form.Item name="customerGroup" label="客户群">
+            <Select placeholder="请选择客户群" allowClear>
+              <Select.Option value="已创建">已创建</Select.Option>
+              <Select.Option value="已解散">已解散</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="customerGroupRemark" label="客户群备注">
+            <Input.TextArea rows={2} placeholder="请输入客户群备注" />
+          </Form.Item>
+
+          <Form.Item name="maintenanceAgent" label="维护代理端">
+            <Select placeholder="请选择维护代理端" allowClear>
+              <Select.Option value="已维护">已维护</Select.Option>
+              <Select.Option value="无需维护">无需维护</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="maintenanceAgentRemark" label="维护代理端备注">
+            <Input.TextArea rows={2} placeholder="请输入维护代理端备注" />
+          </Form.Item>
+
+          <Form.Item name="accountingSoftware" label="记账软件">
+            <Select placeholder="请选择记账软件" allowClear>
+              <Select.Option value="亿企赢">亿企赢</Select.Option>
+              <Select.Option value="云账房">云账房</Select.Option>
+              <Select.Option value="365">365</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="accountingSoftwareRemark" label="记账软件备注">
+            <Input.TextArea rows={2} placeholder="请输入记账软件备注" />
           </Form.Item>
 
           <Form.Item name="registeredAddress" label="注册地址" className="col-span-1 md:col-span-2">

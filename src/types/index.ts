@@ -305,6 +305,12 @@ export interface Customer {
   archiveStorageRemarks?: string // 档案存放备注
   enterpriseStatus?: 'normal' | 'abnormal' | 'cancelled' | 'revoked'
   businessStatus?: 'normal' | 'logged_out' | 'logging_out' | 'lost' | 'waiting_transfer'
+  customerGroup?: string // 客户群
+  customerGroupRemark?: string // 客户群备注
+  maintenanceAgent?: string // 维护代理端
+  maintenanceAgentRemark?: string // 维护代理端备注
+  accountingSoftware?: string // 记账软件
+  accountingSoftwareRemark?: string // 记账软件备注
   followUpRecords?: FollowUpRecord[] // 跟进记录
   createTime: string
   updateTime: string

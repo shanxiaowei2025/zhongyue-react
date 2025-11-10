@@ -1100,6 +1100,39 @@ export default function Customers() {
       },
     },
     {
+      id: 'customerGroup',
+      accessorKey: 'customerGroup',
+      header: '客户群',
+      size: isMobile ? 100 : 120,
+      responsive: ['lg'],
+      cell: ({ getValue }) => {
+        const value = getValue() as string
+        return <EllipsisText text={value || '-'} maxWidth={isMobile ? 80 : 100} />
+      },
+    },
+    {
+      id: 'maintenanceAgent',
+      accessorKey: 'maintenanceAgent',
+      header: '维护代理端',
+      size: isMobile ? 100 : 120,
+      responsive: ['lg'],
+      cell: ({ getValue }) => {
+        const value = getValue() as string
+        return <EllipsisText text={value || '-'} maxWidth={isMobile ? 80 : 100} />
+      },
+    },
+    {
+      id: 'accountingSoftware',
+      accessorKey: 'accountingSoftware',
+      header: '记账软件',
+      size: isMobile ? 100 : 120,
+      responsive: ['lg'],
+      cell: ({ getValue }) => {
+        const value = getValue() as string
+        return <EllipsisText text={value || '-'} maxWidth={isMobile ? 80 : 100} />
+      },
+    },
+    {
       id: 'createTime',
       accessorKey: 'createTime',
       header: '创建时间',
@@ -2171,6 +2204,15 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           </Descriptions.Item>
           <Descriptions.Item label="注册地址" span={3}>
             {displayCustomer.registeredAddress || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="客户群" span={3}>
+            {displayCustomer.customerGroupRemark || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="维护代理端" span={3}>
+            {displayCustomer.maintenanceAgentRemark || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="记账软件" span={3}>
+            {displayCustomer.accountingSoftwareRemark || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="经营地址" span={3}>
             {displayCustomer.businessAddress || '-'}
