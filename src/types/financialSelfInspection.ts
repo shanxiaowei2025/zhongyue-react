@@ -93,6 +93,9 @@ export interface FinancialSelfInspectionListResponse {
   page: number
   pageSize: number
   totalPages: number
+  createdCount: number // 创建数量（当前接口返回数据的总数量）
+  pendingRectificationCount: number // 待整改数量（status字段值为0的总数量）
+  inspectorApprovedCount: number // 抽查人确认数量（status字段值为2的总数量）
 }
 
 // 创建账务自查记录DTO

@@ -213,6 +213,9 @@ const FinancialSelfInspection: React.FC = () => {
     total: submittedTotal,
     loading: submittedLoading,
     refreshSubmittedInspections,
+    createdCount: submittedCreatedCount,
+    pendingRectificationCount: submittedPendingRectificationCount,
+    inspectorApprovedCount: submittedInspectorApprovedCount,
   } = useSubmittedInspections({
     page: submittedCurrent,
     pageSize: submittedPageSize,
@@ -224,6 +227,9 @@ const FinancialSelfInspection: React.FC = () => {
     total: responsibleTotal,
     loading: responsibleLoading,
     refreshResponsibleInspections,
+    createdCount: responsibleCreatedCount,
+    pendingRectificationCount: responsiblePendingRectificationCount,
+    inspectorApprovedCount: responsibleInspectorApprovedCount,
   } = useResponsibleInspections({
     page: responsibleCurrent,
     pageSize: responsiblePageSize,
@@ -237,6 +243,9 @@ const FinancialSelfInspection: React.FC = () => {
     total: reviewedTotal,
     loading: reviewedLoading,
     refreshReviewedInspections,
+    createdCount: reviewedCreatedCount,
+    pendingRectificationCount: reviewedPendingRectificationCount,
+    inspectorApprovedCount: reviewedInspectorApprovedCount,
   } = useReviewedInspections({
     page: reviewedCurrent,
     pageSize: reviewedPageSize,
@@ -1187,17 +1196,35 @@ const FinancialSelfInspection: React.FC = () => {
             </Row>
             <Row>
               <Col span={24}>
-                <Space>
-                  <Button type="primary" icon={<SearchOutlined />} onClick={handleSubmittedSearch}>
-                    搜索
-                  </Button>
-                  <Button icon={<ReloadOutlined />} onClick={handleSubmittedReset}>
-                    重置
-                  </Button>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
-                    新建自查记录
-                  </Button>
-                </Space>
+                <div className="flex justify-between items-center">
+                  <Space>
+                    <Button type="primary" icon={<SearchOutlined />} onClick={handleSubmittedSearch}>
+                      搜索
+                    </Button>
+                    <Button icon={<ReloadOutlined />} onClick={handleSubmittedReset}>
+                      重置
+                    </Button>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+                      新建自查记录
+                    </Button>
+                  </Space>
+                  {hasReviewPermission() && (
+                    <Space size="large" className="text-sm">
+                      <span>
+                        <span className="text-gray-500">创建数量：</span>
+                        <span className="font-semibold text-blue-600">{submittedCreatedCount}</span>
+                      </span>
+                      <span>
+                        <span className="text-gray-500">待整改数量：</span>
+                        <span className="font-semibold text-orange-600">{submittedPendingRectificationCount}</span>
+                      </span>
+                      <span>
+                        <span className="text-gray-500">抽查人确认数量：</span>
+                        <span className="font-semibold text-green-600">{submittedInspectorApprovedCount}</span>
+                      </span>
+                    </Space>
+                  )}
+                </div>
               </Col>
             </Row>
           </Form>
@@ -1389,18 +1416,36 @@ const FinancialSelfInspection: React.FC = () => {
             </Row>
             <Row>
               <Col span={24}>
-                <Space>
-                  <Button
-                    type="primary"
-                    icon={<SearchOutlined />}
-                    onClick={handleResponsibleSearch}
-                  >
-                    搜索
-                  </Button>
-                  <Button icon={<ReloadOutlined />} onClick={handleResponsibleReset}>
-                    重置
-                  </Button>
-                </Space>
+                <div className="flex justify-between items-center">
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<SearchOutlined />}
+                      onClick={handleResponsibleSearch}
+                    >
+                      搜索
+                    </Button>
+                    <Button icon={<ReloadOutlined />} onClick={handleResponsibleReset}>
+                      重置
+                    </Button>
+                  </Space>
+                  {hasReviewPermission() && (
+                    <Space size="large" className="text-sm">
+                      <span>
+                        <span className="text-gray-500">创建数量：</span>
+                        <span className="font-semibold text-blue-600">{responsibleCreatedCount}</span>
+                      </span>
+                      <span>
+                        <span className="text-gray-500">待整改数量：</span>
+                        <span className="font-semibold text-orange-600">{responsiblePendingRectificationCount}</span>
+                      </span>
+                      <span>
+                        <span className="text-gray-500">抽查人确认数量：</span>
+                        <span className="font-semibold text-green-600">{responsibleInspectorApprovedCount}</span>
+                      </span>
+                    </Space>
+                  )}
+                </div>
               </Col>
             </Row>
           </Form>
@@ -1596,14 +1641,32 @@ const FinancialSelfInspection: React.FC = () => {
             </Row>
             <Row>
               <Col span={24}>
-                <Space>
-                  <Button type="primary" icon={<SearchOutlined />} onClick={handleReviewedSearch}>
-                    搜索
-                  </Button>
-                  <Button icon={<ReloadOutlined />} onClick={handleReviewedReset}>
-                    重置
-                  </Button>
-                </Space>
+                <div className="flex justify-between items-center">
+                  <Space>
+                    <Button type="primary" icon={<SearchOutlined />} onClick={handleReviewedSearch}>
+                      搜索
+                    </Button>
+                    <Button icon={<ReloadOutlined />} onClick={handleReviewedReset}>
+                      重置
+                    </Button>
+                  </Space>
+                  {hasReviewPermission() && (
+                    <Space size="large" className="text-sm">
+                      <span>
+                        <span className="text-gray-500">创建数量：</span>
+                        <span className="font-semibold text-blue-600">{reviewedCreatedCount}</span>
+                      </span>
+                      <span>
+                        <span className="text-gray-500">待整改数量：</span>
+                        <span className="font-semibold text-orange-600">{reviewedPendingRectificationCount}</span>
+                      </span>
+                      <span>
+                        <span className="text-gray-500">抽查人确认数量：</span>
+                        <span className="font-semibold text-green-600">{reviewedInspectorApprovedCount}</span>
+                      </span>
+                    </Space>
+                  )}
+                </div>
               </Col>
             </Row>
           </Form>

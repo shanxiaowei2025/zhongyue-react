@@ -191,6 +191,10 @@ export const useSubmittedInspections = (params: FinancialSelfInspectionQueryPara
     loading: isLoading,
     error,
     refreshSubmittedInspections,
+    // 统计信息
+    createdCount: data?.createdCount || 0,
+    pendingRectificationCount: data?.pendingRectificationCount || 0,
+    inspectorApprovedCount: data?.inspectorApprovedCount || 0,
   }
 }
 
@@ -237,6 +241,10 @@ export const useResponsibleInspections = (params: FinancialSelfInspectionQueryPa
     loading: isLoading,
     error,
     refreshResponsibleInspections,
+    // 统计信息
+    createdCount: data?.createdCount || 0,
+    pendingRectificationCount: data?.pendingRectificationCount || 0,
+    inspectorApprovedCount: data?.inspectorApprovedCount || 0,
   }
 }
 
@@ -286,6 +294,10 @@ export const useReviewedInspections = (params: FinancialSelfInspectionQueryParam
     loading: enabled ? isLoading : false,
     error: enabled ? error : null,
     refreshReviewedInspections,
+    // 统计信息
+    createdCount: data?.createdCount || 0,
+    pendingRectificationCount: data?.pendingRectificationCount || 0,
+    inspectorApprovedCount: data?.inspectorApprovedCount || 0,
   }
 }
 
