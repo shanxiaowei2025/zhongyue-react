@@ -107,7 +107,9 @@ const ServiceExpiryDetail: React.FC = () => {
     {
       title: '超期天数',
       key: 'daysOverdue',
+      dataIndex: 'agencyEndDate', // 使用 agencyEndDate 作为排序字段，因为超期天数是从结束日期计算的
       width: 100,
+      sorter: true, // 启用排序
       render: (_, record) => {
         const days = getDaysOverdue(record.agencyEndDate)
         const color =
@@ -192,6 +194,10 @@ const ServiceExpiryDetail: React.FC = () => {
         summaryMetrics={summaryMetrics}
         filters={filters}
         apiFunction={getServiceExpiryStats}
+        defaultParams={{
+          sortField: 'agencyEndDate', // 默认按代理结束日期排序
+          sortOrder: 'ASC', // 升序排序（结束日期越早，超期天数越多，即按超期天数降序）
+        }}
         tableProps={{
           scroll: { x: 1000 },
           size: 'middle' as const,
