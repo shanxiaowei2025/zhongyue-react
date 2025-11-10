@@ -126,6 +126,7 @@ const FinancialSelfInspection: React.FC = () => {
       unifiedSocialCreditCode: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      inspector: '',
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
@@ -352,6 +353,7 @@ const FinancialSelfInspection: React.FC = () => {
       unifiedSocialCreditCode: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      inspector: '',
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
@@ -372,6 +374,7 @@ const FinancialSelfInspection: React.FC = () => {
       unifiedSocialCreditCode: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      inspector: '',
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
@@ -392,6 +395,7 @@ const FinancialSelfInspection: React.FC = () => {
       unifiedSocialCreditCode: '',
       bookkeepingAccountant: '',
       consultantAccountant: '',
+      inspector: '',
       status: undefined,
       inspectionDateStart: undefined,
       inspectionDateEnd: undefined,
@@ -1166,6 +1170,20 @@ const FinancialSelfInspection: React.FC = () => {
                   </Select>
                 </Form.Item>
               </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="抽查人" name="inspector">
+                  <Input
+                    placeholder="请输入抽查人"
+                    value={submittedSearchParams.inspector}
+                    onChange={e =>
+                      setSubmittedSearchParams({
+                        ...submittedSearchParams,
+                        inspector: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Item>
+              </Col>
             </Row>
             <Row>
               <Col span={24}>
@@ -1352,6 +1370,20 @@ const FinancialSelfInspection: React.FC = () => {
                     <Select.Option value={true}>需要</Select.Option>
                     <Select.Option value={false}>不需要</Select.Option>
                   </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="抽查人" name="inspector">
+                  <Input
+                    placeholder="请输入抽查人"
+                    value={responsibleSearchParams.inspector}
+                    onChange={e =>
+                      setResponsibleSearchParams({
+                        ...responsibleSearchParams,
+                        inspector: e.target.value,
+                      })
+                    }
+                  />
                 </Form.Item>
               </Col>
             </Row>
@@ -1545,6 +1577,20 @@ const FinancialSelfInspection: React.FC = () => {
                     <Select.Option value={true}>需要</Select.Option>
                     <Select.Option value={false}>不需要</Select.Option>
                   </Select>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Form.Item label="抽查人" name="inspector">
+                  <Input
+                    placeholder="请输入抽查人"
+                    value={reviewedSearchParams.inspector}
+                    onChange={e =>
+                      setReviewedSearchParams({
+                        ...reviewedSearchParams,
+                        inspector: e.target.value,
+                      })
+                    }
+                  />
                 </Form.Item>
               </Col>
             </Row>
