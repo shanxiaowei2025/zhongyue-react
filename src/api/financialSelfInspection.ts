@@ -118,6 +118,17 @@ export const reviewerRejectInspection = async (
   return request.patch(`/enterprise-service/financial-self-inspection/${id}/reviewer-reject`, data)
 }
 
+// 顾问会计确认是否需要会计沟通
+export const updateNeedAccountantCommunication = async (
+  id: number,
+  data: { needAccountantCommunication: boolean }
+): Promise<ApiResponse<FinancialSelfInspection>> => {
+  return request.patch(
+    `/enterprise-service/financial-self-inspection/${id}/need-accountant-communication`,
+    data
+  )
+}
+
 // 删除账务自查记录
 export const deleteFinancialSelfInspection = async (id: number): Promise<ApiResponse<void>> => {
   return request.delete(`/enterprise-service/financial-self-inspection/${id}`)

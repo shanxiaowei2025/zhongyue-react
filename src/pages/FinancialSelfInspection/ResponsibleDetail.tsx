@@ -29,6 +29,7 @@ import {
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useResponsibleInspectionDetail, useFinancialSelfInspectionOperations } from '../../hooks/useFinancialSelfInspection'
+import { useAuthStore } from '../../store/auth'
 import { buildImageUrl } from '../../utils/upload'
 import { FinancialSelfInspectionStatus } from '../../types/financialSelfInspection'
 import type {
@@ -54,14 +55,17 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [form] = Form.useForm()
+  const { user } = useAuthStore()
   
   // 弹窗状态
   const [communicationModalVisible, setCommunicationModalVisible] = useState<boolean>(false)
   const [communicationLoading, setCommunicationLoading] = useState<boolean>(false)
+  const [updatingNeed, setUpdatingNeed] = useState<boolean>(false)
+  const [targetNeedValue, setTargetNeedValue] = useState<boolean | null>(null)
 
   // 使用统一的hook获取数据
   const { data, loading, error } = useResponsibleInspectionDetail(id ? Number(id) : null)
-  const { updateCommunicationRecord } = useFinancialSelfInspectionOperations()
+  const { updateCommunicationRecord, confirmNeedAccountantCommunication } = useFinancialSelfInspectionOperations()
 
   // 处理错误
   if (error) {
@@ -95,6 +99,28 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
       console.error('沟通记录修改失败:', error)
     } finally {
       setCommunicationLoading(false)
+    }
+  }
+
+  const handleNeedCommunicationChange = async (need: boolean) => {
+    if (!id || !data) return
+    if (!canUpdateNeedCommunication) {
+      message.warning('当前状态不可修改会计沟通情况')
+      return
+    }
+
+    try {
+      setUpdatingNeed(true)
+      setTargetNeedValue(need)
+      await confirmNeedAccountantCommunication(Number(id), need, {
+        companyName: data.companyName,
+        consultantAccountant: data.consultantAccountant,
+      })
+    } catch (error) {
+      console.error('更新会计沟通状态失败:', error)
+    } finally {
+      setUpdatingNeed(false)
+      setTargetNeedValue(null)
     }
   }
 
@@ -259,6 +285,20 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
   }
 
   const timelineRecords = getTimelineRecords()
+  const isConsultant =
+    !!user?.username && data.consultantAccountant === user.username
+  const isAdminOrSuperAdmin =
+    !!user?.roles &&
+    user.roles.some(role =>
+      ['admin', 'super_admin', '管理员', '超级管理员'].includes(role),
+    )
+  const canOperateNeedFlag = isConsultant || isAdminOrSuperAdmin
+  const needCommunication = Boolean(data.needAccountantCommunication)
+  const canUpdateNeedCommunication = [
+    FinancialSelfInspectionStatus.SUBMITTED,
+    FinancialSelfInspectionStatus.INSPECTOR_REJECTED,
+    FinancialSelfInspectionStatus.REVIEWER_REJECTED,
+  ].includes(data.status)
 
   return (
     <div className="financial-self-inspection-responsible-detail">
@@ -368,11 +408,9 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
               )}
             </div>
           </Descriptions.Item>
-          <Descriptions.Item 
-            label="会计沟通情况"
-          >
+          <Descriptions.Item label="会计沟通情况">
             <div className="whitespace-pre-wrap">
-              {Boolean(data.needAccountantCommunication) ? (
+              {needCommunication ? (
                 <>
                   <Tag color="#f50" className="mb-2">需要会计沟通</Tag>
                   <div>
@@ -395,6 +433,34 @@ const FinancialSelfInspectionResponsibleDetail: React.FC = () => {
                 <Tag color="#87d068">不需要会计沟通</Tag>
               )}
             </div>
+            {canOperateNeedFlag && (
+              <div className="mt-3">
+                {!canUpdateNeedCommunication && (
+                  <Text type="secondary">
+                    当前状态不可修改会计沟通情况，仅待整改、抽查人退回、复查人退回状态可修改
+                  </Text>
+                )}
+                <Space size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    loading={updatingNeed && targetNeedValue === true}
+                    disabled={!canUpdateNeedCommunication || needCommunication}
+                    onClick={() => handleNeedCommunicationChange(true)}
+                  >
+                    标记为需要沟通
+                  </Button>
+                  <Button
+                    size="small"
+                    loading={updatingNeed && targetNeedValue === false}
+                    disabled={!canUpdateNeedCommunication || !needCommunication}
+                    onClick={() => handleNeedCommunicationChange(false)}
+                  >
+                    标记为不需要沟通
+                  </Button>
+                </Space>
+              </div>
+            )}
           </Descriptions.Item>
         </Descriptions>
       </Card>

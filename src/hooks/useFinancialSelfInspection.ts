@@ -16,6 +16,7 @@ import {
   reviewerRejectInspection,
   deleteFinancialSelfInspection,
   addCommunicationRecord,
+  updateNeedAccountantCommunication,
 } from '../api/financialSelfInspection'
 import { sendFinancialInspectionNotification } from '../utils/notificationHelper'
 import type {
@@ -360,16 +361,6 @@ export const useFinancialSelfInspectionOperations = () => {
       if (response.code === 0) {
         message.success('创建成功')
         
-        // 检查是否需要发送通知给顾问会计
-        if (data.needAccountantCommunication && data.consultantAccountant && data.companyName) {
-          // 发送通知给顾问会计（异步执行，不影响主流程）
-          sendFinancialInspectionNotification(data.companyName, data.consultantAccountant)
-            .catch(error => {
-              console.error('发送账务自查通知失败:', error)
-              // 通知发送失败不影响主流程，只记录错误
-            })
-        }
-        
         // 清除相关缓存
         await mutate(
           key => typeof key === 'string' && key.includes('/financial-self-inspection'),
@@ -427,6 +418,53 @@ export const useFinancialSelfInspectionOperations = () => {
         }
       } else if (!error.message.includes('沟通记录添加失败')) {
         message.error('沟通记录添加失败，请重试')
+      }
+      throw error
+    }
+  }
+
+  // 顾问会计确认是否需要会计沟通
+  const confirmNeedAccountantCommunication = async (
+    id: number,
+    needAccountantCommunication: boolean,
+    context?: { companyName?: string | null; consultantAccountant?: string | null }
+  ) => {
+    try {
+      const response = await updateNeedAccountantCommunication(id, {
+        needAccountantCommunication,
+      })
+      if (response.code === 0) {
+        message.success(needAccountantCommunication ? '已标记为需要会计沟通' : '已标记为不需要会计沟通')
+
+        // 如果需要会计沟通，则通知顾问会计
+        if (
+          needAccountantCommunication &&
+          context?.companyName &&
+          context?.consultantAccountant
+        ) {
+          sendFinancialInspectionNotification(context.companyName, context.consultantAccountant).catch(
+            error => {
+              console.error('发送账务自查通知失败:', error)
+            }
+          )
+        }
+
+        await mutate(
+          key => typeof key === 'string' && key.includes('/financial-self-inspection'),
+          undefined,
+          {
+            revalidate: true,
+          }
+        )
+        return response.data
+      } else {
+        message.error(response.message || '更新会计沟通状态失败')
+        throw new Error(response.message || '更新会计沟通状态失败')
+      }
+    } catch (error: any) {
+      console.error('更新会计沟通状态失败:', error)
+      if (!error.message.includes('更新会计沟通状态失败')) {
+        message.error('更新会计沟通状态失败，请重试')
       }
       throw error
     }
@@ -613,5 +651,6 @@ export const useFinancialSelfInspectionOperations = () => {
     reviewerRejectInspectionData,
     deleteInspection,
     updateCommunicationRecord,
+    confirmNeedAccountantCommunication,
   }
 }

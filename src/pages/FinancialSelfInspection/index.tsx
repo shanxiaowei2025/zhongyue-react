@@ -16,7 +16,6 @@ import {
   message,
   Popconfirm,
   Select,
-  Switch,
 } from 'antd'
 import {
   SearchOutlined,
@@ -632,7 +631,6 @@ const FinancialSelfInspection: React.FC = () => {
         problem: values.problem,
         problemImageDescription: problemImage?.fileName,
         solution: values.solution,
-        needAccountantCommunication: Boolean(values.needAccountantCommunication),
       }
 
       console.log('创建自查记录数据:', createData)
@@ -2021,28 +2019,14 @@ const FinancialSelfInspection: React.FC = () => {
             />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={5}>
-              <Form.Item label="问题图片" name="problemImage">
-                <FileUpload
-                  label="问题图片"
-                  value={problemImage}
-                  onChange={value => setProblemImage(value)}
-                  accept=".jpg,.jpeg,.png,.gif,.bmp,.webp"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={19}>
-              <Form.Item
-                label="是否需要会计沟通"
-                name="needAccountantCommunication"
-                valuePropName="checked"
-                initialValue={false}
-              >
-                <Switch checkedChildren="是" unCheckedChildren="否" />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item label="问题图片" name="problemImage">
+            <FileUpload
+              label="问题图片"
+              value={problemImage}
+              onChange={value => setProblemImage(value)}
+              accept=".jpg,.jpeg,.png,.gif,.bmp,.webp"
+            />
+          </Form.Item>
 
           <Form.Item
             label="解决方案"

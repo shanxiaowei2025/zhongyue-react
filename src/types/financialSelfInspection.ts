@@ -109,7 +109,6 @@ export interface CreateFinancialSelfInspectionDto {
   problem?: string
   problemImageDescription?: string
   solution?: string
-  needAccountantCommunication?: boolean | number
 }
 
 // 整改完成DTO
