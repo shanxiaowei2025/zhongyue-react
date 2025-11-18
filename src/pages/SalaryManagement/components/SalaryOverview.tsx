@@ -583,27 +583,11 @@ const SalaryOverview: React.FC<SalaryOverviewProps> = ({
       align: 'right',
     },
     {
-      title: (
-        <span>
-          银行卡/微信 <EditOutlined style={{ fontSize: '12px', color: '#1890ff', opacity: 0.8 }} />
-        </span>
-      ),
+      title: createFilterTitle('银行卡/微信', 'bankCardOrWechat', 'range'),
       dataIndex: 'bankCardOrWechat',
       width: 110,
-      render: (value, record) => (
-        <EditableCell
-          value={toNumber(value)}
-          recordId={record.id}
-          field="bankCardOrWechat"
-          onSave={handleSaveField}
-          disabled={record.isPaid}
-          disabledReason="该员工薪资已发放，不允许修改"
-        />
-      ),
+      render: value => formatCurrency(toNumber(value)),
       align: 'right',
-      onCell: () => ({
-        onClick: (e: React.MouseEvent) => e.stopPropagation(),
-      }),
     },
     {
       title: createFilterTitle('对公转账', 'corporatePayment', 'range'),
