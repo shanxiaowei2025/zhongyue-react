@@ -15,6 +15,7 @@ const FEE_PROJECT_MAP: Record<string, string> = {
   invoiceSoftwareFee: '开票软件',
   statisticalReportFee: '统计报表',
   addressFee: '地址费',
+  onlineBankingCustodyFee: '网银托管费',
   changeFee: '变更业务',
   administrativeLicenseFee: '行政许可',
   otherBusinessFee: '其他业务收费（基础）',

@@ -115,6 +115,7 @@ export const getMaxDatesNextDay = (params: {
         housingFundStartDate: string | null
         statisticalStartDate: string | null
         addressStartDate: string | null
+        onlineBankingCustodyStartDate: string | null
       }
     }
     code: number

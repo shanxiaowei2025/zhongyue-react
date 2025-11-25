@@ -24,6 +24,7 @@ interface MySalaryDetailsProps {
 const FEE_TYPE_MAP = {
   agencyFee: '代理费',
   addressFee: '地址费',
+  onlineBankingCustodyFee: '网银托管费',
   accountingSoftwareFee: '记账软件费',
   socialInsuranceAgencyFee: '社保代理费',
   housingFundAgencyFee: '公积金代理费',

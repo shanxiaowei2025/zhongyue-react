@@ -31,6 +31,9 @@ export interface Expense {
   addressFee: number | string
   addressStartDate: string
   addressEndDate: string
+  onlineBankingCustodyFee: number | string
+  onlineBankingCustodyStartDate: string
+  onlineBankingCustodyEndDate: string
   agencyStartDate: string
   agencyEndDate: string
   businessType: string
@@ -118,6 +121,9 @@ export interface CreateExpenseDto {
   addressFee?: number | string
   addressStartDate?: string
   addressEndDate?: string
+  onlineBankingCustodyFee?: number | string
+  onlineBankingCustodyStartDate?: string
+  onlineBankingCustodyEndDate?: string
   agencyStartDate?: string
   agencyEndDate?: string
   businessType?: string

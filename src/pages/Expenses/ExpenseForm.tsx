@@ -56,6 +56,8 @@ interface FormDateFields {
   accountingSoftwareEndDate?: Dayjs
   addressStartDate?: Dayjs
   addressEndDate?: Dayjs
+  onlineBankingCustodyStartDate?: Dayjs
+  onlineBankingCustodyEndDate?: Dayjs
   agencyStartDate?: Dayjs
   agencyEndDate?: Dayjs
   invoiceSoftwareStartDate?: Dayjs
@@ -121,6 +123,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     'agencyFee',
     'accountingSoftwareFee',
     'addressFee',
+    'onlineBankingCustodyFee',
     'invoiceSoftwareFee',
     'socialInsuranceAgencyFee',
     'housingFundAgencyFee',
@@ -135,7 +138,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
   // 定义每个标签页包含的费用字段映射
   const tabFeeFieldsMap: Record<string, string[]> = {
-    '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee', 'addressFee'], // 代理记账
+    '1': ['agencyFee', 'accountingSoftwareFee', 'invoiceSoftwareFee', 'addressFee', 'onlineBankingCustodyFee'], // 代理记账
     '2': ['socialInsuranceAgencyFee', 'housingFundAgencyFee'], // 社保代理
     '3': ['statisticalReportFee', 'customerDataOrganizationFee'], // 统计报表
     '4': ['licenseFee', 'brandFee', 'recordSealFee', 'generalSealFee'], // 新办执照
@@ -238,7 +241,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           // 只有在创建模式下才自动填写日期字段
           if (mode === 'add') {
             // 自动填写有值的日期字段
-            const fieldsToUpdate: Record<string, Dayjs> = {}
+            const fieldsToUpdate: Partial<FormData> = {}
 
             if (dates.agencyStartDate) {
               fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
@@ -260,6 +263,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
             }
             if (dates.addressStartDate) {
               fieldsToUpdate.addressStartDate = dayjs(dates.addressStartDate)
+            }
+            if (dates.onlineBankingCustodyStartDate) {
+              fieldsToUpdate.onlineBankingCustodyStartDate = dayjs(dates.onlineBankingCustodyStartDate)
             }
 
             // 批量更新表单字段
@@ -358,6 +364,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
   const agencyFeeValue = Form.useWatch('agencyFee', form)
   const accountingSoftwareFeeValue = Form.useWatch('accountingSoftwareFee', form)
   const addressFeeValue = Form.useWatch('addressFee', form)
+  const onlineBankingCustodyFeeValue = Form.useWatch('onlineBankingCustodyFee', form)
   const invoiceSoftwareFeeValue = Form.useWatch('invoiceSoftwareFee', form)
   const socialInsuranceAgencyFeeValue = Form.useWatch('socialInsuranceAgencyFee', form)
   const housingFundAgencyFeeValue = Form.useWatch('housingFundAgencyFee', form)
@@ -409,6 +416,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
     agencyFeeValue,
     accountingSoftwareFeeValue,
     addressFeeValue,
+    onlineBankingCustodyFeeValue,
     invoiceSoftwareFeeValue,
     socialInsuranceAgencyFeeValue,
     housingFundAgencyFeeValue,
@@ -465,6 +473,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
           'accountingSoftwareEndDate',
           'addressStartDate',
           'addressEndDate',
+          'onlineBankingCustodyStartDate',
+          'onlineBankingCustodyEndDate',
           'agencyStartDate',
           'agencyEndDate',
           'invoiceSoftwareStartDate',
@@ -734,6 +744,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
         'accountingSoftwareEndDate',
         'addressStartDate',
         'addressEndDate',
+        'onlineBankingCustodyStartDate',
+        'onlineBankingCustodyEndDate',
         'agencyStartDate',
         'agencyEndDate',
         'invoiceSoftwareStartDate',
@@ -1682,6 +1694,34 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             startHasAutoFillValue={!!autoFillDates.addressStartDate}
                             startFieldName_formField="addressStartDate"
                             endFieldName_formField="addressEndDate"
+                          />
+                        </Form.Item>
+
+                        <Form.Item name="onlineBankingCustodyFee" label="网银托管费">
+                          <InputNumber
+                            placeholder="请输入网银托管费"
+                            style={{ width: '100%' }}
+                            precision={2}
+                            addonBefore="¥"
+                            parser={parseNumberInput}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="网银托管日期" style={{ gridColumn: 'span 2' }}>
+                          <DateRangePicker
+                            startValue={form.getFieldValue('onlineBankingCustodyStartDate')}
+                            endValue={form.getFieldValue('onlineBankingCustodyEndDate')}
+                            onStartChange={value => form.setFieldValue('onlineBankingCustodyStartDate', value)}
+                            onEndChange={value => form.setFieldValue('onlineBankingCustodyEndDate', value)}
+                            startPlaceholder="开始日期"
+                            endPlaceholder="结束日期"
+                            startFieldName="网银托管开始日期"
+                            style={{ width: '100%' }}
+                            startMode={mode}
+                            startHasPermission={hasFullDateEditPermission()}
+                            startHasAutoFillValue={!!autoFillDates.onlineBankingCustodyStartDate}
+                            startFieldName_formField="onlineBankingCustodyStartDate"
+                            endFieldName_formField="onlineBankingCustodyEndDate"
                           />
                         </Form.Item>
                       </div>
