@@ -114,6 +114,7 @@ export const getMaxDatesNextDay = (params: {
         socialInsuranceStartDate: string | null
         housingFundStartDate: string | null
         statisticalStartDate: string | null
+        organizationStartDate: string | null
         addressStartDate: string | null
         onlineBankingCustodyStartDate: string | null
       }

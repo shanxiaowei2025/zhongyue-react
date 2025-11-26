@@ -261,6 +261,9 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
             if (dates.statisticalStartDate) {
               fieldsToUpdate.statisticalStartDate = dayjs(dates.statisticalStartDate)
             }
+            if (dates.organizationStartDate) {
+              fieldsToUpdate.organizationStartDate = dayjs(dates.organizationStartDate)
+            }
             if (dates.addressStartDate) {
               fieldsToUpdate.addressStartDate = dayjs(dates.addressStartDate)
             }
