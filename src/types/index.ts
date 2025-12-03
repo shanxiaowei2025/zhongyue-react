@@ -312,10 +312,17 @@ export interface Customer {
   accountingSoftware?: string // 记账软件
   accountingSoftwareRemark?: string // 记账软件备注
   followUpRecords?: FollowUpRecord[] // 跟进记录
+  accountingRequiredFiles?: AccountingRequiredFile[] // 做账所需资料
   createTime: string
   updateTime: string
   submitter: string
   remarks: string
+}
+
+export interface AccountingRequiredFile {
+  fileName?: string
+  url?: string
+  uploadTime?: string
 }
 
 export interface ImageType {

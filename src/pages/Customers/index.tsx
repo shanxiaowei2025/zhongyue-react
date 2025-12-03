@@ -1663,6 +1663,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     visible: false,
     url: '',
   })
+  const [filePreview, setFilePreview] = useState<{ visible: boolean; url: string; fileName: string }>({
+    visible: false,
+    url: '',
+    fileName: '',
+  })
 
   // 获取客户的宗族详情（如果有clanId）
   const customerClanId = customer?.clanId
@@ -2733,6 +2738,70 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
         </div>
       ),
     },
+    {
+      key: 'accounting-files',
+      label: '做账所需资料',
+      children: (
+        <div className="space-y-6">
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <p className="text-sm text-gray-700">
+              客户上传的做账所需资料文件列表
+            </p>
+          </div>
+          
+          {displayCustomer.accountingRequiredFiles && displayCustomer.accountingRequiredFiles.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold">已上传的文件 ({displayCustomer.accountingRequiredFiles.length})</h3>
+              <div className="space-y-2">
+                {displayCustomer.accountingRequiredFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="text-lg text-gray-600">
+                        {file.fileName ? getFileIcon(file.fileName) : <FileOutlined />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {file.fileName || `文件 ${index + 1}`}
+                        </p>
+                        {file.uploadTime && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            上传时间: {formatDate(file.uploadTime)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                      {file.url && (
+                        <Button
+                          type="primary"
+                          size="small"
+                          onClick={() => {
+                            setFilePreview({
+                              visible: true,
+                              url: file.url || '',
+                              fileName: file.fileName || `文件 ${index + 1}`,
+                            })
+                          }}
+                        >
+                          查看
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              <p className="text-gray-500">暂无上传的文件</p>
+            </div>
+          )}
+        </div>
+      ),
+    },
   ]
 
   if (isLoading) {
@@ -2771,6 +2840,48 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             },
           }}
         />
+
+        {/* 文件预览弹窗 */}
+        <Modal
+          title={`查看文件 - ${filePreview.fileName}`}
+          open={filePreview.visible}
+          onCancel={() => setFilePreview(prev => ({ ...prev, visible: false }))}
+          footer={[
+            <Button key="close" onClick={() => setFilePreview(prev => ({ ...prev, visible: false }))}>
+              关闭
+            </Button>,
+            <Button key="download" type="primary" onClick={() => window.open(filePreview.url, '_blank')}>
+              下载
+            </Button>,
+          ]}
+          width={800}
+          style={{ maxHeight: '80vh' }}
+        >
+          <div style={{ textAlign: 'center', maxHeight: '60vh', overflow: 'auto' }}>
+            {filePreview.url && (
+              <>
+                {/* 检查是否是图片 */}
+                {/\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(filePreview.fileName) ? (
+                  <img
+                    src={filePreview.url}
+                    alt={filePreview.fileName}
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  />
+                ) : (
+                  <div style={{ padding: '40px', textAlign: 'center' }}>
+                    <FileOutlined style={{ fontSize: 64, color: '#999', marginBottom: 16 }} />
+                    <p style={{ marginTop: 16, color: '#666' }}>
+                      该文件类型不支持在线预览
+                    </p>
+                    <p style={{ color: '#999', fontSize: 12 }}>
+                      请点击下载按钮下载文件查看
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Modal>
       </div>
       <div className="customer-detail-footer">
         <Button onClick={onClose}>关闭</Button>
