@@ -15,7 +15,7 @@ import {
   Spin,
   Tooltip,
 } from 'antd'
-import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { SearchOutlined, InfoCircleOutlined, CloseOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import DateRangePicker from '../../components/DateRangePicker'
@@ -1195,7 +1195,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   label="企业类型"
                   rules={[{ required: true, message: '请选择企业类型' }]}
                 >
-                  <Select placeholder="请选择企业类型">
+                  <Select placeholder="请选择企业类型" allowClear>
                     <Select.Option value="小规模（公司）">小规模（公司）</Select.Option>
                     <Select.Option value="小规模（个体）">小规模（个体）</Select.Option>
                     <Select.Option value="一般纳税人">一般纳税人</Select.Option>
@@ -1211,7 +1211,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                   label="企业归属地"
                   rules={[{ required: true, message: '请选择归属地' }]}
                 >
-                  <Select loading={isLoadingBranchOffices}>
+                  <Select loading={isLoadingBranchOffices} allowClear>
                     {branchOffices.map(office => (
                       <Select.Option key={office.id} value={office.name}>
                         {office.name}
@@ -1499,7 +1499,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             }),
                           ]}
                         >
-                          <Select placeholder="请选择业务类型">
+                          <Select placeholder="请选择业务类型" allowClear>
                             <Select.Option value="新增">新增</Select.Option>
                             <Select.Option value="续费">续费</Select.Option>
                           </Select>
@@ -1521,7 +1521,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             }),
                           ]}
                         >
-                          <Select placeholder="请选择代理类型">
+                          <Select placeholder="请选择代理类型" allowClear>
                             <Select.Option value="代理记账">代理记账</Select.Option>
                             <Select.Option value="代理申报">代理申报</Select.Option>
                             <Select.Option value="经营账代理">经营账代理</Select.Option>
@@ -1544,7 +1544,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             }),
                           ]}
                         >
-                          <Select placeholder="请选择合同类型">
+                          <Select placeholder="请选择合同类型" allowClear>
                             <Select.Option value="纸质合同">纸质合同</Select.Option>
                             <Select.Option value="电子合同">电子合同</Select.Option>
                           </Select>
@@ -1599,7 +1599,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               }),
                             ]}
                           >
-                            <Select placeholder="请选择赠送代理时长">
+                            <Select placeholder="请选择赠送代理时长" allowClear>
                               <Select.Option value="无赠送">无赠送</Select.Option>
                               <Select.Option value="两年赠一季度">两年赠一季度</Select.Option>
                               <Select.Option value="两年赠半年">两年赠半年</Select.Option>
@@ -1763,7 +1763,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                             }),
                           ]}
                         >
-                          <Select placeholder="请选择业务类型">
+                          <Select placeholder="请选择业务类型" allowClear>
                             <Select.Option value="新增">新增</Select.Option>
                             <Select.Option value="续费">续费</Select.Option>
                           </Select>
@@ -1989,7 +1989,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                         }}
                       >
                         <Form.Item name="licenseType" label="办照类型">
-                          <Select placeholder="请选择办照类型">
+                          <Select placeholder="请选择办照类型" allowClear>
                             <Select.Option value="个体">个体</Select.Option>
                             <Select.Option value="公司">公司</Select.Option>
                             <Select.Option value="合作社">合作社</Select.Option>
