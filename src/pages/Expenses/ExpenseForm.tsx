@@ -1604,6 +1604,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
                               <Select.Option value="两年赠一季度">两年赠一季度</Select.Option>
                               <Select.Option value="两年赠半年">两年赠半年</Select.Option>
                               <Select.Option value="两年赠一年">两年赠一年</Select.Option>
+                              <Select.Option value="三年赠一年">三年赠一年</Select.Option>
                             </Select>
                           </Form.Item>
                         )}
