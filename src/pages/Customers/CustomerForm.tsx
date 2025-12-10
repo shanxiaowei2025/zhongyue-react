@@ -43,6 +43,7 @@ import {
 } from '@ant-design/icons'
 import FileUpload from '../../components/FileUpload'
 import MultiFileUpload from '../../components/MultiFileUpload'
+import AccountingFileManager from '../../components/AccountingFileManager'
 import CustomerLevelTipComponent from '../../components/CustomerLevelTip'
 import CustomerLevelDisplay from '../../components/CustomerLevelDisplay'
 import AccountantStatsDisplay from '../../components/AccountantStatsDisplay'
@@ -2860,98 +2861,16 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         <div className="space-y-6">
           <div className="bg-blue-50 p-4 rounded-lg mb-4">
             <p className="text-sm text-gray-700">
-              上传做账所需的各类资料文件，支持任何格式。文件将存储在云端，可随时查看和下载。
+              上传做账所需的各类资料文件，支持任何格式。文件将按分类存储在云端，可随时查看和下载。
             </p>
           </div>
           
-          {mode !== 'view' && (
-            <div className="mb-6">
-              <MultiFileUpload
-                title="上传做账所需资料"
-                value={accountingRequiredFiles.reduce((acc, file, index) => {
-                  acc[`file_${index}`] = {
-                    fileName: file.fileName,
-                    url: file.url,
-                  }
-                  return acc
-                }, {} as Record<string, ImageType>)}
-                onChange={(files) => {
-                  // 将返回的files对象转换为数组，只保留有url的文件
-                  const allFiles = Object.values(files)
-                    .filter(file => file.url) // 只保留已成功上传的文件
-                    .map((file) => ({
-                      fileName: file.fileName || '未命名文件',
-                      url: file.url,
-                      uploadTime: new Date().toISOString(),
-                    }))
-                  
-                  // 直接使用MultiFileUpload返回的文件列表
-                  // MultiFileUpload已经处理了文件的去重，我们只需要直接使用
-                  setAccountingRequiredFiles(allFiles)
-                }}
-                accept="*/*"
-                showUploadArea={true}
-              />
-            </div>
-          )}
-          
-          {mode !== 'edit' && accountingRequiredFiles.length > 0 ? (
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold">已上传的文件 ({accountingRequiredFiles.length})</h3>
-              <div className="space-y-2">
-                {accountingRequiredFiles.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {file.fileName || `文件 ${index + 1}`}
-                        </p>
-                        {file.uploadTime && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            上传时间: {new Date(file.uploadTime).toLocaleString('zh-CN')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-2">
-                      {file.url && (
-                        <Button
-                          type="primary"
-                          size="small"
-                          onClick={() => {
-                            window.open(file.url, '_blank')
-                          }}
-                        >
-                          查看
-                        </Button>
-                      )}
-                      {mode !== 'view' && (
-                        <Button
-                          danger
-                          size="small"
-                          onClick={() => {
-                            setAccountingRequiredFiles(prev =>
-                              prev.filter((_, i) => i !== index)
-                            )
-                            message.success('文件已删除')
-                          }}
-                        >
-                          删除
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : mode !== 'edit' ? (
-            <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-              <p className="text-gray-500">暂无上传的文件</p>
-            </div>
-          ) : null}
+          <AccountingFileManager
+            customerId={customer?.id || null}
+            files={accountingRequiredFiles}
+            onFilesChange={setAccountingRequiredFiles}
+            mode={mode}
+          />
         </div>
       ),
     },

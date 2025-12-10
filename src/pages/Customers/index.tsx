@@ -2887,6 +2887,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
+                          {file.categoryPath && (
+                            <span className="text-xs text-gray-500 mr-1">
+                              {file.categoryPath} /
+                            </span>
+                          )}
                           {file.fileName || `文件 ${index + 1}`}
                         </p>
                         {file.uploadTime && (
