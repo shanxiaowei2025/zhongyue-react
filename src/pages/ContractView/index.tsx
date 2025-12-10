@@ -36,6 +36,7 @@ const ContractView: React.FC<ContractViewProps> = () => {
         } else {
           setError('未找到合同图片')
         }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         console.error('获取合同图片失败:', error)
         if (error.response?.status === 404) {

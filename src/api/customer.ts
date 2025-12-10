@@ -98,12 +98,12 @@ export const getCustomerDetail = (id: number) => {
  * 获取客户列表 - 异步版本
  * @param params 查询参数
  */
-export const getCustomers = async (params: Record<string, any>) => {
+export const getCustomers = async (params: Record<string, unknown>) => {
   try {
     // 确保有必要的分页参数
     const paginationParams: PaginationParams = {
-      page: params.page || 1,
-      pageSize: params.pageSize || 10,
+      page: (params.page as number) || 1,
+      pageSize: (params.pageSize as number) || 10,
       ...params,
     }
 
@@ -124,12 +124,12 @@ export const getCustomers = async (params: Record<string, any>) => {
  * 获取分页客户列表 - 异步版本
  * @param params 查询参数
  */
-export const getPaginatedCustomers = async (params: Record<string, any>) => {
+export const getPaginatedCustomers = async (params: Record<string, unknown>) => {
   try {
     // 确保有必要的分页参数
     const paginationParams: PaginationParams = {
-      page: params.page || 1,
-      pageSize: params.pageSize || 10,
+      page: (params.page as number) || 1,
+      pageSize: (params.pageSize as number) || 10,
       ...params,
     }
 
@@ -144,7 +144,7 @@ export const getPaginatedCustomers = async (params: Record<string, any>) => {
   }
 }
 
-export const exportCustomerCSV = (params?: Record<string, any>) => {
+export const exportCustomerCSV = (params?: Record<string, unknown>) => {
   // 如果提供了查询参数，构建查询字符串
   let queryString = ''
   if (params) {

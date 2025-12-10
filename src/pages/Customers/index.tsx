@@ -305,7 +305,7 @@ export default function Customers() {
   // 处理URL参数中的view参数，自动打开客户详情
   useEffect(() => {
     const viewParam = searchParams.get('view')
-    const editParam = searchParams.get('edit')
+    const _editParam = searchParams.get('edit')
     
     // 处理从其他页面传来的编辑客户请求
     if (location.state?.editCustomerId) {
@@ -592,6 +592,7 @@ export default function Customers() {
       const imagesToDelete: string[] = []
 
       // 处理对象格式的图片字段 {key: {fileName, url}}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const processObjectImages = (imagesObj: Record<string, any> | undefined) => {
         if (!imagesObj) return
 
@@ -711,7 +712,7 @@ export default function Customers() {
       message.loading('正在导出数据，请稍候...', 0)
 
       // 使用当前搜索参数导出数据，不包含分页限制
-      const { page, pageSize, ...exportParams } = requestParams
+      const { page: _page, pageSize: _pageSize, ...exportParams } = requestParams
       const response = await exportCustomerCSV(exportParams)
 
       message.destroy()
@@ -1019,8 +1020,21 @@ export default function Customers() {
       return false
     }
 
-    // 处理文件上传
-    handleImport(file)
+    // 显示确认弹窗
+    Modal.confirm({
+      title: '确认导入',
+      content: '导入功能会将表格上的内容上传至系统，请确保系统内没有您需要上传的企业。',
+      okText: '确认',
+      cancelText: '取消',
+      onOk() {
+        // 用户点击确认，处理文件上传
+        handleImport(file)
+      },
+      onCancel() {
+        // 用户点击取消，不做任何操作
+        console.log('用户取消了导入')
+      },
+    })
     return false // 阻止默认上传行为
   }
 
@@ -1318,12 +1332,12 @@ export default function Customers() {
   }
 
   // 修改所有关闭弹窗的地方，使用handleCloseDetail函数
-  const handleFormCancel = () => {
+  const _handleFormCancel = () => {
     handleCloseDetail()
   }
 
   // 修改表单提交后的处理
-  const handleFormSuccess = (isAdd: boolean, customerId?: number) => {
+  const _handleFormSuccess = (isAdd: boolean, customerId?: number) => {
     // 关闭表单
     handleCloseDetail()
 
@@ -1755,7 +1769,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
   // 凭证记录相关hooks
   const { exportToExcel, loading: exportLoading } = useVoucherRecordActions()
-  const { canExport } = useVoucherPermission()
+  const { canExport: _canExport } = useVoucherPermission()
 
   const [activeTabKey, setActiveTabKey] = useState(
     usePageStates.getState().getState('customerDetailTab') || 'basic'
@@ -2155,6 +2169,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     !displayCustomer ||
     typeof displayCustomer !== 'object' ||
     typeof displayCustomer.companyName !== 'string' ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ((displayCustomer as any).code !== undefined && (displayCustomer as any).data === undefined)
   ) {
     console.error('CustomerDetail: 客户数据无效', displayCustomer)

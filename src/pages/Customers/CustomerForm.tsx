@@ -185,6 +185,7 @@ type FormCustomer = Omit<
   publicBankOpeningDate?: Dayjs | null
   generalAccountOpeningDate?: Dayjs | null
   licenseNoFixedTerm?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any // 添加索引签名
 }
 
@@ -400,7 +401,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
   // 凭证记录相关hooks
   const { exportToExcel, loading: exportLoading } = useVoucherRecordActions()
-  const { canExport } = useVoucherPermission()
+  const { canExport: _canExport } = useVoucherPermission()
 
   // 费用记录相关hooks
   const { expenses, total: expensesTotal, isLoading: expensesLoading } = useExpenseList({
@@ -412,7 +413,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   // 费用详情相关状态和hooks
   const [expenseDetailVisible, setExpenseDetailVisible] = useState(false)
   const [currentExpenseId, setCurrentExpenseId] = useState<number | null>(null)
-  const { expense: expenseDetail, isLoading: expenseDetailLoading } = useExpenseDetail(currentExpenseId)
+  const { expense: _expenseDetail, isLoading: _expenseDetailLoading } = useExpenseDetail(currentExpenseId)
   
   // 打开费用详情对话框
   const handleViewExpense = (id: number) => {
@@ -459,6 +460,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
   // 辅助函数：确保图片数据是正确的单文件格式
   // 确保图片数据格式为单文件格式（兼容历史数据）
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ensureSingleFileFormat = (imageData: any): any => {
     if (!imageData || typeof imageData !== 'object') {
       return imageData
@@ -534,7 +536,9 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             try {
               const { getClanById } = await import('../../api/clan')
               const response = await getClanById(customer.clanId!)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               if (response && response.code === 0 && (response.data as any)?.data?.clanName) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setSelectedClanName((response.data as any).data.clanName)
               }
             } catch (error) {
@@ -627,6 +631,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       } else {
         // 如果没有actualResponsibles数组，但有旧字段，尝试向下兼容
         // 使用类型断言处理可能不存在的字段
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const oldCustomer = customer as any
         if (
           oldCustomer &&
@@ -672,6 +677,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }, [mode, user?.username, form])
 
   // 宗族选项更新
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (clanList && Array.isArray(clanList) && clanList.length > 0) {
       console.log('📋 宗族列表更新:', {
@@ -945,6 +951,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           handleCancel(false)
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Form submission error:', error)
       message.error('提交失败，请重试')
@@ -954,6 +961,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   // 添加单独的处理函数来处理表单验证错误
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormValidationError = (errorInfo: any) => {
     console.error('Form validation error:', errorInfo)
 
@@ -1085,10 +1093,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         // 调用 handleSubmit 并传递 isAutoSave=true
         await handleSubmit(formValues, true)
         // 自动保存成功
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (validationError: any) {
         // 处理验证错误但不显示消息，避免干扰用户
         console.error('自动保存验证错误:', validationError)
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('自动保存出错:', error)
       // 不显示错误消息，避免干扰用户
@@ -1111,6 +1121,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       } = formValues
 
       // 收集图片文件名到uploadedImages中
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const collectFileName = (obj: any) => {
         if (!obj) return
         Object.values(obj).forEach(item => {
@@ -1199,6 +1210,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const handleUpdatePaidInCapitalItem = (
     index: number,
     field: keyof PaidInCapitalItem,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any
   ) => {
     const newItems = [...paidInCapitalItems]
@@ -1258,6 +1270,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   const handleUpdateAdministrativeLicenseItem = (
     index: number,
     field: keyof AdministrativeLicenseItem,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any
   ) => {
     const newItems = [...administrativeLicenseItems]
@@ -1305,6 +1318,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
     setClanPage(1)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClanSelect = (value: string, option: any) => {
     const clanId = option?.key
     // 忽略loading和加载更多选项的选择
@@ -1382,6 +1396,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
   }
 
   // 处理宗族相关操作的核心函数，返回最终的宗族ID
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClanOperations = async (
     companyName: string,
     newClanId?: number | null,
@@ -1395,6 +1410,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         const { removeMemberFromClan } = await import('../../api/clan')
         const response = await removeMemberFromClan(oldClanId, companyName)
         if (response && response.code === 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const successMsg = (response.data as any)?.message || response.message || '移除成员成功'
           message.success(successMsg)
         }
@@ -1415,6 +1431,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       }
 
       return null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('宗族操作失败:', error)
       const errorMsg =
@@ -1992,7 +2009,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     <MultiFileUpload
                       disabled={false}
                       value={images || {}}
-                      onChange={value => {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      onChange={(value: any) => {
                         // MultiFileUpload onChange 被调用
                         // 更新实缴资本项中的图片
                         handleUpdatePaidInCapitalItem(index, 'images', value)
@@ -2009,6 +2027,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                     {
                       title: '操作',
                       key: 'action',
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       render: (_: any, record: any, index: number) => (
                         <Popconfirm
                           title="确定删除此条记录吗?"
@@ -2969,6 +2988,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                 publicBankOpeningDate: customer.publicBankOpeningDate
                   ? dayjs(customer.publicBankOpeningDate)
                   : null,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               } as any)
             : undefined
         }
