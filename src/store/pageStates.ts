@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
+import { persist } from 'zustand/middleware'
 
 /**
  * 页面状态存储接口
@@ -24,32 +25,38 @@ export interface PageStatesStore {
 
 /**
  * 页面状态管理 store
- * 使用 Zustand + immer 实现
+ * 使用 Zustand + immer + persist 实现
+ * 状态会自动保存到 localStorage，刷新后自动恢复
  */
 export const usePageStates = create<PageStatesStore>()(
-  immer((set, get) => ({
-    // 状态存储对象
-    states: {},
+  persist(
+    immer((set, get) => ({
+      // 状态存储对象
+      states: {},
 
-    // 设置状态
-    setState: (key, value) =>
-      set(state => {
-        state.states[key] = value
-      }),
+      // 设置状态
+      setState: (key, value) =>
+        set(state => {
+          state.states[key] = value
+        }),
 
-    // 获取状态
-    getState: key => get().states[key],
+      // 获取状态
+      getState: key => get().states[key],
 
-    // 清除状态
-    clearState: key =>
-      set(state => {
-        delete state.states[key]
-      }),
+      // 清除状态
+      clearState: key =>
+        set(state => {
+          delete state.states[key]
+        }),
 
-    // 清除所有状态
-    clearAll: () =>
-      set(state => {
-        state.states = {}
-      }),
-  }))
+      // 清除所有状态
+      clearAll: () =>
+        set(state => {
+          state.states = {}
+        }),
+    })),
+    {
+      name: 'zhongyue-page-states', // localStorage 的 key 名称
+    }
+  )
 )

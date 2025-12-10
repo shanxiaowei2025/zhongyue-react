@@ -15,7 +15,7 @@ import {
   Spin,
   Tooltip,
 } from 'antd'
-import { SearchOutlined, InfoCircleOutlined, CloseOutlined } from '@ant-design/icons'
+import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import ContractLink from '../../components/ContractLink'
 import CustomerAutoComplete from '../../components/CustomerAutoComplete'
 import DateRangePicker from '../../components/DateRangePicker'
@@ -658,6 +658,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
       // 设置默认选项卡
       setActiveTab('1')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, expense, mode, form])
 
   // 初始化完成后触发一次费用计算

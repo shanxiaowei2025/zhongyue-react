@@ -11,7 +11,6 @@ import {
   Tabs,
   Descriptions,
   Select,
-  AutoComplete,
   DatePicker,
   Image,
   Upload,
@@ -58,6 +57,7 @@ import { usePageStates, PageStatesStore } from '../../store/pageStates'
 import { useCustomerList, useCustomerDetail } from '../../hooks/useCustomer'
 import { usePermission } from '../../hooks/usePermission'
 import { useVoucherRecordActions } from '../../hooks/useVoucherRecord'
+import { useAuthStore } from '../../store/auth'
 import { useVoucherPermission } from '../../hooks/useVoucherPermission'
 import VoucherRecordReadOnly from '../../components/VoucherRecord/VoucherRecordReadOnly'
 import { useDebouncedValue } from '../../hooks/useDebounce'
@@ -144,8 +144,14 @@ export default function Customers() {
   const getState = usePageStates((state: PageStatesStore) => state.getState)
   const setState = usePageStates((state: PageStatesStore) => state.setState)
 
+  // 获取当前用户信息
+  const { user } = useAuthStore()
+
   // 获取权限相关信息
   const { customerPermissions, loading: permissionLoading, refreshPermissions } = usePermission()
+
+  // 检查是否为管理员或超级管理员
+  const isAdmin = user?.roles?.some(role => ['admin', 'super_admin', '管理员', '超级管理员'].includes(role)) ?? false
 
   // 从 pageStates 恢复搜索参数
   const savedSearchParams = getState('customersSearchParams')
@@ -753,12 +759,23 @@ export default function Customers() {
         if (data.success) {
           // 有失败记录需要展示
           if (data.failedRecords && data.failedRecords.length > 0) {
+            // 检查是否所有失败都是因为重复
+            const allDuplicates = data.failedRecords.every(
+              (record: { reason?: string }) =>
+                record.reason?.includes('重复') ||
+                record.reason?.includes('Duplicate')
+            )
+
             // 创建模态框展示失败记录
             Modal.error({
-              title: '部分数据导入失败',
+              title: allDuplicates ? '导入数据重复' : '部分数据导入失败',
               content: (
-                <div style={{ maxHeight: '400px', overflow: 'auto' }}>
-                  <p>{data.message}</p>
+                <div style={{ maxHeight: '500px', overflow: 'auto' }}>
+                  <p style={{ marginBottom: '16px', color: '#ff4d4f', fontWeight: 'bold' }}>
+                    {allDuplicates
+                      ? `发现 ${data.failedRecords.length} 条重复数据，请修改后重新导入`
+                      : data.message}
+                  </p>
                   <Table
                     dataSource={data.failedRecords.map((record, index) => ({
                       ...record,
@@ -797,7 +814,7 @@ export default function Customers() {
                               </>
                             )
                           }
-                          return text
+                          return <span style={{ color: '#ff4d4f' }}>{text}</span>
                         },
                       },
                     ]}
@@ -806,19 +823,78 @@ export default function Customers() {
                   />
                 </div>
               ),
-              width: 800,
+              width: 900,
               maskClosable: false,
               okText: '关闭',
             })
           } else {
             // 全部导入成功
-            message.success(data.message)
+            Modal.success({
+              title: '导入成功',
+              content: (
+                <div>
+                  <p>{data.message}</p>
+                  <p style={{ color: '#52c41a', fontWeight: 'bold' }}>
+                    ✓ 所有数据已成功导入
+                  </p>
+                </div>
+              ),
+              okText: '确定',
+              onOk: () => {
+                // 刷新客户列表
+                refreshCustomers()
+              },
+            })
           }
 
-          // 刷新客户列表
-          refreshCustomers()
+          // 如果有部分成功，也刷新列表
+          if (data.count && data.count > 0) {
+            refreshCustomers()
+          }
         } else {
-          message.error(data.message || '导入失败')
+          // 导入完全失败
+          Modal.error({
+            title: '导入失败',
+            content: (
+              <div>
+                <p>{data.message || '导入失败，请检查文件格式'}</p>
+                {data.failedRecords && data.failedRecords.length > 0 && (
+                  <>
+                    <p style={{ marginTop: '16px', marginBottom: '8px' }}>失败详情：</p>
+                    <Table
+                      dataSource={data.failedRecords.map((record, index) => ({
+                        ...record,
+                        key: index,
+                      }))}
+                      columns={[
+                        {
+                          title: '行号',
+                          dataIndex: 'row',
+                          key: 'row',
+                          width: 80,
+                        },
+                        {
+                          title: '企业名称',
+                          dataIndex: 'companyName',
+                          key: 'companyName',
+                          width: 200,
+                        },
+                        {
+                          title: '失败原因',
+                          dataIndex: 'reason',
+                          key: 'reason',
+                        },
+                      ]}
+                      pagination={false}
+                      size="small"
+                    />
+                  </>
+                )}
+              </div>
+            ),
+            width: 900,
+            okText: '关闭',
+          })
         }
       } else {
         message.error(response.message || '导入失败')
@@ -1534,16 +1610,20 @@ export default function Customers() {
                 >
                   导出
                 </Button>
-                <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls,.csv">
-                  <Button type="default" icon={<UploadOutlined />} className="w-full sm:w-auto">
-                    导入
-                  </Button>
-                </Upload>
-                <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls,.csv">
-                  <Button type="default" icon={<FileExcelOutlined />} className="w-full sm:w-auto">
-                    批量替换
-                  </Button>
-                </Upload>
+                {isAdmin && (
+                  <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls,.csv">
+                    <Button type="default" icon={<UploadOutlined />} className="w-full sm:w-auto">
+                      导入
+                    </Button>
+                  </Upload>
+                )}
+                {isAdmin && (
+                  <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls,.csv">
+                    <Button type="default" icon={<FileExcelOutlined />} className="w-full sm:w-auto">
+                      批量替换
+                    </Button>
+                  </Upload>
+                )}
               </div>
             </div>
           </div>

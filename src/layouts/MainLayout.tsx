@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 
 // 扩展Window接口，添加自定义方法
 declare global {
@@ -157,16 +157,77 @@ const MODULE_CONFIG: Record<
   },
 }
 
+// 辅助函数：根据路径获取对应的 icon
+const getIconForPath = (path: string): React.ReactNode => {
+  // 根据路径返回对应的 icon
+  if (path === '/') return <DashboardOutlined />
+  if (path.startsWith('/customers')) return <ShopOutlined />
+  if (path.startsWith('/contracts')) return <FileTextOutlined />
+  if (path.startsWith('/employees')) return <TeamOutlined />
+  if (path.startsWith('/expenses')) return <DollarOutlined />
+  if (path.startsWith('/financial-self-inspection')) return <AuditOutlined />
+  if (path.startsWith('/tax-review')) return <FileDoneOutlined />
+  if (path.startsWith('/enterprise-service')) return <AppstoreOutlined />
+  if (path.startsWith('/data-query')) return <DatabaseOutlined />
+  if (path.startsWith('/reports')) return <BarChartOutlined />
+  if (path.startsWith('/salary-management')) return <CreditCardOutlined />
+  if (path.startsWith('/my-salary')) return <CreditCardOutlined />
+  if (path.startsWith('/permissions')) return <LockOutlined />
+  if (path.startsWith('/profile')) return <UserOutlined />
+  return undefined
+}
+
 // 创建增强版tabs存储，支持模块状态保持
 const useTabsStore = () => {
-  const [tabs, setTabs] = useState<TabItem[]>([
-    { key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false },
-  ])
-  const [activeKey, setActiveKey] = useState('/')
+  // 从 localStorage 恢复标签页列表
+  const [tabs, setTabs] = useState<TabItem[]>(() => {
+    const savedTabs = localStorage.getItem('openTabs')
+    if (savedTabs) {
+      try {
+        const parsed = JSON.parse(savedTabs) as Array<{ key: string; label: string; closable?: boolean }>
+        // 恢复标签页并重建 icon
+        const restoredTabs = parsed.map((tab) => ({
+          key: tab.key,
+          label: tab.label,
+          closable: tab.closable !== false, // 默认为 true
+          icon: getIconForPath(tab.key),
+        }))
+        // 确保仪表盘始终存在
+        if (!restoredTabs.some((tab: TabItem) => tab.key === '/')) {
+          restoredTabs.unshift({ key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false })
+        }
+        return restoredTabs
+      } catch {
+        // 恢复失败，使用默认值
+      }
+    }
+    return [{ key: '/', label: '仪表盘', icon: <DashboardOutlined />, closable: false }]
+  })
+  
+  // 从 localStorage 恢复当前激活的标签页
+  const [activeKey, setActiveKey] = useState<string>(() => {
+    const savedActiveKey = localStorage.getItem('activeTabKey')
+    if (savedActiveKey) {
+      return savedActiveKey
+    }
+    return '/'
+  })
 
-  // 缓存组件状态的对象
-  const [cachedViews, setCachedViews] = useState<Record<string, boolean>>({
-    '/': true,
+  // 缓存组件状态的对象 - 初始化时包含所有已保存的标签页
+  const [cachedViews, setCachedViews] = useState<Record<string, boolean>>(() => {
+    const savedTabs = localStorage.getItem('openTabs')
+    const initialCachedViews: Record<string, boolean> = { '/': true }
+    if (savedTabs) {
+      try {
+        const parsed = JSON.parse(savedTabs)
+        parsed.forEach((tab: TabItem) => {
+          initialCachedViews[tab.key] = true
+        })
+      } catch {
+        // 恢复失败，使用默认值
+      }
+    }
+    return initialCachedViews
   })
 
   // 模块状态映射，支持持久化存储
@@ -294,11 +355,29 @@ const useTabsStore = () => {
     setTabs(prev => {
       // 检查标签是否已存在
       if (!prev.some(tab => tab.key === newTab.key)) {
-        return [...prev, newTab]
+        const newTabs = [...prev, newTab]
+        // 保存标签页列表到 localStorage（只保存可序列化的数据）
+        try {
+          const tabsToSave = newTabs.map(tab => ({
+            key: tab.key,
+            label: tab.label,
+            closable: tab.closable,
+          }))
+          localStorage.setItem('openTabs', JSON.stringify(tabsToSave))
+        } catch {
+          console.error('保存标签页列表失败')
+        }
+        return newTabs
       }
       return prev
     })
     setActiveKey(newTab.key)
+    // 保存当前激活的标签页
+    try {
+      localStorage.setItem('activeTabKey', newTab.key)
+    } catch {
+      console.error('保存激活标签页失败')
+    }
     setCachedViews(prev => ({
       ...prev,
       [newTab.key]: true,
@@ -369,6 +448,18 @@ const useTabsStore = () => {
       // 删除标签
       const newTabs = tabs.filter(tab => tab.key !== targetKey)
       setTabs(newTabs)
+      
+      // 保存更新后的标签页列表到 localStorage（只保存可序列化的数据）
+      try {
+        const tabsToSave = newTabs.map(tab => ({
+          key: tab.key,
+          label: tab.label,
+          closable: tab.closable,
+        }))
+        localStorage.setItem('openTabs', JSON.stringify(tabsToSave))
+      } catch {
+        console.error('保存标签页列表失败')
+      }
 
       // 从缓存中删除视图
       setCachedViews(prev => {
@@ -383,6 +474,12 @@ const useTabsStore = () => {
         const newActiveKey =
           newTabs[targetIndex === newTabs.length ? targetIndex - 1 : targetIndex].key
         setActiveKey(newActiveKey)
+        // 保存新的激活标签页
+        try {
+          localStorage.setItem('activeTabKey', newActiveKey)
+        } catch {
+          console.error('保存激活标签页失败')
+        }
       }
     },
     [tabs, activeKey, clearContractFormCache, clearEmployeeFormCache]
@@ -648,23 +745,29 @@ const MainLayout = () => {
   ]
 
   // 根据用户角色过滤菜单项
-  const menuItems: MenuProps['items'] = user?.roles.some(role =>
-    ['super_admin', 'admin'].includes(role)
-  )
-    ? [...baseMenuItems, ...systemMenuItems]
-    : baseMenuItems
+  const menuItems = useMemo(
+    () =>
+      user?.roles.some(role => ['super_admin', 'admin'].includes(role))
+        ? [...baseMenuItems, ...systemMenuItems]
+        : baseMenuItems,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user?.roles]
+  ) as MenuProps['items']
 
   // 获取菜单项图标和标签
   const getMenuItemByKey = (key: string) => {
     // 递归查找所有菜单项，包括子菜单
-    const findMenuItemRecursive = (items: MenuProps['items']): any => {
-      if (!items) return null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const findMenuItemRecursive = (items: MenuProps['items']): MenuProps['items'] extends Array<infer T> ? T | null : null => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!items) return null as any
 
       for (const item of items) {
         if (!item) continue
 
         if ('key' in item && item.key === key) {
-          return item
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return item as any
         }
 
         // 检查子菜单
@@ -840,13 +943,16 @@ const MainLayout = () => {
 
     if (currentMenuItem && 'label' in currentMenuItem) {
       // 添加新标签或切换到已有标签
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const menuItem = currentMenuItem as any
       tabsStore.addTab({
         key: pathname,
-        label: currentMenuItem.label as string,
-        icon: 'icon' in currentMenuItem ? currentMenuItem.icon : undefined,
+        label: menuItem.label as string,
+        icon: 'icon' in menuItem ? menuItem.icon : undefined,
         closable: pathname !== '/', // 仪表盘不可关闭
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, tabsStore.identifyModule, tabsStore.updateModuleState, tabsStore.addTab])
 
   // 检查用户状态，确保用户信息显示正确
@@ -905,17 +1011,24 @@ const MainLayout = () => {
 
         if (!tabExists) {
           // 如果tab不存在，先添加tab
-          const menuItem = targetMenuItem as any
-          tabsStore.addTab({
-            key: mainTabPath,
-            label: menuItem.label as string,
-            icon: menuItem.icon,
-            closable: mainTabPath !== '/', // 仪表盘不可关闭
-          })
+          if ('label' in targetMenuItem) {
+            tabsStore.addTab({
+              key: mainTabPath,
+              label: targetMenuItem.label as string,
+              icon: 'icon' in targetMenuItem ? targetMenuItem.icon : undefined,
+              closable: mainTabPath !== '/', // 仪表盘不可关闭
+            })
+          }
         }
 
         // 先切换到主tab
         tabsStore.setActiveKey(mainTabPath)
+        // 保存当前激活的标签页
+        try {
+          localStorage.setItem('activeTabKey', mainTabPath)
+        } catch {
+          console.error('保存激活标签页失败')
+        }
 
         // 智能导航：优先使用保存的状态路径，否则使用传入的目标路径
         const finalTargetPath = smartTargetPath !== mainTabPath ? smartTargetPath : targetPath
@@ -1028,6 +1141,12 @@ const MainLayout = () => {
   // 处理标签页变化
   const handleTabChange = (activeKey: string) => {
     tabsStore.setActiveKey(activeKey)
+    // 保存当前激活的标签页
+    try {
+      localStorage.setItem('activeTabKey', activeKey)
+    } catch {
+      console.error('保存激活标签页失败')
+    }
     navigate(activeKey)
   }
 
