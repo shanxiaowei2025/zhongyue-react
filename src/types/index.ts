@@ -323,6 +323,8 @@ export interface AccountingRequiredFile {
   fileName?: string
   url?: string
   uploadTime?: string
+  categoryId?: number
+  categoryPath?: string
 }
 
 export interface ImageType {

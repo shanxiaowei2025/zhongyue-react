@@ -7,12 +7,9 @@ import {
   message,
   Space,
   Popconfirm,
-  Table,
   Spin,
   Empty,
   Tooltip,
-  Dropdown,
-  MenuProps,
 } from 'antd'
 import {
   PlusOutlined,
@@ -36,8 +33,14 @@ interface AccountingFileManagerProps {
     categoryId?: number
     categoryPath?: string
   }>
-  onFilesChange: (files: any[]) => void
-  mode?: 'edit' | 'view'
+  onFilesChange: (files: Array<{
+    fileName?: string
+    url?: string
+    uploadTime?: string
+    categoryId?: number
+    categoryPath?: string
+  }>) => void
+  mode?: 'add' | 'edit' | 'view'
 }
 
 const AccountingFileManager: React.FC<AccountingFileManagerProps> = ({
@@ -148,7 +151,13 @@ const AccountingFileManager: React.FC<AccountingFileManagerProps> = ({
   }
 
   // 删除文件
-  const handleDeleteFile = async (file: any) => {
+  const handleDeleteFile = async (file: {
+    fileName?: string
+    url?: string
+    uploadTime?: string
+    categoryId?: number
+    categoryPath?: string
+  }) => {
     // 根据文件对象找到在全局 files 数组中的索引
     const fileIndex = files.findIndex(
       (f) => f.url === file.url && f.fileName === file.fileName && f.uploadTime === file.uploadTime
@@ -168,7 +177,7 @@ const AccountingFileManager: React.FC<AccountingFileManagerProps> = ({
   }
 
   // 构建树形数据（计算实时文件数量）
-  const buildTreeData = (categoryList: AccountingFileCategory[]) => {
+  const buildTreeData = (categoryList: AccountingFileCategory[]): any[] => {
     return categoryList.map((category) => {
       const hasChildren = category.children && category.children.length > 0
       
