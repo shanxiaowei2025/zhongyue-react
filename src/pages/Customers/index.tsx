@@ -1000,6 +1000,27 @@ export default function Customers() {
   }
 
   // 文件上传前校验
+  // 处理导入按钮点击，先弹窗再选择文件
+  const handleImportClick = () => {
+    Modal.confirm({
+      title: '确认导入',
+      content: '导入功能会将表格上的内容上传至系统，请确保系统内没有您需要上传的企业。',
+      okText: '确认',
+      cancelText: '取消',
+      onOk() {
+        // 用户点击确认，触发文件选择
+        const fileInput = document.getElementById('import-file-input') as HTMLInputElement
+        if (fileInput) {
+          fileInput.click()
+        }
+      },
+      onCancel() {
+        // 用户点击取消，不做任何操作
+        console.log('用户取消了导入')
+      },
+    })
+  }
+
   const beforeUpload = (file: File) => {
     const isExcel =
       file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
@@ -1020,21 +1041,8 @@ export default function Customers() {
       return false
     }
 
-    // 显示确认弹窗
-    Modal.confirm({
-      title: '确认导入',
-      content: '导入功能会将表格上的内容上传至系统，请确保系统内没有您需要上传的企业。',
-      okText: '确认',
-      cancelText: '取消',
-      onOk() {
-        // 用户点击确认，处理文件上传
-        handleImport(file)
-      },
-      onCancel() {
-        // 用户点击取消，不做任何操作
-        console.log('用户取消了导入')
-      },
-    })
+    // 处理文件上传
+    handleImport(file)
     return false // 阻止默认上传行为
   }
 
@@ -1625,11 +1633,25 @@ export default function Customers() {
                   导出
                 </Button>
                 {isAdmin && (
-                  <Upload showUploadList={false} beforeUpload={beforeUpload} accept=".xlsx,.xls,.csv">
-                    <Button type="default" icon={<UploadOutlined />} className="w-full sm:w-auto">
+                  <>
+                    <Button
+                      type="default"
+                      icon={<UploadOutlined />}
+                      onClick={handleImportClick}
+                      className="w-full sm:w-auto"
+                    >
                       导入
                     </Button>
-                  </Upload>
+                    <Upload
+                      id="import-file-input"
+                      showUploadList={false}
+                      beforeUpload={beforeUpload}
+                      accept=".xlsx,.xls,.csv"
+                      style={{ display: 'none' }}
+                    >
+                      <input type="file" />
+                    </Upload>
+                  </>
                 )}
                 {isAdmin && (
                   <Upload showUploadList={false} beforeUpload={beforeUpdate} accept=".xlsx,.xls,.csv">
