@@ -1000,16 +1000,17 @@ export default function Customers() {
   }
 
   // 文件上传前校验
-  // 处理导入按钮点击，先弹窗再选择文件
+  // 处理导入按钮点击，先弹窗再上传
   const handleImportClick = () => {
     Modal.confirm({
       title: '确认导入',
       content: '导入功能会将表格上的内容上传至系统，请确保系统内没有您需要上传的企业。',
       okText: '确认',
       cancelText: '取消',
+      centered: true,
       onOk() {
-        // 用户点击确认，触发文件选择
-        const fileInput = document.getElementById('import-file-input') as HTMLInputElement
+        // 用户点击确认，触发隐藏的文件输入框
+        const fileInput = document.getElementById('hidden-import-input') as HTMLInputElement
         if (fileInput) {
           fileInput.click()
         }
@@ -1021,30 +1022,37 @@ export default function Customers() {
     })
   }
 
-  const beforeUpload = (file: File) => {
-    const isExcel =
-      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      file.type === 'application/vnd.ms-excel' ||
-      file.name.endsWith('.xlsx') ||
-      file.name.endsWith('.xls')
+  // 处理文件选择
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // 验证文件
+      const isExcel =
+        file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.type === 'application/vnd.ms-excel' ||
+        file.name.endsWith('.xlsx') ||
+        file.name.endsWith('.xls')
 
-    const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv')
+      const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv')
 
-    if (!isExcel && !isCSV) {
-      message.error('只能上传Excel或CSV文件！')
-      return false
+      if (!isExcel && !isCSV) {
+        message.error('只能上传Excel或CSV文件！')
+        return
+      }
+
+      const isLt10M = file.size / 1024 / 1024 < 10
+      if (!isLt10M) {
+        message.error('文件大小不能超过10MB！')
+        return
+      }
+
+      // 处理文件上传
+      handleImport(file)
     }
-
-    const isLt10M = file.size / 1024 / 1024 < 10
-    if (!isLt10M) {
-      message.error('文件大小不能超过10MB！')
-      return false
-    }
-
-    // 处理文件上传
-    handleImport(file)
-    return false // 阻止默认上传行为
+    // 重置文件输入，以便可以再次选择同一文件
+    event.target.value = ''
   }
+
 
   // 批量替换前校验
   const beforeUpdate = (file: File) => {
@@ -1642,15 +1650,13 @@ export default function Customers() {
                     >
                       导入
                     </Button>
-                    <Upload
-                      id="import-file-input"
-                      showUploadList={false}
-                      beforeUpload={beforeUpload}
+                    <input
+                      id="hidden-import-input"
+                      type="file"
                       accept=".xlsx,.xls,.csv"
+                      onChange={handleFileSelect}
                       style={{ display: 'none' }}
-                    >
-                      <input type="file" />
-                    </Upload>
+                    />
                   </>
                 )}
                 {isAdmin && (
