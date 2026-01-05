@@ -12,6 +12,7 @@ import {
   BUSINESS_STATUS_COLOR_MAP,
   ENTERPRISE_STATUS_COLOR_MAP,
 } from '../../constants'
+import AccountantDistributionChart from './components/AccountantDistributionChart'
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -335,6 +336,49 @@ const CustomerChurnDetail: React.FC = () => {
               valueStyle={{ color: '#722ed1', fontSize: 24, fontWeight: 700 }}
             />
           </Card>
+        </Col>
+      </Row>
+
+      {/* 流失客户按会计类型分布（顾问 / 记账 / 开票） */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+        <Col xs={24} lg={8}>
+          <AccountantDistributionChart
+            title="顾问会计流失客户分布（仅流失户）"
+            loading={isLoading}
+            data={
+              (data?.churnDistributionByType?.consultantAccountant || []).map(d => ({
+                accountantName: d.accountantName,
+                accountantType: 'consultantAccountant' as const,
+                clientCount: d.churnedClientCount,
+              }))
+            }
+          />
+        </Col>
+        <Col xs={24} lg={8}>
+          <AccountantDistributionChart
+            title="记账会计流失客户分布（仅流失户）"
+            loading={isLoading}
+            data={
+              (data?.churnDistributionByType?.bookkeepingAccountant || []).map(d => ({
+                accountantName: d.accountantName,
+                accountantType: 'bookkeepingAccountant' as const,
+                clientCount: d.churnedClientCount,
+              }))
+            }
+          />
+        </Col>
+        <Col xs={24} lg={8}>
+          <AccountantDistributionChart
+            title="开票员流失客户分布（仅流失户）"
+            loading={isLoading}
+            data={
+              (data?.churnDistributionByType?.invoiceOfficer || []).map(d => ({
+                accountantName: d.accountantName,
+                accountantType: 'invoiceOfficer' as const,
+                clientCount: d.churnedClientCount,
+              }))
+            }
+          />
         </Col>
       </Row>
 

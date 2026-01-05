@@ -14,6 +14,8 @@ interface UseReportsDashboardParams {
   month?: string
   year?: number
   threshold?: number
+  // 首次打开页面时传入 true 可强制绕过后端缓存（通过在请求参数中注入时间戳）
+  force?: boolean
 }
 
 export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
@@ -24,6 +26,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     month = new Date().toISOString().slice(0, 7), // 默认当前月份 YYYY-MM
     year = new Date().getFullYear(),
     threshold = 500,
+    force = false,
   } = params
 
   // 并行获取所有报表数据
@@ -38,6 +41,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     pageSize: 10,
     sortField: 'decreaseAmount',
     sortOrder: 'DESC',
+    _ts: force ? Date.now() : undefined,
   })
 
   const {
@@ -45,14 +49,14 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     isLoading: employeeLoading,
     error: employeeError,
     refresh: refreshEmployee,
-  } = useEmployeePerformance({ month })
+  } = useEmployeePerformance({ month, _ts: force ? Date.now() : undefined })
 
   const {
     data: churnData,
     isLoading: churnLoading,
     error: churnError,
     refresh: refreshChurn,
-  } = useCustomerChurnStats({ year, month: parseInt(month.split('-')[1]) })
+  } = useCustomerChurnStats({ year, month: parseInt(month.split('-')[1]), _ts: force ? Date.now() : undefined })
 
   const {
     data: expiryData,
@@ -63,6 +67,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     pageSize: 10,
     sortField: 'agencyEndDate',
     sortOrder: 'DESC',
+    _ts: force ? Date.now() : undefined,
   })
 
   // 只有管理员才获取会计负责客户数据
@@ -81,7 +86,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     isLoading: accountantLoading,
     error: accountantError,
     refresh: refreshAccountant,
-  } = useAccountantClientStats(accountantParams)
+  } = useAccountantClientStats({ ...accountantParams, _ts: force ? Date.now() : undefined })
 
   // 基于用户选择的月份计算6个月的日期范围
   const selectedDate = new Date(`${month}-01`) // 将YYYY-MM转换为Date对象
@@ -104,6 +109,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
     pageSize: 9999999, // 获取足够的数据用于图表展示
     sortField: 'createTime',
     sortOrder: 'DESC',
+    _ts: force ? Date.now() : undefined,
   })
 
   // 从 YYYY-MM 格式提取数字月份
@@ -117,6 +123,7 @@ export const useReportsDashboard = (params: UseReportsDashboardParams = {}) => {
   } = useCustomerLevelDistribution({
     year: year,
     month: monthNumber,
+    _ts: force ? Date.now() : undefined,
   })
 
   // 检查是否有任何数据正在加载

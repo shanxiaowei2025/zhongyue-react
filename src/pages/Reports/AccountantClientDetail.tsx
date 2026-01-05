@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { Bar } from 'react-chartjs-2'
+import AccountantDistributionChart from './components/AccountantDistributionChart'
 
 ChartJS.register(
   CategoryScale,
@@ -488,6 +489,54 @@ const AccountantClientDetail: React.FC = () => {
               )}
             </div>
           </Card>
+        </Col>
+      </Row>
+      {/* 流失客户分布（按会计类型拆分：顾问 / 记账 / 开票） */}
+      <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+        <Col xs={24} lg={8}>
+          <AccountantDistributionChart
+            title="顾问会计流失客户分布（仅流失户）"
+            loading={isLoading}
+            data={
+              (data?.churnDistribution || [])
+                .filter(d => d.accountantType === 'consultantAccountant')
+                .map(d => ({
+                  accountantName: d.accountantName,
+                  accountantType: d.accountantType,
+                  clientCount: d.churnedClientCount,
+                }))
+            }
+          />
+        </Col>
+        <Col xs={24} lg={8}>
+          <AccountantDistributionChart
+            title="记账会计流失客户分布（仅流失户）"
+            loading={isLoading}
+            data={
+              (data?.churnDistribution || [])
+                .filter(d => d.accountantType === 'bookkeepingAccountant')
+                .map(d => ({
+                  accountantName: d.accountantName,
+                  accountantType: d.accountantType,
+                  clientCount: d.churnedClientCount,
+                }))
+            }
+          />
+        </Col>
+        <Col xs={24} lg={8}>
+          <AccountantDistributionChart
+            title="开票员流失客户分布（仅流失户）"
+            loading={isLoading}
+            data={
+              (data?.churnDistribution || [])
+                .filter(d => d.accountantType === 'invoiceOfficer')
+                .map(d => ({
+                  accountantName: d.accountantName,
+                  accountantType: d.accountantType,
+                  clientCount: d.churnedClientCount,
+                }))
+            }
+          />
         </Col>
       </Row>
     </div>

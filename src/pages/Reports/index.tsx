@@ -38,9 +38,22 @@ const Reports: React.FC = () => {
     year: new Date().getFullYear(),
     threshold: 500,
   })
+  // 首次打开页面时强制刷新后端数据（跳过后端缓存）
+  const [forceOnce, setForceOnce] = useState(true)
 
-  // 获取仪表盘数据
-  const { dashboardData, isLoading, error, refreshAll } = useReportsDashboard(filterParams)
+  // 在首次渲染后取消强制刷新标记，避免每次渲染都强制绕过缓存
+  useEffect(() => {
+    if (forceOnce) {
+      // 置为 false 在下一次渲染生效
+      setForceOnce(false)
+    }
+  }, []) // 仅在首次挂载时执行
+
+  // 获取仪表盘数据；首次打开时传入 forceOnce 强制刷新后端数据
+  const { dashboardData, isLoading, error, refreshAll } = useReportsDashboard({
+    ...filterParams,
+    force: forceOnce,
+  })
 
   // 处理日期筛选变化
   const handleDateFilterChange = (value: { month?: string; year?: number }) => {

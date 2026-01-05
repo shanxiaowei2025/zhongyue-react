@@ -83,6 +83,12 @@ export interface CustomerChurnData {
     churnRate: number
     recoveryOpportunities: number
   }
+  // 后端新增：按会计类型分布的流失客户统计
+  churnDistributionByType?: {
+    consultantAccountant?: Array<{ accountantName: string; churnedClientCount: number }>;
+    bookkeepingAccountant?: Array<{ accountantName: string; churnedClientCount: number }>;
+    invoiceOfficer?: Array<{ accountantName: string; churnedClientCount: number }>;
+  }
 }
 
 // 服务到期相关类型
@@ -125,6 +131,12 @@ export interface AccountantClientData {
       clientCount: number
     }
   }
+  // 流失客户分布：后端新增字段，仅包含 enterpriseStatus=cancelled 或 businessStatus=lost 的客户统计
+  churnDistribution?: Array<{
+    accountantName: string
+    accountantType: 'consultantAccountant' | 'bookkeepingAccountant' | 'invoiceOfficer'
+    churnedClientCount: number
+  }>
 }
 
 // 新增客户相关类型
