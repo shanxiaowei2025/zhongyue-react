@@ -20,6 +20,7 @@ const Contracts = lazy(() => import('../pages/Contracts'))
 const CreateContract = lazy(() => import('../pages/Contracts/CreateContract'))
 const ContractDetail = lazy(() => import('../pages/Contracts/ContractDetail'))
 const Reports = lazy(() => import('../pages/Reports'))
+const BusinessStatistics = lazy(() => import('../pages/BusinessStatistics'))
 const AgencyFeeAnalysisDetail = lazy(() => import('../pages/Reports/AgencyFeeAnalysisDetail'))
 const EmployeePerformanceDetail = lazy(() => import('../pages/Reports/EmployeePerformanceDetail'))
 const CustomerChurnDetail = lazy(() => import('../pages/Reports/CustomerChurnDetail'))
@@ -129,6 +130,14 @@ const routes: RouteObject[] = [
       {
         path: 'contracts/edit/:id',
         element: <EditContract />,
+      },
+      {
+        path: 'business-statistics',
+        element: (
+          <AuthorizedRoute requiredRoles={['super_admin', 'salary_admin', '超级管理员', '薪资管理员']}>
+            <BusinessStatistics />
+          </AuthorizedRoute>
+        ),
       },
       {
         path: 'reports',

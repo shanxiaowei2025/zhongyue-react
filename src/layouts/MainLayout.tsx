@@ -38,6 +38,7 @@ import {
   CreditCardOutlined,
   DatabaseOutlined,
   BarChartOutlined,
+  PieChartOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/auth'
 import { buildImageUrl } from '../utils/upload'
@@ -155,6 +156,12 @@ const MODULE_CONFIG: Record<
     icon: <BarChartOutlined />,
     pathPatterns: ['/reports'],
   },
+  '/business-statistics': {
+    defaultPath: '/business-statistics',
+    label: '业务统计',
+    icon: <PieChartOutlined />,
+    pathPatterns: ['/business-statistics'],
+  },
 }
 
 // 辅助函数：根据路径获取对应的 icon
@@ -170,6 +177,7 @@ const getIconForPath = (path: string): React.ReactNode => {
   if (path.startsWith('/enterprise-service')) return <AppstoreOutlined />
   if (path.startsWith('/data-query')) return <DatabaseOutlined />
   if (path.startsWith('/reports')) return <BarChartOutlined />
+  if (path.startsWith('/business-statistics')) return <PieChartOutlined />
   if (path.startsWith('/salary-management')) return <CreditCardOutlined />
   if (path.startsWith('/my-salary')) return <CreditCardOutlined />
   if (path.startsWith('/permissions')) return <LockOutlined />
@@ -619,6 +627,16 @@ const MainLayout = () => {
       icon: <BarChartOutlined />,
       label: '报表管理',
     },
+    // 业务统计菜单仅对超级管理员和薪资管理员可见
+    ...(user?.roles && user.roles.some(role => ['super_admin', 'salary_admin', '超级管理员', '薪资管理员'].includes(role))
+      ? [
+          {
+            key: '/business-statistics',
+            icon: <PieChartOutlined />,
+            label: '业务统计',
+          },
+        ]
+      : []),
     // 根据用户角色决定是否显示凭证管理菜单
     ...(user?.roles.some(role =>
       [
