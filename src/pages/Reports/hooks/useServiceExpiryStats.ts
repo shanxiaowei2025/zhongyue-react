@@ -8,6 +8,7 @@ interface UseServiceExpiryStatsParams {
   sortField?: string
   sortOrder?: 'ASC' | 'DESC'
   companyName?: string
+  _ts?: number
 }
 
 // SWR key生成函数

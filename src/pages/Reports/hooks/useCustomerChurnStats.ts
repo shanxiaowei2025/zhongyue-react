@@ -9,6 +9,7 @@ interface UseCustomerChurnStatsParams {
   pageSize?: number
   sortField?: string
   sortOrder?: 'ASC' | 'DESC'
+  _ts?: number
 }
 
 // SWR key生成函数

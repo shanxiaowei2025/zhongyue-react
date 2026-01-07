@@ -8,6 +8,7 @@ interface UseCustomerLevelDistributionParams {
   pageSize?: number
   sortField?: string
   sortOrder?: 'ASC' | 'DESC'
+  _ts?: number
 }
 
 export const useCustomerLevelDistribution = (params: UseCustomerLevelDistributionParams = {}) => {
