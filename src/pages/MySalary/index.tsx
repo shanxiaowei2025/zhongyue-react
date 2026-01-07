@@ -522,8 +522,15 @@ const MySalary: React.FC = () => {
               dataSource={salaryList}
               rowKey="id"
               loading={loading}
-              pagination={false}
-              scroll={{ x: 2200, y: 'calc(100vh - 250px)' }}
+              // 每页显示6条，达到分页需求
+              pagination={{
+                pageSize: 6,
+                showSizeChanger: false,
+                showQuickJumper: true,
+                showTotal: (total) => `共 ${total} 条记录`,
+              }}
+              // 不使用内部纵向滚动，改用页面外层滚动，避免固定列导致表头插入滚动条占位
+              scroll={{ x: 2200 }}
               size="middle"
               bordered
               locale={{

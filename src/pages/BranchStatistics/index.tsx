@@ -1,45 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Form, DatePicker, Select, Button, Space, Spin, message, Row, Col, Statistic } from 'antd';
+import { Card, Table, Form, DatePicker, Button, Space, Spin, message, Statistic } from 'antd';
 import { ReloadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { getBusinessStatistics, BusinessStatisticsItem, BusinessStatisticsQueryParams } from '../../api/business-statistics';
 import { useNavigate } from 'react-router-dom';
+import { getBusinessStatisticsByLocation, BusinessStatisticsByLocationItem, BusinessStatisticsQueryParams } from '../../api/business-statistics';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
-const BusinessStatistics: React.FC = () => {
+const BranchStatistics: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<BusinessStatisticsItem[]>([]);
-  const [summary, setSummary] = useState<BusinessStatisticsItem | null>(null);
+  const [data, setData] = useState<BusinessStatisticsByLocationItem[]>([]);
+  const [summary, setSummary] = useState<BusinessStatisticsByLocationItem | null>(null);
   const [total, setTotal] = useState(0);
-  const [salespersons, setSalespersons] = useState<string[]>([]);
 
-  // 获取业务统计数据
   const fetchStatistics = async (params?: BusinessStatisticsQueryParams) => {
     setLoading(true);
     try {
       const rawValues = params || form.getFieldsValue();
-      // 规范化日期参数：如果使用 RangePicker 的 dateRange，转换为 startDate/endDate (YYYY-MM-DD)
       const normalized: any = { ...rawValues };
       if (normalized.dateRange) {
         const dr = normalized.dateRange;
         if (Array.isArray(dr) && dr[0]) {
           normalized.startDate =
-            typeof dr[0].format === 'function'
-              ? dr[0].format('YYYY-MM-DD')
-              : dayjs(dr[0]).format('YYYY-MM-DD');
+            typeof dr[0].format === 'function' ? dr[0].format('YYYY-MM-DD') : dayjs(dr[0]).format('YYYY-MM-DD');
           normalized.endDate =
-            typeof dr[1].format === 'function'
-              ? dr[1].format('YYYY-MM-DD')
-              : dayjs(dr[1]).format('YYYY-MM-DD');
+            typeof dr[1].format === 'function' ? dr[1].format('YYYY-MM-DD') : dayjs(dr[1]).format('YYYY-MM-DD');
         }
         delete normalized.dateRange;
       }
 
-      // 如果 startDate/endDate 是 dayjs 对象，也格式化它们
       if (normalized.startDate && typeof normalized.startDate.format === 'function') {
         normalized.startDate = normalized.startDate.format('YYYY-MM-DD');
       }
@@ -47,48 +38,38 @@ const BusinessStatistics: React.FC = () => {
         normalized.endDate = normalized.endDate.format('YYYY-MM-DD');
       }
 
-      const response = await getBusinessStatistics(normalized);
+      const response = await getBusinessStatisticsByLocation(normalized);
       if (response.code === 0) {
         const items = response.data.data || [];
         setData(items);
-        setSummary(response.data.summary);
-        setTotal(response.data.total);
-        // derive salesperson options from returned items (unique, non-empty)
-        const sp = Array.from(
-          new Set(items.map((i: any) => (i.salesperson ? String(i.salesperson) : '')).filter(Boolean))
-        );
-        setSalespersons(sp);
+        setSummary(response.data.summary || null);
+        setTotal(response.data.total || 0);
       } else {
-        message.error(response.message || '获取统计数据失败');
+        message.error(response.message || '获取分公司统计失败');
       }
     } catch (error) {
-      console.error('获取业务统计数据失败:', error);
-      message.error('获取统计数据失败，请重试');
+      console.error('获取分公司统计失败:', error);
+      message.error('获取分公司统计失败，请重试');
     } finally {
       setLoading(false);
     }
   };
 
-  // 初始化加载数据
   useEffect(() => {
     fetchStatistics();
   }, []);
 
-  // 搜索处理
   const handleSearch = () => {
     const values = form.getFieldsValue();
     fetchStatistics(values);
   };
 
-  // 重置搜索
   const handleReset = () => {
     form.resetFields();
     fetchStatistics({});
   };
 
-  // 导出数据
   const handleExport = () => {
-    // 导出当前表格数据为 CSV
     try {
       if (!data || data.length === 0) {
         message.warning('当前没有可导出的数据');
@@ -119,7 +100,7 @@ const BusinessStatistics: React.FC = () => {
       ];
 
       const headerMapping: Record<string, string> = {
-        salesperson: '业务员',
+        salesperson: '分公司',
         licenseFee: '办照费用',
         brandFee: '牌子费',
         recordSealFee: '备案章费用',
@@ -150,7 +131,6 @@ const BusinessStatistics: React.FC = () => {
         return s;
       };
 
-      // build CSV
       const header = columnsOrder.map(c => headerMapping[c] || c).join(',');
       const rows = data.map(item =>
         columnsOrder.map(col => {
@@ -159,7 +139,6 @@ const BusinessStatistics: React.FC = () => {
         }).join(',')
       );
 
-      // include summary as last row labeled 总计
       if (summary) {
         const summaryRow = columnsOrder.map(col => {
           const v = (summary as any)[col];
@@ -170,10 +149,9 @@ const BusinessStatistics: React.FC = () => {
 
       const csvContent = '\uFEFF' + [header, ...rows].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const filename = `业务统计_${(new Date()).toISOString().slice(0,10)}.csv`;
+      const filename = `分公司统计_${(new Date()).toISOString().slice(0,10)}.csv`;
 
       if ((navigator as any).msSaveBlob) {
-        // IE 10+
         (navigator as any).msSaveBlob(blob, filename);
       } else {
         const link = document.createElement('a');
@@ -195,18 +173,14 @@ const BusinessStatistics: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const handleOpenBranchStatistics = () => {
-    navigate('/business-statistics/by-location');
-  };
-
-  // 表格列配置
-  const columns: ColumnsType<BusinessStatisticsItem> = [
+  const columns: ColumnsType<BusinessStatisticsByLocationItem> = [
     {
-      title: '业务员',
+      title: '分公司',
       dataIndex: 'salesperson',
       key: 'salesperson',
       fixed: 'left',
       width: 120,
+      render: (v) => v || '未分配',
     },
     {
       title: '办照费用',
@@ -364,7 +338,10 @@ const BusinessStatistics: React.FC = () => {
   ];
 
   return (
-    <div className="business-statistics-page">
+    <div className="branch-statistics-page">
+      <div style={{ marginBottom: 12 }}>
+        <Button onClick={() => navigate(-1)}>返回</Button>
+      </div>
       {/* 搜索条件 */}
       <Card className="mb-6">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
@@ -388,46 +365,23 @@ const BusinessStatistics: React.FC = () => {
                   }}
                 />
               </Form.Item>
-
-              <Form.Item label="业务员" name="salesperson">
-                <Select
-                  mode="multiple"
-                  showSearch
-                  placeholder="支持多选"
-                  allowClear
-                  style={{ width: 210 }}
-                  maxTagCount={2}
-                  maxTagPlaceholder={(omittedValues) => `+${omittedValues.length}...`}
-                  filterOption={(input, option) => {
-                    const text = (option?.children as React.ReactNode) ?? '';
-                    return String(text).toLowerCase().includes(String(input).toLowerCase());
-                  }}
-                >
-                  {salespersons.map(sp => (
-                    <Option key={sp} value={sp}>
-                      {sp}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item style={{ marginTop: 12 }}>
-                <Space>
-                  <Button type="primary" onClick={handleSearch} loading={loading}>
-                    查询
-                  </Button>
-                  <Button onClick={handleReset}>
-                    <ReloadOutlined />
-                    重置
-                  </Button>
-                  <Button onClick={handleExport}>
-                    <DownloadOutlined />
-                    导出
-                  </Button>
-                  <Button onClick={handleOpenBranchStatistics}>
-                    分公司统计
-                  </Button>
-                </Space>
+              {/* 三个按钮：查询 / 重置 / 导出（放在收费日期下方） */}
+              <Form.Item style={{ width: '100%', marginTop: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Space>
+                    <Button type="primary" onClick={handleSearch} loading={loading}>
+                      查询
+                    </Button>
+                    <Button onClick={handleReset}>
+                      <ReloadOutlined />
+                      重置
+                    </Button>
+                    <Button onClick={handleExport}>
+                      <DownloadOutlined />
+                      导出
+                    </Button>
+                  </Space>
+                </div>
               </Form.Item>
             </Form>
           </div>
@@ -436,7 +390,7 @@ const BusinessStatistics: React.FC = () => {
             {summary && (
               <>
                 <Card size="small" style={{ minWidth: 180 }}>
-                  <Statistic title="总业务员数" value={total} suffix="人" valueStyle={{ color: '#3f8600' }} />
+                  <Statistic title="总分公司数" value={total} suffix="个" valueStyle={{ color: '#3f8600' }} />
                 </Card>
                 <Card size="small" style={{ minWidth: 200 }}>
                   <Statistic title="总费用" value={summary.totalFee || 0} prefix="¥" valueStyle={{ color: '#1890ff' }} />
@@ -464,17 +418,14 @@ const BusinessStatistics: React.FC = () => {
         </div>
       </Card>
 
-      
-
-      {/* 数据表格 */}
       <Card>
         <Table
           columns={columns}
           dataSource={data}
           loading={loading}
           rowKey="salesperson"
-          // 不使用内部纵向滚动，改用页面外层滚动以避免固定列插入滚动条占位 th 导致错位
-          scroll={{ x: 2000 }}
+          // 不启用内部垂直滚动（页面外层滚动），避免表头插入滚动条占位列导致错位
+          scroll={{ x: 2460 }}
           pagination={{
             total,
             showSizeChanger: true,
@@ -554,4 +505,6 @@ const BusinessStatistics: React.FC = () => {
   );
 };
 
-export default BusinessStatistics;
+export default BranchStatistics;
+
+
