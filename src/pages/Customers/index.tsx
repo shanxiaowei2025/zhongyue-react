@@ -378,6 +378,7 @@ export default function Customers() {
             ...customer,
             // 确保图片对象初始化为空对象而不是undefined
             legalPersonIdImages: customer.legalPersonIdImages || {},
+            legalPersonIdImagesWithId: customer.legalPersonIdImagesWithId || {},
             businessLicenseImages: customer.businessLicenseImages || {},
             bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
             otherIdImages: customer.otherIdImages || {},
@@ -522,6 +523,7 @@ export default function Customers() {
       ...record,
       // 确保图片对象初始化为空对象而不是undefined
       legalPersonIdImages: record.legalPersonIdImages || {},
+      legalPersonIdImagesWithId: record.legalPersonIdImagesWithId || {},
       businessLicenseImages: record.businessLicenseImages || {},
       bankAccountLicenseImages: record.bankAccountLicenseImages || {},
       otherIdImages: record.otherIdImages || {},
@@ -625,6 +627,7 @@ export default function Customers() {
       // }
 
       processObjectImages(customer.legalPersonIdImages)
+      processObjectImages(customer.legalPersonIdImagesWithId)
       processObjectImages(customer.businessLicenseImages)
       processObjectImages(customer.bankAccountLicenseImages)
       processObjectImages(customer.otherIdImages)
@@ -1810,6 +1813,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       ...customer,
       // 确保图片对象初始化为空对象而不是undefined
       legalPersonIdImages: customer.legalPersonIdImages || {},
+      legalPersonIdImagesWithId: customer.legalPersonIdImagesWithId || {},
       businessLicenseImages: customer.businessLicenseImages || {},
       bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
       otherIdImages: customer.otherIdImages || {},
@@ -1859,6 +1863,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           const processedData = {
             ...response.data,
             legalPersonIdImages: response.data.legalPersonIdImages || {},
+            legalPersonIdImagesWithId: response.data.legalPersonIdImagesWithId || {},
             businessLicenseImages: response.data.businessLicenseImages || {},
             bankAccountLicenseImages: response.data.bankAccountLicenseImages || {},
             otherIdImages: response.data.otherIdImages || {},
@@ -1907,6 +1912,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       ...data.data,
       // 确保图片对象始终为对象而不是undefined
       legalPersonIdImages: data.data.legalPersonIdImages || {},
+      legalPersonIdImagesWithId: data.data.legalPersonIdImagesWithId || {},
       businessLicenseImages: data.data.businessLicenseImages || {},
       bankAccountLicenseImages: data.data.bankAccountLicenseImages || {},
       otherIdImages: data.data.otherIdImages || {},
@@ -2174,6 +2180,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
       return {
         ...data,
         legalPersonIdImages: data.legalPersonIdImages || {},
+        legalPersonIdImagesWithId: data.legalPersonIdImagesWithId || {},
         businessLicenseImages: data.businessLicenseImages || {},
         bankAccountLicenseImages: data.bankAccountLicenseImages || {},
         otherIdImages: data.otherIdImages || {},
@@ -2185,6 +2192,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
     return {
       ...customer,
       legalPersonIdImages: customer.legalPersonIdImages || {},
+      legalPersonIdImagesWithId: customer.legalPersonIdImagesWithId || {},
       businessLicenseImages: customer.businessLicenseImages || {},
       bankAccountLicenseImages: customer.bankAccountLicenseImages || {},
       otherIdImages: customer.otherIdImages || {},
@@ -2608,8 +2616,11 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
           <Descriptions.Item label="参保人员">
             {displayCustomer.insuredPersonnel || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="个税密码">
-            {displayCustomer.personalIncomeTaxPassword || '-'}
+          <Descriptions.Item label="实名密码">
+            {displayCustomer.realNamePassword || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label="网报密码">
+            {displayCustomer.netReportPassword || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="个税申报人员">
             {displayCustomer.personalIncomeTaxStaff || '-'}
@@ -2817,6 +2828,16 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               <div>
                 <div className="mb-1">一般户开户许可证</div>
                 {renderImage(displayCustomer.bankAccountLicenseImages?.general, '一般户开户许可证')}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium mb-2">法人手持身份证照片</h3>
+            <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-2 gap-6'}`}>
+              <div>
+                <div className="mb-1">法人手持身份证</div>
+                {renderImage(displayCustomer.legalPersonIdImagesWithId?.holdingIdCard, '法人手持身份证')}
               </div>
             </div>
           </div>

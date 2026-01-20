@@ -120,7 +120,8 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   taxCategories: 'tax',
   socialInsuranceTypes: 'tax',
   insuredPersonnel: 'tax',
-  personalIncomeTaxPassword: 'tax',
+  realNamePassword: 'tax',
+  netReportPassword: 'tax',
   personalIncomeTaxStaff: 'tax',
   // 删除了 enterpriseInfoSheetNumber 和 sealStorageNumber
   invoicingSoftware: 'tax',
@@ -151,6 +152,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
 
   // 档案资料标签页字段
   legalPersonIdImages: 'images',
+  legalPersonIdImagesWithId: 'images',
   businessLicenseImages: 'images',
   bankAccountLicenseImages: 'images',
   otherIdImages: 'images',
@@ -295,6 +297,7 @@ const convertImageFieldsToUrls = (values: Partial<FormCustomer>): Partial<FormCu
 
   // 处理所有图片字段 - 确保每个字段都被处理
   processImageField('legalPersonIdImages')
+  processImageField('legalPersonIdImagesWithId')
   processImageField('businessLicenseImages')
   processImageField('bankAccountLicenseImages')
   processImageField('otherIdImages')
@@ -518,6 +521,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         bankAccountLicenseImages: customer.bankAccountLicenseImages ? {
           basic: ensureSingleFileFormat(customer.bankAccountLicenseImages.basic),
           general: ensureSingleFileFormat(customer.bankAccountLicenseImages.general),
+        } : undefined,
+        // 确保法人手持身份证照片数据格式正确
+        legalPersonIdImagesWithId: customer.legalPersonIdImagesWithId ? {
+          holdingIdCard: ensureSingleFileFormat(customer.legalPersonIdImagesWithId.holdingIdCard),
         } : undefined,
       }
       form.setFieldsValue(formValues)
@@ -782,6 +789,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         ) {
           values.bankAccountLicenseImages = customer.bankAccountLicenseImages || {}
         }
+        if (
+          !values.legalPersonIdImagesWithId ||
+          typeof values.legalPersonIdImagesWithId !== 'object'
+        ) {
+          values.legalPersonIdImagesWithId = customer.legalPersonIdImagesWithId || {}
+        }
         if (!values.otherIdImages || typeof values.otherIdImages !== 'object') {
           values.otherIdImages = customer.otherIdImages || {}
         }
@@ -816,6 +829,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         typeof dataWithImages.bankAccountLicenseImages !== 'object'
       ) {
         dataWithImages.bankAccountLicenseImages = customer?.bankAccountLicenseImages || {}
+      }
+
+      if (
+        !dataWithImages.legalPersonIdImagesWithId ||
+        typeof dataWithImages.legalPersonIdImagesWithId !== 'object'
+      ) {
+        dataWithImages.legalPersonIdImagesWithId = customer?.legalPersonIdImagesWithId || {}
       }
 
       if (!dataWithImages.otherIdImages || typeof dataWithImages.otherIdImages !== 'object') {
@@ -1054,6 +1074,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
           ) {
             formValues.bankAccountLicenseImages = customer.bankAccountLicenseImages || {}
           }
+          if (
+            !formValues.legalPersonIdImagesWithId ||
+            typeof formValues.legalPersonIdImagesWithId !== 'object'
+          ) {
+            formValues.legalPersonIdImagesWithId = customer.legalPersonIdImagesWithId || {}
+          }
           if (!formValues.otherIdImages || typeof formValues.otherIdImages !== 'object') {
             formValues.otherIdImages = customer.otherIdImages || {}
           }
@@ -1115,6 +1141,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
       const formValues = form.getFieldsValue()
       const {
         legalPersonIdImages,
+        legalPersonIdImagesWithId,
         businessLicenseImages,
         bankAccountLicenseImages,
         otherIdImages,
@@ -1134,6 +1161,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
 
       // 处理主要图片字段
       collectFileName(legalPersonIdImages)
+      collectFileName(legalPersonIdImagesWithId)
       collectFileName(businessLicenseImages)
       collectFileName(bankAccountLicenseImages)
       collectFileName(otherIdImages)
@@ -2416,7 +2444,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
             <Input.TextArea rows={2} />
           </Form.Item>
 
-          <Form.Item name="personalIncomeTaxPassword" label="个税密码">
+          <Form.Item name="realNamePassword" label="实名密码">
+            <Input />
+          </Form.Item>
+
+          <Form.Item name="netReportPassword" label="网报密码">
             <Input />
           </Form.Item>
 
@@ -2688,6 +2720,24 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                   value={safeGetFieldValue(form, ['bankAccountLicenseImages', 'general'])}
                   onChange={value =>
                     safeSetFieldValue(form, ['bankAccountLicenseImages', 'general'], value)
+                  }
+                  onSuccess={handleFileUploadSuccess}
+                  enableRemarks={true}
+                />
+              </Form.Item>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium mb-2">法人手持身份证照片</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Form.Item name={['legalPersonIdImagesWithId', 'holdingIdCard']} label="法人手持身份证">
+                <FileUpload
+                  label="法人手持身份证"
+                  disabled={mode === 'view'}
+                  value={safeGetFieldValue(form, ['legalPersonIdImagesWithId', 'holdingIdCard'])}
+                  onChange={value =>
+                    safeSetFieldValue(form, ['legalPersonIdImagesWithId', 'holdingIdCard'], value)
                   }
                   onSuccess={handleFileUploadSuccess}
                   enableRemarks={true}

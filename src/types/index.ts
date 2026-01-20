@@ -258,6 +258,9 @@ export interface Customer {
     basic?: ImageTypeWithRemarks
     general?: ImageTypeWithRemarks
   }
+  legalPersonIdImagesWithId?: {
+    holdingIdCard?: ImageTypeWithRemarks // 法人手持身份证照片
+  }
   supplementaryImages: Record<string, ImageType>
   administrativeLicense: AdministrativeLicenseItem[]
   actualResponsibles: ActualResponsibleItem[]
@@ -294,7 +297,8 @@ export interface Customer {
   socialInsuranceTypes: string
   insuredPersonnel: string
   tripartiteAgreementAccount: string
-  personalIncomeTaxPassword: string
+  realNamePassword: string // 实名密码
+  netReportPassword: string // 网报密码
   personalIncomeTaxStaff: string
   // 删除了 enterpriseInfoSheetNumber 字段
   // 删除了 sealStorageNumber 字段，移动到档案存放信息中
