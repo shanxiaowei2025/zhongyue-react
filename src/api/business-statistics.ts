@@ -5,6 +5,8 @@ export interface BusinessStatisticsQueryParams {
   startDate?: string;
   endDate?: string;
   salesperson?: string;
+  /** 业务状态筛选：新增/续费 */
+  businessStatus?: '新增' | '续费';
 }
 
 export interface BusinessStatisticsItem {

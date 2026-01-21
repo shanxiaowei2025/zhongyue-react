@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Table, Form, DatePicker, Select, Button, Space, Spin, message, Row, Col, Statistic } from 'antd';
 import { ReloadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { getBusinessStatistics, BusinessStatisticsItem, BusinessStatisticsQueryParams } from '../../api/business-statistics';
+import { usePageStates } from '../../store/pageStates';
 import { useNavigate } from 'react-router-dom';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+
+// 页面状态缓存 key
+const PAGE_STATE_KEY = 'businessStatisticsFilters';
 
 const BusinessStatistics: React.FC = () => {
   const [form] = Form.useForm();
@@ -16,6 +20,28 @@ const BusinessStatistics: React.FC = () => {
   const [summary, setSummary] = useState<BusinessStatisticsItem | null>(null);
   const [total, setTotal] = useState(0);
   const [salespersons, setSalespersons] = useState<string[]>([]);
+
+  // 从缓存中获取保存的筛选条件
+  const getCachedFilters = useCallback(() => {
+    try {
+      const cached = usePageStates.getState().getState(PAGE_STATE_KEY);
+      if (cached) {
+        return cached;
+      }
+    } catch (error) {
+      console.error('获取缓存筛选条件失败:', error);
+    }
+    return null;
+  }, []);
+
+  // 保存筛选条件到缓存
+  const saveFiltersToCache = useCallback((values: any) => {
+    try {
+      usePageStates.getState().setState(PAGE_STATE_KEY, values);
+    } catch (error) {
+      console.error('保存筛选条件到缓存失败:', error);
+    }
+  }, []);
 
   // 获取业务统计数据
   const fetchStatistics = async (params?: BusinessStatisticsQueryParams) => {
@@ -47,6 +73,9 @@ const BusinessStatistics: React.FC = () => {
         normalized.endDate = normalized.endDate.format('YYYY-MM-DD');
       }
 
+      // 保存筛选条件到缓存
+      saveFiltersToCache(normalized);
+
       const response = await getBusinessStatistics(normalized);
       if (response.code === 0) {
         const items = response.data.data || [];
@@ -69,9 +98,31 @@ const BusinessStatistics: React.FC = () => {
     }
   };
 
-  // 初始化加载数据
+  // 初始化加载数据（尝试从缓存恢复筛选条件）
   useEffect(() => {
-    fetchStatistics();
+    const cachedFilters = getCachedFilters();
+    if (cachedFilters) {
+      // 恢复筛选条件
+      const { startDate, endDate, salesperson, businessStatus, ...rest } = cachedFilters;
+      
+      // 设置表单值
+      const formValues: any = { ...rest };
+      if (startDate && endDate) {
+        formValues.dateRange = [dayjs(startDate), dayjs(endDate)];
+      }
+      if (salesperson !== undefined) {
+        formValues.salesperson = salesperson;
+      }
+      if (businessStatus !== undefined) {
+        formValues.businessStatus = businessStatus;
+      }
+      
+      form.setFieldsValue(formValues);
+      // 使用缓存的筛选条件查询数据
+      fetchStatistics(cachedFilters);
+    } else {
+      fetchStatistics();
+    }
   }, []);
 
   // 搜索处理
@@ -370,7 +421,7 @@ const BusinessStatistics: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <Form form={form} layout="inline" className="mb-0">
-              <Form.Item label="收费日期" name="dateRange">
+              <Form.Item label="收费日期" name="dateRange" style={{ marginTop: 12 }}>
                 <RangePicker
                   placeholder={['开始日期', '结束日期']}
                   onChange={(dates) => {
@@ -389,7 +440,7 @@ const BusinessStatistics: React.FC = () => {
                 />
               </Form.Item>
 
-              <Form.Item label="业务员" name="salesperson">
+              <Form.Item label="业务员" name="salesperson" style={{ marginTop: 12 }}>
                 <Select
                   mode="multiple"
                   showSearch
@@ -408,6 +459,17 @@ const BusinessStatistics: React.FC = () => {
                       {sp}
                     </Option>
                   ))}
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="业务状态" name="businessStatus" style={{ marginTop: 12 }}>
+                <Select
+                  allowClear
+                  placeholder="全部"
+                  style={{ width: 120}}
+                >
+                  <Option value="新增">新增</Option>
+                  <Option value="续费">续费</Option>
                 </Select>
               </Form.Item>
 
