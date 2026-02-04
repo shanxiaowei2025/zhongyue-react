@@ -25,7 +25,8 @@ export const getCustomerListKey = (params: PaginationParams) => {
       // 处理数组类型的参数（多选字段）
       if (Array.isArray(value)) {
         value.forEach(item => {
-          if (item !== undefined && item !== null && item !== '') {
+          // 允许空字符串，因为它用于查询空值
+          if (item !== undefined && item !== null) {
             // 当值为 "__EMPTY__" 时，设置为空字符串以实现空值查询
             const paramValue = item === '__EMPTY__' ? '' : String(item)
             queryParams.append(key, paramValue)
@@ -75,9 +76,25 @@ export const customerListFetcher = async (url: string) => {
     }
   })
 
-  // 处理参数：如果某个参数有多个值，则保持为数组；否则转为单值
+  // 多选字段列表（这些字段应该始终保持为数组）
+  const multiSelectFields = [
+    'customerLevel',
+    'consultantAccountant',
+    'bookkeepingAccountant',
+    'taxBureau',
+    'enterpriseType',
+    'industryCategory',
+    'enterpriseStatus',
+    'businessStatus',
+    'location'
+  ]
+
+  // 处理参数：多选字段保持为数组，其他字段转为单值
   Object.entries(paramMap).forEach(([key, values]) => {
-    if (values.length === 1) {
+    if (multiSelectFields.includes(key)) {
+      // 多选字段始终保持为数组
+      searchParams[key] = values
+    } else if (values.length === 1) {
       searchParams[key] = values[0]
     } else {
       searchParams[key] = values
@@ -90,7 +107,7 @@ export const customerListFetcher = async (url: string) => {
     pageSize: parseInt(pageSize),
     ...searchParams,
   })
-
+  
   if (response && response.code === 0) {
     return response.data
   }
@@ -119,18 +136,19 @@ export const customerDetailFetcher = async (url: string) => {
  * 使用SWR获取客户列表的钩子
  */
 export const useCustomerList = (params: PaginationParams) => {
-  const { data, error, isLoading, isValidating } = useSWR(
+  const { data, error, isLoading, isValidating, mutate: mutateCurrent } = useSWR(
     getCustomerListKey(params),
     customerListFetcher,
     {
       revalidateOnFocus: false,
-      dedupingInterval: 3000,
+      dedupingInterval: 1000, // 减少去重间隔
+      keepPreviousData: false, // 不保留旧数据
     }
   )
 
   // 刷新列表数据
   const refreshCustomerList = async () => {
-    await mutate(getCustomerListKey(params))
+    await mutateCurrent()
   }
 
   // 删除客户

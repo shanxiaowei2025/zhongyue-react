@@ -68,6 +68,7 @@ import {
   exportCustomerCSV,
   importCustomerExcel,
   updateCustomerExcel,
+  getUniqueCustomerLevels,
 } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import ExpenseRecords from './ExpenseRecords'
@@ -198,6 +199,22 @@ export default function Customers() {
   const [detailType, setDetailType] = useState<'view' | 'edit' | 'add'>('view')
   const [isMobile, setIsMobile] = useState(false)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number>()
+  const [customerLevelOptions, setCustomerLevelOptions] = useState<string[]>([])
+
+  // 获取客户分级唯一值列表
+  const { data: customerLevelsData } = useSWR('/customer/unique-values/customer-level', () =>
+    getUniqueCustomerLevels()
+  )
+
+  // 更新客户分级选项
+  useEffect(() => {
+    // 处理嵌套的data结构：response.data.data（兼容旧版本）
+    // 或直接的data结构：response.data（新版本）
+    const actualData = customerLevelsData?.data?.data || customerLevelsData?.data
+    if (actualData && Array.isArray(actualData)) {
+      setCustomerLevelOptions(actualData)
+    }
+  }, [customerLevelsData])
 
   // 临时降级方案 - 确保按钮正常显示
   // 如果权限加载失败或尚未完成，允许所有操作
@@ -214,7 +231,7 @@ export default function Customers() {
   const debouncedSearchParams = useDebouncedValue(searchQueryParams, 500)
 
   // 构建请求参数
-  const requestParams = {
+  const requestParams = useMemo(() => ({
     page: current,
     pageSize,
     // 处理基础字符串字段
@@ -256,7 +273,7 @@ export default function Customers() {
           endDate: debouncedSearchParams.dateRange[1].format('YYYY-MM-DD'),
         }
       : {}),
-  }
+  }), [current, pageSize, debouncedSearchParams])
 
   // 使用SWR获取客户列表数据
   const {
@@ -1439,26 +1456,16 @@ export default function Customers() {
                   className="w-full"
                   maxTagCount="responsive"
                   options={[
-                    'AA',
-                    'AB', 
-                    'AC',
-                    'AD',
-                    'BA',
-                    'BB',
-                    'BC',
-                    'BD',
-                    'CA',
-                    'CB',
-                    'CC',
-                    'CD',
-                    'DA',
-                    'DB',
-                    'DC',
-                    'DD',
-                  ].map(level => ({
-                    value: level,
-                    label: level,
-                  }))}
+                    // 添加空值选项
+                    { value: '__EMPTY__', label: '-（未设置）' },
+                    // 添加数据库中的实际值
+                    ...(Array.isArray(customerLevelOptions) ? customerLevelOptions.map(level => ({
+                      value: level,
+                      label: level,
+                    })) : [])
+                  ]}
+                  loading={!customerLevelsData}
+                  notFoundContent={!customerLevelsData ? '加载中...' : (customerLevelOptions.length === 0 ? '暂无数据' : undefined)}
                 />
               </Form.Item>
 

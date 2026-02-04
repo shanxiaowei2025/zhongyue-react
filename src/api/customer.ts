@@ -12,7 +12,8 @@ export const getCustomerList = (params: PaginationParams) => {
       // 处理数组类型的参数（多选字段）
       if (Array.isArray(value)) {
         value.forEach(item => {
-          if (item !== undefined && item !== null && item !== '') {
+          // 允许空字符串，因为它用于查询空值
+          if (item !== undefined && item !== null) {
             // 当值为 "__EMPTY__" 时，设置为空字符串以实现空值查询
             const paramValue = item === '__EMPTY__' ? '' : String(item)
             queryParams.append(key, paramValue)
@@ -154,7 +155,8 @@ export const exportCustomerCSV = (params?: Record<string, unknown>) => {
         // 处理数组类型的参数（多选字段）
         if (Array.isArray(value)) {
           value.forEach(item => {
-            if (item !== undefined && item !== null && item !== '') {
+            // 允许空字符串，因为它用于查询空值
+            if (item !== undefined && item !== null) {
               // 当值为 "__EMPTY__" 时，设置为空字符串以实现空值查询
               const paramValue = item === '__EMPTY__' ? '' : String(item)
               queryParams.append(key, paramValue)
@@ -233,4 +235,9 @@ export const updateCustomerExcel = async (file: File) => {
     console.error('批量替换客户Excel文件出错:', error)
     throw error
   }
+}
+
+// 获取客户分级的唯一值列表
+export const getUniqueCustomerLevels = () => {
+  return request.get<ApiResponse<string[]>>('/customer/unique-values/customer-level')
 }
