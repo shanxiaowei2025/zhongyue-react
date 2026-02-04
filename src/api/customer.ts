@@ -241,3 +241,12 @@ export const updateCustomerExcel = async (file: File) => {
 export const getUniqueCustomerLevels = () => {
   return request.get<ApiResponse<string[]>>('/customer/unique-values/customer-level')
 }
+
+// 获取企业名称搜索建议
+export const getCustomerSearchSuggestions = (keyword: string, limit: number = 10) => {
+  return request.get<ApiResponse<Array<{
+    id: number
+    companyName: string
+    unifiedSocialCreditCode: string
+  }>>>(`/customer/search-suggestions?keyword=${encodeURIComponent(keyword)}&limit=${limit}`)
+}

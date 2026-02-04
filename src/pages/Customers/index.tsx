@@ -17,6 +17,7 @@ import {
   Form,
   Tooltip,
   Pagination,
+  AutoComplete,
 } from 'antd'
 import ResizableTable from '../../components/ResizableTable'
 import {
@@ -69,6 +70,7 @@ import {
   importCustomerExcel,
   updateCustomerExcel,
   getUniqueCustomerLevels,
+  getCustomerSearchSuggestions,
 } from '../../api/customer'
 import { deleteFile, buildImageUrl } from '../../utils/upload'
 import ExpenseRecords from './ExpenseRecords'
@@ -163,8 +165,28 @@ export default function Customers() {
 
   const [current, setCurrent] = useState(savedPagination?.current || 1)
   const pageSize = 10 // 固定每页10条
-  const [searchQueryParams, setSearchQueryParams] = useState(() => {
-    const baseParams = {
+  
+  // 定义搜索参数类型
+  type SearchParamsType = {
+    keyword: string
+    unifiedSocialCreditCode: string
+    customerLevel: string[]
+    consultantAccountant: string[]
+    bookkeepingAccountant: string[]
+    taxBureau: string[]
+    enterpriseType: string[]
+    industryCategory: string[]
+    enterpriseStatus: string[]
+    businessStatus: string[]
+    location: string[]
+    remarks: string
+    startDate: string
+    endDate: string
+    dateRange: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  }
+  
+  const [searchQueryParams, setSearchQueryParams] = useState<SearchParamsType>(() => {
+    const baseParams: SearchParamsType = {
       keyword: '',
       unifiedSocialCreditCode: '',
       customerLevel: [] as string[],
@@ -179,7 +201,7 @@ export default function Customers() {
       remarks: '',
       startDate: '',
       endDate: '',
-      dateRange: null as [dayjs.Dayjs, dayjs.Dayjs] | null,
+      dateRange: null,
       ...(savedSearchParams || {}), // 恢复之前保存的搜索条件
     }
 
@@ -200,6 +222,12 @@ export default function Customers() {
   const [isMobile, setIsMobile] = useState(false)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number>()
   const [customerLevelOptions, setCustomerLevelOptions] = useState<string[]>([])
+  const [searchSuggestions, setSearchSuggestions] = useState<Array<{
+    value: string
+    label: React.ReactNode
+    id: number
+  }>>([])
+  const [searchLoading, setSearchLoading] = useState(false)
 
   // 获取客户分级唯一值列表
   const { data: customerLevelsData } = useSWR('/customer/unique-values/customer-level', () =>
@@ -208,11 +236,10 @@ export default function Customers() {
 
   // 更新客户分级选项
   useEffect(() => {
-    // 处理嵌套的data结构：response.data.data（兼容旧版本）
-    // 或直接的data结构：response.data（新版本）
-    const actualData = customerLevelsData?.data?.data || customerLevelsData?.data
-    if (actualData && Array.isArray(actualData)) {
-      setCustomerLevelOptions(actualData)
+    // customerLevelsData 的类型是 ApiResponse<string[]>
+    // 所以 customerLevelsData.data 就是 string[]
+    if (customerLevelsData?.data && Array.isArray(customerLevelsData.data)) {
+      setCustomerLevelOptions(customerLevelsData.data)
     }
   }, [customerLevelsData])
 
@@ -226,6 +253,61 @@ export default function Customers() {
   useEffect(() => {
     refreshPermissions()
   }, [refreshPermissions])
+
+  // 处理企业名称搜索建议
+  const handleSearchSuggestions = useCallback(async (value: string) => {
+    console.log('搜索建议触发，输入值:', value)
+    
+    if (!value || value.trim().length < 2) {
+      console.log('关键词长度不足，清空建议列表')
+      setSearchSuggestions([])
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      console.log('开始请求搜索建议...')
+      const response = await getCustomerSearchSuggestions(value.trim(), 10)
+      console.log('搜索建议响应:', response)
+      
+      // 响应格式：{code: 0, message: '操作成功', data: [...], timestamp: xxx}
+      if (response.code === 0 && Array.isArray(response.data)) {
+        console.log('找到', response.data.length, '条结果')
+        
+        if (response.data.length > 0) {
+          const suggestions = response.data.map(item => ({
+            value: item.companyName,
+            label: (
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 500 }}>{item.companyName}</div>
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+                  {item.unifiedSocialCreditCode || '无统一社会信用代码'}
+                </div>
+              </div>
+            ),
+            id: item.id,
+          }))
+          setSearchSuggestions(suggestions)
+        } else {
+          console.log('无匹配数据')
+          setSearchSuggestions([])
+        }
+      } else {
+        console.log('响应格式错误或无数据')
+        setSearchSuggestions([])
+      }
+    } catch (error) {
+      console.error('获取搜索建议失败:', error)
+      setSearchSuggestions([])
+    } finally {
+      setSearchLoading(false)
+    }
+  }, [])
+
+  // 处理选择搜索建议
+  const handleSelectSuggestion = useCallback((value: string) => {
+    setSearchQueryParams(prev => ({ ...prev, keyword: value }))
+  }, [setSearchQueryParams])
 
   // 添加防抖搜索参数
   const debouncedSearchParams = useDebouncedValue(searchQueryParams, 500)
@@ -267,7 +349,7 @@ export default function Customers() {
       location: debouncedSearchParams.location.map((val: string) => val === '__EMPTY__' ? '' : val)
     } : {}),
     // 如果有dateRange，将其转换为startDate和endDate
-    ...(debouncedSearchParams.dateRange
+    ...(debouncedSearchParams.dateRange && debouncedSearchParams.dateRange[0] && debouncedSearchParams.dateRange[1]
       ? {
           startDate: debouncedSearchParams.dateRange[0].format('YYYY-MM-DD'),
           endDate: debouncedSearchParams.dateRange[1].format('YYYY-MM-DD'),
@@ -1439,12 +1521,16 @@ export default function Customers() {
           <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-2">
               <Form.Item label="企业名称" className="mb-2">
-                <Input
+                <AutoComplete
                   placeholder="请输入企业名称关键词"
                   value={searchQueryParams.keyword}
-                  onChange={e => setSearchQueryParams({ ...searchQueryParams, keyword: e.target.value })}
+                  options={searchSuggestions}
+                  onSearch={handleSearchSuggestions}
+                  onSelect={handleSelectSuggestion}
+                  onChange={value => setSearchQueryParams({ ...searchQueryParams, keyword: value })}
                   className="w-full"
                   allowClear
+                  notFoundContent={searchLoading ? '搜索中...' : searchQueryParams.keyword && searchQueryParams.keyword.length >= 2 ? '无匹配结果' : '请输入至少2个字符'}
                 />
               </Form.Item>
 
