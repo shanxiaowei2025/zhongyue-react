@@ -1129,6 +1129,22 @@ export default function Customers() {
       ),
     },
     {
+      id: 'consultantAccountant',
+      accessorKey: 'consultantAccountant',
+      header: '顾问会计',
+      size: 120,
+      responsive: ['lg'],
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={100} />,
+    },
+    {
+      id: 'bookkeepingAccountant',
+      accessorKey: 'bookkeepingAccountant',
+      header: '记账会计',
+      size: 120,
+      responsive: ['lg'],
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={100} />,
+    },
+    {
       id: 'enterpriseType',
       accessorKey: 'enterpriseType',
       header: '企业类型',
