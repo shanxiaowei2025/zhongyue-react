@@ -9,8 +9,11 @@ import { useAuthStore } from './store/auth'
 import { useNotificationStore } from './store/notification'
 import webSocketService from './services/websocket'
 import { mutate } from 'swr'
-import { getNewNotificationsKey, getNotificationListKey } from './hooks/useNotification'
+import { getNewNotificationsKey, getNotificationListKey, useNotificationActions } from './hooks/useNotification'
+import { getNewNotifications } from './api/notification'
 import PasswordExpiredModal from './components/PasswordExpiredModal'
+import NotificationDetail from './components/NotificationDetail'
+import type { Notification } from './types/notification'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 
@@ -18,6 +21,10 @@ dayjs.locale('zh-cn')
 
 const App = () => {
   const [loading, setLoading] = useState(true)
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false)
+  const [currentNotification, setCurrentNotification] = useState<Notification | null>(null)
+  const [unreadQueue, setUnreadQueue] = useState<Notification[]>([]) // 未读通知队列
+  
   const {
     isAuthenticated,
     resetTimer,
@@ -33,7 +40,22 @@ const App = () => {
     addNewNotification,
     setWebSocketConnected,
     reset: resetNotificationStore,
+    updateStats,
   } = useNotificationStore()
+
+  const { markAsReadAction } = useNotificationActions()
+
+  // 处理通知队列，逐条弹出
+  useEffect(() => {
+    if (!notificationModalVisible && unreadQueue.length > 0) {
+      // 当前没有弹窗显示，且队列中有未读通知
+      const nextNotification = unreadQueue[0]
+      setCurrentNotification(nextNotification)
+      setNotificationModalVisible(true)
+      // 从队列中移除已显示的通知
+      setUnreadQueue(prev => prev.slice(1))
+    }
+  }, [notificationModalVisible, unreadQueue])
 
   // 在应用启动时预加载角色数据，但仅当用户已登录时
   useEffect(() => {
@@ -115,6 +137,30 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]) // 仅在认证状态变化时重新运行
 
+  // 登录后检查未读通知并加入队列
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      // 延迟检查，确保页面加载完成
+      const timer = setTimeout(async () => {
+        try {
+          // 获取所有未读通知（最多10条，避免过多弹窗）
+          const response = await getNewNotifications({ page: 1, limit: 10 })
+          const unreadNotifications = response.data?.items || []
+          
+          // 如果有未读通知，加入队列
+          if (unreadNotifications.length > 0) {
+            console.log(`登录后发现 ${unreadNotifications.length} 条未读通知`)
+            setUnreadQueue(unreadNotifications)
+          }
+        } catch (error) {
+          console.error('检查未读通知失败:', error)
+        }
+      }, 1000) // 延迟1秒，避免与其他初始化逻辑冲突
+
+      return () => clearTimeout(timer)
+    }
+  }, [isAuthenticated, loading])
+
   // WebSocket 连接管理
   useEffect(() => {
     if (isAuthenticated) {
@@ -128,7 +174,23 @@ const App = () => {
         // 刷新SWR缓存以确保通知弹窗和通知中心数据同步
         mutate(getNewNotificationsKey({ page: 1, limit: 999 }))
         mutate(getNotificationListKey({ page: 1, limit: 50 }))
-        // 可以在这里添加通知提示
+        
+        // 构建通知对象并加入队列
+        const newNotification: Notification = {
+          id: data.id,
+          notificationId: data.id,
+          title: data.title,
+          content: data.content,
+          type: data.type,
+          createdBy: data.createdBy,
+          createdAt: data.createdAt,
+          readStatus: 0, // 新通知默认未读
+          readAt: null,
+        }
+        
+        // 加入通知队列
+        setUnreadQueue(prev => [...prev, newNotification])
+        
         console.log('收到新通知:', data.title)
       })
 
@@ -191,6 +253,26 @@ const App = () => {
 
         {/* 密码过期强制修改弹窗 */}
         {isAuthenticated && <PasswordExpiredModal visible={passwordModalVisible} />}
+
+        {/* 新通知弹窗 */}
+        {isAuthenticated && (
+          <NotificationDetail
+            visible={notificationModalVisible}
+            notification={currentNotification}
+            onClose={() => {
+              setNotificationModalVisible(false)
+              setCurrentNotification(null)
+            }}
+            onMarkAsRead={async notificationId => {
+              const success = await markAsReadAction(notificationId)
+              if (success) {
+                updateStats()
+              }
+              return success
+            }}
+            showCopyButton={true}
+          />
+        )}
       </Suspense>
     </ConfigProvider>
   )

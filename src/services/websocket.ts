@@ -26,7 +26,11 @@ class WebSocketService {
 
     // 开发环境：使用localhost直连WebSocket服务器
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'ws://127.0.0.1:3000'
+      // 从环境变量读取API服务器地址，提取端口号
+      const apiServer = import.meta.env.VITE_API_SERVER || 'http://127.0.0.1:3001/'
+      const portMatch = apiServer.match(/:(\d+)/)
+      const port = portMatch ? portMatch[1] : '3001'
+      return `ws://127.0.0.1:${port}`
     }
 
     // 生产环境：使用相对路径，通过Nginx代理转发
