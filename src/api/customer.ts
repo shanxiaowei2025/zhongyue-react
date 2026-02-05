@@ -250,3 +250,12 @@ export const getCustomerSearchSuggestions = (keyword: string, limit: number = 10
     unifiedSocialCreditCode: string
   }>>>(`/customer/search-suggestions?keyword=${encodeURIComponent(keyword)}&limit=${limit}`)
 }
+
+// 检查行政许可到期情况
+export const checkLicenseExpiry = () => {
+  return request.post<ApiResponse<{
+    success: boolean
+    message: string
+    expiringCount: number
+  }>>('/customer/check-license-expiry')
+}

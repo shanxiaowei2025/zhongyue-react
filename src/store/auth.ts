@@ -137,6 +137,8 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('user')
         localStorage.removeItem('passwordUpdatedAt')
         localStorage.removeItem('lastActivityTime')
+        // 清除登录通知标记，以便下次登录时重新显示
+        sessionStorage.removeItem('hasShownLoginNotification')
         state.user = null
         state.token = null
         state.isAuthenticated = false

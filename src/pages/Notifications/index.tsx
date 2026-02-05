@@ -42,6 +42,8 @@ const NotificationsPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [detailModalVisible, setDetailModalVisible] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
+  const [currentPage, setCurrentPage] = useState(1) // 当前页码
+  const [pageSize, setPageSize] = useState(10) // 每页条数
 
   const { stats, isWebSocketConnected, updateStats } = useNotificationStore()
 
@@ -54,13 +56,13 @@ const NotificationsPage: React.FC = () => {
     meta: allMeta,
     isLoading: allLoading,
     refreshNotificationList: refreshAll,
-  } = useNotificationList({ page: 1, limit: 50 })
+  } = useNotificationList({ page: currentPage, limit: pageSize })
 
   const {
     newNotifications: unreadNotifications,
     meta: unreadMeta,
     isLoading: unreadLoading,
-  } = useNewNotifications({ page: 1, limit: 50 })
+  } = useNewNotifications({ page: currentPage, limit: pageSize })
 
   const {
     markAsReadAction,
@@ -83,15 +85,21 @@ const NotificationsPage: React.FC = () => {
       console.log('检测到新通知，刷新通知列表')
 
       // 刷新全部通知列表
-      mutate(getNotificationListKey({ page: 1, limit: 50 }))
+      mutate(getNotificationListKey({ page: currentPage, limit: pageSize }))
 
       // 刷新未读通知列表
-      mutate(getNewNotificationsKey({ page: 1, limit: 50 }))
+      mutate(getNewNotificationsKey({ page: currentPage, limit: pageSize }))
 
       // 更新追踪的总数
       setPrevStatsTotal(stats.total)
     }
-  }, [stats.total, prevStatsTotal])
+  }, [stats.total, prevStatsTotal, currentPage, pageSize])
+
+  // 切换标签页时重置页码
+  useEffect(() => {
+    setCurrentPage(1)
+    setSelectedRowKeys([])
+  }, [activeTab])
 
   // 刷新数据
   const handleRefresh = async () => {
@@ -99,21 +107,30 @@ const NotificationsPage: React.FC = () => {
     await updateStats()
   }
 
+  // 处理分页变化
+  const handlePageChange = (page: number, size: number) => {
+    setCurrentPage(page)
+    setPageSize(size)
+    setSelectedRowKeys([]) // 切换页面时清空选择
+  }
+
   // 查看通知详情
   const handleViewDetail = (notification: Notification) => {
     setSelectedNotification(notification)
     setDetailModalVisible(true)
 
-    // 如果是未读状态，标记为已读
+    // 不自动标记为已读，让用户手动点击"标记已读"按钮
+    // 如果需要查看时自动标记为已读，取消下面的注释
+    /*
     if (notification.readStatus === 0) {
       markAsReadAction(notification.notificationId).then(success => {
         if (success) {
-          // SWR缓存已在markAsReadAction中刷新
           updateStats()
           handleRefresh()
         }
       })
     }
+    */
   }
 
   // 标记单个通知为已读
@@ -295,10 +312,10 @@ const NotificationsPage: React.FC = () => {
   ]
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       <Card>
         {/* 页面头部 */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <BellOutlined className="text-2xl text-blue-500" />
             <Title level={3} className="mb-0">
@@ -402,6 +419,8 @@ const NotificationsPage: React.FC = () => {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            onChange: handlePageChange,
+            onShowSizeChange: handlePageChange,
           }}
           rowSelection={{
             selectedRowKeys,
