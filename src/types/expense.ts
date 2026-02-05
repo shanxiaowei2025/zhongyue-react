@@ -203,10 +203,13 @@ export interface ExpenseQueryParams {
   dateRange?: any
   createDateRange?: any
   auditDateRange?: any
+  agencyEndDateRange?: any // 代理费结束日期范围
   chargeDateStart?: string
   chargeDateEnd?: string
   auditDateStart?: string
   auditDateEnd?: string
+  agencyEndDateStart?: string // 代理费结束日期开始（年月格式：YYYY-MM）
+  agencyEndDateEnd?: string // 代理费结束日期结束（年月格式：YYYY-MM）
 }
 
 // 费用审核DTO

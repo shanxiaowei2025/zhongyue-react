@@ -200,6 +200,29 @@ export const expenseListFetcher = async ([, params]: [string, ExpenseQueryParams
       }
     }
 
+    // 处理代理费结束日期范围（年月格式：YYYY-MM）
+    if (params.agencyEndDateRange && Array.isArray(params.agencyEndDateRange)) {
+      queryParams.agencyEndDateStart = Array.isArray(params.agencyEndDateRange[0])
+        ? params.agencyEndDateRange[0][0]
+        : params.agencyEndDateRange[0]?.format?.('YYYY-MM') || params.agencyEndDateRange[0]
+
+      queryParams.agencyEndDateEnd = Array.isArray(params.agencyEndDateRange[1])
+        ? params.agencyEndDateRange[1][0]
+        : params.agencyEndDateRange[1]?.format?.('YYYY-MM') || params.agencyEndDateRange[1]
+
+      // 删除原始agencyEndDateRange参数，避免发送不必要的数据
+      delete queryParams.agencyEndDateRange
+    } else {
+      // 删除agencyEndDateRange参数，但保留直接传入的agencyEndDateStart和agencyEndDateEnd
+      delete queryParams.agencyEndDateRange
+
+      // 只有在没有直接传入agencyEndDateStart/agencyEndDateEnd时才删除这些参数
+      if (!params.agencyEndDateStart && !params.agencyEndDateEnd) {
+        delete queryParams.agencyEndDateStart
+        delete queryParams.agencyEndDateEnd
+      }
+    }
+
     // 确保page和pageSize参数是有效的数字
     queryParams.page = Number(queryParams.page) || 1
     queryParams.pageSize = Number(queryParams.pageSize) || 10
