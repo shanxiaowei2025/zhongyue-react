@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Table,
   Button,
@@ -12,6 +12,7 @@ import {
   Tag,
   Tooltip,
   AutoComplete,
+  Pagination,
 } from 'antd'
 import type { ColumnType, ColumnGroupType } from 'antd/es/table'
 import {
@@ -27,6 +28,8 @@ import {
   CloseOutlined,
   MessageOutlined,
 } from '@ant-design/icons'
+import ResizableTable from '../../components/ResizableTable'
+import type { ResizableTableColumn } from '../../types/table'
 import { useSearchParams } from 'react-router-dom'
 import { usePageStates } from '../../hooks/usePageStates'
 import { useExpenseList, expenseDetailFetcher, exportExpenseData } from '../../hooks/useExpense'
@@ -161,100 +164,58 @@ const STATUS_COLORS = {
   [ExpenseStatus.Rejected]: 'red',
 }
 
-// 定义表格列
-const columns: (ColumnType<Expense> | ColumnGroupType<Expense>)[] = [
-  {
-    title: '企业名称',
-    dataIndex: 'companyName',
-    key: 'companyName',
-    width: 180,
-    ellipsis: true,
-  },
-  {
-    title: '总计费用',
-    dataIndex: 'totalFee',
-    key: 'totalFee',
-    width: 100,
-    render: (value: number | string | null | undefined) => {
-      if (value === null || value === undefined) return '¥0.00'
+// 智能文本渲染组件 - 只在文本被截断时显示tooltip
+const EllipsisText: React.FC<{
+  text: string
+  maxWidth?: number
+}> = ({ text, maxWidth }) => {
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [isOverflowing, setIsOverflowing] = useState(false)
 
-      // 确保将任何类型的值转换为数字
-      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value)
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current) {
+        const isOverflow = textRef.current.scrollWidth > textRef.current.clientWidth
+        setIsOverflowing(isOverflow)
+      }
+    }
 
-      // 检查是否为有效数字
-      return !isNaN(numValue) ? `¥${numValue.toFixed(2)}` : '¥0.00'
-    },
-  },
-  {
-    title: '业务类型',
-    dataIndex: 'businessType',
-    key: 'businessType',
-    width: 120,
-    ellipsis: true,
-    render: (value: string) => value || '-',
-  },
-  {
-    title: '社保代理业务类型',
-    dataIndex: 'socialInsuranceBusinessType',
-    key: 'socialInsuranceBusinessType',
-    width: 140,
-    ellipsis: true,
-    render: (value: string) => value || '-',
-  },
-  {
-    title: '代理费起止日期',
-    key: 'agencyDateRange',
-    width: 220,
-    ellipsis: false,
-    render: (record: Expense) => {
-      const startDate = record.agencyStartDate
-      const endDate = record.agencyEndDate
+    checkOverflow()
+    // 添加resize监听以处理窗口大小变化
+    window.addEventListener('resize', checkOverflow)
+    return () => window.removeEventListener('resize', checkOverflow)
+  }, [text])
 
-      if (!startDate || !endDate) return '-'
+  const content = (
+    <span
+      ref={textRef}
+      style={{
+        cursor: isOverflowing ? 'pointer' : 'default',
+        display: 'block',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        maxWidth: maxWidth ? `${maxWidth}px` : '100%',
+      }}
+    >
+      {text}
+    </span>
+  )
 
-      return (
-        <span style={{ whiteSpace: 'nowrap' }}>
-          {`${dayjs(startDate).format('YYYY-MM')} ~ ${dayjs(endDate).format('YYYY-MM')}`}
-        </span>
-      )
-    },
-  },
-  {
-    title: '收费日期',
-    dataIndex: 'chargeDate',
-    key: 'chargeDate',
-    width: 120,
-    render: (value: string) => (value ? dayjs(value).format('YYYY-MM-DD') : '-'),
-  },
-  {
-    title: '业务员',
-    dataIndex: 'salesperson',
-    key: 'salesperson',
-    width: 100,
-  },
-  {
-    title: '审核状态',
-    dataIndex: 'status',
-    key: 'status',
-    width: 100,
-    render: (status: ExpenseStatus) => (
-      <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
-    ),
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 150,
-    render: (value: string) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-'),
-  },
-  {
-    title: '操作',
-    key: 'action',
-    fixed: 'right',
-    width: 150,
-  },
-]
+  if (isOverflowing) {
+    return (
+      <Tooltip
+        title={text}
+        placement="topLeft"
+        mouseEnterDelay={0.3}
+      >
+        {content}
+      </Tooltip>
+    )
+  }
+
+  return content
+}
 
 const Expenses: React.FC = () => {
   const [urlSearchParams, setUrlSearchParams] = useSearchParams()
@@ -783,15 +744,6 @@ const Expenses: React.FC = () => {
     }, 0)
   }
 
-  // 表格页码改变
-  const handleTableChange = (pagination: any) => {
-    setSearchParams({
-      ...searchParams,
-      page: pagination.current,
-      pageSize: pagination.pageSize,
-    })
-  }
-
   // 处理新增费用
   const handleAdd = () => {
     // 检查创建权限
@@ -1176,15 +1128,109 @@ const Expenses: React.FC = () => {
     }
   }
 
-  // 为columns添加操作列
-  const tableColumns = [...columns]
-  // 替换操作列
-  if (tableColumns[tableColumns.length - 1].key === 'action') {
-    tableColumns[tableColumns.length - 1] = {
-      ...tableColumns[tableColumns.length - 1],
-      render: (_: any, record: Expense) => renderActions(record),
-    }
-  }
+  // 定义可调整列宽的表格列
+  const resizableColumns: ResizableTableColumn<Expense>[] = [
+    {
+      id: 'companyName',
+      accessorKey: 'companyName',
+      header: '企业名称',
+      enableResizing: true,
+      size: 250,
+      minSize: 150,
+      fixed: 'left',
+      cell: ({ getValue }) => (
+        <EllipsisText text={(getValue() as string) || '-'} maxWidth={undefined} />
+      ),
+    },
+    {
+      id: 'totalFee',
+      accessorKey: 'totalFee',
+      header: '总计费用',
+      size: 120,
+      cell: ({ getValue }) => {
+        const value = getValue()
+        if (value === null || value === undefined) return '¥0.00'
+        const numValue = typeof value === 'string' ? parseFloat(value as string) : Number(value)
+        return !isNaN(numValue) ? `¥${numValue.toFixed(2)}` : '¥0.00'
+      },
+    },
+    {
+      id: 'businessType',
+      accessorKey: 'businessType',
+      header: '业务类型',
+      size: 140,
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={120} />,
+    },
+    {
+      id: 'socialInsuranceBusinessType',
+      accessorKey: 'socialInsuranceBusinessType',
+      header: '社保代理业务类型',
+      size: 180,
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={160} />,
+    },
+    {
+      id: 'agencyDateRange',
+      accessorFn: (row) => row,
+      header: '代理费起止日期',
+      size: 240,
+      cell: ({ getValue }) => {
+        const record = getValue() as Expense
+        const startDate = record.agencyStartDate
+        const endDate = record.agencyEndDate
+        if (!startDate || !endDate) return '-'
+        return (
+          <span style={{ whiteSpace: 'nowrap' }}>
+            {`${dayjs(startDate).format('YYYY-MM')} ~ ${dayjs(endDate).format('YYYY-MM')}`}
+          </span>
+        )
+      },
+    },
+    {
+      id: 'chargeDate',
+      accessorKey: 'chargeDate',
+      header: '收费日期',
+      size: 130,
+      cell: ({ getValue }) => {
+        const value = getValue() as string
+        return value ? dayjs(value).format('YYYY-MM-DD') : '-'
+      },
+    },
+    {
+      id: 'salesperson',
+      accessorKey: 'salesperson',
+      header: '业务员',
+      size: 110,
+      cell: ({ getValue }) => <EllipsisText text={(getValue() as string) || '-'} maxWidth={90} />,
+    },
+    {
+      id: 'status',
+      accessorKey: 'status',
+      header: '审核状态',
+      size: 110,
+      cell: ({ getValue }) => {
+        const status = getValue() as ExpenseStatus
+        return <Tag color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Tag>
+      },
+    },
+    {
+      id: 'createdAt',
+      accessorKey: 'createdAt',
+      header: '创建时间',
+      size: 200,
+      cell: ({ getValue }) => {
+        const value = getValue() as string
+        return value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-'
+      },
+    },
+    {
+      id: 'action',
+      accessorFn: (row) => row,
+      header: '操作',
+      size: 180,
+      fixed: 'right',
+      cell: ({ getValue }) => renderActions(getValue() as Expense),
+    },
+  ]
 
   return (
     <div className="expenses-page">
@@ -1336,21 +1382,31 @@ const Expenses: React.FC = () => {
       </div>
 
       <div>
-        <Table
-          columns={tableColumns}
+        <ResizableTable
+          columns={resizableColumns}
           dataSource={expenses}
           rowKey="id"
-          scroll={{ x: 1500 }}
           loading={loading || isSearching}
-          pagination={{
-            current: searchParams.page,
-            pageSize: searchParams.pageSize,
-            total: total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: total => `共 ${total} 条数据`,
-          }}
-          onChange={handleTableChange}
+          tableKey="expense-table"
+          scroll={{ x: 'max-content' }}
+          size="middle"
+          pagination={
+            <Pagination
+              current={searchParams.page}
+              pageSize={searchParams.pageSize}
+              total={total}
+              showSizeChanger
+              showQuickJumper
+              showTotal={total => `共 ${total} 条数据`}
+              onChange={(page, pageSize) => {
+                setSearchParams({
+                  ...searchParams,
+                  page,
+                  pageSize,
+                })
+              }}
+            />
+          }
         />
       </div>
 

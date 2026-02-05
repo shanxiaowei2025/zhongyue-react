@@ -174,6 +174,8 @@ export function ResizableTable<T extends Record<string, any>>({
         {`
           .resizable-table-container {
             position: relative;
+            width: fit-content;
+            max-width: 100%;
           }
           
           .resizable-header {
@@ -191,20 +193,24 @@ export function ResizableTable<T extends Record<string, any>>({
             position: relative;
             overflow-x: auto;
             max-width: 100%;
-            width: 100%;
+            width: fit-content;
+            margin-bottom: 0;
+          }
+          
+          /* ant-table-wrapper 也使用 fit-content */
+          .resizable-table-container .ant-table-wrapper {
+            width: fit-content;
+            max-width: 100%;
           }
           
           /* 确保表格有足够宽度触发滚动 */
           .resizable-table-container .ant-table {
-            min-width: 1200px;
+            min-width: max-content;
           }
           
           /* 分页容器 - 独立显示在右侧 */
           .pagination-container {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            z-index: 15;
+            position: relative;
             background: white;
             padding: 16px 0;
             display: flex;
