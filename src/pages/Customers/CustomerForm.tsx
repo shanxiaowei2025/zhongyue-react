@@ -1284,6 +1284,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
         startDate: dayjs().format('YYYY-MM-DD'),
         expiryDate: dayjs().format('YYYY-MM-DD'),
         images: {},
+        lastChargeAmount: '',
+        remarks: '',
       },
     ])
   }
@@ -2192,6 +2194,44 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, mode, onSuccess, 
                       }}
                       format="YYYY-MM-DD"
                       style={{ width: '100%' }}
+                    />
+                  )
+                },
+              },
+              {
+                title: '上次收费金额',
+                dataIndex: 'lastChargeAmount',
+                key: 'lastChargeAmount',
+                width: 200,
+                render: (text, record, index) => {
+                  if (mode === 'view') return text || '-'
+                  return (
+                    <Input
+                      value={text}
+                      onChange={e =>
+                        handleUpdateAdministrativeLicenseItem(index, 'lastChargeAmount', e.target.value)
+                      }
+                      placeholder="如：1000 或 执照➕小餐饮证1000"
+                      style={{ width: '100%' }}
+                    />
+                  )
+                },
+              },
+              {
+                title: '备注',
+                dataIndex: 'remarks',
+                key: 'remarks',
+                width: 200,
+                render: (text, record, index) => {
+                  if (mode === 'view') return text || '-'
+                  return (
+                    <Input.TextArea
+                      value={text}
+                      onChange={e =>
+                        handleUpdateAdministrativeLicenseItem(index, 'remarks', e.target.value)
+                      }
+                      placeholder="请输入备注"
+                      autoSize={{ minRows: 1, maxRows: 3 }}
                     />
                   )
                 },

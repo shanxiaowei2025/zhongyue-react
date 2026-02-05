@@ -352,6 +352,8 @@ export interface AdministrativeLicenseItem {
   startDate: string | null // 后端是Date类型或null，前端用string或null存储
   expiryDate: string | null // 后端是Date类型或null，前端用string或null存储
   images: Record<string, ImageType>
+  lastChargeAmount?: string // 上次收费金额（字符串类型，可能包含描述如"执照➕小餐饮证1000"）
+  remarks?: string // 备注
 }
 
 export interface ActualResponsibleItem {

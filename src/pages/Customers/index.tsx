@@ -2614,6 +2614,18 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
                 render: date => formatDate(date, false),
               },
               {
+                title: '上次收费金额',
+                dataIndex: 'lastChargeAmount',
+                key: 'lastChargeAmount',
+                render: text => text || '-',
+              },
+              {
+                title: '备注',
+                dataIndex: 'remarks',
+                key: 'remarks',
+                render: text => text || '-',
+              },
+              {
                 title: '附件',
                 dataIndex: 'images',
                 key: 'images',
