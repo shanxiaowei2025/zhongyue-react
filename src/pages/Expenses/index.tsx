@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Table,
   Button,
@@ -11,6 +11,7 @@ import {
   DatePicker,
   Tag,
   Tooltip,
+  AutoComplete,
 } from 'antd'
 import type { ColumnType, ColumnGroupType } from 'antd/es/table'
 import {
@@ -37,6 +38,7 @@ import ExpenseReceipt from './ExpenseReceipt'
 import AuditModal from './AuditModal'
 import { getAllBusinessOptions } from '../../utils/businessOptions'
 import { getBusinessOptions } from '../../api/businessOption'
+import { getCustomerSearchSuggestions } from '../../api/customer'
 import dayjs from 'dayjs'
 import './expenses.css'
 
@@ -270,6 +272,54 @@ const Expenses: React.FC = () => {
 
   // 动态业务选项（从数据库获取）
   const [businessInquiryOptions, setBusinessInquiryOptions] = useState<{ label: string; value: string }[]>([])
+
+  // 企业名称搜索建议相关状态
+  const [searchSuggestions, setSearchSuggestions] = useState<Array<{
+    value: string
+    label: React.ReactNode
+    id: number
+  }>>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  // 处理企业名称搜索建议
+  const handleSearchSuggestions = useCallback(async (value: string) => {
+    if (!value || value.trim().length < 2) {
+      setSearchSuggestions([])
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      const response = await getCustomerSearchSuggestions(value.trim(), 10)
+      
+      if (response.code === 0 && Array.isArray(response.data)) {
+        if (response.data.length > 0) {
+          const suggestions = response.data.map(item => ({
+            value: item.companyName,
+            label: (
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 500 }}>{item.companyName}</div>
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>
+                  {item.unifiedSocialCreditCode || '无统一社会信用代码'}
+                </div>
+              </div>
+            ),
+            id: item.id,
+          }))
+          setSearchSuggestions(suggestions)
+        } else {
+          setSearchSuggestions([])
+        }
+      } else {
+        setSearchSuggestions([])
+      }
+    } catch (error) {
+      console.error('获取搜索建议失败:', error)
+      setSearchSuggestions([])
+    } finally {
+      setSearchLoading(false)
+    }
+  }, [])
 
   // 加载所有业务选项（从数据库）
   const loadAllBusinessOptions = async () => {
@@ -604,6 +654,14 @@ const Expenses: React.FC = () => {
 
   // 创建防抖处理后的搜索函数
   const debouncedSearch = useDebounce(handleSearch, DEBOUNCE_DELAY)
+
+  // 处理选择搜索建议
+  const handleSelectSuggestion = useCallback((value: string) => {
+    form.setFieldValue('companyName', value)
+    // 直接触发防抖搜索
+    setIsSearching(true)
+    debouncedSearch()
+  }, [form, debouncedSearch])
 
   // 表单字段变化时的处理函数
   const handleFormFieldChange = () => {
@@ -1140,7 +1198,15 @@ const Expenses: React.FC = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full mb-4">
             <Form.Item name="companyName" label="企业名称" className="m-0 w-full">
-              <Input placeholder="输入企业名称" allowClear className="w-full" />
+              <AutoComplete
+                placeholder="输入企业名称关键词"
+                options={searchSuggestions}
+                onSearch={handleSearchSuggestions}
+                onSelect={handleSelectSuggestion}
+                allowClear
+                className="w-full"
+                notFoundContent={searchLoading ? '搜索中...' : '请输入至少2个字符'}
+              />
             </Form.Item>
 
             <Form.Item
