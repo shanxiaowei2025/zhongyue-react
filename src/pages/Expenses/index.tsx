@@ -801,7 +801,7 @@ const Expenses: React.FC = () => {
   }
 
   // 处理编辑费用
-  const handleEdit = async (record: Expense) => {
+  const handleEdit = useCallback(async (record: Expense) => {
     // 检查编辑权限
     if (!canEditExpense) {
       message.error('您没有编辑费用的权限')
@@ -821,10 +821,10 @@ const Expenses: React.FC = () => {
       console.error('获取费用详情失败:', error)
       // 错误处理由拦截器统一处理
     }
-  }
+  }, [canEditExpense])
 
   // 处理删除费用
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     // 检查删除权限
     if (!canDeleteExpense) {
       message.error('您没有删除费用的权限')
@@ -840,10 +840,10 @@ const Expenses: React.FC = () => {
       console.error('删除费用失败:', error)
       // 错误消息已经在removeExpense中处理，这里不需要重复显示
     }
-  }
+  }, [canDeleteExpense, removeExpense])
 
   // 处理查看收据
-  const handleViewReceipt = (id: number) => {
+  const handleViewReceipt = useCallback((id: number) => {
     // 检查查看收据权限
     if (!canViewReceipt) {
       message.error('您没有查看收据的权限')
@@ -852,16 +852,16 @@ const Expenses: React.FC = () => {
 
     setReceiptExpenseId(id)
     setReceiptVisible(true)
-  }
+  }, [canViewReceipt])
 
   // 处理预览收据
-  const handlePreviewReceipt = (id: number) => {
+  const handlePreviewReceipt = useCallback((id: number) => {
     setPreviewExpenseId(id)
     setPreviewVisible(true)
-  }
+  }, [])
 
   // 处理审核
-  const handleAudit = (record: Expense) => {
+  const handleAudit = useCallback((record: Expense) => {
     // 检查审核权限
     if (!canAuditExpense) {
       message.error('您没有审核费用的权限')
@@ -870,10 +870,10 @@ const Expenses: React.FC = () => {
 
     setExpenseToAudit(record)
     setAuditModalVisible(true)
-  }
+  }, [canAuditExpense])
 
   // 提交审核
-  const handleAuditSubmit = async (values: { status: ExpenseStatus; reason?: string }) => {
+  const handleAuditSubmit = useCallback(async (values: { status: ExpenseStatus; reason?: string }) => {
     try {
       // 检查审核权限
       if (!canAuditExpense) {
@@ -899,10 +899,10 @@ const Expenses: React.FC = () => {
       console.error('审核失败:', error)
       // 错误处理由拦截器统一处理
     }
-  }
+  }, [canAuditExpense, expenseToAudit, auditExpense])
 
   // 取消审核
-  const handleCancelAudit = async (record: Expense) => {
+  const handleCancelAudit = useCallback(async (record: Expense) => {
     try {
       // 检查取消审核权限
       if (!canCancelAuditExpense) {
@@ -917,7 +917,7 @@ const Expenses: React.FC = () => {
       console.error('取消审核失败:', error)
       // 错误处理由拦截器统一处理
     }
-  }
+  }, [canCancelAuditExpense, cancelAuditExpense, fetchExpenses])
 
   // 导出数据
   const handleExport = async () => {
@@ -995,188 +995,6 @@ const Expenses: React.FC = () => {
       message.destroy()
       console.error('导出错误:', error)
       message.error('导出失败，请联系管理员添加导出权限')
-    }
-  }
-
-  // 操作列渲染函数
-  const renderActions = (record: Expense) => {
-    // 根据审核状态显示不同的操作按钮
-    switch (record.status) {
-      case ExpenseStatus.Pending: // 未审核
-        return (
-          <Space size="small" className="action-buttons">
-            {/* 预览收据按钮 */}
-            <Tooltip title="预览收据">
-              <Button
-                type="link"
-                size="small"
-                icon={<FileSearchOutlined />}
-                className="preview-btn"
-                onClick={() => handlePreviewReceipt(record.id)}
-              />
-            </Tooltip>
-
-            {canEditExpense && (
-              <Tooltip title="编辑">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<EditOutlined />}
-                  className="edit-btn"
-                  onClick={() => handleEdit(record)}
-                />
-              </Tooltip>
-            )}
-            {canAuditExpense && (
-              <Tooltip title="审核">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<AuditOutlined />}
-                  onClick={() => handleAudit(record)}
-                />
-              </Tooltip>
-            )}
-            {canDeleteExpense && (
-              <Popconfirm
-                title="确定要删除吗?"
-                onConfirm={() => handleDelete(record.id)}
-                okText="确定"
-                cancelText="取消"
-              >
-                <Tooltip title="删除">
-                  <Button
-                    type="link"
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    className="delete-btn"
-                  />
-                </Tooltip>
-              </Popconfirm>
-            )}
-          </Space>
-        )
-
-      case ExpenseStatus.Approved: // 已审核通过
-        return (
-          <Space size="small" className="action-buttons">
-            {canViewReceipt && (
-              <Tooltip title="查看收据">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<EyeOutlined />}
-                  className="view-btn"
-                  onClick={() => handleViewReceipt(record.id)}
-                />
-              </Tooltip>
-            )}
-            {record.internalRemarks && (
-              <Tooltip
-                title={
-                  <div>
-                    内部备注：
-                    <br />
-                    {record.internalRemarks}
-                  </div>
-                }
-              >
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<MessageOutlined />}
-                  className="message-btn"
-                />
-              </Tooltip>
-            )}
-            {canCancelAuditExpense && (
-              <Tooltip title="取消审核">
-                <Button
-                  type="link"
-                  size="small"
-                  danger
-                  icon={<CloseOutlined />}
-                  onClick={() => handleCancelAudit(record)}
-                />
-              </Tooltip>
-            )}
-          </Space>
-        )
-
-      case ExpenseStatus.Rejected: // 已退回/拒绝
-        return (
-          <Space size="small" className="action-buttons">
-            {canEditExpense && (
-              <Tooltip title="编辑">
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<EditOutlined />}
-                  className="edit-btn"
-                  onClick={() => handleEdit(record)}
-                />
-              </Tooltip>
-            )}
-            <Popconfirm
-              title={
-                <div className="reject-reason-popup">
-                  <div className="reject-reason-header">
-                    <InfoCircleOutlined
-                      style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }}
-                    />
-                    <span style={{ fontWeight: 'bold', fontSize: '16px' }}>退回原因</span>
-                  </div>
-                  <div
-                    className="reject-reason-content"
-                    style={{
-                      margin: '12px 0',
-                      padding: '10px',
-                      background: '#f9f9f9',
-                      border: '1px solid #f0f0f0',
-                      borderRadius: '4px',
-                      minHeight: '60px',
-                      maxHeight: '200px',
-                      overflow: 'auto',
-                    }}
-                  >
-                    {record.rejectReason || '未提供退回原因'}
-                  </div>
-                </div>
-              }
-              okText="关闭"
-              cancelButtonProps={{ style: { display: 'none' } }}
-              okButtonProps={{ style: { backgroundColor: '#1890ff', borderColor: '#1890ff' } }}
-              overlayStyle={{ maxWidth: '400px' }}
-              icon={null}
-            >
-              <Tooltip title="退回原因">
-                <Button type="link" size="small" danger icon={<InfoCircleOutlined />} />
-              </Tooltip>
-            </Popconfirm>
-            {canDeleteExpense && (
-              <Popconfirm
-                title="确定要删除吗?"
-                onConfirm={() => handleDelete(record.id)}
-                okText="确定"
-                cancelText="取消"
-              >
-                <Tooltip title="删除">
-                  <Button
-                    type="link"
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    className="delete-btn"
-                  />
-                </Tooltip>
-              </Popconfirm>
-            )}
-          </Space>
-        )
-
-      default:
-        return null
     }
   }
 
@@ -1280,7 +1098,187 @@ const Expenses: React.FC = () => {
       header: '操作',
       size: 180,
       fixed: 'right',
-      cell: ({ getValue }) => renderActions(getValue() as Expense),
+      cell: ({ row }) => {
+        const record = row.original
+        // 根据审核状态显示不同的操作按钮
+        switch (record.status) {
+          case ExpenseStatus.Pending: // 未审核
+            return (
+              <Space size="small" className="action-buttons">
+                {/* 预览收据按钮 */}
+                <Tooltip title="预览收据">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<FileSearchOutlined />}
+                    className="preview-btn"
+                    onClick={() => handlePreviewReceipt(record.id)}
+                  />
+                </Tooltip>
+
+                {canEditExpense && (
+                  <Tooltip title="编辑">
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EditOutlined />}
+                      className="edit-btn"
+                      onClick={() => handleEdit(record)}
+                    />
+                  </Tooltip>
+                )}
+                {canAuditExpense && (
+                  <Tooltip title="审核">
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<AuditOutlined />}
+                      onClick={() => handleAudit(record)}
+                    />
+                  </Tooltip>
+                )}
+                {canDeleteExpense && (
+                  <Tooltip title="删除">
+                    <Popconfirm
+                      title="确定要删除吗?"
+                      onConfirm={() => handleDelete(record.id)}
+                      okText="确定"
+                      cancelText="取消"
+                    >
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        className="delete-btn"
+                      />
+                    </Popconfirm>
+                  </Tooltip>
+                )}
+              </Space>
+            )
+
+          case ExpenseStatus.Approved: // 已审核通过
+            return (
+              <Space size="small" className="action-buttons">
+                {canViewReceipt && (
+                  <Tooltip title="查看收据">
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      className="view-btn"
+                      onClick={() => handleViewReceipt(record.id)}
+                    />
+                  </Tooltip>
+                )}
+                {record.internalRemarks && (
+                  <Tooltip
+                    title={
+                      <div>
+                        内部备注：
+                        <br />
+                        {record.internalRemarks}
+                      </div>
+                    }
+                  >
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<MessageOutlined />}
+                      className="message-btn"
+                    />
+                  </Tooltip>
+                )}
+                {canCancelAuditExpense && (
+                  <Tooltip title="取消审核">
+                    <Button
+                      type="link"
+                      size="small"
+                      danger
+                      icon={<CloseOutlined />}
+                      onClick={() => handleCancelAudit(record)}
+                    />
+                  </Tooltip>
+                )}
+              </Space>
+            )
+
+          case ExpenseStatus.Rejected: // 已退回/拒绝
+            return (
+              <Space size="small" className="action-buttons">
+                {canEditExpense && (
+                  <Tooltip title="编辑">
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EditOutlined />}
+                      className="edit-btn"
+                      onClick={() => handleEdit(record)}
+                    />
+                  </Tooltip>
+                )}
+                <Tooltip title="退回原因">
+                  <Popconfirm
+                    title={
+                      <div className="reject-reason-popup">
+                        <div className="reject-reason-header">
+                          <InfoCircleOutlined
+                            style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }}
+                          />
+                          <span style={{ fontWeight: 'bold', fontSize: '16px' }}>退回原因</span>
+                        </div>
+                        <div
+                          className="reject-reason-content"
+                          style={{
+                            margin: '12px 0',
+                            padding: '10px',
+                            background: '#f9f9f9',
+                            border: '1px solid #f0f0f0',
+                            borderRadius: '4px',
+                            minHeight: '60px',
+                            maxHeight: '200px',
+                            overflow: 'auto',
+                          }}
+                        >
+                          {record.rejectReason || '未提供退回原因'}
+                        </div>
+                      </div>
+                    }
+                    okText="关闭"
+                    cancelButtonProps={{ style: { display: 'none' } }}
+                    okButtonProps={{ style: { backgroundColor: '#1890ff', borderColor: '#1890ff' } }}
+                    overlayStyle={{ maxWidth: '400px' }}
+                    icon={null}
+                  >
+                    <Button type="link" size="small" danger icon={<InfoCircleOutlined />} />
+                  </Popconfirm>
+                </Tooltip>
+                {canDeleteExpense && (
+                  <Tooltip title="删除">
+                    <Popconfirm
+                      title="确定要删除吗?"
+                      onConfirm={() => handleDelete(record.id)}
+                      okText="确定"
+                      cancelText="取消"
+                    >
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        className="delete-btn"
+                      />
+                    </Popconfirm>
+                  </Tooltip>
+                )}
+              </Space>
+            )
+
+          default:
+            return null
+        }
+      },
     },
   ]
 

@@ -45,6 +45,30 @@
   color: #9254de;
 }
 
+/* 修复按钮边框闪烁问题 */
+.action-buttons .ant-btn-link {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.action-buttons .ant-btn-link:hover,
+.action-buttons .ant-btn-link:focus,
+.action-buttons .ant-btn-link:active {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 确保tooltip能正常显示 */
+.action-buttons .ant-tooltip {
+  z-index: 1050;
+}
+
+.action-buttons .ant-popconfirm {
+  z-index: 1060;
+}
+
 /* 关联合同链接样式 */
 .related-contract-link {
   color: inherit !important;

@@ -234,48 +234,75 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ visible, mode, expense, onCan
 
         const response = await getMaxDatesForAutoFill(params)
 
+        console.log('=== 自动填充日期响应 ===')
+        console.log('完整响应:', response)
+        console.log('response.code:', response.code)
+        console.log('response.data:', response.data)
+        console.log('response.data?.dates:', response.data?.dates)
+
         if (response.code === 0 && response.data?.dates) {
           const dates = response.data.dates
+          console.log('提取的 dates 对象:', dates)
           setAutoFillDates(dates)
 
           // 只有在创建模式下才自动填写日期字段
           if (mode === 'add') {
+            console.log('当前模式为创建模式，开始自动填充日期字段')
             // 自动填写有值的日期字段
             const fieldsToUpdate: Partial<FormData> = {}
 
             if (dates.agencyStartDate) {
+              console.log('填充 agencyStartDate:', dates.agencyStartDate)
               fieldsToUpdate.agencyStartDate = dayjs(dates.agencyStartDate)
             }
             if (dates.accountingSoftwareStartDate) {
+              console.log('填充 accountingSoftwareStartDate:', dates.accountingSoftwareStartDate)
               fieldsToUpdate.accountingSoftwareStartDate = dayjs(dates.accountingSoftwareStartDate)
             }
             if (dates.invoiceSoftwareStartDate) {
+              console.log('填充 invoiceSoftwareStartDate:', dates.invoiceSoftwareStartDate)
               fieldsToUpdate.invoiceSoftwareStartDate = dayjs(dates.invoiceSoftwareStartDate)
             }
             if (dates.socialInsuranceStartDate) {
+              console.log('填充 socialInsuranceStartDate:', dates.socialInsuranceStartDate)
               fieldsToUpdate.socialInsuranceStartDate = dayjs(dates.socialInsuranceStartDate)
             }
             if (dates.housingFundStartDate) {
+              console.log('填充 housingFundStartDate:', dates.housingFundStartDate)
               fieldsToUpdate.housingFundStartDate = dayjs(dates.housingFundStartDate)
             }
             if (dates.statisticalStartDate) {
+              console.log('填充 statisticalStartDate:', dates.statisticalStartDate)
               fieldsToUpdate.statisticalStartDate = dayjs(dates.statisticalStartDate)
             }
             if (dates.organizationStartDate) {
+              console.log('填充 organizationStartDate:', dates.organizationStartDate)
               fieldsToUpdate.organizationStartDate = dayjs(dates.organizationStartDate)
             }
             if (dates.addressStartDate) {
+              console.log('填充 addressStartDate:', dates.addressStartDate)
               fieldsToUpdate.addressStartDate = dayjs(dates.addressStartDate)
             }
             if (dates.onlineBankingCustodyStartDate) {
+              console.log('填充 onlineBankingCustodyStartDate:', dates.onlineBankingCustodyStartDate)
               fieldsToUpdate.onlineBankingCustodyStartDate = dayjs(dates.onlineBankingCustodyStartDate)
             }
 
             // 批量更新表单字段
             if (Object.keys(fieldsToUpdate).length > 0) {
+              console.log('准备更新的字段:', fieldsToUpdate)
               form.setFieldsValue(fieldsToUpdate)
+              console.log('字段更新完成')
+            } else {
+              console.log('没有需要更新的字段')
             }
+          } else {
+            console.log('当前模式为编辑模式，不自动填充日期')
           }
+        } else {
+          console.log('响应格式不正确或没有 dates 数据')
+          console.log('response.code:', response.code)
+          console.log('response.data:', response.data)
         }
       } catch (error) {
         // 静默处理错误，不显示错误消息
