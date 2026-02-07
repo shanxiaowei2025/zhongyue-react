@@ -45,19 +45,24 @@
   color: #9254de;
 }
 
-/* 修复按钮边框闪烁问题 */
+/* 操作按钮样式优化 - 移除边框闪烁 */
 .action-buttons .ant-btn-link {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+  padding: 4px 8px;
+  height: auto;
+  line-height: 1;
+  border: 1px solid transparent !important;
+  transition: background-color 0.2s ease;
 }
 
 .action-buttons .ant-btn-link:hover,
-.action-buttons .ant-btn-link:focus,
-.action-buttons .ant-btn-link:active {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+.action-buttons .ant-btn-link:focus {
+  background-color: rgba(0, 0, 0, 0.04);
+  border: 1px solid transparent !important;
+}
+
+/* 防止图标闪烁 */
+.action-buttons .ant-btn-link .anticon {
+  transition: none;
 }
 
 /* 确保tooltip能正常显示 */
