@@ -210,6 +210,7 @@ export interface ExpenseQueryParams {
   auditDateEnd?: string
   agencyEndDateStart?: string // 代理费结束日期开始（年月格式：YYYY-MM）
   agencyEndDateEnd?: string // 代理费结束日期结束（年月格式：YYYY-MM）
+  skipPermission?: string // 跳过权限过滤（用于客户详情中的费用记录展示）
 }
 
 // 费用审核DTO

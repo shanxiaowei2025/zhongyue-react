@@ -14,11 +14,12 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ customerId, companyName
   const [currentExpenseId, setCurrentExpenseId] = useState<number | null>(null)
   const [expenseDetailVisible, setExpenseDetailVisible] = useState(false)
 
-  // 获取费用记录，使用 companyName 进行过滤
+  // 获取费用记录，使用 companyName 进行过滤，跳过权限控制
   const { expenses, total: expensesTotal, isLoading: expensesLoading } = useExpenseList({
     page: 1,
     pageSize: 10,
     companyName: companyName,
+    skipPermission: 'true',
   })
 
   const handleViewExpense = (expenseId: number) => {

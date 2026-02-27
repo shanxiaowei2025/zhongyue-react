@@ -13,6 +13,7 @@ import {
   Tooltip,
   AutoComplete,
   Pagination,
+  Modal,
 } from 'antd'
 import type { ColumnType, ColumnGroupType } from 'antd/es/table'
 import {
@@ -454,6 +455,10 @@ const Expenses: React.FC = () => {
     page: Number(savedState.page) || 1,
     pageSize: Number(savedState.pageSize) || 10,
   })
+
+  // 退回原因弹窗状态
+  const [rejectReasonVisible, setRejectReasonVisible] = useState(false)
+  const [rejectReasonText, setRejectReasonText] = useState('')
 
   // 费用详情状态
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
@@ -1105,55 +1110,46 @@ const Expenses: React.FC = () => {
           case ExpenseStatus.Pending: // 未审核
             return (
               <Space size="small" className="action-buttons">
-                {/* 预览收据按钮 */}
-                <Tooltip title="预览收据">
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<FileSearchOutlined />}
+                  className="preview-btn"
+                  onClick={() => handlePreviewReceipt(record.id)}
+                />
+
+                {canEditExpense && (
                   <Button
                     type="link"
                     size="small"
-                    icon={<FileSearchOutlined />}
-                    className="preview-btn"
-                    onClick={() => handlePreviewReceipt(record.id)}
+                    icon={<EditOutlined />}
+                    className="edit-btn"
+                    onClick={() => handleEdit(record)}
                   />
-                </Tooltip>
-
-                {canEditExpense && (
-                  <Tooltip title="编辑">
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<EditOutlined />}
-                      className="edit-btn"
-                      onClick={() => handleEdit(record)}
-                    />
-                  </Tooltip>
                 )}
                 {canAuditExpense && (
-                  <Tooltip title="审核">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<AuditOutlined />}
+                    onClick={() => handleAudit(record)}
+                  />
+                )}
+                {canDeleteExpense && (
+                  <Popconfirm
+                    title="确定要删除吗?"
+                    onConfirm={() => handleDelete(record.id)}
+                    okText="确定"
+                    cancelText="取消"
+                  >
                     <Button
                       type="link"
                       size="small"
-                      icon={<AuditOutlined />}
-                      onClick={() => handleAudit(record)}
+                      danger
+                      icon={<DeleteOutlined />}
+                      className="delete-btn"
                     />
-                  </Tooltip>
-                )}
-                {canDeleteExpense && (
-                  <Tooltip title="删除">
-                    <Popconfirm
-                      title="确定要删除吗?"
-                      onConfirm={() => handleDelete(record.id)}
-                      okText="确定"
-                      cancelText="取消"
-                    >
-                      <Button
-                        type="link"
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        className="delete-btn"
-                      />
-                    </Popconfirm>
-                  </Tooltip>
+                  </Popconfirm>
                 )}
               </Space>
             )
@@ -1162,15 +1158,13 @@ const Expenses: React.FC = () => {
             return (
               <Space size="small" className="action-buttons">
                 {canViewReceipt && (
-                  <Tooltip title="查看收据">
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<EyeOutlined />}
-                      className="view-btn"
-                      onClick={() => handleViewReceipt(record.id)}
-                    />
-                  </Tooltip>
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    className="view-btn"
+                    onClick={() => handleViewReceipt(record.id)}
+                  />
                 )}
                 {record.internalRemarks && (
                   <Tooltip
@@ -1191,15 +1185,13 @@ const Expenses: React.FC = () => {
                   </Tooltip>
                 )}
                 {canCancelAuditExpense && (
-                  <Tooltip title="取消审核">
-                    <Button
-                      type="link"
-                      size="small"
-                      danger
-                      icon={<CloseOutlined />}
-                      onClick={() => handleCancelAudit(record)}
-                    />
-                  </Tooltip>
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    icon={<CloseOutlined />}
+                    onClick={() => handleCancelAudit(record)}
+                  />
                 )}
               </Space>
             )
@@ -1208,69 +1200,39 @@ const Expenses: React.FC = () => {
             return (
               <Space size="small" className="action-buttons">
                 {canEditExpense && (
-                  <Tooltip title="编辑">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EditOutlined />}
+                    className="edit-btn"
+                    onClick={() => handleEdit(record)}
+                  />
+                )}
+                <Button
+                  type="link"
+                  size="small"
+                  danger
+                  icon={<InfoCircleOutlined />}
+                  onClick={() => {
+                    setRejectReasonText(record.rejectReason || '未提供退回原因')
+                    setRejectReasonVisible(true)
+                  }}
+                />
+                {canDeleteExpense && (
+                  <Popconfirm
+                    title="确定要删除吗?"
+                    onConfirm={() => handleDelete(record.id)}
+                    okText="确定"
+                    cancelText="取消"
+                  >
                     <Button
                       type="link"
                       size="small"
-                      icon={<EditOutlined />}
-                      className="edit-btn"
-                      onClick={() => handleEdit(record)}
+                      danger
+                      icon={<DeleteOutlined />}
+                      className="delete-btn"
                     />
-                  </Tooltip>
-                )}
-                <Tooltip title="退回原因">
-                  <Popconfirm
-                    title={
-                      <div className="reject-reason-popup">
-                        <div className="reject-reason-header">
-                          <InfoCircleOutlined
-                            style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }}
-                          />
-                          <span style={{ fontWeight: 'bold', fontSize: '16px' }}>退回原因</span>
-                        </div>
-                        <div
-                          className="reject-reason-content"
-                          style={{
-                            margin: '12px 0',
-                            padding: '10px',
-                            background: '#f9f9f9',
-                            border: '1px solid #f0f0f0',
-                            borderRadius: '4px',
-                            minHeight: '60px',
-                            maxHeight: '200px',
-                            overflow: 'auto',
-                          }}
-                        >
-                          {record.rejectReason || '未提供退回原因'}
-                        </div>
-                      </div>
-                    }
-                    okText="关闭"
-                    cancelButtonProps={{ style: { display: 'none' } }}
-                    okButtonProps={{ style: { backgroundColor: '#1890ff', borderColor: '#1890ff' } }}
-                    overlayStyle={{ maxWidth: '400px' }}
-                    icon={null}
-                  >
-                    <Button type="link" size="small" danger icon={<InfoCircleOutlined />} />
                   </Popconfirm>
-                </Tooltip>
-                {canDeleteExpense && (
-                  <Tooltip title="删除">
-                    <Popconfirm
-                      title="确定要删除吗?"
-                      onConfirm={() => handleDelete(record.id)}
-                      okText="确定"
-                      cancelText="取消"
-                    >
-                      <Button
-                        type="link"
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        className="delete-btn"
-                      />
-                    </Popconfirm>
-                  </Tooltip>
                 )}
               </Space>
             )
@@ -1514,6 +1476,44 @@ const Expenses: React.FC = () => {
         onClose={() => setAuditModalVisible(false)}
         onConfirm={handleAuditSubmit}
       />
+
+      {/* 退回原因弹窗 */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <InfoCircleOutlined style={{ color: '#FF4D4F', fontSize: '18px', marginRight: '8px' }} />
+            <span>退回原因</span>
+          </div>
+        }
+        open={rejectReasonVisible}
+        onCancel={() => setRejectReasonVisible(false)}
+        footer={
+          <Button type="primary" onClick={() => setRejectReasonVisible(false)}>
+            关闭
+          </Button>
+        }
+        width={480}
+      >
+        <div
+          style={{
+            margin: '12px 0',
+            padding: '12px',
+            background: '#f9f9f9',
+            border: '1px solid #f0f0f0',
+            borderRadius: '4px',
+            minHeight: '60px',
+            maxHeight: '300px',
+            overflow: 'auto',
+            fontSize: '14px',
+            lineHeight: 1.6,
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
+            color: '#595959',
+          }}
+        >
+          {rejectReasonText}
+        </div>
+      </Modal>
     </div>
   )
 }
