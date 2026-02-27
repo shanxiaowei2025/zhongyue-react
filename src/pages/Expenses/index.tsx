@@ -1113,6 +1113,7 @@ const Expenses: React.FC = () => {
                 <Button
                   type="link"
                   size="small"
+                  title="预览收据"
                   icon={<FileSearchOutlined />}
                   className="preview-btn"
                   onClick={() => handlePreviewReceipt(record.id)}
@@ -1122,6 +1123,7 @@ const Expenses: React.FC = () => {
                   <Button
                     type="link"
                     size="small"
+                    title="编辑"
                     icon={<EditOutlined />}
                     className="edit-btn"
                     onClick={() => handleEdit(record)}
@@ -1131,6 +1133,7 @@ const Expenses: React.FC = () => {
                   <Button
                     type="link"
                     size="small"
+                    title="审核"
                     icon={<AuditOutlined />}
                     onClick={() => handleAudit(record)}
                   />
@@ -1145,6 +1148,7 @@ const Expenses: React.FC = () => {
                     <Button
                       type="link"
                       size="small"
+                      title="删除"
                       danger
                       icon={<DeleteOutlined />}
                       className="delete-btn"
@@ -1161,33 +1165,26 @@ const Expenses: React.FC = () => {
                   <Button
                     type="link"
                     size="small"
+                    title="查看收据"
                     icon={<EyeOutlined />}
                     className="view-btn"
                     onClick={() => handleViewReceipt(record.id)}
                   />
                 )}
                 {record.internalRemarks && (
-                  <Tooltip
-                    title={
-                      <div>
-                        内部备注：
-                        <br />
-                        {record.internalRemarks}
-                      </div>
-                    }
-                  >
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<MessageOutlined />}
-                      className="message-btn"
-                    />
-                  </Tooltip>
+                  <Button
+                    type="link"
+                    size="small"
+                    title={`内部备注：${record.internalRemarks}`}
+                    icon={<MessageOutlined />}
+                    className="message-btn"
+                  />
                 )}
                 {canCancelAuditExpense && (
                   <Button
                     type="link"
                     size="small"
+                    title="取消审核"
                     danger
                     icon={<CloseOutlined />}
                     onClick={() => handleCancelAudit(record)}
@@ -1203,6 +1200,7 @@ const Expenses: React.FC = () => {
                   <Button
                     type="link"
                     size="small"
+                    title="编辑"
                     icon={<EditOutlined />}
                     className="edit-btn"
                     onClick={() => handleEdit(record)}
@@ -1211,6 +1209,7 @@ const Expenses: React.FC = () => {
                 <Button
                   type="link"
                   size="small"
+                  title="查看退回原因"
                   danger
                   icon={<InfoCircleOutlined />}
                   onClick={() => {
@@ -1228,6 +1227,7 @@ const Expenses: React.FC = () => {
                     <Button
                       type="link"
                       size="small"
+                      title="删除"
                       danger
                       icon={<DeleteOutlined />}
                       className="delete-btn"
