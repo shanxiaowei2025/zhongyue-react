@@ -459,6 +459,10 @@ const Expenses: React.FC = () => {
   const [rejectReasonVisible, setRejectReasonVisible] = useState(false)
   const [rejectReasonText, setRejectReasonText] = useState('')
 
+  // 内部备注弹窗状态
+  const [internalRemarksVisible, setInternalRemarksVisible] = useState(false)
+  const [internalRemarksText, setInternalRemarksText] = useState('')
+
   // 费用详情状态
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
   const [formVisible, setFormVisible] = useState(false)
@@ -1173,9 +1177,13 @@ const Expenses: React.FC = () => {
                   <Button
                     type="link"
                     size="small"
-                    title={`内部备注：${record.internalRemarks}`}
+                    title="查看内部备注"
                     icon={<MessageOutlined />}
                     className="message-btn"
+                    onClick={() => {
+                      setInternalRemarksText(record.internalRemarks || '无备注')
+                      setInternalRemarksVisible(true)
+                    }}
                   />
                 )}
                 {canCancelAuditExpense && (
@@ -1503,6 +1511,44 @@ const Expenses: React.FC = () => {
           }}
         >
           {rejectReasonText}
+        </div>
+      </Modal>
+
+      {/* 内部备注弹窗 */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <MessageOutlined style={{ color: '#1890FF', fontSize: '18px', marginRight: '8px' }} />
+            <span>内部备注</span>
+          </div>
+        }
+        open={internalRemarksVisible}
+        onCancel={() => setInternalRemarksVisible(false)}
+        footer={
+          <Button type="primary" onClick={() => setInternalRemarksVisible(false)}>
+            关闭
+          </Button>
+        }
+        width={480}
+      >
+        <div
+          style={{
+            margin: '12px 0',
+            padding: '12px',
+            background: '#f9f9f9',
+            border: '1px solid #f0f0f0',
+            borderRadius: '4px',
+            minHeight: '60px',
+            maxHeight: '300px',
+            overflow: 'auto',
+            fontSize: '14px',
+            lineHeight: 1.6,
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
+            color: '#595959',
+          }}
+        >
+          {internalRemarksText}
         </div>
       </Modal>
     </div>
