@@ -7,7 +7,6 @@ import {
   Select,
   Form,
   message,
-  Popconfirm,
   DatePicker,
   Tag,
   Tooltip,
@@ -829,22 +828,28 @@ const Expenses: React.FC = () => {
   }, [canEditExpense])
 
   // 处理删除费用
-  const handleDelete = useCallback(async (id: number) => {
+  const handleDelete = useCallback((id: number) => {
     // 检查删除权限
     if (!canDeleteExpense) {
       message.error('您没有删除费用的权限')
       return
     }
 
-    try {
-      // 使用removeExpense函数代替直接调用API
-      // 这样可以避免显示两次成功消息
-      await removeExpense(id)
-      // 不再需要单独刷新列表，因为removeExpense会自动刷新
-    } catch (error) {
-      console.error('删除费用失败:', error)
-      // 错误消息已经在removeExpense中处理，这里不需要重复显示
-    }
+    Modal.confirm({
+      title: '确认删除',
+      content: '确定要删除这条费用记录吗？删除后将无法恢复。',
+      okText: '确定',
+      cancelText: '取消',
+      okType: 'danger',
+      centered: true,
+      onOk: async () => {
+        try {
+          await removeExpense(id)
+        } catch (error) {
+          console.error('删除费用失败:', error)
+        }
+      },
+    })
   }, [canDeleteExpense, removeExpense])
 
   // 处理查看收据
@@ -1139,21 +1144,14 @@ const Expenses: React.FC = () => {
                   />
                 )}
                 {canDeleteExpense && (
-                  <Popconfirm
-                    title="确定要删除吗?"
-                    onConfirm={() => handleDelete(record.id)}
-                    okText="确定"
-                    cancelText="取消"
-                  >
-                    <Button
-                      type="link"
-                      size="small"
-                      title="删除"
-                      danger
-                      icon={<DeleteOutlined />}
-                      className="delete-btn"
-                    />
-                  </Popconfirm>
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    className="delete-btn"
+                    onClick={() => handleDelete(record.id)}
+                  />
                 )}
               </Space>
             )
@@ -1218,21 +1216,14 @@ const Expenses: React.FC = () => {
                   }}
                 />
                 {canDeleteExpense && (
-                  <Popconfirm
-                    title="确定要删除吗?"
-                    onConfirm={() => handleDelete(record.id)}
-                    okText="确定"
-                    cancelText="取消"
-                  >
-                    <Button
-                      type="link"
-                      size="small"
-                      title="删除"
-                      danger
-                      icon={<DeleteOutlined />}
-                      className="delete-btn"
-                    />
-                  </Popconfirm>
+                  <Button
+                    type="link"
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    className="delete-btn"
+                    onClick={() => handleDelete(record.id)}
+                  />
                 )}
               </Space>
             )
