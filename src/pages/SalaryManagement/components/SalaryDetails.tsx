@@ -43,6 +43,7 @@ const payrollCompanyOptions = [
   { label: '中岳会计', value: '中岳会计' },
   { label: '雄安分公司', value: '雄安分公司' },
   { label: '高碑店分公司', value: '高碑店分公司' },
+  { label: '中垦', value: '中垦' },
   { label: '金盾', value: '金盾' },
   { label: '如你心意', value: '如你心意' },
   { label: '脉信', value: '脉信' },
