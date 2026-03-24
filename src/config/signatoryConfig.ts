@@ -41,6 +41,7 @@ export const AGENCY_SIGNATORY_CONFIG: Record<string, SignatoryConfig> = {
     phone: '13831247565',
     footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
     creditCode: '91130626MADR9GRR0G',
+    legalPerson: '张意茹',
   },
 }
 

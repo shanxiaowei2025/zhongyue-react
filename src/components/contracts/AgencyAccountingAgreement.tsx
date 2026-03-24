@@ -74,6 +74,10 @@ const AgencyAccountingAgreement = forwardRef<
 >(({ signatory, contractData = {}, onSubmit, onUpdate, mode = 'create' }, ref) => {
   // 获取当前签约方配置
   const config = getAgencySignatoryConfig(signatory)
+  const defaultPartyBLegalPerson = config?.legalPerson || '刘菲'
+  const isCurrentSignatoryCache = contractData.signatory === signatory
+  const cachedPartyBLegalPerson =
+    typeof contractData.partyBLegalPerson === 'string' ? contractData.partyBLegalPerson.trim() : ''
 
   // 调试信息：检查配置获取是否正确
   useEffect(() => {
@@ -92,8 +96,12 @@ const AgencyAccountingAgreement = forwardRef<
   const [createModeFormData, setCreateModeFormData] = useState<Record<string, any>>({
     signatory,
     contractType: '代理记账合同',
-    partyBLegalPerson: '刘菲',
     ...contractData,
+    // 仅在缓存属于当前签约方时沿用缓存值，避免跨公司串值
+    partyBLegalPerson:
+      isCurrentSignatoryCache && cachedPartyBLegalPerson
+        ? contractData.partyBLegalPerson
+        : defaultPartyBLegalPerson,
   })
 
   // 当签署方配置变化时，更新创建模式的默认地址和电话
@@ -104,11 +112,13 @@ const AgencyAccountingAgreement = forwardRef<
         signatory,
         partyBAddress: config.address,
         partyBPhone: config.phone,
+        partyBLegalPerson: defaultPartyBLegalPerson,
       }))
       console.log('🔄 [代理记账合同] 更新签署方默认信息:', {
         signatory,
         address: config.address,
         phone: config.phone,
+        legalPerson: defaultPartyBLegalPerson,
       })
 
       // 根据默认乙方地址自动填写邮政编码
@@ -122,7 +132,7 @@ const AgencyAccountingAgreement = forwardRef<
         console.log(`🔄 [代理记账合同] 根据默认乙方地址自动填写邮政编码: ${defaultPostalCode}`)
       }
     }
-  }, [signatory, config, mode])
+  }, [signatory, config, mode, defaultPartyBLegalPerson])
 
   // 根据模式选择使用的表单数据
   const formData =
@@ -135,7 +145,7 @@ const AgencyAccountingAgreement = forwardRef<
           ...(config && {
             partyBAddress: config.address,
             partyBPhone: config.phone,
-            partyBLegalPerson: '刘菲',
+            partyBLegalPerson: defaultPartyBLegalPerson,
           }),
           // 然后用API数据覆盖默认值（确保API数据优先）
           ...contractData,
@@ -292,10 +302,22 @@ const AgencyAccountingAgreement = forwardRef<
             partyBPhone: config.phone,
           }),
           ...contractData,
+          partyBLegalPerson:
+            isCurrentSignatoryCache && cachedPartyBLegalPerson
+              ? contractData.partyBLegalPerson
+              : defaultPartyBLegalPerson,
         }))
       }
     }
-  }, [contractData, signatory, mode, config])
+  }, [
+    contractData,
+    signatory,
+    mode,
+    config,
+    defaultPartyBLegalPerson,
+    isCurrentSignatoryCache,
+    cachedPartyBLegalPerson,
+  ])
 
   // 自动获取委托日期
   useEffect(() => {
@@ -626,12 +648,12 @@ const AgencyAccountingAgreement = forwardRef<
       return false
     }
 
-    // 乙方法定代表人有默认值 '刘菲'
-    const partyBLegalPerson = formData.partyBLegalPerson || '刘菲'
+    // 乙方法定代表人有签署方默认值
+    const partyBLegalPerson = formData.partyBLegalPerson || defaultPartyBLegalPerson
     if (!partyBLegalPerson || !partyBLegalPerson.trim()) {
       console.error('❌ [代理记账合同] 乙方法定代表人验证失败:', {
         formData: formData.partyBLegalPerson,
-        defaultValue: '刘菲',
+        defaultValue: defaultPartyBLegalPerson,
         finalValue: partyBLegalPerson,
       })
       message.error('请填写乙方法定代表人')
@@ -675,8 +697,8 @@ const AgencyAccountingAgreement = forwardRef<
     }
 
     if (!formData.partyBLegalPerson) {
-      console.log('🔄 [代理记账合同] 同步乙方法定代表人默认值: 刘菲')
-      handleFormChange('partyBLegalPerson', '刘菲')
+      console.log(`🔄 [代理记账合同] 同步乙方法定代表人默认值: ${defaultPartyBLegalPerson}`)
+      handleFormChange('partyBLegalPerson', defaultPartyBLegalPerson)
     }
 
     console.log('✅ [代理记账合同] 表单验证通过，数据同步完成')
@@ -738,7 +760,7 @@ const AgencyAccountingAgreement = forwardRef<
         partyBCompany: config?.title || '',
         partyBAddress: formData.partyBAddress || config?.address || '',
         partyBCreditCode: config?.creditCode || '',
-        partyBLegalPerson: formData.partyBLegalPerson || '刘菲',
+        partyBLegalPerson: formData.partyBLegalPerson || defaultPartyBLegalPerson,
       }
 
       if (mode === 'create' && onSubmit) {
@@ -783,7 +805,7 @@ const AgencyAccountingAgreement = forwardRef<
       partyBPhone: formData.partyBPhone || config.phone || '',
       partyBContact: formData.partyBContact || '',
       partyBPostalCode: formData.partyBPostalCode || '', // 乙方邮编字段
-      partyBLegalPerson: formData.partyBLegalPerson || '刘菲', // 乙方法定代表人（默认值）
+      partyBLegalPerson: formData.partyBLegalPerson || defaultPartyBLegalPerson, // 乙方法定代表人（默认值）
 
       // 委托期间
       entrustmentStartDate: formData.entrustmentStartDate || '',
@@ -1322,7 +1344,7 @@ const AgencyAccountingAgreement = forwardRef<
                 <div className={styles.signatureLabel}>法定代表人：</div>
                 <Input
                   placeholder="*请输入法定代表人"
-                  value={formData.partyBLegalPerson || '刘菲'}
+                  value={formData.partyBLegalPerson || defaultPartyBLegalPerson}
                   onChange={e => handleFormChange('partyBLegalPerson', e.target.value)}
                   style={{ width: '100%', fontSize: '12px' }}
                 />

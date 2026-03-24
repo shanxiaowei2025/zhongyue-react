@@ -443,7 +443,7 @@ const AgencyAccountingAgreementView: React.FC<AgencyAccountingAgreementViewProps
             <div className={styles.signatureInfoColumn}>
               <div className={styles.signatureField}>
                 <div className={styles.signatureLabel}>法定代表人：</div>
-                <span>{partyBLegalPerson || '刘菲'}</span>
+                <span>{partyBLegalPerson || config.legalPerson || '刘菲'}</span>
               </div>
             </div>
           </div>

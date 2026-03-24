@@ -1354,7 +1354,7 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
             <View style={styles.signatureInfoColumn}>
               <View style={styles.signatureField}>
                 <Text style={styles.signatureLabel}>法定代表人：</Text>
-                <Text>{contractData.partyBLegalPerson || '刘菲'}</Text>
+                <Text>{contractData.partyBLegalPerson || config.legalPerson || '刘菲'}</Text>
               </View>
             </View>
           </View>

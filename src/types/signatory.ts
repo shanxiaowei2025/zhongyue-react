@@ -5,6 +5,7 @@ export interface SignatoryConfig {
   phone: string
   footer: string
   creditCode: string
+  legalPerson?: string
 }
 
 export interface SignatoryStampConfig {
