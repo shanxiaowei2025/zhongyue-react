@@ -23,9 +23,10 @@ const ProductServiceAgreementView: React.FC<ProductServiceAgreementViewProps> = 
     return <div className="error-message">不支持的签署方: {contractData.signatory}</div>
   }
 
-  // 检查是否是脉信公司的产品服务协议
+  // 检查是否使用脉信/如你心意产品服务协议样式
+  const maixinStyleSignatories = ['保定脉信会计服务有限公司', '保定如你心意企业管理咨询有限公司']
   const isMaixinProductService =
-    contractData.signatory === '保定脉信会计服务有限公司' &&
+    maixinStyleSignatories.includes(contractData.signatory || '') &&
     contractData.contractType === '产品服务协议'
 
   // 获取项目名称

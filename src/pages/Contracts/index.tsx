@@ -101,12 +101,18 @@ const SIGNATORY_OPTIONS = [
 const CONTRACT_TYPE_OPTIONS = {
   // 前4个签署方的合同类型
   group1: ['产品服务协议', '代理记账合同'],
-  // 后2个签署方的合同类型
+  // 金盾签署方的合同类型
   group2: ['单项服务合同'],
+  // 如你心意签署方的合同类型
+  runixinyi: ['产品服务协议', '代理记账合同', '单项服务合同'],
 }
 
 // 获取签署方对应的合同类型选项
 const getContractTypeOptions = (signatory: string) => {
+  if (signatory === '保定如你心意企业管理咨询有限公司') {
+    return CONTRACT_TYPE_OPTIONS.runixinyi
+  }
+
   const group1Signatories = [
     '定兴县中岳会计服务有限公司',
     '定兴县中岳会计服务有限公司河北雄安分公司',
@@ -121,7 +127,13 @@ const getContractTypeOptions = (signatory: string) => {
 
 // 获取所有可能的合同类型选项（用于搜索）
 const getAllContractTypeOptions = () => {
-  return [...CONTRACT_TYPE_OPTIONS.group1, ...CONTRACT_TYPE_OPTIONS.group2]
+  return Array.from(
+    new Set([
+      ...CONTRACT_TYPE_OPTIONS.group1,
+      ...CONTRACT_TYPE_OPTIONS.group2,
+      ...CONTRACT_TYPE_OPTIONS.runixinyi,
+    ])
+  )
 }
 
 // 合同状态选项

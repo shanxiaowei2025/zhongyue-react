@@ -34,6 +34,14 @@ export const AGENCY_SIGNATORY_CONFIG: Record<string, SignatoryConfig> = {
     footer: '保定脉信会计服务有限公司Tel: 15030201110',
     creditCode: '91130629MA07XG2A1Q',
   },
+  保定如你心意企业管理咨询有限公司: {
+    title: '保定如你心意企业管理咨询有限公司',
+    englishTitle: 'Baoding Ru Ni Xin Yi Enterprise Management Consulting Co., Ltd.',
+    address: '河北省保定市定兴县东落堡镇东落堡村264号',
+    phone: '13831247565',
+    footer: '保定如你心意企业管理咨询有限公司Tel: 13831247565',
+    creditCode: '91130626MADR9GRR0G',
+  },
 }
 
 // 产品服务协议和单项服务合同专用配置（使用完整地址格式）

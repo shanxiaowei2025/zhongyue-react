@@ -614,9 +614,10 @@ const ContractPDFDocument: React.FC<ContractPDFDocumentProps> = ({ contractData 
     return STAMP_IMAGE_MAP[signatory as keyof typeof STAMP_IMAGE_MAP] || ''
   }
 
-  // 检查是否是脉信公司的产品服务协议
+  // 检查是否使用脉信/如你心意产品服务协议样式
+  const maixinStyleSignatories = ['保定脉信会计服务有限公司', '保定如你心意企业管理咨询有限公司']
   const isMaixinProductService =
-    contractData.signatory === '保定脉信会计服务有限公司' &&
+    maixinStyleSignatories.includes(contractData.signatory || '') &&
     contractData.contractType === '产品服务协议'
 
   // 需要显示日期的服务项目
