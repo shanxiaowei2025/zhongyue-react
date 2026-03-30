@@ -179,6 +179,11 @@ export const exportCustomerCSV = (params?: Record<string, unknown>) => {
   return request.get(`/customer/export/csv${queryString ? `?${queryString}` : ''}`, {}, 'blob')
 }
 
+// 导出客户表全部字段（管理员专用）
+export const exportAllCustomerCSV = () => {
+  return request.get('/customer/export/csv-all', {}, 'blob')
+}
+
 // 导入客户Excel文件
 export const importCustomerExcel = async (file: File) => {
   const formData = new FormData()

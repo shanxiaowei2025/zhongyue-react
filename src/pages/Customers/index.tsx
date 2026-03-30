@@ -67,6 +67,7 @@ import {
   getCustomerDetail,
   getCustomerById,
   exportCustomerCSV,
+  exportAllCustomerCSV,
   importCustomerExcel,
   updateCustomerExcel,
   getUniqueCustomerLevels,
@@ -844,6 +845,41 @@ export default function Customers() {
       message.destroy()
       console.error('导出失败', error)
       message.error('导出失败，请联系管理员添加导出权限')
+    }
+  }
+
+  // 管理员全部导出（导出客户表全部字段）
+  const handleExportAll = async () => {
+    try {
+      message.loading('正在导出全部客户数据，请稍候...', 0)
+
+      const response = await exportAllCustomerCSV()
+
+      message.destroy()
+
+      const blob = new Blob([response as BlobPart], { type: 'text/csv;charset=utf-8;' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+
+      const date = new Date().toISOString().split('T')[0]
+      link.download = `客户全部数据_${date}.csv`
+
+      document.body.appendChild(link)
+      link.click()
+
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(link)
+
+      message.success('全部导出成功')
+    } catch (error) {
+      message.destroy()
+      console.error('全部导出失败', error)
+      const backendMessage = (error as any)?.response?.data?.message
+      const errorText = Array.isArray(backendMessage)
+        ? backendMessage.join('；')
+        : backendMessage
+      message.error(errorText || '全部导出失败，请稍后重试')
     }
   }
 
@@ -1734,6 +1770,16 @@ export default function Customers() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
+                {isAdmin && (
+                  <Button
+                    type="default"
+                    icon={<DownloadOutlined />}
+                    onClick={handleExportAll}
+                    className="w-full sm:w-auto"
+                  >
+                    全部导出
+                  </Button>
+                )}
                 {canCreateCustomer && (
                   <Button
                     type="primary"
