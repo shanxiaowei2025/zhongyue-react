@@ -19,6 +19,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 
 dayjs.locale('zh-cn')
+const SILENT_POPUP_NOTIFICATION_TYPES = new Set(['行政到期'])
 
 const App = () => {
   const [loading, setLoading] = useState(true)
@@ -30,6 +31,7 @@ const App = () => {
   const [totalUnreadCount, setTotalUnreadCount] = useState(0) // 总未读数
   
   const {
+    user,
     isAuthenticated,
     resetTimer,
     startTimer,
@@ -48,6 +50,11 @@ const App = () => {
   } = useNotificationStore()
 
   const { markAsReadAction } = useNotificationActions()
+  const isAdminOrSuperAdmin =
+    !!user?.roles?.includes('admin') || !!user?.roles?.includes('super_admin')
+  const isSilentNotificationForCurrentUser = (type?: string) =>
+    isAdminOrSuperAdmin &&
+    SILENT_POPUP_NOTIFICATION_TYPES.has(type || 'system')
 
   // 队列处理逻辑已移除，改为登录时显示汇总弹窗，实时通知直接显示详情
 
@@ -149,20 +156,24 @@ const App = () => {
           // 获取所有未读通知
           const response = await getNewNotifications({ page: 1, limit: 999 })
           const unreadNotifications = response.data?.items || []
+          const popupNotifications = unreadNotifications.filter(
+            (notification: Notification) =>
+              !isSilentNotificationForCurrentUser(notification.type),
+          )
           
           // 如果有未读通知，按类型统计
-          if (unreadNotifications.length > 0) {
-            console.log(`登录后发现 ${unreadNotifications.length} 条未读通知`)
+          if (popupNotifications.length > 0) {
+            console.log(`登录后发现 ${popupNotifications.length} 条可弹窗未读通知`)
             
             // 按类型统计
             const summary: Record<string, number> = {}
-            unreadNotifications.forEach((notification: Notification) => {
+            popupNotifications.forEach((notification: Notification) => {
               const type = notification.type || 'system'
               summary[type] = (summary[type] || 0) + 1
             })
             
             setNotificationSummary(summary)
-            setTotalUnreadCount(unreadNotifications.length)
+            setTotalUnreadCount(popupNotifications.length)
             setSummaryModalVisible(true)
             
             // 标记已显示过登录通知（sessionStorage 在浏览器会话期间有效，关闭浏览器后清除）
@@ -175,7 +186,7 @@ const App = () => {
 
       return () => clearTimeout(timer)
     }
-  }, [isAuthenticated, loading])
+  }, [isAuthenticated, loading, isAdminOrSuperAdmin])
 
   // WebSocket 连接管理
   useEffect(() => {
@@ -202,6 +213,11 @@ const App = () => {
           createdAt: data.createdAt,
           readStatus: 0, // 新通知默认未读
           readAt: null,
+        }
+
+        if (isSilentNotificationForCurrentUser(newNotification.type)) {
+          console.log('收到静默通知（不弹窗）:', data.title)
+          return
         }
         
         // 实时收到的新通知，直接显示详情弹窗
@@ -239,7 +255,13 @@ const App = () => {
       setWebSocketConnected(false)
       resetNotificationStore()
     }
-  }, [isAuthenticated, addNewNotification, setWebSocketConnected, resetNotificationStore])
+  }, [
+    isAuthenticated,
+    isAdminOrSuperAdmin,
+    addNewNotification,
+    setWebSocketConnected,
+    resetNotificationStore,
+  ])
 
   // 显示一个全屏加载指示器，直到预加载完成
   if (loading) {
