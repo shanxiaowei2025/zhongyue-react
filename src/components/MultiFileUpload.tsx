@@ -16,7 +16,7 @@ import {
   FilePptOutlined,
   InboxOutlined,
 } from '@ant-design/icons'
-import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
+import { uploadFile, deleteFile, resolveFileUrl } from '../utils/upload'
 import type { ImageType } from '../types'
 
 const { Dragger } = Upload
@@ -123,7 +123,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const fileList: FileItem[] = Object.entries(safeValue).map(([key, fileData]) => ({
     key,
     fileName: fileData.fileName || key,
-    url: fileData.fileName ? buildImageUrl(fileData.fileName) : fileData.url || '',
+    url: resolveFileUrl(fileData),
   }))
 
   // 生成下一个键名（使用时间戳确保唯一性）
@@ -356,8 +356,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         if (fileIndex !== -1) {
           const timestamp = new Date().getTime()
           const fileItem = safeValue[key]
-          const fileName = fileItem?.fileName || ''
-          const originalUrl = fileName ? buildImageUrl(fileName) : fileItem?.url || ''
+          const originalUrl = resolveFileUrl(fileItem)
           const updatedUrl = originalUrl.includes('?')
             ? originalUrl.split('?')[0] + `?t=${timestamp}`
             : originalUrl + `?t=${timestamp}`
@@ -564,9 +563,7 @@ const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                   onClick={() => {
                     const fileData = safeValue[previewTitle]
                     if (fileData) {
-                      const url = fileData.fileName
-                        ? buildImageUrl(fileData.fileName)
-                        : fileData.url
+                      const url = resolveFileUrl(fileData)
                       if (url) window.open(url, '_blank')
                     }
                   }}

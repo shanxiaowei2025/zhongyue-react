@@ -73,7 +73,7 @@ import {
   getUniqueCustomerLevels,
   getCustomerSearchSuggestions,
 } from '../../api/customer'
-import { deleteFile, buildImageUrl } from '../../utils/upload'
+import { deleteFile, resolveFileUrl } from '../../utils/upload'
 import ExpenseRecords from './ExpenseRecords'
 import FollowUpRecords from '../../components/FollowUpRecords'
 import { useLocation, useSearchParams, useNavigate } from 'react-router-dom'
@@ -2214,13 +2214,12 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
 
   // 渲染单张文件（图片或其他文件）
   const renderImage = (image: ImageType | ImageTypeWithRemarks | undefined, label: string) => {
-    if (!image || !image.url) {
+    if (!image || !resolveFileUrl(image)) {
       return <div className="no-image-placeholder">暂无文件</div>
     }
 
     try {
-      // 使用fileName构建完整URL
-      const fileUrl = image.fileName ? buildImageUrl(image.fileName) : image.url || ''
+      const fileUrl = resolveFileUrl(image)
 
       // 确保URL是有效的
       if (!fileUrl || fileUrl === 'undefined' || fileUrl === 'null') {

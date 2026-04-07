@@ -17,7 +17,7 @@ import {
   InboxOutlined,
 } from '@ant-design/icons'
 import type { UploadFile } from 'antd/es/upload/interface'
-import { uploadFile, deleteFile, buildImageUrl } from '../utils/upload'
+import { uploadFile, deleteFile, resolveFileUrl } from '../utils/upload'
 import type { ImageType, ImageTypeWithRemarks } from '../types'
 
 const { Dragger } = Upload
@@ -86,11 +86,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   // 当value变化时重置重试次数和错误状态
   useEffect(() => {
-    if (value?.url) {
+    if (resolveFileUrl(value)) {
       setRetryCount(0)
       setFileError(false)
     }
-  }, [value?.url])
+  }, [value])
 
   // 判断文件类型
   const getFileType = (fileName: string): string => {
@@ -229,9 +229,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
   }
 
   const handlePreview = () => {
-    if (value?.url) {
-      // 确保URL是完整的，并添加时间戳避免缓存
-      const url = value.fileName ? buildImageUrl(value.fileName) : value.url
+    const url = resolveFileUrl(value)
+
+    if (url) {
       const timestamp = new Date().getTime()
       const urlWithTimestamp = url.includes('?')
         ? `${url.split('?')[0]}?t=${timestamp}`
@@ -256,10 +256,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
             status: 'done',
             url:
               retryCount > 0
-                ? `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
-                : value.fileName
-                  ? buildImageUrl(value.fileName)
-                  : value.url,
+                ? `${resolveFileUrl(value)}?t=${new Date().getTime()}`
+                : resolveFileUrl(value),
           },
         ]
       : []
@@ -276,7 +274,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   // 处理图片加载错误
   const handleImageError = () => {
-    if (retryCount < maxRetries && value?.url) {
+    const url = resolveFileUrl(value)
+
+    if (retryCount < maxRetries && url) {
       // 设置递增的重试延迟: 2秒, 4秒, 8秒
       const retryDelay = Math.pow(2, retryCount + 1) * 1000
 
@@ -290,9 +290,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       retryTimeoutRef.current = setTimeout(() => {
         setRetryCount(prev => prev + 1)
         // 通过添加时间戳参数避免浏览器缓存
-        setPreviewFile(
-          `${value.fileName ? buildImageUrl(value.fileName) : value.url}?t=${new Date().getTime()}`
-        )
+        setPreviewFile(`${url}?t=${new Date().getTime()}`)
       }, retryDelay)
     } else {
       // 超过最大重试次数，显示错误状态
@@ -419,7 +417,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 <Button
                   type="primary"
                   onClick={() => {
-                    const url = value?.fileName ? buildImageUrl(value.fileName) : value?.url
+                    const url = resolveFileUrl(value)
                     if (url) window.open(url, '_blank')
                   }}
                 >

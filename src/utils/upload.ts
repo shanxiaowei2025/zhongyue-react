@@ -4,6 +4,19 @@ import axios from 'axios'
 
 // 获取与request相同的baseURL
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+const minioEndpoint = import.meta.env.MINIO_ENDPOINT || 'https://minio-api.zhongyuekuaiji.cn'
+const bucketName = import.meta.env.MINIO_BUCKET_NAME || 'zhongyue'
+
+const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value)
+
+const encodeObjectName = (fileName: string): string => {
+  return fileName
+    .replace(/^\/+/, '')
+    .split('/')
+    .filter(Boolean)
+    .map(segment => encodeURIComponent(segment))
+    .join('/')
+}
 
 interface UploadResponse {
   data: {
@@ -57,7 +70,7 @@ export const uploadFile = async (file: File): Promise<{ fileName: string; url: s
       const fileName = result.data.fileName || ''
       return {
         fileName,
-        url: buildImageUrl(fileName),
+        url: result.data.url || buildImageUrl(fileName),
       }
     } else {
       message.error(result.message || '上传失败')
@@ -91,7 +104,9 @@ export const deleteFile = async (fileName: string): Promise<boolean> => {
     }
 
     // 使用request.delete方法
-    const result = await request.delete<DeleteResponse>(`/storage/files/${processedFileName}`)
+    const result = await request.delete<DeleteResponse>(
+      `/storage/files/${encodeURIComponent(processedFileName)}`
+    )
 
     return result.code === 0
   } catch (error: any) {
@@ -122,20 +137,42 @@ export const buildImageUrl = (fileName: string | any): string => {
           : String(fileName)
 
   // 检查fileNameStr是否已经是完整URL（包含http或https协议）
-  if (fileNameStr.startsWith('http://') || fileNameStr.startsWith('https://')) {
+  if (isAbsoluteUrl(fileNameStr)) {
     return fileNameStr // 如果已经是完整URL，直接返回
   }
 
-  // 从环境变量获取MinIO配置
-  const endpoint = import.meta.env.MINIO_ENDPOINT || 'https://minio-api.zhongyuekuaiji.cn'
-  const bucketName = import.meta.env.MINIO_BUCKET_NAME || 'zhongyue'
-
   // 确保endpoint末尾有斜杠
-  const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`
+  const baseUrl = minioEndpoint.endsWith('/') ? minioEndpoint : `${minioEndpoint}/`
 
-  // 确保fileName开头没有斜杠
-  const cleanFileName = fileNameStr.startsWith('/') ? fileNameStr.substring(1) : fileNameStr
+  const cleanFileName = encodeObjectName(fileNameStr)
 
   // 拼接完整URL
   return `${baseUrl}${bucketName}/${cleanFileName}`
+}
+
+export const resolveFileUrl = (
+  file:
+    | string
+    | {
+        fileName?: string
+        url?: string
+      }
+    | null
+    | undefined
+): string => {
+  if (!file) return ''
+
+  if (typeof file === 'string') {
+    return isAbsoluteUrl(file) ? file : buildImageUrl(file)
+  }
+
+  if (file.fileName) {
+    return buildImageUrl(file.fileName)
+  }
+
+  if (file.url) {
+    return isAbsoluteUrl(file.url) ? file.url : buildImageUrl(file.url)
+  }
+
+  return ''
 }
