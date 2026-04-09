@@ -308,7 +308,16 @@ export interface Customer {
   onlineBankingStorageNumber?: string // 网银托管存放编号
   archiveStorageRemarks?: string // 档案存放备注
   enterpriseStatus?: 'normal' | 'abnormal' | 'cancelled' | 'revoked'
-  businessStatus?: 'normal' | 'logged_out' | 'logging_out' | 'lost' | 'waiting_transfer'
+  businessStatus?:
+    | 'normal'
+    | 'logged_out'
+    | 'logging_out'
+    | 'lost'
+    | 'waiting_transfer'
+    | 'arrears_no_report'
+    | 'annual_inspection_only'
+    | 'license_only_no_agency'
+    | 'single_service_only'
   customerGroup?: string // 客户群
   customerGroupRemark?: string // 客户群备注
   maintenanceAgent?: string // 维护代理端

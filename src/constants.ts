@@ -5,6 +5,10 @@ export const BUSINESS_STATUS_MAP = {
   logging_out: '注销中',
   lost: '已流失',
   waiting_transfer: '等待转出',
+  arrears_no_report: '欠费不报',
+  annual_inspection_only: '只年检',
+  license_only_no_agency: '仅办照不代理',
+  single_service_only: '仅单项业务办理',
 } as const
 
 // 工商状态映射
@@ -22,6 +26,10 @@ export const BUSINESS_STATUS_COLOR_MAP = {
   logging_out: 'warning',
   lost: 'error',
   waiting_transfer: 'processing',
+  arrears_no_report: 'warning',
+  annual_inspection_only: 'processing',
+  license_only_no_agency: 'default',
+  single_service_only: 'default',
 } as const
 
 // 工商状态颜色映射
