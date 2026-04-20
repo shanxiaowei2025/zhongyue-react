@@ -20,6 +20,9 @@ import RelatedDataTabs from './components/RelatedDataTabs'
 import ImportExportPanel from './components/ImportExportPanel'
 import CommissionPanel from './components/CommissionPanel'
 import SpecialBusinessModal from './components/SpecialBusinessModal'
+import SalesCommissionReviewModal, {
+  type SalesCommissionReviewItem,
+} from './components/SalesCommissionReviewModal'
 import '../../components/ScrollableTabs.css'
 
 const SalaryManagement: React.FC = () => {
@@ -53,6 +56,9 @@ const SalaryManagement: React.FC = () => {
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
   const [specialBusinessModalOpen, setSpecialBusinessModalOpen] = useState(false)
+  const [salesCommissionModalOpen, setSalesCommissionModalOpen] = useState(false)
+  const [salesCommissionSaving, setSalesCommissionSaving] = useState(false)
+  const [salesCommissionRows, setSalesCommissionRows] = useState<SalesCommissionReviewItem[]>([])
 
   const handleMonthChange = (yearMonth: string) => {
     operations.switchMonth(yearMonth)
@@ -65,9 +71,59 @@ const SalaryManagement: React.FC = () => {
   const handleAutoGenerate = async () => {
     try {
       setAutoGenerating(true)
-      await operations.autoGenerateSalary()
+      const reviewResult = await operations.autoGenerateSalary()
+
+      if (reviewResult.reviewData.length > 0) {
+        setSalesCommissionRows(
+          reviewResult.reviewData.map(item => ({
+            ...item,
+            originalBaseSalary: item.baseSalary,
+          }))
+        )
+        setSalesCommissionModalOpen(true)
+      } else {
+        Modal.confirm({
+          title: '确认生成薪资',
+          content: '当前月份没有需要确认基础工资的销售专员，是否直接重新统计并保存薪资？',
+          okText: '直接生成',
+          cancelText: '取消',
+          onOk: async () => {
+            await operations.confirmAutoGenerateSalary([])
+          },
+        })
+      }
     } finally {
       setAutoGenerating(false)
+    }
+  }
+
+  const handleSalesCommissionBaseSalaryChange = (name: string, value: number) => {
+    setSalesCommissionRows(current =>
+      current.map(item => (item.name === name ? { ...item, baseSalary: value } : item))
+    )
+  }
+
+  const handleSalesCommissionModalCancel = () => {
+    setSalesCommissionModalOpen(false)
+    setSalesCommissionRows([])
+  }
+
+  const handleSalesCommissionConfirm = async () => {
+    try {
+      setSalesCommissionSaving(true)
+      await operations.confirmAutoGenerateSalary(
+        salesCommissionRows
+          .filter(item => Math.abs(item.baseSalary - item.originalBaseSalary) > 0.001)
+          .map(item => ({
+            name: item.name,
+            baseSalary: item.baseSalary,
+          }))
+      )
+
+      setSalesCommissionModalOpen(false)
+      setSalesCommissionRows([])
+    } finally {
+      setSalesCommissionSaving(false)
     }
   }
 
@@ -379,6 +435,15 @@ const SalaryManagement: React.FC = () => {
       <SpecialBusinessModal
         open={specialBusinessModalOpen}
         onCancel={() => setSpecialBusinessModalOpen(false)}
+      />
+
+      <SalesCommissionReviewModal
+        open={salesCommissionModalOpen}
+        data={salesCommissionRows}
+        loading={salesCommissionSaving}
+        onCancel={handleSalesCommissionModalCancel}
+        onBaseSalaryChange={handleSalesCommissionBaseSalaryChange}
+        onConfirm={handleSalesCommissionConfirm}
       />
     </div>
   )

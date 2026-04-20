@@ -65,6 +65,7 @@ import type {
   SalesCommissionConfig,
   PerformanceCommissionConfig,
   AutoGenerateSalaryResult,
+  AutoGenerateSalesCommissionReviewResult,
 } from '../types/salaryIntegrated'
 
 // 薪资主表相关接口
@@ -117,11 +118,10 @@ export const salaryApi = {
     return response.data
   },
 
-  // 自动生成薪资（固定使用当前月份）
-  async autoGenerateSalary(): Promise<AutoGenerateSalaryResult> {
-    const currentMonth = new Date().toISOString().slice(0, 7)
-    const response = await request.post<ApiResponse<AutoGenerateSalaryResult>>(
-      `/salary/auto-generate?month=${currentMonth}`
+  // 统计销售专员提成确认数据（不直接保存到薪资表）
+  async autoGenerateSalary(month: string): Promise<AutoGenerateSalesCommissionReviewResult> {
+    const response = await request.post<ApiResponse<AutoGenerateSalesCommissionReviewResult>>(
+      `/salary/auto-generate?month=${month}`
     )
 
     // 薪资自动生成响应处理
@@ -140,6 +140,30 @@ export const salaryApi = {
     }
 
     // 兜底处理
+    console.error('无法解析响应数据结构:', responseData)
+    throw new Error('响应数据格式异常')
+  },
+
+  // 确认预生成结果并保存
+  async confirmAutoGenerateSalary(data: {
+    month: string
+    salesBaseSalaryOverrides?: Array<{ name: string; baseSalary: number }>
+  }): Promise<AutoGenerateSalaryResult> {
+    const response = await request.post<ApiResponse<AutoGenerateSalaryResult>>(
+      '/salary/auto-generate/confirm',
+      data
+    )
+
+    const responseData = response.data as any
+
+    if (responseData && responseData.success && responseData.message) {
+      return responseData
+    }
+
+    if (responseData && responseData.data && responseData.data.success) {
+      return responseData.data
+    }
+
     console.error('无法解析响应数据结构:', responseData)
     throw new Error('响应数据格式异常')
   },

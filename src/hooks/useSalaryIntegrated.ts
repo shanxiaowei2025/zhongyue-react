@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import { message } from 'antd'
+import dayjs from 'dayjs'
 import {
   salaryApi,
   integratedApi,
@@ -110,34 +111,62 @@ export const useSalaryIntegrated = () => {
     }
   )
 
+  const getAutoGenerateRequestMonth = useCallback(() => {
+    return dayjs(selectedYearMonth).add(1, 'month').startOf('month').format('YYYY-MM-DD')
+  }, [selectedYearMonth])
+
   // 操作方法
   const operations = {
     // 自动生成薪资（固定使用当前月份）
     autoGenerateSalary: useCallback(async () => {
       try {
         setLoading(true)
-        message.loading('正在自动生成薪资数据...', 0)
+        message.loading('正在统计销售专员提成信息...', 0)
 
-        const result = await salaryApi.autoGenerateSalary()
+        const result = await salaryApi.autoGenerateSalary(getAutoGenerateRequestMonth())
 
         message.destroy()
         message.success(`${result.message}`)
 
-        // 也可以使用更详细的信息
-        // message.success(`薪资数据生成成功：新增${result.details.created}条，更新${result.details.updated}条记录`)
-
-        // 刷新数据
-        await mutateMonthly()
-
         return result
       } catch (error: any) {
         message.destroy()
-        message.error(`自动生成薪资失败: ${error.message}`)
+        message.error(`统计销售专员提成信息失败: ${error.message}`)
         throw error
       } finally {
         setLoading(false)
       }
-    }, [mutateMonthly, setLoading]),
+    }, [getAutoGenerateRequestMonth, setLoading]),
+
+    // 确认预生成结果并保存
+    confirmAutoGenerateSalary: useCallback(
+      async (salesBaseSalaryOverrides: Array<{ name: string; baseSalary: number }>) => {
+        try {
+          setLoading(true)
+          message.loading('正在保存生成后的薪资数据...', 0)
+
+          const result = await salaryApi.confirmAutoGenerateSalary({
+            month: getAutoGenerateRequestMonth(),
+            salesBaseSalaryOverrides,
+          })
+
+          await mutateMonthly()
+
+          message.destroy()
+          message.success(result.message)
+
+          return result
+        } catch (error: any) {
+          message.destroy()
+          await mutateMonthly()
+          message.error(`保存生成薪资失败: ${error.message}`)
+          throw error
+        } finally {
+          setLoading(false)
+        }
+      },
+      [getAutoGenerateRequestMonth, mutateMonthly, setLoading]
+    ),
 
     // 更新薪资记录
     updateSalary: useCallback(

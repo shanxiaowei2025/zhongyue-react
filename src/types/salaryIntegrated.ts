@@ -58,6 +58,16 @@ export interface SalaryRecord {
   updatedAt: string
 }
 
+export interface SalesCommissionReviewRecord {
+  name: string
+  businessCommissionOwn: number
+  businessCommissionOutsource: number
+  specialBusinessCommission: number
+  agencyCommission: number
+  commissionTotal: number
+  baseSalary: number
+}
+
 // 社保信息数据模型
 export interface SocialInsuranceRecord {
   id: number
@@ -494,6 +504,12 @@ export interface AutoGenerateSalaryResult {
     created: number
     updated: number
   }
+}
+
+export interface AutoGenerateSalesCommissionReviewResult {
+  success: boolean
+  message: string
+  reviewData: SalesCommissionReviewRecord[]
 }
 
 // 操作类型
